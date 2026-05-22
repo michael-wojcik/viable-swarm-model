@@ -6,6 +6,7 @@ description: >
   learning organism: it reads its own acquired wisdom at startup, executes
   builds with custom sub-agent types, and appends new lessons to BOTH the
   project-local memory AND its own files. Invoke with /flow:viable-swarm-model.
+type: flow
 triggers:
   - "build a new project"
   - "create an application"
