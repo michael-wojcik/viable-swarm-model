@@ -61,7 +61,7 @@ use symlinks or update paths in mutation commands.
 
 | VSM System | CLI Implementation | Custom Type | Activation | Produces |
 |---|---|---|---|---|
-| **S5 (Policy)** | Main conversation agent | — | Always | Decisions, escalation, mutations |
+| **S5 (Policy)** | Main conversation agent (you) | — | Always | Decisions, escalation, mutations |
 | **S4 (Intelligence)** | `vsm_architect` subagent | Custom | Phase 1 | Architecture doc, API spec |
 | **S3 (Control)** | Main agent via SetTodoList | — | All phases | Progress tracking, mutation decisions |
 | **S3* (Audit)** | `vsm_auditor` subagent | Custom | After waves | PASS/ISSUES/BLOCKER |
@@ -143,7 +143,7 @@ flowchart TD
     P8[Phase 8: Reflection<br/>Append to .kimi/lessons.md]
     P8M[Phase 8b: Meta-Reflection + Hypothesis Generation<br/>Evaluate performance<br/>Write new hypotheses to hypotheses.md<br/>Bucket mutations: append-only vs structural]
     P8W[Write append-only mutations<br/>security-lessons, patterns, anti-patterns,<br/>integration-checklist, experiments.md,<br/>hypotheses.md, mutation-log.md]
-    P8A{<choice>structural mutations<br/>approved by S5</choice>?}
+    P8A{<choice>structural mutations<br/>approved by user</choice>?}
     P8WS[Write approved structural mutations<br/>agent prompts, flow diagram, phase logic]
     P8L[Log rejection rationale<br/>to mutation-log.md]
     P8C[git commit all changes]
@@ -280,9 +280,9 @@ If empirical findings justify it, append directly:
 - Experiments to `experiments.md`
 - Rationale to `mutation-log.md`
 
-**Structural mutations** (S5 approval via AskUserQuestion):
+**Structural mutations** (user approval via AskUserQuestion):
 If findings justify modifying prompts, flow diagrams, or phase logic:
-1. Present to S5 via `AskUserQuestion`:
+1. Present to user via `AskUserQuestion`:
    - Files that would change
    - What the change does
    - Evidence from this build

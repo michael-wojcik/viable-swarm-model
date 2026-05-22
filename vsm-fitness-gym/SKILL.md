@@ -53,7 +53,7 @@ adjust paths in Shell commands.
 
 | Role | CLI Implementation | Custom Type | Activation | Produces |
 |---|---|---|---|---|
-| **S5 (Policy)** | Main conversation agent | — | Always | Hypothesis selection, mutation approval |
+| **S5 (Policy)** | Main conversation agent (you) | — | Always | Hypothesis selection, mutation approval |
 | **S4 (Designer)** | `vsm_experiment_designer` | Custom | Phase 1 | Experiment spec, minimal code plan |
 | **S1 (Builder)** | `coder` subagent | Built-in | Phase 2 | Minimal experiment code |
 | **S3* (Tester)** | `vsm_auditor` or `vsm_security` | Custom | Phase 3 | PASS/ISSUES/BLOCKER on experiment |

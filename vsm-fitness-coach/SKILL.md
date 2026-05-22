@@ -86,7 +86,7 @@ flowchart TD
     P2S{<choice>any phase scored < 4</choice>?}
     P3[Phase 3: Generate Hypotheses<br/>One hypothesis per gap identified]
     P4[Phase 4: Propose Mutations<br/>Present structured report to S5]
-    P4A{<choice>structural mutations<br/>approved by S5</choice>?}
+    P4A{<choice>structural mutations<br/>approved by user</choice>?}
     P5[Phase 5: Apply Mutations<br/>Append-only: autonomous<br/>Structural: conditional]
     P5L[Log rejections to mutation-log.md]
     P5R[Write fitness report<br/>assets/fitness-report-template.md]
@@ -214,7 +214,7 @@ Present all proposed mutations to S5 in a structured report:
 
 **Append-only mutations**: Write directly to main skill's files.
 
-**Structural mutations**: Only if S5 approved (via natural language or
+**Structural mutations**: Only if user approved (via natural language or
 `AskUserQuestion`). If rejected or ambiguous, log rationale to `mutation-log.md`.
 
 Write all applied mutations to:
