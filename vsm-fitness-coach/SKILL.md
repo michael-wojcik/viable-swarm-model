@@ -67,6 +67,10 @@ in the user's actual project directory.
 | **S3* (Evaluator)** | Main agent reads rubric | — | Phase 3 | Scored evaluation per phase |
 | **S2 (Synthesizer)** | Main agent | — | Phase 4 | Hypotheses, mutations |
 
+**Terminology**: `S5` refers to the main conversation agent (you, the LLM executing
+this skill). The word `user` refers to the human operator. S5 may escalate to the
+user via `AskUserQuestion` or `EnterPlanMode` when human policy input is required.
+
 ## 4. The Golden Rule
 
 The fitness coach does NOT build code directly. It delegates all

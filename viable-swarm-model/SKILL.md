@@ -73,6 +73,10 @@ use symlinks or update paths in mutation commands.
 | **S1-DevOps** | `coder` subagent | Built-in | Phase 4 | Docker, CI/CD |
 | **Algedonic** | Main agent detects/stops | — | Any phase | TaskStop, AskUserQuestion |
 
+**Terminology**: `S5` refers to the main conversation agent (you, the LLM executing
+this skill). The word `user` refers to the human operator. S5 may escalate to the
+user via `AskUserQuestion` or `EnterPlanMode` when human policy input is required.
+
 ### Custom Type Prompt Characteristics
 
 **`vsm_architect`** (S4 Intelligence): Reads codebase, researches tech, produces

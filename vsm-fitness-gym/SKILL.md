@@ -59,6 +59,10 @@ adjust paths in Shell commands.
 | **S3* (Tester)** | `vsm_auditor` or `vsm_security` | Custom | Phase 3 | PASS/ISSUES/BLOCKER on experiment |
 | **S2 (Analyzer)** | Main agent | — | Phase 4 | Result analysis, mutation proposal |
 
+**Terminology**: `S5` refers to the main conversation agent (you, the LLM executing
+this skill). The word `user` refers to the human operator. S5 may escalate to the
+user via `AskUserQuestion` or `EnterPlanMode` when human policy input is required.
+
 ### Custom Type Prompt Characteristics
 
 **`vsm_experiment_designer`** (S4 Designer):
