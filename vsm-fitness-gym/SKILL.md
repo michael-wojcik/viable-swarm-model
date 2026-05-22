@@ -34,7 +34,8 @@ designed to test one specific muscle (one falsifiable claim) at a time.
 5. **Analyze** — Did the main skill catch the issue? Was there a false positive?
 6. **Report** — Update hypothesis status, propose mutations, write to experiment log
 
-**Primary invocation**: `/flow:vsm-fitness-gym` executes the experiment workflow.  
+**Primary invocation**: `/flow:vsm-fitness-gym`
+Must be embedded in a message (e.g., `Let's test a hypothesis. /flow:vsm-fitness-gym Test H2`).
 **Example**: `/flow:vsm-fitness-gym Test hypotheses H2, H7, H12`
 
 **Path convention**: This skill assumes the main skill is installed at

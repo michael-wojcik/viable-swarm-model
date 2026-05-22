@@ -33,7 +33,8 @@ systemic gaps, generates falsifiable hypotheses, and proposes mutations.
 `viable-swarm-model` is the athlete (does the real work) and
 `vsm-fitness-gym` is the gym (isolated equipment for targeted workouts).
 
-**Primary invocation**: `/flow:vsm-fitness-coach`  
+**Primary invocation**: `/flow:vsm-fitness-coach`
+Must be embedded in a message (e.g., `Let's do a fitness build. /flow:vsm-fitness-coach Run FB2`).
 **Example**: `/flow:vsm-fitness-coach Run fitness build #1 (DocuFlow)`
 
 **Path convention**:
@@ -51,7 +52,8 @@ in the user's actual project directory.
 - **`/flow:vsm-fitness-coach [fitness project name or ID]`** — Execute a
   fitness build. The coach reads the fitness project catalog, presents
   options to S5 (you), guides the main skill through the build, and then
-  evaluates performance.
+  evaluates performance. Must include some natural language text before or
+  around the command for Kimi CLI to process it.
 - **`/skill:vsm-fitness-coach`** — Load as knowledge reference. Use when
   you need the evaluation rubric or fitness project catalog.
 

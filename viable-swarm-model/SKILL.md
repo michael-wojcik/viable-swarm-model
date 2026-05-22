@@ -39,7 +39,8 @@ targeted workouts).
 3. At shutdown (Phase 8b), it evaluates its own performance, proposes new
    hypotheses, and appends new knowledge to its own files.
 
-**Primary invocation**: `/flow:viable-swarm-model` executes the full workflow.  
+**Primary invocation**: `/flow:viable-swarm-model` executes the full workflow.
+Must be embedded in a message (e.g., `Let's build something. /flow:viable-swarm-model Build a React app`).
 **Reference loading**: `/skill:viable-swarm-model` loads knowledge without execution.
 
 **Path convention**: This skill assumes installation at
@@ -49,9 +50,10 @@ use symlinks or update paths in mutation commands.
 
 ## 2. How to Invoke This Skill
 
-- **`/flow:viable-swarm-model`** — Execute the full VSM workflow. The model
+- **`/flow:viable-swarm-model <task>`** — Execute the full VSM workflow. The model
   follows the Mermaid flow diagram step-by-step, outputting `<choice>branch</choice>`
-  at decision nodes to select paths.
+  at decision nodes to select paths. Must include some natural language text
+  before or around the command for Kimi CLI to process it.
 - **`/skill:viable-swarm-model`** — Load as knowledge reference. Use when you
   need patterns, anti-patterns, or checklists without triggering the full workflow.
 

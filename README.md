@@ -97,8 +97,11 @@ ln -s ~/vsm/vsm-fitness-gym ~/.kimi/skills/vsm-fitness-gym
 ### Build a project with the full swarm
 
 ```
-/flow:viable-swarm-model Build a real-time collaborative document editor with React and FastAPI
+Let's build a project. /flow:viable-swarm-model Build a real-time collaborative document editor with React and FastAPI
 ```
+
+**Note**: `/flow` commands must be embedded in a message with some natural
+language text. Standalone `/flow:name` may not trigger a response.
 
 This executes the complete VSM phase workflow:
 1. **Phase 0**: Viability check + self-test
@@ -115,7 +118,7 @@ This executes the complete VSM phase workflow:
 ### Run a comprehensive fitness build
 
 ```
-/flow:vsm-fitness-coach
+Let's do a fitness build. /flow:vsm-fitness-coach
 ```
 
 The fitness coach:
@@ -137,7 +140,7 @@ rm -rf ~/vsm-fitness-builds/*
 ### Run focused experiments on specific hypotheses
 
 ```
-/flow:vsm-fitness-gym Test hypotheses H2, H7, H12
+Let's test some hypotheses. /flow:vsm-fitness-gym Test hypotheses H2, H7, H12
 ```
 
 The gym:
