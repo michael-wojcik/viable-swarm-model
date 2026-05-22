@@ -86,7 +86,7 @@ flowchart TD
     P2S{<choice>any phase scored < 3</choice>?}
     P3[Phase 3: Generate Hypotheses<br/>One hypothesis per gap identified]
     P4[Phase 4: Propose Mutations<br/>Map findings to skill file changes]
-    P4A{<choice>mutations approved</choice>?}
+    P4A{<choice>scoring justifies mutation</choice>?}
     P5[Phase 5: Apply Mutations<br/>Write to main skill files<br/>Append to hypotheses.md, experiments.md,<br/>mutation-log.md]
     P5R[Write fitness report<br/>assets/fitness-report-template.md]
     P5G[git commit all changes]

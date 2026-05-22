@@ -142,7 +142,7 @@ flowchart TD
     P7E[Escalate to User<br/>AskUserQuestion]
     P8[Phase 8: Reflection<br/>Append to .kimi/lessons.md]
     P8M[Phase 8b: Meta-Reflection + Hypothesis Generation<br/>Evaluate skill performance<br/>Propose new hypotheses<br/>Propose mutations]
-    P8A{<choice>mutations approved</choice>?}
+    P8A{<choice>empirical findings justify mutation</choice>?}
     P8W[Write mutations to skill files<br/>Append to mutation-log.md]
     P8C[git commit mutations]
     END([END])

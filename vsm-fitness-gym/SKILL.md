@@ -84,7 +84,6 @@ flowchart TD
     P0S{<choice>hypotheses found</choice>?}
     P0P[Present to S5<br/>User selects which to test]
     P1[Phase 1: Design Experiments<br/>vsm_experiment_designer per hypothesis]
-    P1R{<choice>designs approved</choice>?}
     P2[Phase 2: Build Experiments<br/>coder agents in parallel]
     P2S[TaskOutput block=true]
     P3[Phase 3: Run Relevant Audits<br/>vsm_auditor / vsm_security]
@@ -92,7 +91,7 @@ flowchart TD
     P4[Phase 4: Analyze Results<br/>Compare expected vs actual]
     P4C{<choice>hypothesis confirmed</choice>?}
     P5[Phase 5: Propose Mutations<br/>Update main skill files]
-    P5A{<choice>mutations approved</choice>?}
+    P5A{<choice>empirical findings justify mutation</choice>?}
     P5W[Write mutations<br/>Update hypotheses.md status<br/>Append to experiments.md<br/>Append to mutation-log.md]
     P5G[git commit mutations]
     END([END])
@@ -102,9 +101,7 @@ flowchart TD
     P0S -->|<choice>none</choice>| END
     P0S -->|<choice>found</choice>| P0P
     P0P --> P1
-    P1 --> P1R
-    P1R -->|<choice>rejected</choice>| P1
-    P1R -->|<choice>approved</choice>| P2
+    P1 --> P2
     P2 --> P2S
     P2S --> P3
     P3 --> P3D
