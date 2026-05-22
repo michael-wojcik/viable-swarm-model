@@ -36,8 +36,15 @@ systemic gaps, generates falsifiable hypotheses, and proposes mutations.
 **Primary invocation**: `/flow:vsm-fitness-coach`  
 **Example**: `/flow:vsm-fitness-coach Run fitness build #1 (DocuFlow)`
 
-**Path convention**: This skill assumes the main skill is installed at
-`~/vsm/viable-swarm-model/`. If installed elsewhere, adjust paths.
+**Path convention**:
+- Main skill: `~/vsm/viable-swarm-model/`
+- Fitness builds: `~/vsm-fitness-builds/[project-id]-[date]/`
+
+If installed elsewhere, adjust paths.
+
+**Build directory**: Every fitness build creates a dedicated, timestamped
+directory. The athlete (`viable-swarm-model`) builds the project there — never
+in the user's actual project directory.
 
 ## 2. How to Invoke
 
@@ -86,7 +93,8 @@ flowchart TD
     BEGIN --> P0
     P0 --> P0S
     P0S -->|<choice>none</choice>| END
-    P0S -->|<choice>selected</choice>| P1
+    P0S -->|<choice>selected</choice>| P0D[Create build directory<br/>~/vsm-fitness-builds/[id]-[date]/]
+    P0D --> P1
     P1 --> P1A
     P1A --> P2
     P2 --> P2S
@@ -114,22 +122,34 @@ Present the catalog to S5 (you). Each project includes:
 If invoked without argument, present all projects and let S5 select.
 If invoked with argument (e.g., "Run FB1"), load that project directly.
 
-### Phase 1: Execute Build
+### Phase 1: Create Build Directory + Execute Build
+
+**Step 1a: Create build directory**
+```bash
+mkdir -p ~/vsm-fitness-builds/FB1-20260522
+cd ~/vsm-fitness-builds/FB1-20260522
+```
+
+The athlete builds the project in this directory — never in the user's
+actual project directory. This isolates the fitness build from real work.
+
+**Step 1b: Execute build**
 Instruct the model to run the `viable-swarm-model` workflow on the selected
-project. The main skill's full 10-phase flow executes:
+project, building in `~/vsm-fitness-builds/[project-id]-[date]/`. The main
+skill's full 10-phase flow executes:
 - Intelligence, Foundation, Implementation, Testing, Integration, Security, Fix
 - Phase 8b meta-reflection (the main skill's own evaluation)
 
-The orchestrator does NOT interfere during the build. It observes and records.
+The coach does NOT interfere during the build. It observes and records.
 
-**Critical**: Collect ALL artifacts produced during the build:
+**Critical**: Collect ALL artifacts from the build directory:
 - `plan.md`
 - Auditor reports (Phase 2b, 3b)
 - Coordinator integration report
 - Security gate findings
 - Test coverage report
 - Fix wave logs
-- Project lessons (`.kimi/lessons.md`)
+- Project lessons (`~/vsm-fitness-builds/[id]-[date]/.kimi/lessons.md`)
 - Main skill's own meta-reflection output
 
 ### Phase 2: Evaluate Performance

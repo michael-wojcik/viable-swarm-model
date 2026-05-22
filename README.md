@@ -118,14 +118,21 @@ This executes the complete VSM phase workflow:
 /flow:vsm-fitness-coach
 ```
 
-The fitness orchestrator:
+The fitness coach:
 1. Presents a catalog of substantial test projects (DocuFlow, GeoQuiz, TaskFlow)
 2. You select one
-3. Guides the main skill through building it
-4. Scores every phase of the main skill's performance (1-5)
-5. Identifies systemic gaps and generates hypotheses
-6. Produces a structured fitness report
-7. Proposes mutations to improve the main skill
+3. Creates a dedicated build directory (`~/vsm-fitness-builds/FB1-20260522/`)
+4. Guides the main skill through building the project **in that directory**
+5. Scores every phase of the main skill's performance (1-5)
+6. Identifies systemic gaps and generates hypotheses
+7. Produces a structured fitness report
+8. Proposes mutations to improve the main skill
+
+**Important**: Fitness builds are isolated in `~/vsm-fitness-builds/`. They never
+touch your actual project directory. Clean up old builds anytime:
+```bash
+rm -rf ~/vsm-fitness-builds/*
+```
 
 ### Run focused experiments on specific hypotheses
 
