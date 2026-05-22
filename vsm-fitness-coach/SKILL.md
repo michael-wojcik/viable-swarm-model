@@ -57,6 +57,10 @@ in the user's actual project directory.
 - **`/skill:vsm-fitness-coach`** — Load as knowledge reference. Use when
   you need the evaluation rubric or fitness project catalog.
 
+**Terminology**: `S5` refers to the main conversation agent (you, the LLM executing
+this skill). The word `user` refers to the human operator. S5 may escalate to the
+user via `AskUserQuestion` or `EnterPlanMode` when human policy input is required.
+
 ## 3. Fitness Coach Roles
 
 | VSM System | CLI Implementation | Custom Type | Activation | Produces |
@@ -66,10 +70,6 @@ in the user's actual project directory.
 | **S1 (Builder)** | `viable-swarm-model` workflow | Flow skill | Phase 1 | Substantial project |
 | **S3* (Evaluator)** | Main agent reads rubric | — | Phase 3 | Scored evaluation per phase |
 | **S2 (Synthesizer)** | Main agent | — | Phase 4 | Hypotheses, mutations |
-
-**Terminology**: `S5` refers to the main conversation agent (you, the LLM executing
-this skill). The word `user` refers to the human operator. S5 may escalate to the
-user via `AskUserQuestion` or `EnterPlanMode` when human policy input is required.
 
 ## 4. The Golden Rule
 
