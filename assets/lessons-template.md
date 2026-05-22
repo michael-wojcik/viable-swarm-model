@@ -1,5 +1,11 @@
 # Project Lessons Learned
 
+> **Mutation rules**: This is a PROJECT-LOCAL file, not a skill file.
+> It is created/modified in the project root at `.kimi/lessons.md`.
+> The skill reads it at Phase 0 and appends to it at Phase 8.
+> This template itself is mutable — if the lesson format proves inadequate,
+> the skill may propose a new template structure.
+
 This file is append-only. Each lesson follows the format below.
 
 **Epistemic rule**: If this file contradicts the viable-swarm-model SKILL.md,

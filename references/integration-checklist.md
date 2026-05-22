@@ -1,5 +1,10 @@
 # Cross-File Integration Verification Checklist
 
+> **Mutation rules**: Append new checks discovered in the field. Mark checks
+> that are consistently irrelevant for certain project types with a note.
+> Never delete — a check that seems irrelevant for one project type may be
+> critical for another.
+
 Run ALL of these before declaring integration complete.
 
 **Failure rule**: If ANY check fails, send back to responsible S1 for

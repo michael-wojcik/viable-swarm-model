@@ -1,5 +1,10 @@
 # Custom Sub-Agent Prompts
 
+> **Mutation rules**: Refine wording based on observed agent performance.
+> Append guidance for new failure modes. Mark superseded guidance with
+> `~~strikethrough~~`. Never delete — the history of prompt evolution is
+> valuable for understanding why agents behave as they do.
+
 Full system prompt characteristics for each VSM custom sub-agent type.
 
 ---

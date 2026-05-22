@@ -1,5 +1,10 @@
 # Security Lessons — Prevention Rule Format
 
+> **Mutation rules**: Append new lessons as they are discovered. Mark lessons
+> that are consistently false positives with `~~strikethrough~~` and rationale.
+> If a prevention rule is proven ineffective after 3+ sessions, append a
+> correction rather than deleting. The history of what was tried matters.
+
 All 37 empirical lessons from cybernetic-dev-swarm, organized as prevention
 rules for agent prompts. Each lesson: category, prevention rule, affected
 agents.

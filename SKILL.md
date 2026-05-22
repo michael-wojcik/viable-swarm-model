@@ -1,13 +1,11 @@
 ---
 name: viable-swarm-model
 description: >
-  A cybernetic development swarm for Kimi Code CLI based on Stafford Beer's
-  Viable System Model and Gordon Pask's Conversation Theory. Uses custom sub-agent
-  types, parallel wave execution, an executable Flow Skill workflow, security-first
-  prevention with 37 empirical lessons, cross-file integration verification, and
-  project-local learning. Invoke with /flow:viable-swarm-model for the full workflow
-  or /skill:viable-swarm-model to load as knowledge. Use for multi-file projects,
-  greenfield builds, system design, refactoring, architecture. NOT for single-file changes.
+  A self-modifying cybernetic development swarm for Kimi Code CLI based on
+  Stafford Beer's VSM and Gordon Pask's Conversation Theory. This skill is a
+  learning organism: it reads its own acquired wisdom at startup, executes
+  builds with custom sub-agent types, and appends new lessons to BOTH the
+  project-local memory AND its own files. Invoke with /flow:viable-swarm-model.
 triggers:
   - "build a new project"
   - "create an application"
@@ -21,14 +19,17 @@ triggers:
 
 ## 1. Overview
 
-The `viable-swarm-model` skill transforms Kimi Code CLI into a self-organizing,
-learning cybernetic development team. Based on Stafford Beer's Viable System
-Model (VSM) and Gordon Pask's Conversation Theory, it coordinates specialist
-agents through structured phases.
+The `viable-swarm-model` skill is a **learning organism**. It is not a static
+playbook. Between sessions, it modifies its own files based on empirical
+results. The skill that loads in conversation N+1 is structurally different
+from the skill that loaded in conversation N.
 
-The swarm functions as a learning organism: it reads lessons from previous
-sessions, applies prevention rules, and appends new findings to project-local
-memory.
+**How learning works**:
+1. At startup (Phase 0), the skill reads its own `references/acquired-wisdom.md`
+   (if it exists) and the project-local `.kimi/lessons.md`.
+2. During execution, it applies prevention rules, patterns, and anti-patterns.
+3. At shutdown (Phase 8b), it evaluates its own performance and appends new
+   knowledge to its own files.
 
 **Primary invocation**: `/flow:viable-swarm-model` executes the full workflow.  
 **Reference loading**: `/skill:viable-swarm-model` loads knowledge without execution.
@@ -45,9 +46,9 @@ memory.
 
 | VSM System | CLI Implementation | Custom Type | Activation | Produces |
 |---|---|---|---|---|
-| **S5 (Policy)** | Main conversation agent | — | Always | Decisions, escalation |
+| **S5 (Policy)** | Main conversation agent | — | Always | Decisions, escalation, mutations |
 | **S4 (Intelligence)** | `vsm_architect` subagent | Custom | Phase 1 | Architecture doc, API spec |
-| **S3 (Control)** | Main agent via SetTodoList | — | All phases | Progress tracking |
+| **S3 (Control)** | Main agent via SetTodoList | — | All phases | Progress tracking, mutation decisions |
 | **S3* (Audit)** | `vsm_auditor` subagent | Custom | After waves | PASS/ISSUES/BLOCKER |
 | **S2 (Coordination)** | `vsm_coordinator` subagent | Custom | After Wave 3 | Integration report |
 | **S1-Backend** | `coder` subagent | Built-in | Phases 2,3 | Backend code |
@@ -74,7 +75,7 @@ GraphQL SDL, Prisma relations, env vars. Full prompt:
 see `references/custom-agent-prompts.md`.
 
 **`vsm_security`** (Security Audit): Read-only security specialist. Runs 15+
-point security checklist. Prevents, not detects — knows all 37 anti-patterns.
+point security checklist. Prevents, not detects — knows all anti-patterns.
 Full prompt: see `references/custom-agent-prompts.md`.
 
 **`vsm_tester`** (S1 Quality): Reads implementation, writes tests (unit,
@@ -96,9 +97,9 @@ decision nodes, output `<choice>branch name</choice>` to select the next step.
 ```mermaid
 flowchart TD
     BEGIN([BEGIN])
-    P0[Phase 0: Viability Check<br/>S5 Main Agent]
+    P0[Phase 0: Viability Check + Self-Test<br/>S5 Main Agent]
     P0D{<choice>trivial</choice>?}
-    P0R[Read .kimi/lessons.md<br/>Write plan.md]
+    P0R[Read .kimi/lessons.md<br/>Read references/acquired-wisdom.md<br/>Self-test skill files<br/>Write plan.md]
     P1[Phase 1: Intelligence<br/>vsm_architect subagent]
     P1H{<choice>S3/S4 deadlock</choice>?}
     P1A[EnterPlanMode<br/>User Approval]
@@ -125,6 +126,10 @@ flowchart TD
     P7D{<choice>BLOCKERs remain<br/>iterations < 3</choice>?}
     P7E[Escalate to User<br/>AskUserQuestion]
     P8[Phase 8: Reflection<br/>Append to .kimi/lessons.md]
+    P8M[Phase 8b: Meta-Reflection<br/>Evaluate skill performance<br/>Propose mutations]
+    P8A{<choice>mutations approved</choice>?}
+    P8W[Write mutations to skill files<br/>Append to mutation-log.md]
+    P8C[git commit mutations]
     END([END])
 
     BEGIN --> P0
@@ -166,14 +171,26 @@ flowchart TD
     P7D -->|<choice>no, max reached</choice>| P7E
     P7D -->|<choice>no, all clear</choice>| P8
     P7E --> END
-    P8 --> END
+    P8 --> P8M
+    P8M --> P8A
+    P8A -->|<choice>yes</choice>| P8W
+    P8A -->|<choice>no</choice>| END
+    P8W --> P8C
+    P8C --> END
 ```
 
 ## 6. Phase Details
 
-### Phase 0: Viability Check
-Main agent (S5) self-check: trivial (<50 lines, one file)? If yes, respond
-directly. If non-trivial, read `.kimi/lessons.md` if exists. Write `plan.md`.
+### Phase 0: Viability Check + Self-Test
+Main agent (S5) performs:
+1. **Viability check**: trivial (<50 lines, one file)? If yes, respond directly.
+2. **Read project memory**: `.kimi/lessons.md` if exists.
+3. **Read acquired wisdom**: `references/acquired-wisdom.md` if exists.
+4. **Self-test**: Verify all referenced files exist and are readable. Verify
+the flow diagram parses. Verify the skill can describe its own phase sequence
+without contradiction. If any check fails → emit algedonic, write diagnosis
+to `references/mutation-log.md`, ask user to review.
+5. Write `plan.md`.
 
 ### Phase 1: Intelligence (S4)
 Spawn `vsm_architect` subagent. Review output. S3/S4 homeostat: max 3
@@ -209,6 +226,30 @@ Escalate to user.
 ### Phase 8: Reflection
 Append to `.kimi/lessons.md` with Source/Finding/Fix/Verification format.
 See `assets/lessons-template.md`.
+
+### Phase 8b: Meta-Reflection (Skill Self-Modification)
+After project reflection, evaluate the skill's own performance:
+
+1. **Effectiveness audit**: Which prevention rules caught real bugs? Which
+   flagged safe code as risky (false positive)?
+2. **Coverage audit**: Were any anti-patterns missed? Any vulnerability classes
+   not covered by existing checklists?
+3. **Phase audit**: Were any phases unnecessary? Any decision points misleading?
+   Did the flow diagram match reality?
+4. **Agent audit**: Did any custom agent type underperform? Do prompts need
+   refinement?
+
+**If empirical findings justify mutation**:
+- Append new rules to `references/security-lessons.md`
+- Append new patterns to `references/pattern-library.md`
+- Append new anti-patterns to `references/anti-patterns.md`
+- Append new integration checks to `references/integration-checklist.md`
+- Refine agent prompts in `references/custom-agent-prompts.md`
+- Write the mutation to `references/mutation-log.md` with full rationale
+- `git commit` the changes
+
+**Mutation amplitude limit**: Max 3 structural mutations per session.
+Empirical append-only mutations are unlimited.
 
 ## 7. Cross-File Integration Verification Checklist
 
@@ -274,101 +315,61 @@ escalate to user.
 | 1 | MEDIUM | Feature X not implemented | Manual workaround | v2.0 |
 ```
 
-## 10. Proven Pattern Library
+## 10. The Mutation System
 
-All 37 patterns organized by category. Each: trigger condition, what it solves,
-implementation details.
+This skill is a learning organism. It modifies its own files between sessions.
+All files in `~/.kimi/skills/viable-swarm-model/` are mutable.
 
-**Foundation**
-1. Foundation-First Wave Execution — types/config/utils in Wave 1 before implementation
-2. Entry Point Wiring (MANDATORY) — main.go/server.ts + App.tsx after Wave 2
-3. Frontend Scaffolding Active Creation — package.json, vite.config.ts, tsconfig.json, index.html mandatory
+### Why Mutation Is Safe
 
-**Backend**
-4. asyncHandler Pattern B — controllers self-wrap async
-5. PostGIS Stored Procedures — geospatial API functions
-6. Dynamic MVT Tile Generation — ST_AsMVT with 204 empty tiles
-7. Python dataclasses-json CamelCase — TypeScript interop
-8. Apollo Server v4 + graphql-ws — split link, Redis pub/sub
-9. pgvector Semantic Search — OpenAI embeddings, ivfflat index
-10. SSE for AI Streaming — StreamingResponse, getReader + TextDecoder
-11. Redis Task Queue + Async Worker — lpush/brpop, dependent enqueue
-12. DAG as JSONB — 3-color DFS cycle detection, Kahn sort
-13. Rust lib.rs + main.rs — testable binaries, tests/ import from crate
+The skill directory is a **git repository**. Every mutation is committed.
+If a mutation breaks viability, the user (or the skill itself) can revert:
 
-**Frontend**
-14. Canvas + React — ref-based, imperative rAF loop
-15. Vite Path Alias for Shared Types — `@flux/shared`, no `../../shared/`
-16. TipTap v2 Rich Text — JSONB persistence, BubbleMenu
-17. D3.js v7 Interactive DAG — drag, connect, zoom, context menu
-18. Mobile-First Game UI — 60px buttons, 160px countdown, dark theme
+```bash
+cd ~/.kimi/skills/viable-swarm-model
+git log --oneline
+git revert [commit]
+```
 
-**Real-Time**
-19. Raw WebSocket Event Constants — shared typed constants, no hardcoded strings
-20. Socket.io v4 Rooms — per-session isolation, room cleanup
-21. Server-Authoritative Countdown — asyncio task, 1s broadcast, cancel support
-22. FeedMessage Discriminated Union — `kind` field envelope, both sides share type
-23. Yjs CRDT Persistence — PostgreSQL BYTEA, chronological apply
-24. Optimistic Update Engine — Apollo cache immediate, rollback capture
+### What Can Mutate
 
-**Cross-Language**
-25. Go JSON Tags camelCase — prevents snake_case leakage
-26. Python dataclasses-json CamelCase — see #7
+| File | Mutation Mode | Justification Required |
+|---|---|---|
+| `references/security-lessons.md` | Append new lessons; strikethrough false positives | Low: empirical finding |
+| `references/pattern-library.md` | Append new patterns; mark obsolete | Low: empirical finding |
+| `references/anti-patterns.md` | Append new; remove false positives | Low: empirical finding |
+| `references/integration-checklist.md` | Append new checks | Low: empirical finding |
+| `references/custom-agent-prompts.md` | Append guidance; refine wording | Medium: repeated pattern |
+| `references/flow-diagram.mermaid` | Refine decision logic | High: phase audit shows mismatch |
+| `SKILL.md` | Amend phase details, mutation rules | High: structural issue proven |
 
-**Testing**
-27. Deterministic Mock Embeddings — hash-seeded pseudo-random vectors
+### Mutation Log Format
 
-**Game**
-28. Game Engine as Foundation — tick loop, physics, state in Wave 1
-29. FeedMessage Discriminated Union — see #22
+Every mutation is recorded in `references/mutation-log.md`:
+```markdown
+## Mutation [N] — YYYY-MM-DD
+**Session**: [task description]
+**File**: [path]
+**Type**: [append | edit | remove | structural]
+**Rationale**: [why this change improves the skill]
+**Expected effect**: [what should happen in next session]
+```
 
-**GraphQL**
-30. Apollo Server v4 + graphql-ws — see #8
+### Epistemic Rule for Self-Modification
 
-**Full-Stack**
-31. Frontend Scaffolding Active Creation — see #3
-32. Verify Frontend Scaffolding in Phase 4 — see #3
+"If a mutation contradicts the original design intent, the mutation wins IF it
+was validated by empirical results. Design intent is a hypothesis; empirical
+results are evidence."
 
-**Infrastructure**
-33. PostGIS Dynamic MVT — see #6
-34. Redis Dependent Enqueuing — see #11
-35. D3.js Interactive DAG — see #17
-36. Mobile-First Game UI — see #18
-37. Rust Testable Binaries — see #13
+### Rollback Procedure
 
-## 11. Anti-Pattern Registry (~50+)
+If Phase 0 self-test fails because of a bad mutation:
+1. Read `references/mutation-log.md` to identify the offending mutation
+2. `git revert` the commit
+3. Re-run Phase 0 self-test
+4. Document the reversion as a new mutation entry (learning what NOT to change)
 
-Organized by category. Each: what it is, when it occurs, prevention rule.
-
-**Security** (11): Hardcoded secrets, `||` fallback for secrets, fake JWT
-parsers, CORS wildcard with credentials, JWT in WebSocket URL, missing document
-ownership filtering, game API returns answers, GraphQL without depth limiting,
-plaintext/weak password hashing, auth middleware returns None silently, frontend
-API URL localhost fallback.
-
-**Integration** (10): Celery task name mismatch, processor model drift, bug
-propagation across files, Prisma relation name mismatch, standalone worker
-imported as library, env var naming drift, orphaned utility code, duplicate
-Rust imports, frontend wrong relative path to shared, missing React Cell import.
-
-**Process** (16): Sequential everything, vague prompts, no shared workspace,
-skipping review, agents as doc generators, nested orchestration, not reading
-outputs between waves, S1 proliferation, ignoring algedonic signals, skipping
-learning phase, ignoring loaded session memory, session context loss destroys
-files, flat-only structure, spawning S2/S3 for small sessions, using
-unmaintained react-beautiful-dnd, flooding awareness without debouncing,
-using `console.log` in production code.
-
-**Data/Architecture** (2): Storing passwords in plaintext/weak hashing,
-frontend components without project scaffolding.
-
-**Additional** (2): Synchronous file I/O in request handlers (blocks event
-loop), missing request payload validation (accepts arbitrary JSON without
-Zod/Joi/class-validator).
-
-Full registry with prevention rules: see `references/security-lessons.md`.
-
-## 12. Teachback Protocol (from Pask CT)
+## 11. Teachback Protocol (from Pask CT)
 
 Before declaring a phase complete, explain what was built:
 
@@ -380,7 +381,7 @@ Before declaring a phase complete, explain what was built:
 
 If explanation reveals gaps → revisit before proceeding.
 
-## 13. Background Task Management
+## 12. Background Task Management
 
 Use `TaskList` to monitor active tasks. Use `TaskOutput(block=true)` to
 synchronize dependent waves. Use `TaskStop` to cancel on algedonic signals.
@@ -389,19 +390,20 @@ Use `/tasks` command for interactive browser.
 Max 4 concurrent background tasks (configurable via `max_background_tasks`
 in `~/.kimi/config.toml`).
 
-## 14. Session Resumption for Learning
+## 13. Session Resumption for Learning
 
 When `--continue` resumes a session:
 1. Read `.kimi/lessons.md` at session start
-2. Apply relevant lessons to planning
-3. After delivery, append new lessons
-4. Over time, creates a project-specific knowledge base
+2. Read `references/acquired-wisdom.md` at session start
+3. Apply relevant lessons to planning
+4. After delivery, append new lessons to both project-local and skill-global memory
+5. Over time, this creates both a project-specific and a cross-project knowledge base
 
 **Epistemic rule**: If `.kimi/lessons.md` contradicts this SKILL.md,
 the lessons file wins. It contains empirical data; this file contains
 general guidance.
 
-## 15. Quick Decision Tree
+## 14. Quick Decision Tree
 
 ```
 User asks for software engineering work?
@@ -409,5 +411,6 @@ User asks for software engineering work?
 │   └── Respond directly, no VSM workflow
 └── Non-trivial?
     ├── Read .kimi/lessons.md if exists (apply learnings)
+    ├── Read references/acquired-wisdom.md if exists (apply cross-project learnings)
     └── Execute VSM workflow via /flow:viable-swarm-model
 ```
