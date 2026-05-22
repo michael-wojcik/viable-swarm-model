@@ -4,6 +4,11 @@ A self-modifying cybernetic development swarm for [Kimi Code CLI](https://github
 
 This is not a static prompt. It is a **learning organism** that evolves its own files between sessions.
 
+> **The analogy**: `viable-swarm-model` is the **athlete** (does the real work),
+> `vsm-fitness-orchestrator` is the **coach** (designs training, evaluates
+> performance), and `vsm-evolution-chamber` is the **gym** (isolated equipment
+> for targeted workouts).
+
 ---
 
 ## What this is

@@ -18,18 +18,20 @@ triggers:
 
 ## 1. Overview
 
-The `vsm-fitness-orchestrator` is the **coach** of the viable-swarm-model
-ecosystem. Its job is to design and run **comprehensive fitness builds** —
-substantial, multi-service projects that deliberately exercise every phase,
-every agent type, and every pattern in the main skill.
+The `vsm-fitness-orchestrator` is the **coach** of the ecosystem. It does
+not lift the weights — the athlete (`viable-swarm-model`) does. The coach's
+job is to **design training programs**, **watch game tape**, and **identify
+weaknesses the athlete cannot see in itself**.
 
-After the build completes, the orchestrator performs a **structured post-mortem**:
-it scores each phase against a rubric, identifies systemic gaps, generates
-falsifiable hypotheses, and proposes mutations to the main skill.
+The orchestrator designs **comprehensive fitness builds** — substantial,
+multi-service projects that deliberately exercise every phase, every agent
+type, and every pattern in the athlete. After the build, it performs a
+**structured post-mortem**: scores each phase against a rubric, identifies
+systemic gaps, generates falsifiable hypotheses, and proposes mutations.
 
-**This is not a replacement for the main skill** — it is a meta-layer that
-guides the main skill through a build-and-evaluate cycle. Think of it as a
-personal trainer for the swarm.
+**Mental model**: If `vsm-fitness-orchestrator` is the coach, then
+`viable-swarm-model` is the athlete (does the real work) and
+`vsm-evolution-chamber` is the gym (isolated equipment for targeted workouts).
 
 **Primary invocation**: `/flow:vsm-fitness-orchestrator`  
 **Example**: `/flow:vsm-fitness-orchestrator Run fitness build #1 (DocuFlow)`

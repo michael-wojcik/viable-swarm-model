@@ -17,10 +17,14 @@ triggers:
 
 ## 1. Overview
 
-The `vsm-evolution-chamber` is the **research laboratory** of the
-viable-swarm-model ecosystem. While the main skill builds real projects, the
-evolution chamber builds **minimal experiments** — tiny, isolated codebases
-designed to test a single falsifiable claim about the main skill's knowledge.
+The `vsm-evolution-chamber` is the **gym** of the ecosystem. While the
+athlete (`viable-swarm-model`) performs in real games, the gym provides
+**isolated equipment for targeted workouts** — minimal, controlled experiments
+designed to test one specific muscle (one falsifiable claim) at a time.
+
+**Mental model**: If `vsm-evolution-chamber` is the gym, then
+`viable-swarm-model` is the athlete (does the real work) and
+`vsm-fitness-orchestrator` is the coach (designs the training program).
 
 **Scientific method embedded:**
 1. **Observe** — Read the main skill's hypothesis backlog

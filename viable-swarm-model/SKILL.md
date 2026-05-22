@@ -20,10 +20,17 @@ triggers:
 
 ## 1. Overview
 
-The `viable-swarm-model` skill is a **learning organism**. It is not a static
-playbook. Between sessions, it modifies its own files based on empirical
-results. The skill that loads in conversation N+1 is structurally different
-from the skill that loaded in conversation N.
+The `viable-swarm-model` skill is the **athlete** of the ecosystem. It does
+the actual work — building real projects under pressure, performing in messy
+conditions, and getting stronger with every session. Between builds, it
+modifies its own files based on empirical results. The skill that loads in
+conversation N+1 is structurally different from the skill that loaded in
+conversation N.
+
+**Mental model**: If `viable-swarm-model` is the athlete, then
+`vsm-fitness-orchestrator` is the coach (designs training, evaluates
+performance) and `vsm-evolution-chamber` is the gym (isolated equipment for
+targeted workouts).
 
 **How learning works**:
 1. At startup (Phase 0), the skill reads its own `references/acquired-wisdom.md`
