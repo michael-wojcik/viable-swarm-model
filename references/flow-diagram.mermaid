@@ -1,0 +1,73 @@
+flowchart TD
+    BEGIN([BEGIN])
+    P0[Phase 0: Viability Check<br/>S5 Main Agent]
+    P0D{<choice>trivial</choice>?}
+    P0R[Read .kimi/lessons.md<br/>Write plan.md]
+    P1[Phase 1: Intelligence<br/>vsm_architect subagent]
+    P1H{<choice>S3/S4 deadlock</choice>?}
+    P1A[EnterPlanMode<br/>User Approval]
+    P1D{<choice>approved</choice>?}
+    P2[Phase 2: Foundation Wave<br/>2-3 coder agents<br/>run_in_background=true]
+    P2S[TaskOutput block=true]
+    P2A[Phase 2b: Audit<br/>vsm_auditor]
+    P2D{<choice>BLOCKERs</choice>?}
+    P3[Phase 3: Implementation Wave<br/>Parallel coder agents]
+    P3S[TaskOutput block=true]
+    P3A[Phase 3b: Audit + Coordination<br/>vsm_auditor + vsm_coordinator]
+    P3D{<choice>BLOCKERs</choice>?}
+    P3E[Entry Point Wiring<br/>MANDATORY]
+    P4[Phase 4: Testing + Infra Wave<br/>vsm_tester + coder]
+    P4S[TaskOutput block=true]
+    P4R[Shell: run tests]
+    P5[Phase 5: Integration Verification<br/>vsm_coordinator + vsm_auditor]
+    P5D{<choice>ANY failure</choice>?}
+    P6[Phase 6: Security Gate<br/>vsm_security]
+    P6D{<choice>CRITICAL/HIGH</choice>?}
+    P6L[Document LOW as<br/>known limitation]
+    P7[Phase 7: Fix Wave<br/>coder agents]
+    P7R[Re-audit changed files]
+    P7D{<choice>BLOCKERs remain<br/>iterations < 3</choice>?}
+    P7E[Escalate to User<br/>AskUserQuestion]
+    P8[Phase 8: Reflection<br/>Append to .kimi/lessons.md]
+    END([END])
+
+    BEGIN --> P0
+    P0 --> P0R
+    P0R --> P0D
+    P0D -->|<choice>yes</choice>| END
+    P0D -->|<choice>no</choice>| P1
+    P1 --> P1H
+    P1H -->|<choice>yes</choice>| P1
+    P1H -->|<choice>no</choice>| P1A
+    P1A --> P1D
+    P1D -->|<choice>rejected</choice>| P1
+    P1D -->|<choice>approved</choice>| P2
+    P2 --> P2S
+    P2S --> P2A
+    P2A --> P2D
+    P2D -->|<choice>yes</choice>| P7
+    P2D -->|<choice>no</choice>| P3
+    P3 --> P3S
+    P3S --> P3A
+    P3A --> P3D
+    P3D -->|<choice>yes</choice>| P7
+    P3D -->|<choice>no</choice>| P3E
+    P3E --> P4
+    P4 --> P4S
+    P4S --> P4R
+    P4R --> P5
+    P5 --> P5D
+    P5D -->|<choice>yes</choice>| P3
+    P5D -->|<choice>no</choice>| P6
+    P6 --> P6D
+    P6D -->|<choice>yes</choice>| P7
+    P6D -->|<choice>LOW only</choice>| P6L
+    P6D -->|<choice>none</choice>| P8
+    P6L --> P8
+    P7 --> P7R
+    P7R --> P7D
+    P7D -->|<choice>yes</choice>| P7
+    P7D -->|<choice>no, max reached</choice>| P7E
+    P7D -->|<choice>no, all clear</choice>| P8
+    P7E --> END
+    P8 --> END
