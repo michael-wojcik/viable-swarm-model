@@ -12,7 +12,7 @@ triggers:
   - "run experiment"
   - "validate skill"
   - "find knowledge gap"
-  - "evolution chamber"
+  - "fitness gym"
 ---
 
 ## 1. Overview
@@ -183,5 +183,5 @@ Write mutation rationale to main skill's `mutation-log.md`.
 2. **Corrections beat deletions**: If a hypothesis is rejected, append a
    correction rather than deleting the hypothesis. The skill should learn what
    it already knows, not just what it doesn't.
-3. **The main skill is the subject**: The evolution chamber does not mutate
+3. **The main skill is the subject**: The fitness gym does not mutate
    itself. It mutates the main skill based on experimental evidence.

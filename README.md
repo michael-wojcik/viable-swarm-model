@@ -140,7 +140,7 @@ rm -rf ~/vsm-fitness-builds/*
 /flow:vsm-fitness-gym Test hypotheses H2, H7, H12
 ```
 
-The evolution chamber:
+The gym:
 1. Reads the main skill's hypothesis backlog
 2. Designs minimal reproducible experiments
 3. Builds tiny test projects with intentional bugs
@@ -170,17 +170,17 @@ The main skill defines **5 custom sub-agent types** that map to VSM roles:
 | Security | `vsm_security` | Exhaustive security audit |
 | Tester | `vsm_tester` | Writes and runs tests, fixes bugs inline |
 
-The evolution chamber adds:
+The gym adds:
 
 | Role | Type | Job |
 |---|---|---|
 | Experiment Designer | `vsm_experiment_designer` | Designs minimal, isolated experiments |
 
-The fitness orchestrator adds:
+The fitness coach adds:
 
 | Role | Type | Job |
 |---|---|---|
-| Fitness Coach | `vsm_fitness_orchestrator` | Designs comprehensive builds, scores performance, identifies systemic weaknesses |
+| Fitness Coach | `vsm_fitness_coach` | Designs comprehensive builds, scores performance, identifies systemic weaknesses |
 
 ### The mutation system
 
@@ -213,10 +213,10 @@ If empirical findings justify it, the skill **appends new knowledge to its own f
 
 The ecosystem learns at three scales:
 
-1. **Fitness builds** (orchestrator): "Let's build DocuFlow and see how the skill performs end-to-end."
+1. **Fitness builds** (coach): "Let's build DocuFlow and see how the skill performs end-to-end."
    → Scores each phase, identifies systemic weaknesses, produces hypotheses.
 
-2. **Focused experiments** (evolution chamber): "Let's test H2 with a 20-line endpoint."
+2. **Focused experiments** (gym): "Let's test H2 with a 20-line endpoint."
    → Isolates variables, confirms/rejects hypotheses with scientific rigor.
 
 3. **Theory update** (main skill mutation): "H2 confirmed. Append 'computed field N+1' to auditor prompt."
@@ -230,7 +230,7 @@ isolated experimentation, and empirical mutation.
 
 ```
 Conversation N (fitness build):
-  ├─ Load fitness orchestrator
+  ├─ Load fitness coach
   ├─ Select DocuFlow from catalog
   ├─ Guide main skill through full build
   ├─ Collect all reports and artifacts
@@ -240,7 +240,7 @@ Conversation N (fitness build):
   └─ git commit
 
 Conversation N+1 (focused experiment):
-  ├─ Load evolution chamber
+  ├─ Load gym
   ├─ Read hypothesis backlog (from fitness build + main skill)
   ├─ Design minimal experiments for top hypotheses
   ├─ Run experiments, record results
@@ -263,7 +263,7 @@ The one-conversation delay between observation and validated mutation is not a b
 - If a mutation breaks the skill, run `git revert HEAD` in `~/vsm/`
 - The `mutation-log.md` file records the rationale for every change
 - Empirical append-only mutations are unlimited; structural changes to the core workflow are capped at 3 per session
-- The evolution chamber runs experiments in `~/vsm-fitness-builds/gym/` — they never affect real projects
+- The gym runs experiments in `~/vsm-fitness-builds/gym/` — they never affect real projects
 
 ## Requirements
 

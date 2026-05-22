@@ -4,7 +4,7 @@ description: >
   The coaching layer of the viable-swarm-model ecosystem. Designs comprehensive
   fitness builds (substantial projects) that exercise every capability of the
   main skill, scores its performance against a rubric, identifies systemic
-  weaknesses, and proposes mutations. This is the meta-orchestrator that turns
+  weaknesses, and proposes mutations. This is the meta-coach that turns
   real builds into structured skill improvement. Invoke with
   /flow:vsm-fitness-coach.
 type: flow
@@ -23,7 +23,7 @@ not lift the weights — the athlete (`viable-swarm-model`) does. The coach's
 job is to **design training programs**, **watch game tape**, and **identify
 weaknesses the athlete cannot see in itself**.
 
-The orchestrator designs **comprehensive fitness builds** — substantial,
+The coach designs **comprehensive fitness builds** — substantial,
 multi-service projects that deliberately exercise every phase, every agent
 type, and every pattern in the athlete. After the build, it performs a
 **structured post-mortem**: scores each phase against a rubric, identifies
@@ -49,13 +49,13 @@ in the user's actual project directory.
 ## 2. How to Invoke
 
 - **`/flow:vsm-fitness-coach [fitness project name or ID]`** — Execute a
-  fitness build. The orchestrator reads the fitness project catalog, presents
+  fitness build. The coach reads the fitness project catalog, presents
   options to S5 (you), guides the main skill through the build, and then
   evaluates performance.
 - **`/skill:vsm-fitness-coach`** — Load as knowledge reference. Use when
   you need the evaluation rubric or fitness project catalog.
 
-## 3. Fitness Orchestrator Roles
+## 3. Fitness Coach Roles
 
 | VSM System | CLI Implementation | Custom Type | Activation | Produces |
 |---|---|---|---|---|
@@ -67,8 +67,8 @@ in the user's actual project directory.
 
 ## 4. The Golden Rule
 
-The fitness orchestrator does NOT build code directly. It delegates all
-implementation to the main skill (`viable-swarm-model`). The orchestrator's
+The fitness coach does NOT build code directly. It delegates all
+implementation to the main skill (`viable-swarm-model`). The coach's
 value is in **selection, evaluation, and synthesis**.
 
 ## 5. Executable Flow Diagram
@@ -242,14 +242,14 @@ See `assets/fitness-report-template.md` for the full template. Summary:
 
 ## 8. Design Principles
 
-1. **The orchestrator is not a builder**: It never writes implementation code.
+1. **The coach is not a builder**: It never writes implementation code.
    It only evaluates, scores, and synthesizes.
 2. **Real builds, not toy examples**: Fitness projects are substantial
    (500-5000 lines, multi-service) to stress-test the main skill realistically.
 3. **Structured evaluation**: The rubric prevents subjective "felt okay"
    assessments. Every score needs evidence.
 4. **Hypothesis-driven improvement**: Every gap becomes a falsifiable claim
-   that the evolution chamber can test later.
-5. **Co-evolution**: The orchestrator evaluates the main skill; the evolution
+   that the gym can test later.
+5. **Co-evolution**: The coach evaluates the main skill; the evolution
    chamber validates the hypotheses; the main skill improves. All three
    skills grow together.
