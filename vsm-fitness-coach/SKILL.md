@@ -83,11 +83,12 @@ flowchart TD
     P1[Phase 1: Execute Build<br/>Run viable-swarm-model workflow<br/>Build the selected project]
     P1A[Collect all artifacts:<br/>plan.md, audit reports, security reports,<br/>integration report, test results, fix logs]
     P2[Phase 2: Evaluate Performance<br/>Read references/evaluation-rubric.md<br/>Score each phase 1-5]
-    P2S{<choice>any phase scored < 3</choice>?}
+    P2S{<choice>any phase scored < 4</choice>?}
     P3[Phase 3: Generate Hypotheses<br/>One hypothesis per gap identified]
-    P4[Phase 4: Propose Mutations<br/>Map findings to skill file changes]
-    P4A{<choice>scoring justifies mutation</choice>?}
-    P5[Phase 5: Apply Mutations<br/>Write to main skill files<br/>Append to hypotheses.md, experiments.md,<br/>mutation-log.md]
+    P4[Phase 4: Propose Mutations<br/>Present structured report to S5]
+    P4A{<choice>structural mutations<br/>approved by S5</choice>?}
+    P5[Phase 5: Apply Mutations<br/>Append-only: autonomous<br/>Structural: conditional]
+    P5L[Log rejections to mutation-log.md]
     P5R[Write fitness report<br/>assets/fitness-report-template.md]
     P5G[git commit all changes]
     END([END])
@@ -104,9 +105,10 @@ flowchart TD
     P2S -->|<choice>no</choice>| P4
     P3 --> P4
     P4 --> P4A
-    P4A -->|<choice>rejected</choice>| P4
-    P4A -->|<choice>approved</choice>| P5
+    P4A -->|<choice>approved / none proposed</choice>| P5
+    P4A -->|<choice>rejected / ambiguous</choice>| P5L
     P5 --> P5R
+    P5L --> P5R
     P5R --> P5G
     P5G --> END
 ```
@@ -188,18 +190,37 @@ For every gap identified in Phase 2, write a hypothesis to the main skill's
 
 ### Phase 4: Propose Mutations
 Map confirmed gaps to specific skill file changes:
-- Scored 1-2 → High-confidence mutation (append rule, refine prompt, add check)
+- Scored 1-2 → High-confidence mutation
 - Scored 3 → Medium-confidence (propose hypothesis, monitor next build)
 - Scored 4-5 → No mutation needed
 
-Present all proposed mutations to S5 for approval.
+Classify each mutation:
+- **Append-only**: new rules, patterns, anti-patterns, checklists
+- **Structural**: agent prompt changes, flow diagram changes, phase logic changes
+
+Present all proposed mutations to S5 in a structured report:
+- Phase-by-phase scoring
+- Each gap with rationale
+- Proposed changes (append-only vs structural)
+
+**S5 response inference**:
+- "apply all" / "approved" / "go ahead" → apply everything
+- "skip structural" / "only append-only" → apply append-only, log structural
+- Explicit rejection → log all to mutation-log.md
+- Ambiguous or silent on structural → `AskUserQuestion`:
+  "These structural mutations are proposed: [list]. Approve?"
 
 ### Phase 5: Apply Mutations
-Write approved mutations to the main skill's files:
-- Append prevention rules, patterns, anti-patterns
-- Update agent prompts
-- Append to `hypotheses.md`, `experiments.md`, `mutation-log.md`
-- Write fitness report using `assets/fitness-report-template.md`
+
+**Append-only mutations**: Write directly to main skill's files.
+
+**Structural mutations**: Only if S5 approved (via natural language or
+`AskUserQuestion`). If rejected or ambiguous, log rationale to `mutation-log.md`.
+
+Write all applied mutations to:
+- Main skill's reference files
+- `hypotheses.md`, `experiments.md`, `mutation-log.md`
+- Fitness report using `assets/fitness-report-template.md`
 - `git commit` all changes with descriptive message
 
 ## 7. Fitness Report Template

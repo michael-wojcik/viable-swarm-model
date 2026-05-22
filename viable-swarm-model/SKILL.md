@@ -141,10 +141,12 @@ flowchart TD
     P7D{<choice>BLOCKERs remain<br/>iterations < 3</choice>?}
     P7E[Escalate to User<br/>AskUserQuestion]
     P8[Phase 8: Reflection<br/>Append to .kimi/lessons.md]
-    P8M[Phase 8b: Meta-Reflection + Hypothesis Generation<br/>Evaluate skill performance<br/>Propose new hypotheses<br/>Propose mutations]
-    P8A{<choice>empirical findings justify mutation</choice>?}
-    P8W[Write mutations to skill files<br/>Append to mutation-log.md]
-    P8C[git commit mutations]
+    P8M[Phase 8b: Meta-Reflection + Hypothesis Generation<br/>Evaluate performance<br/>Write new hypotheses to hypotheses.md<br/>Bucket mutations: append-only vs structural]
+    P8W[Write append-only mutations<br/>security-lessons, patterns, anti-patterns,<br/>integration-checklist, experiments.md,<br/>hypotheses.md, mutation-log.md]
+    P8A{<choice>structural mutations<br/>approved by S5</choice>?}
+    P8WS[Write approved structural mutations<br/>agent prompts, flow diagram, phase logic]
+    P8L[Log rejection rationale<br/>to mutation-log.md]
+    P8C[git commit all changes]
     END([END])
 
     BEGIN --> P0
@@ -187,10 +189,12 @@ flowchart TD
     P7D -->|<choice>no, all clear</choice>| P8
     P7E --> END
     P8 --> P8M
-    P8M --> P8A
-    P8A -->|<choice>yes</choice>| P8W
-    P8A -->|<choice>no</choice>| END
-    P8W --> P8C
+    P8M --> P8W
+    P8W --> P8A
+    P8A -->|<choice>yes</choice>| P8WS
+    P8A -->|<choice>no</choice>| P8L
+    P8WS --> P8C
+    P8L --> P8C
     P8C --> END
 ```
 
@@ -257,7 +261,7 @@ After project reflection, evaluate the skill's own performance:
 4. **Agent audit**: Did any custom agent type underperform? Do prompts need
    refinement?
 
-**Hypothesis generation**:
+**Hypothesis generation** (always append-only, always happens):
 5. **Anomaly detection**: What was surprising? What did the skill get wrong?
    What vulnerability class is completely absent from our knowledge base?
 6. **Propose hypotheses**: For each anomaly, write a new hypothesis to
@@ -267,18 +271,27 @@ After project reflection, evaluate the skill's own performance:
    - Experiment: minimal test to validate
    - Expected result
 
-**If empirical findings justify mutation**:
-- Append new rules to `~/.kimi/skills/viable-swarm-model/references/security-lessons.md`
-- Append new patterns to `~/.kimi/skills/viable-swarm-model/references/pattern-library.md`
-- Append new anti-patterns to `~/.kimi/skills/viable-swarm-model/references/anti-patterns.md`
-- Append new integration checks to `~/.kimi/skills/viable-swarm-model/references/integration-checklist.md`
-- Refine agent prompts in `~/.kimi/skills/viable-swarm-model/references/custom-agent-prompts.md`
-- Append the experiment to `~/.kimi/skills/viable-swarm-model/references/experiments.md`
-- Write the mutation to `~/.kimi/skills/viable-swarm-model/references/mutation-log.md`
-- `git commit` the changes
+**Append-only mutations** (autonomous — no S5 gate):
+If empirical findings justify it, append directly:
+- New rules to `security-lessons.md`
+- New patterns to `pattern-library.md`
+- New anti-patterns to `anti-patterns.md`
+- New checks to `integration-checklist.md`
+- Experiments to `experiments.md`
+- Rationale to `mutation-log.md`
+
+**Structural mutations** (S5 approval via AskUserQuestion):
+If findings justify modifying prompts, flow diagrams, or phase logic:
+1. Present to S5 via `AskUserQuestion`:
+   - Files that would change
+   - What the change does
+   - Evidence from this build
+2. If approved: write the changes
+3. If rejected: log the rejection rationale to `mutation-log.md`
 
 **Mutation amplitude limit**: Max 3 structural mutations per session.
-Empirical append-only mutations are unlimited.
+Append-only mutations are unlimited.
+`git commit` all changes.
 
 ## 7. Cross-File Integration Verification Checklist
 

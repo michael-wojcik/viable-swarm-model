@@ -160,6 +160,9 @@ If hypothesis confirmed, propose specific changes to the main skill:
 - Update `hypotheses.md` status: `confirmed`
 - Append full record to `experiments.md`
 
+All gym mutations are autonomous — no S5 gate. The gym's controlled
+experiment provides strong, falsifiable evidence.
+
 Write mutation rationale to main skill's `mutation-log.md`.
 `git commit` all changes.
 
