@@ -61,6 +61,92 @@ Does it detect the triple mismatch?
 
 ---
 
+## H4: A dedicated wiring agent would reduce entry-point conflicts by 80%
+
+**Status**: untested
+**Proposed**: 2026-05-22
+**Rationale**: In FB1, the backend implementation agent and worker agent both modified
+`main.py` and `worker.py`. The later agent overwrote the earlier agent's changes,
+causing integration failures. If a single "wiring" agent ran after all implementation
+agents to handle entry-point imports and registrations, these conflicts would not occur.
+**Experiment**: Run two fitness builds identical in scope. Build A uses current parallel
+approach. Build B adds a dedicated wiring agent that runs after implementation agents
+and is the ONLY agent allowed to modify main.py/App.tsx. Count entry-point conflicts.
+**Expected**: Build B has ≤1 entry-point conflict; Build A has ≥3.
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
+
+---
+
+## H5: Requiring fix agents to run verification commands would reduce false positives by 90%
+
+**Status**: untested
+**Proposed**: 2026-05-22
+**Rationale**: In FB1 Fix Wave 2, the fix agent claimed to update `useYjs.ts` to include
+the JWT token in the URL path. In reality, the token was still passed as the `room`
+parameter to `WebsocketProvider` — the fix was a false positive. If fix agents were
+required to run a shell verification command (e.g., `grep` for the expected change)
+before reporting success, false positives would be caught.
+**Experiment**: Run 10 fix tasks with the current prompt (no verification requirement).
+Run 10 identical fix tasks with a modified prompt requiring a verification shell command.
+Count false positive fixes in each group.
+**Expected**: Control group (no verification): ≥3 false positives. Treatment group
+(verification required): ≤1 false positive.
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
+
+---
+
+## H6: Pre-installing test dependencies would enable test execution for 70% of Python builds
+
+**Status**: untested
+**Proposed**: 2026-05-22
+**Rationale**: In FB1 Phase 4, the tester agent could not write or execute tests because
+the environment lacked pytest, pytest-asyncio, httpx, and PostgreSQL/Redis. The agent
+spent most of its time failing shell commands instead of writing tests. If common test
+dependencies were pre-installed, the agent could focus on test logic.
+**Experiment**: Compare test wave outcomes across 5 Python fitness builds with current
+environment vs. 5 builds with pytest/pytest-asyncio/httpx pre-installed.
+**Expected**: Pre-installed deps group produces executable test files in 70%+ of builds;
+current group produces executable tests in ≤20%.
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
+
+---
+
+## H7: Adding GraphQL depth limit to architect checklist would result in 95% implementation rate
+
+**Status**: untested
+**Proposed**: 2026-05-22
+**Rationale**: FB1's GraphQL schema had no depth limiting — a HIGH security finding.
+Neither the architect nor the backend coder included it. If the architect's design
+checklist explicitly required "GraphQL depth limit (max 10) + complexity analysis",
+the backend coder would likely implement it.
+**Experiment**: Run 5 GraphQL-enabled fitness builds with current checklist. Run 5 with
+modified checklist including GraphQL depth limit requirement. Count builds with depth
+limiting implemented.
+**Expected**: Current checklist: 0-1 builds with depth limiting. Modified checklist: 4-5 builds.
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
+
+---
+
+## H8: Adding rate limiting to foundation requirements would result in 80% implementation rate
+
+**Status**: untested
+**Proposed**: 2026-05-22
+**Rationale**: FB1 had no rate limiting on auth endpoints — a HIGH security finding.
+The foundation wave created auth scaffolding but did not include rate limiting. If the
+foundation wave requirements explicitly included "rate limiting on auth endpoints",
+the backend foundation agent would implement it early.
+**Experiment**: Run 5 auth-enabled fitness builds with current foundation requirements.
+Run 5 with modified requirements including rate limiting. Count builds with rate limiting.
+**Expected**: Current: 0-1 builds with rate limiting. Modified: 3-4 builds.
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
+
+---
+
 ## H[N]: [Hypothesis Title]
 
 **Status**: untested

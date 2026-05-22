@@ -223,3 +223,16 @@ for accumulated wisdom.
 completeness (emerging, detection-based). 23 security lessons prevented 100%
 of known anti-patterns but revealed new failure modes.
 **Affected**: S3 (main agent), vsm_auditor.
+
+### L25: GraphQL Depth Limiting Must Be in Design Checklist
+**Prevention rule**: GraphQL schemas without depth/complexity limiting are a DoS vector. In FB1,
+`strawberry.Schema` was created with no `max_depth` or `max_complexity`. Security gate caught it
+as HIGH severity. Add "GraphQL depth limit (max 10) + complexity analysis" to architect design
+checklist and integration checklist.
+**Affected**: vsm_architect, vsm_auditor, vsm_security.
+
+### L26: Rate Limiting on Auth Endpoints Is Not Optional
+**Prevention rule**: Auth endpoints (register, login, refresh) without rate limiting are brute-force
+vulnerable. In FB1, 8-character password minimum + no rate limiting = credential stuffing risk.
+Add rate limiting requirement to foundation wave for any build with auth.
+**Affected**: S1 coders in Phase 2, vsm_security.

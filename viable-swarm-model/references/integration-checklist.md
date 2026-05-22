@@ -113,3 +113,13 @@ correction BEFORE quality gates.
 - [ ] No orphaned utility files
 - [ ] No empty files committed
 - [ ] README has setup instructions
+
+## 21. Parallel Agent Coordination
+- [ ] Entry point files (main.py, App.tsx, server.ts) are modified by at most one agent per wave
+- [ ] If multiple agents must contribute to entry points, a dedicated "wiring" agent runs last
+- [ ] All imports in entry points resolve (no missing modules)
+
+## 22. WebSocket Auth Contracts
+- [ ] Browser WebSocket auth uses path-based tokens (NOT query params) when headers are impossible
+- [ ] Backend validates token from path parameter before accepting connection
+- [ ] Token is short-lived (≤15 min) and scoped to the specific resource

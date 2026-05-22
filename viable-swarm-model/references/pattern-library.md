@@ -228,3 +228,10 @@
 **Trigger**: Rust project needs integration tests.  
 **Solves**: Binary crates cannot be imported by tests.  
 **Implementation**: See Pattern #13.
+
+### 38. Browser WebSocket Auth via URL Path Token
+**Trigger**: WebSocket endpoint needs auth but browser `WebSocket` API cannot set custom headers.  
+**Solves**: JWT leakage in URL query params (security anti-pattern) vs. impossible header auth.  
+**Implementation**: Use route `/ws/resource/{id}/{token}` where `{token}` is a short-lived JWT. Backend validates token from path param. NOT a query param — query params are logged by proxies; path segments are less commonly logged.  
+**Example**: `backend/app/websockets/yjs.py` + `frontend/src/hooks/useYjs.ts` in FB1.  
+**Caveat**: Token may still appear in server access logs. Ensure log sanitization for WS endpoints.

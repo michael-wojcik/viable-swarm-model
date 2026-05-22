@@ -228,3 +228,15 @@
 **What**: API endpoints accept arbitrary JSON without schema validation.  
 **When**: Developer trusts client input.  
 **Prevention**: Zod/Joi/class-validator on ALL inputs. Fail closed.
+
+### 42. Fix Agent False Positive Claims
+**What**: Fix agent reports "fixed" but the code change does not actually resolve the issue.  
+**When**: Agent misreads code, applies change to wrong location, or claims success before verification.  
+**Prevention**: Require fix agents to run a verification shell command (e.g., `grep`) before reporting completion. Example: FB1 Fix Wave 2 claimed Yjs token in URL path but token was still passed as `room` parameter.  
+**Affected**: vsm_fix agents, S1 coders in Phase 7.
+
+### 43. Parallel Agents Overwriting Shared Entry Points
+**What**: Multiple implementation agents modify the same entry-point file (main.py, App.tsx). Later agent overwrites earlier agent's imports/registrations.  
+**When**: Backend and worker agents both wire routers into `main.py`.  
+**Prevention**: Either (a) serialize entry-point wiring to a single agent, or (b) have a dedicated "wiring" agent run after all implementation agents.  
+**Affected**: S1 coders in Phase 3.
