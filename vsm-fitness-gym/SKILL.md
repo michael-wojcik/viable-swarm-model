@@ -1,11 +1,11 @@
 ---
-name: vsm-evolution-chamber
+name: vsm-fitness-gym
 description: >
   The scientific research arm of viable-swarm-model. Designs and runs minimal
   reproducible experiments to test hypotheses about the main skill's knowledge
   gaps. Reads the main skill's hypothesis backlog, builds tiny test projects,
   runs relevant audit/security phases, records results, and proposes mutations.
-  Invoke with /flow:vsm-evolution-chamber.
+  Invoke with /flow:vsm-fitness-gym.
 type: flow
 triggers:
   - "test hypothesis"
@@ -17,14 +17,14 @@ triggers:
 
 ## 1. Overview
 
-The `vsm-evolution-chamber` is the **gym** of the ecosystem. While the
+The `vsm-fitness-gym` is the **gym** of the ecosystem. While the
 athlete (`viable-swarm-model`) performs in real games, the gym provides
 **isolated equipment for targeted workouts** — minimal, controlled experiments
 designed to test one specific muscle (one falsifiable claim) at a time.
 
-**Mental model**: If `vsm-evolution-chamber` is the gym, then
+**Mental model**: If `vsm-fitness-gym` is the gym, then
 `viable-swarm-model` is the athlete (does the real work) and
-`vsm-fitness-orchestrator` is the coach (designs the training program).
+`vsm-fitness-coach` is the coach (designs the training program).
 
 **Scientific method embedded:**
 1. **Observe** — Read the main skill's hypothesis backlog
@@ -34,8 +34,8 @@ designed to test one specific muscle (one falsifiable claim) at a time.
 5. **Analyze** — Did the main skill catch the issue? Was there a false positive?
 6. **Report** — Update hypothesis status, propose mutations, write to experiment log
 
-**Primary invocation**: `/flow:vsm-evolution-chamber` executes the experiment workflow.  
-**Example**: `/flow:vsm-evolution-chamber Test hypotheses H2, H7, H12`
+**Primary invocation**: `/flow:vsm-fitness-gym` executes the experiment workflow.  
+**Example**: `/flow:vsm-fitness-gym Test hypotheses H2, H7, H12`
 
 **Path convention**: This skill assumes the main skill is installed at
 `~/.kimi/skills/viable-swarm-model/viable-swarm-model/`. If installed elsewhere,
@@ -43,10 +43,10 @@ adjust paths in Shell commands.
 
 ## 2. How to Invoke
 
-- **`/flow:vsm-evolution-chamber [hypothesis IDs or description]`** — Execute
+- **`/flow:vsm-fitness-gym [hypothesis IDs or description]`** — Execute
   the experiment workflow. The chamber reads the main skill's hypotheses.md,
   selects untested items, designs experiments, runs them, and records results.
-- **`/skill:vsm-evolution-chamber`** — Load as knowledge reference.
+- **`/skill:vsm-fitness-gym`** — Load as knowledge reference.
 
 ## 3. Experiment Agent Types
 

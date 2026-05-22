@@ -28,8 +28,8 @@ conversation N+1 is structurally different from the skill that loaded in
 conversation N.
 
 **Mental model**: If `viable-swarm-model` is the athlete, then
-`vsm-fitness-orchestrator` is the coach (designs training, evaluates
-performance) and `vsm-evolution-chamber` is the gym (isolated equipment for
+`vsm-fitness-coach` is the coach (designs training, evaluates
+performance) and `vsm-fitness-gym` is the gym (isolated equipment for
 targeted workouts).
 
 **How learning works**:

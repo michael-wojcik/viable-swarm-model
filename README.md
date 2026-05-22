@@ -5,8 +5,8 @@ A self-modifying cybernetic development swarm for [Kimi Code CLI](https://github
 This is not a static prompt. It is a **learning organism** that evolves its own files between sessions.
 
 > **The analogy**: `viable-swarm-model` is the **athlete** (does the real work),
-> `vsm-fitness-orchestrator` is the **coach** (designs training, evaluates
-> performance), and `vsm-evolution-chamber` is the **gym** (isolated equipment
+> `vsm-fitness-coach` is the **coach** (designs training, evaluates
+> performance), and `vsm-fitness-gym` is the **gym** (isolated equipment
 > for targeted workouts).
 
 ---
@@ -57,13 +57,13 @@ viable-swarm-model/                    ← the repo
 │   │   └── security-lessons.md
 │   └── assets/
 │       └── lessons-template.md
-├── vsm-evolution-chamber/             ← companion skill (the research lab)
+├── vsm-fitness-gym/             ← companion skill (the research lab)
 │   ├── SKILL.md
 │   ├── references/
 │   │   └── experiment-templates.md
 │   └── assets/
 │       └── hypothesis-template.md
-└── vsm-fitness-orchestrator/          ← companion skill (the coach)
+└── vsm-fitness-coach/          ← companion skill (the coach)
     ├── SKILL.md
     ├── references/
     │   ├── fitness-projects.md        ← catalog of test projects
@@ -89,7 +89,7 @@ Or symlink both skills individually:
 ```bash
 git clone https://github.com/michael-wojcik/viable-swarm-model.git ~/vsm
 ln -s ~/vsm/viable-swarm-model ~/.kimi/skills/viable-swarm-model
-ln -s ~/vsm/vsm-evolution-chamber ~/.kimi/skills/vsm-evolution-chamber
+ln -s ~/vsm/vsm-fitness-gym ~/.kimi/skills/vsm-fitness-gym
 ```
 
 ## Usage
@@ -115,7 +115,7 @@ This executes the complete VSM phase workflow:
 ### Run a comprehensive fitness build
 
 ```
-/flow:vsm-fitness-orchestrator
+/flow:vsm-fitness-coach
 ```
 
 The fitness orchestrator:
@@ -130,7 +130,7 @@ The fitness orchestrator:
 ### Run focused experiments on specific hypotheses
 
 ```
-/flow:vsm-evolution-chamber Test hypotheses H2, H7, H12
+/flow:vsm-fitness-gym Test hypotheses H2, H7, H12
 ```
 
 The evolution chamber:

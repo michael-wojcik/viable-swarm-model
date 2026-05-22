@@ -5,7 +5,7 @@
 > Never delete — the history of what was tried and rejected is valuable.
 >
 > Each hypothesis is a falsifiable claim about the skill's knowledge or
-> behavior. It is tested by the vsm-evolution-chamber companion skill or
+> behavior. It is tested by the vsm-fitness-gym companion skill or
 > during Phase 8b of a real build.
 
 ---

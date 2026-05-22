@@ -12,7 +12,7 @@
 ## Experiment [N] — YYYY-MM-DD
 
 **Hypothesis**: [Link to hypothesis ID, e.g., H7]
-**Designed by**: [vsm-evolution-chamber or Phase 8b]
+**Designed by**: [vsm-fitness-gym or Phase 8b]
 **Method**: [What was built, how it was tested]
 **Variables**: [What was isolated]
 **Control**: [What "correct" behavior looks like]

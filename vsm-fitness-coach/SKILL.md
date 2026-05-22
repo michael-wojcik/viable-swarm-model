@@ -1,12 +1,12 @@
 ---
-name: vsm-fitness-orchestrator
+name: vsm-fitness-coach
 description: >
   The coaching layer of the viable-swarm-model ecosystem. Designs comprehensive
   fitness builds (substantial projects) that exercise every capability of the
   main skill, scores its performance against a rubric, identifies systemic
   weaknesses, and proposes mutations. This is the meta-orchestrator that turns
   real builds into structured skill improvement. Invoke with
-  /flow:vsm-fitness-orchestrator.
+  /flow:vsm-fitness-coach.
 type: flow
 triggers:
   - "fitness build"
@@ -18,7 +18,7 @@ triggers:
 
 ## 1. Overview
 
-The `vsm-fitness-orchestrator` is the **coach** of the ecosystem. It does
+The `vsm-fitness-coach` is the **coach** of the ecosystem. It does
 not lift the weights — the athlete (`viable-swarm-model`) does. The coach's
 job is to **design training programs**, **watch game tape**, and **identify
 weaknesses the athlete cannot see in itself**.
@@ -29,23 +29,23 @@ type, and every pattern in the athlete. After the build, it performs a
 **structured post-mortem**: scores each phase against a rubric, identifies
 systemic gaps, generates falsifiable hypotheses, and proposes mutations.
 
-**Mental model**: If `vsm-fitness-orchestrator` is the coach, then
+**Mental model**: If `vsm-fitness-coach` is the coach, then
 `viable-swarm-model` is the athlete (does the real work) and
-`vsm-evolution-chamber` is the gym (isolated equipment for targeted workouts).
+`vsm-fitness-gym` is the gym (isolated equipment for targeted workouts).
 
-**Primary invocation**: `/flow:vsm-fitness-orchestrator`  
-**Example**: `/flow:vsm-fitness-orchestrator Run fitness build #1 (DocuFlow)`
+**Primary invocation**: `/flow:vsm-fitness-coach`  
+**Example**: `/flow:vsm-fitness-coach Run fitness build #1 (DocuFlow)`
 
 **Path convention**: This skill assumes the main skill is installed at
 `~/vsm/viable-swarm-model/`. If installed elsewhere, adjust paths.
 
 ## 2. How to Invoke
 
-- **`/flow:vsm-fitness-orchestrator [fitness project name or ID]`** — Execute a
+- **`/flow:vsm-fitness-coach [fitness project name or ID]`** — Execute a
   fitness build. The orchestrator reads the fitness project catalog, presents
   options to S5 (you), guides the main skill through the build, and then
   evaluates performance.
-- **`/skill:vsm-fitness-orchestrator`** — Load as knowledge reference. Use when
+- **`/skill:vsm-fitness-coach`** — Load as knowledge reference. Use when
   you need the evaluation rubric or fitness project catalog.
 
 ## 3. Fitness Orchestrator Roles
@@ -104,7 +104,7 @@ flowchart TD
 ## 6. Phase Details
 
 ### Phase 0: Select Fitness Project
-Read `~/vsm/vsm-fitness-orchestrator/references/fitness-projects.md`.
+Read `~/vsm/vsm-fitness-coach/references/fitness-projects.md`.
 Present the catalog to S5 (you). Each project includes:
 - **Name & ID**: e.g., "FB1: DocuFlow"
 - **Complexity**: Estimated agent waves, lines of code, services
@@ -133,7 +133,7 @@ The orchestrator does NOT interfere during the build. It observes and records.
 - Main skill's own meta-reflection output
 
 ### Phase 2: Evaluate Performance
-Read `~/vsm/vsm-fitness-orchestrator/references/evaluation-rubric.md`.
+Read `~/vsm/vsm-fitness-coach/references/evaluation-rubric.md`.
 Score each phase of the main skill's execution from 1-5:
 
 | Score | Meaning |
