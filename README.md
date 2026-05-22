@@ -28,35 +28,43 @@ The result is a structured, multi-agent workflow that produces higher-quality co
 | Project memory only | **Dual memory**: project-local `.kimi/lessons.md` + skill-global `acquired-wisdom.md` |
 | Same skill every time | **Different skill every time** — it learns and mutates |
 | Human tests hypotheses | **Built-in scientific method**: hypothesis → experiment → falsification → theory update |
+| Ad-hoc evaluation | **Structured fitness builds** with scored rubrics and standardized reports |
 
 ## Repository Structure
 
-This repo contains **two skills** that co-evolve:
+This repo contains **three skills** that co-evolve:
 
 ```
-viable-swarm-model/              ← the repo
+viable-swarm-model/                    ← the repo
 ├── README.md
-├── viable-swarm-model/          ← main skill
+├── viable-swarm-model/                ← main skill (the builder)
 │   ├── SKILL.md
 │   ├── references/
 │   │   ├── acquired-wisdom.md
 │   │   ├── anti-patterns.md
 │   │   ├── custom-agent-prompts.md
-│   │   ├── experiments.md       ← experiment log
+│   │   ├── experiments.md             ← experiment log
 │   │   ├── flow-diagram.mermaid
-│   │   ├── hypotheses.md        ← hypothesis backlog
+│   │   ├── hypotheses.md              ← hypothesis backlog
 │   │   ├── integration-checklist.md
 │   │   ├── mutation-log.md
 │   │   ├── pattern-library.md
 │   │   └── security-lessons.md
 │   └── assets/
 │       └── lessons-template.md
-└── vsm-evolution-chamber/       ← companion skill (the research lab)
+├── vsm-evolution-chamber/             ← companion skill (the research lab)
+│   ├── SKILL.md
+│   ├── references/
+│   │   └── experiment-templates.md
+│   └── assets/
+│       └── hypothesis-template.md
+└── vsm-fitness-orchestrator/          ← companion skill (the coach)
     ├── SKILL.md
     ├── references/
-    │   └── experiment-templates.md
+    │   ├── fitness-projects.md        ← catalog of test projects
+    │   └── evaluation-rubric.md       ← scoring criteria
     └── assets/
-        └── hypothesis-template.md
+        └── fitness-report-template.md
 ```
 
 ## Installation
@@ -99,7 +107,22 @@ This executes the complete VSM phase workflow:
 9. **Phase 8**: Reflection (project lessons)
 10. **Phase 8b**: Meta-reflection + hypothesis generation (skill mutates itself)
 
-### Run scientific experiments on the skill
+### Run a comprehensive fitness build
+
+```
+/flow:vsm-fitness-orchestrator
+```
+
+The fitness orchestrator:
+1. Presents a catalog of substantial test projects (DocuFlow, GeoQuiz, TaskFlow)
+2. You select one
+3. Guides the main skill through building it
+4. Scores every phase of the main skill's performance (1-5)
+5. Identifies systemic gaps and generates hypotheses
+6. Produces a structured fitness report
+7. Proposes mutations to improve the main skill
+
+### Run focused experiments on specific hypotheses
 
 ```
 /flow:vsm-evolution-chamber Test hypotheses H2, H7, H12
@@ -141,6 +164,12 @@ The evolution chamber adds:
 |---|---|---|
 | Experiment Designer | `vsm_experiment_designer` | Designs minimal, isolated experiments |
 
+The fitness orchestrator adds:
+
+| Role | Type | Job |
+|---|---|---|
+| Fitness Coach | `vsm_fitness_orchestrator` | Designs comprehensive builds, scores performance, identifies systemic weaknesses |
+
 ### The mutation system
 
 After every build, the main skill evaluates its own performance:
@@ -170,36 +199,44 @@ If empirical findings justify it, the skill **appends new knowledge to its own f
 
 ### The scientific method
 
-The skill doesn't just accumulate knowledge — it tests it:
+The ecosystem learns at three scales:
 
-1. **Hypothesis generation** (Phase 8b): "I suspect the security agent misses JWT in dynamically-constructed WebSocket URLs."
-2. **Experiment design** (evolution chamber): Build a 20-line WebSocket server with a template-string JWT leak.
-3. **Falsification** (evolution chamber): Run vsm_security against it. Did it catch it?
-4. **Theory update** (mutation): If it missed it → append new prevention rule. If it caught it → mark hypothesis rejected.
+1. **Fitness builds** (orchestrator): "Let's build DocuFlow and see how the skill performs end-to-end."
+   → Scores each phase, identifies systemic weaknesses, produces hypotheses.
 
-This is how the skill discovers **new vulnerability classes** and **new patterns** that were never in the original knowledge pack.
+2. **Focused experiments** (evolution chamber): "Let's test H2 with a 20-line endpoint."
+   → Isolates variables, confirms/rejects hypotheses with scientific rigor.
+
+3. **Theory update** (main skill mutation): "H2 confirmed. Append 'computed field N+1' to auditor prompt."
+   → Updates skill files, commits to git.
+
+This is how the skill discovers **new vulnerability classes** and **new patterns**
+that were never in the original knowledge pack — through structured observation,
+isolated experimentation, and empirical mutation.
 
 ## The closed feedback loop
 
 ```
-Conversation N (build real project):
-  ├─ Load skill (constitution + acquired-wisdom-so-far)
-  ├─ Self-test: can I still execute my own workflow?
-  ├─ Execute build
-  ├─ Phase 8:  Write project lessons to .kimi/lessons.md
-  ├─ Phase 8b: Propose hypotheses based on surprises
+Conversation N (fitness build):
+  ├─ Load fitness orchestrator
+  ├─ Select DocuFlow from catalog
+  ├─ Guide main skill through full build
+  ├─ Collect all reports and artifacts
+  ├─ Score each phase 1-5 against rubric
+  ├─ Identify gaps, generate hypotheses
+  ├─ Write fitness report
   └─ git commit
 
-Conversation N+1 (dedicated experiment):
+Conversation N+1 (focused experiment):
   ├─ Load evolution chamber
-  ├─ Read hypothesis backlog
-  ├─ Design minimal experiments
+  ├─ Read hypothesis backlog (from fitness build + main skill)
+  ├─ Design minimal experiments for top hypotheses
   ├─ Run experiments, record results
   ├─ Update hypothesis status (confirmed/rejected)
   ├─ Propose mutations to main skill
   └─ git commit
 
-Conversation N+2 (next real project):
+Conversation N+2 (next real project or fitness build):
   ├─ Load updated skill (smarter than before)
   ├─ Self-test passes
   ├─ Execute build from smarter position

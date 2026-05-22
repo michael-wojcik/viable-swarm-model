@@ -1,0 +1,233 @@
+---
+name: vsm-fitness-orchestrator
+description: >
+  The coaching layer of the viable-swarm-model ecosystem. Designs comprehensive
+  fitness builds (substantial projects) that exercise every capability of the
+  main skill, scores its performance against a rubric, identifies systemic
+  weaknesses, and proposes mutations. This is the meta-orchestrator that turns
+  real builds into structured skill improvement. Invoke with
+  /flow:vsm-fitness-orchestrator.
+type: flow
+triggers:
+  - "fitness build"
+  - "test the skill"
+  - "evaluate viable-swarm-model"
+  - "stress test"
+  - "skill workout"
+---
+
+## 1. Overview
+
+The `vsm-fitness-orchestrator` is the **coach** of the viable-swarm-model
+ecosystem. Its job is to design and run **comprehensive fitness builds** —
+substantial, multi-service projects that deliberately exercise every phase,
+every agent type, and every pattern in the main skill.
+
+After the build completes, the orchestrator performs a **structured post-mortem**:
+it scores each phase against a rubric, identifies systemic gaps, generates
+falsifiable hypotheses, and proposes mutations to the main skill.
+
+**This is not a replacement for the main skill** — it is a meta-layer that
+guides the main skill through a build-and-evaluate cycle. Think of it as a
+personal trainer for the swarm.
+
+**Primary invocation**: `/flow:vsm-fitness-orchestrator`  
+**Example**: `/flow:vsm-fitness-orchestrator Run fitness build #1 (DocuFlow)`
+
+**Path convention**: This skill assumes the main skill is installed at
+`~/vsm/viable-swarm-model/`. If installed elsewhere, adjust paths.
+
+## 2. How to Invoke
+
+- **`/flow:vsm-fitness-orchestrator [fitness project name or ID]`** — Execute a
+  fitness build. The orchestrator reads the fitness project catalog, presents
+  options to S5 (you), guides the main skill through the build, and then
+  evaluates performance.
+- **`/skill:vsm-fitness-orchestrator`** — Load as knowledge reference. Use when
+  you need the evaluation rubric or fitness project catalog.
+
+## 3. Fitness Orchestrator Roles
+
+| VSM System | CLI Implementation | Custom Type | Activation | Produces |
+|---|---|---|---|---|
+| **S5 (Policy)** | Main conversation agent (you) | — | Phase 0 | Project selection, mutation approval |
+| **S4 (Selector)** | Main agent reads catalog | — | Phase 0 | Fitness project spec |
+| **S1 (Builder)** | `viable-swarm-model` workflow | Flow skill | Phase 1 | Substantial project |
+| **S3* (Evaluator)** | Main agent reads rubric | — | Phase 3 | Scored evaluation per phase |
+| **S2 (Synthesizer)** | Main agent | — | Phase 4 | Hypotheses, mutations |
+
+## 4. The Golden Rule
+
+The fitness orchestrator does NOT build code directly. It delegates all
+implementation to the main skill (`viable-swarm-model`). The orchestrator's
+value is in **selection, evaluation, and synthesis**.
+
+## 5. Executable Flow Diagram
+
+```mermaid
+flowchart TD
+    BEGIN([BEGIN])
+    P0[Phase 0: Select Fitness Project<br/>Read references/fitness-projects.md]
+    P0S{<choice>project selected</choice>?}
+    P1[Phase 1: Execute Build<br/>Run viable-swarm-model workflow<br/>Build the selected project]
+    P1A[Collect all artifacts:<br/>plan.md, audit reports, security reports,<br/>integration report, test results, fix logs]
+    P2[Phase 2: Evaluate Performance<br/>Read references/evaluation-rubric.md<br/>Score each phase 1-5]
+    P2S{<choice>any phase scored < 3</choice>?}
+    P3[Phase 3: Generate Hypotheses<br/>One hypothesis per gap identified]
+    P4[Phase 4: Propose Mutations<br/>Map findings to skill file changes]
+    P4A{<choice>mutations approved</choice>?}
+    P5[Phase 5: Apply Mutations<br/>Write to main skill files<br/>Append to hypotheses.md, experiments.md,<br/>mutation-log.md]
+    P5R[Write fitness report<br/>assets/fitness-report-template.md]
+    P5G[git commit all changes]
+    END([END])
+
+    BEGIN --> P0
+    P0 --> P0S
+    P0S -->|<choice>none</choice>| END
+    P0S -->|<choice>selected</choice>| P1
+    P1 --> P1A
+    P1A --> P2
+    P2 --> P2S
+    P2S -->|<choice>yes</choice>| P3
+    P2S -->|<choice>no</choice>| P4
+    P3 --> P4
+    P4 --> P4A
+    P4A -->|<choice>rejected</choice>| P4
+    P4A -->|<choice>approved</choice>| P5
+    P5 --> P5R
+    P5R --> P5G
+    P5G --> END
+```
+
+## 6. Phase Details
+
+### Phase 0: Select Fitness Project
+Read `~/vsm/vsm-fitness-orchestrator/references/fitness-projects.md`.
+Present the catalog to S5 (you). Each project includes:
+- **Name & ID**: e.g., "FB1: DocuFlow"
+- **Complexity**: Estimated agent waves, lines of code, services
+- **Coverage**: Which skill capabilities it exercises
+- **Known stress points**: Specific patterns/anti-patterns it should trigger
+
+If invoked without argument, present all projects and let S5 select.
+If invoked with argument (e.g., "Run FB1"), load that project directly.
+
+### Phase 1: Execute Build
+Instruct the model to run the `viable-swarm-model` workflow on the selected
+project. The main skill's full 10-phase flow executes:
+- Intelligence, Foundation, Implementation, Testing, Integration, Security, Fix
+- Phase 8b meta-reflection (the main skill's own evaluation)
+
+The orchestrator does NOT interfere during the build. It observes and records.
+
+**Critical**: Collect ALL artifacts produced during the build:
+- `plan.md`
+- Auditor reports (Phase 2b, 3b)
+- Coordinator integration report
+- Security gate findings
+- Test coverage report
+- Fix wave logs
+- Project lessons (`.kimi/lessons.md`)
+- Main skill's own meta-reflection output
+
+### Phase 2: Evaluate Performance
+Read `~/vsm/vsm-fitness-orchestrator/references/evaluation-rubric.md`.
+Score each phase of the main skill's execution from 1-5:
+
+| Score | Meaning |
+|---|---|
+| 5 | Exceeded expectations. Caught issues that weren't obvious. |
+| 4 | Performed as designed. No gaps. |
+| 3 | Adequate but had minor gaps or inefficiencies. |
+| 2 | Significant gaps. Missed important issues. |
+| 1 | Failed. Phase was misleading, redundant, or harmful. |
+
+For each phase scored < 4, write a detailed note:
+- What was expected
+- What actually happened
+- Root cause (if identifiable)
+- Severity (cosmetic, moderate, critical)
+
+### Phase 3: Generate Hypotheses
+For every gap identified in Phase 2, write a hypothesis to the main skill's
+`references/hypotheses.md`:
+
+```markdown
+## H[N]: [Specific falsifiable claim]
+**Status**: untested
+**Proposed**: [date]
+**Rationale**: [What the fitness build revealed]
+**Source**: Fitness build [FB ID]
+**Experiment**: [Minimal test to validate]
+**Expected**: [Confirm/reject criteria]
+```
+
+### Phase 4: Propose Mutations
+Map confirmed gaps to specific skill file changes:
+- Scored 1-2 → High-confidence mutation (append rule, refine prompt, add check)
+- Scored 3 → Medium-confidence (propose hypothesis, monitor next build)
+- Scored 4-5 → No mutation needed
+
+Present all proposed mutations to S5 for approval.
+
+### Phase 5: Apply Mutations
+Write approved mutations to the main skill's files:
+- Append prevention rules, patterns, anti-patterns
+- Update agent prompts
+- Append to `hypotheses.md`, `experiments.md`, `mutation-log.md`
+- Write fitness report using `assets/fitness-report-template.md`
+- `git commit` all changes with descriptive message
+
+## 7. Fitness Report Template
+
+See `assets/fitness-report-template.md` for the full template. Summary:
+
+```markdown
+# Fitness Report: [Project Name]
+
+## Build Summary
+- Project: [name]
+- Waves executed: [count]
+- Agents spawned: [count]
+- BLOCKERs found: [count]
+- Fix iterations: [count]
+
+## Phase Scores
+| Phase | Score | Notes |
+|-------|-------|-------|
+| 0. Viability | [1-5] | [notes] |
+| 1. Intelligence | [1-5] | [notes] |
+| 2. Foundation | [1-5] | [notes] |
+| 3. Implementation | [1-5] | [notes] |
+| 4. Testing | [1-5] | [notes] |
+| 5. Integration | [1-5] | [notes] |
+| 6. Security | [1-5] | [notes] |
+| 7. Fix | [1-5] | [notes] |
+| 8. Reflection | [1-5] | [notes] |
+| 8b. Meta-Reflection | [1-5] | [notes] |
+
+## Gaps Identified
+1. [Gap description] → Hypothesis H[N]
+2. [Gap description] → Hypothesis H[N]
+
+## Mutations Applied
+1. [File changed] → [Rationale]
+2. [File changed] → [Rationale]
+
+## Overall Assessment
+[Is the skill improving? Getting worse? Any structural concerns?]
+```
+
+## 8. Design Principles
+
+1. **The orchestrator is not a builder**: It never writes implementation code.
+   It only evaluates, scores, and synthesizes.
+2. **Real builds, not toy examples**: Fitness projects are substantial
+   (500-5000 lines, multi-service) to stress-test the main skill realistically.
+3. **Structured evaluation**: The rubric prevents subjective "felt okay"
+   assessments. Every score needs evidence.
+4. **Hypothesis-driven improvement**: Every gap becomes a falsifiable claim
+   that the evolution chamber can test later.
+5. **Co-evolution**: The orchestrator evaluates the main skill; the evolution
+   chamber validates the hypotheses; the main skill improves. All three
+   skills grow together.
