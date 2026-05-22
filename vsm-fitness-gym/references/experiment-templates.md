@@ -11,7 +11,7 @@
 
 **Structure**:
 ```
-/tmp/vsm-exp-{hypothesis-id}/
+~/vsm-fitness-builds/gym/{hypothesis-id}/
 ├── main.py          # Minimal FastAPI/Flask app with ONE intentional vulnerability
 ├── .env.example     # (optional) If testing env var patterns
 └── requirements.txt # Minimal dependencies
@@ -36,7 +36,7 @@
 
 **Structure**:
 ```
-/tmp/vsm-exp-{hypothesis-id}/
+~/vsm-fitness-builds/gym/{hypothesis-id}/
 ├── backend/
 │   ├── tasks.py     # Defines Celery tasks or event names
 │   └── models.py    # Database models
@@ -63,7 +63,7 @@
 
 **Structure**:
 ```
-/tmp/vsm-exp-{hypothesis-id}/
+~/vsm-fitness-builds/gym/{hypothesis-id}/
 ├── app.py           # One endpoint with the anti-pattern
 └── test_app.py      # (optional) Test that demonstrates the issue
 ```
@@ -86,7 +86,7 @@
 
 **Structure**:
 ```
-/tmp/vsm-exp-{hypothesis-id}/
+~/vsm-fitness-builds/gym/{hypothesis-id}/
 ├── input/           # Code or spec sent to the agent
 └── expected/        # What the agent SHOULD produce
 ```

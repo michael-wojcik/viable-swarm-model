@@ -38,7 +38,7 @@ systemic gaps, generates falsifiable hypotheses, and proposes mutations.
 
 **Path convention**:
 - Main skill: `~/vsm/viable-swarm-model/`
-- Fitness builds: `~/vsm-fitness-builds/[project-id]-[date]/`
+- Fitness builds: `~/vsm-fitness-builds/coach/[project-id]-[date]/`
 
 If installed elsewhere, adjust paths.
 
@@ -93,7 +93,7 @@ flowchart TD
     BEGIN --> P0
     P0 --> P0S
     P0S -->|<choice>none</choice>| END
-    P0S -->|<choice>selected</choice>| P0D[Create build directory<br/>~/vsm-fitness-builds/[id]-[date]/]
+    P0S -->|<choice>selected</choice>| P0D[Create build directory<br/>~/vsm-fitness-builds/coach/[id]-[date]/]
     P0D --> P1
     P1 --> P1A
     P1A --> P2
@@ -126,8 +126,8 @@ If invoked with argument (e.g., "Run FB1"), load that project directly.
 
 **Step 1a: Create build directory**
 ```bash
-mkdir -p ~/vsm-fitness-builds/FB1-20260522
-cd ~/vsm-fitness-builds/FB1-20260522
+mkdir -p ~/vsm-fitness-builds/coach/FB1-20260522
+cd ~/vsm-fitness-builds/coach/FB1-20260522
 ```
 
 The athlete builds the project in this directory — never in the user's
@@ -135,7 +135,7 @@ actual project directory. This isolates the fitness build from real work.
 
 **Step 1b: Execute build**
 Instruct the model to run the `viable-swarm-model` workflow on the selected
-project, building in `~/vsm-fitness-builds/[project-id]-[date]/`. The main
+project, building in `~/vsm-fitness-builds/coach/[project-id]-[date]/`. The main
 skill's full 10-phase flow executes:
 - Intelligence, Foundation, Implementation, Testing, Integration, Security, Fix
 - Phase 8b meta-reflection (the main skill's own evaluation)
@@ -149,7 +149,7 @@ The coach does NOT interfere during the build. It observes and records.
 - Security gate findings
 - Test coverage report
 - Fix wave logs
-- Project lessons (`~/vsm-fitness-builds/[id]-[date]/.kimi/lessons.md`)
+- Project lessons (`~/vsm-fitness-builds/coach/[id]-[date]/.kimi/lessons.md`)
 - Main skill's own meta-reflection output
 
 ### Phase 2: Evaluate Performance

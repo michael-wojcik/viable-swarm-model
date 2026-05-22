@@ -121,7 +121,7 @@ This executes the complete VSM phase workflow:
 The fitness coach:
 1. Presents a catalog of substantial test projects (DocuFlow, GeoQuiz, TaskFlow)
 2. You select one
-3. Creates a dedicated build directory (`~/vsm-fitness-builds/FB1-20260522/`)
+3. Creates a dedicated build directory (`~/vsm-fitness-builds/coach/FB1-20260522/`)
 4. Guides the main skill through building the project **in that directory**
 5. Scores every phase of the main skill's performance (1-5)
 6. Identifies systemic gaps and generates hypotheses
@@ -263,7 +263,7 @@ The one-conversation delay between observation and validated mutation is not a b
 - If a mutation breaks the skill, run `git revert HEAD` in `~/vsm/`
 - The `mutation-log.md` file records the rationale for every change
 - Empirical append-only mutations are unlimited; structural changes to the core workflow are capped at 3 per session
-- The evolution chamber runs experiments in `/tmp/` — they never affect real projects
+- The evolution chamber runs experiments in `~/vsm-fitness-builds/gym/` — they never affect real projects
 
 ## Requirements
 

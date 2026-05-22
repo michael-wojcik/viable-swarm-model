@@ -135,7 +135,7 @@ The designer produces a minimal experiment spec:
 
 ### Phase 2: Build Experiments
 Spawn parallel `coder` subagents. Each builds its experiment in a temporary
-directory (e.g., `/tmp/vsm-exp-H7/`). No scaffolding beyond what's needed
+directory (e.g., `~/vsm-fitness-builds/gym/H7/`). No scaffolding beyond what's needed
 to run the relevant audit.
 
 ### Phase 3: Run Relevant Audits
@@ -173,8 +173,8 @@ Write mutation rationale to main skill's `mutation-log.md`.
    present. Remove distractions.
 3. **Deterministic**: The experiment should produce the same result every time.
 4. **Fast**: An experiment should run in minutes, not hours.
-5. **Safe**: Experiments contain intentional bugs, but they run in temporary
-   directories and don't affect real projects.
+5. **Safe**: Experiments contain intentional bugs, but they run in isolated
+   directories (`~/vsm-fitness-builds/gym/`) and don't affect real projects.
 
 ## 8. Epistemic Rules
 
