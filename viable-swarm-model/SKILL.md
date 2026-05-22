@@ -29,11 +29,16 @@ from the skill that loaded in conversation N.
 1. At startup (Phase 0), the skill reads its own `references/acquired-wisdom.md`
    (if it exists) and the project-local `.kimi/lessons.md`.
 2. During execution, it applies prevention rules, patterns, and anti-patterns.
-3. At shutdown (Phase 8b), it evaluates its own performance and appends new
-   knowledge to its own files.
+3. At shutdown (Phase 8b), it evaluates its own performance, proposes new
+   hypotheses, and appends new knowledge to its own files.
 
 **Primary invocation**: `/flow:viable-swarm-model` executes the full workflow.  
 **Reference loading**: `/skill:viable-swarm-model` loads knowledge without execution.
+
+**Path convention**: This skill assumes installation at
+`~/.kimi/skills/viable-swarm-model/`. When self-modifying, the model uses
+absolute paths from this root. If installed elsewhere (e.g. via `extra_skill_dirs`),
+use symlinks or update paths in mutation commands.
 
 ## 2. How to Invoke This Skill
 
@@ -100,7 +105,7 @@ flowchart TD
     BEGIN([BEGIN])
     P0[Phase 0: Viability Check + Self-Test<br/>S5 Main Agent]
     P0D{<choice>trivial</choice>?}
-    P0R[Read .kimi/lessons.md<br/>Read references/acquired-wisdom.md<br/>Self-test skill files<br/>Write plan.md]
+    P0R[Read .kimi/lessons.md<br/>Read references/acquired-wisdom.md<br/>Read references/hypotheses.md<br/>Self-test skill files<br/>Write plan.md]
     P1[Phase 1: Intelligence<br/>vsm_architect subagent]
     P1H{<choice>S3/S4 deadlock</choice>?}
     P1A[EnterPlanMode<br/>User Approval]
@@ -127,7 +132,7 @@ flowchart TD
     P7D{<choice>BLOCKERs remain<br/>iterations < 3</choice>?}
     P7E[Escalate to User<br/>AskUserQuestion]
     P8[Phase 8: Reflection<br/>Append to .kimi/lessons.md]
-    P8M[Phase 8b: Meta-Reflection<br/>Evaluate skill performance<br/>Propose mutations]
+    P8M[Phase 8b: Meta-Reflection + Hypothesis Generation<br/>Evaluate skill performance<br/>Propose new hypotheses<br/>Propose mutations]
     P8A{<choice>mutations approved</choice>?}
     P8W[Write mutations to skill files<br/>Append to mutation-log.md]
     P8C[git commit mutations]
@@ -186,12 +191,15 @@ flowchart TD
 Main agent (S5) performs:
 1. **Viability check**: trivial (<50 lines, one file)? If yes, respond directly.
 2. **Read project memory**: `.kimi/lessons.md` if exists.
-3. **Read acquired wisdom**: `references/acquired-wisdom.md` if exists.
-4. **Self-test**: Verify all referenced files exist and are readable. Verify
+3. **Read acquired wisdom**: `~/.kimi/skills/viable-swarm-model/references/acquired-wisdom.md`
+   if exists.
+4. **Read hypotheses**: `~/.kimi/skills/viable-swarm-model/references/hypotheses.md`
+   if exists. Note any untested hypotheses that are relevant to this project.
+5. **Self-test**: Verify all referenced files exist and are readable. Verify
 the flow diagram parses. Verify the skill can describe its own phase sequence
 without contradiction. If any check fails → emit algedonic, write diagnosis
-to `references/mutation-log.md`, ask user to review.
-5. Write `plan.md`.
+to `~/.kimi/skills/viable-swarm-model/references/mutation-log.md`, ask user to review.
+6. Write `plan.md`.
 
 ### Phase 1: Intelligence (S4)
 Spawn `vsm_architect` subagent. Review output. S3/S4 homeostat: max 3
@@ -228,7 +236,7 @@ Escalate to user.
 Append to `.kimi/lessons.md` with Source/Finding/Fix/Verification format.
 See `assets/lessons-template.md`.
 
-### Phase 8b: Meta-Reflection (Skill Self-Modification)
+### Phase 8b: Meta-Reflection + Hypothesis Generation
 After project reflection, evaluate the skill's own performance:
 
 1. **Effectiveness audit**: Which prevention rules caught real bugs? Which
@@ -240,13 +248,24 @@ After project reflection, evaluate the skill's own performance:
 4. **Agent audit**: Did any custom agent type underperform? Do prompts need
    refinement?
 
+**Hypothesis generation**:
+5. **Anomaly detection**: What was surprising? What did the skill get wrong?
+   What vulnerability class is completely absent from our knowledge base?
+6. **Propose hypotheses**: For each anomaly, write a new hypothesis to
+   `~/.kimi/skills/viable-swarm-model/references/hypotheses.md` with:
+   - Status: untested
+   - Rationale: what was observed
+   - Experiment: minimal test to validate
+   - Expected result
+
 **If empirical findings justify mutation**:
-- Append new rules to `references/security-lessons.md`
-- Append new patterns to `references/pattern-library.md`
-- Append new anti-patterns to `references/anti-patterns.md`
-- Append new integration checks to `references/integration-checklist.md`
-- Refine agent prompts in `references/custom-agent-prompts.md`
-- Write the mutation to `references/mutation-log.md` with full rationale
+- Append new rules to `~/.kimi/skills/viable-swarm-model/references/security-lessons.md`
+- Append new patterns to `~/.kimi/skills/viable-swarm-model/references/pattern-library.md`
+- Append new anti-patterns to `~/.kimi/skills/viable-swarm-model/references/anti-patterns.md`
+- Append new integration checks to `~/.kimi/skills/viable-swarm-model/references/integration-checklist.md`
+- Refine agent prompts in `~/.kimi/skills/viable-swarm-model/references/custom-agent-prompts.md`
+- Append the experiment to `~/.kimi/skills/viable-swarm-model/references/experiments.md`
+- Write the mutation to `~/.kimi/skills/viable-swarm-model/references/mutation-log.md`
 - `git commit` the changes
 
 **Mutation amplitude limit**: Max 3 structural mutations per session.
@@ -340,6 +359,8 @@ git revert [commit]
 | `references/pattern-library.md` | Append new patterns; mark obsolete | Low: empirical finding |
 | `references/anti-patterns.md` | Append new; remove false positives | Low: empirical finding |
 | `references/integration-checklist.md` | Append new checks | Low: empirical finding |
+| `references/hypotheses.md` | Append new hypotheses; update status | Low: empirical finding |
+| `references/experiments.md` | Append experiment records | Low: empirical finding |
 | `references/custom-agent-prompts.md` | Append guidance; refine wording | Medium: repeated pattern |
 | `references/flow-diagram.mermaid` | Refine decision logic | High: phase audit shows mismatch |
 | `SKILL.md` | Amend phase details, mutation rules | High: structural issue proven |
@@ -395,10 +416,11 @@ in `~/.kimi/config.toml`).
 
 When `--continue` resumes a session:
 1. Read `.kimi/lessons.md` at session start
-2. Read `references/acquired-wisdom.md` at session start
-3. Apply relevant lessons to planning
-4. After delivery, append new lessons to both project-local and skill-global memory
-5. Over time, this creates both a project-specific and a cross-project knowledge base
+2. Read `~/.kimi/skills/viable-swarm-model/references/acquired-wisdom.md`
+3. Read `~/.kimi/skills/viable-swarm-model/references/hypotheses.md`
+4. Apply relevant lessons to planning
+5. After delivery, append new lessons to both project-local and skill-global memory
+6. Over time, this creates both a project-specific and a cross-project knowledge base
 
 **Epistemic rule**: If `.kimi/lessons.md` contradicts this SKILL.md,
 the lessons file wins. It contains empirical data; this file contains
@@ -413,5 +435,6 @@ User asks for software engineering work?
 └── Non-trivial?
     ├── Read .kimi/lessons.md if exists (apply learnings)
     ├── Read references/acquired-wisdom.md if exists (apply cross-project learnings)
+    ├── Read references/hypotheses.md if exists (test relevant hypotheses)
     └── Execute VSM workflow via /flow:viable-swarm-model
 ```
