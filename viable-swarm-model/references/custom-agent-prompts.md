@@ -159,3 +159,9 @@ technologies, and produce design documents ONLY (never implementation code).
   target impossible with current structure.
 - **MUST NOT**: Skip tests because "it looks correct", ignore failing tests,
   write tests that don't actually run, delete implementation code.
+
+**Additional Guidance (FB2 Finding)**: At the start of the testing wave, install any missing
+test dependencies before writing tests. Common dependencies that may be missing:
+`jsdom`, `@testing-library/jest-dom`, `@testing-library/user-event`, `@vitest/coverage-v8`,
+`pytest-asyncio`, `pytest-cov`, `httpx`. Run `npm install` or `pip install` as needed.
+This prevents the agent from spending the entire wave failing on missing packages.

@@ -147,6 +147,78 @@ Run 5 with modified requirements including rate limiting. Count builds with rate
 
 ---
 
+## H9: Docker-compose bash fallbacks are a systemic vulnerability class
+
+**Status**: untested
+**Proposed**: 2026-05-22
+**Rationale**: FB2 revealed `:-` fallbacks embedding credentials in docker-compose. This pattern was not in any existing checklist. The security gate caught it but only after the foundation wave had already created the file.
+**Experiment**: Audit 5 fitness builds' docker-compose files for `:-` or `||` fallbacks. Count occurrences.
+**Expected**: ≥3 builds have at least one fallback. If so, add prevention rule.
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
+
+---
+
+## H10: SQLAlchemy column-name import shadowing is a repeatable bug pattern
+
+**Status**: untested
+**Proposed**: 2026-05-22
+**Rationale**: `Question.text` shadowed `sqlalchemy.text` in FB2, causing a runtime crash. Any model with columns named `text`, `select`, `join`, etc. could shadow SQLAlchemy imports.
+**Experiment**: Build a minimal FastAPI project with models containing columns named `text`, `select`, `join`. Run pytest. Does it crash?
+**Expected**: Import crash confirmed. Prevention: alias SQLAlchemy imports in models files.
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
+
+---
+
+## H11: Pre-installing test dependencies reduces test wave time by 50%
+
+**Status**: untested
+**Proposed**: 2026-05-22
+**Rationale**: FB2 tester spent ~15 minutes installing jsdom, pytest-asyncio, etc. FB1 tester could not run tests at all due to missing deps.
+**Experiment**: Compare test wave duration across 5 builds with vs. without pre-installed deps.
+**Expected**: Pre-installed group completes test wave in ≤10 minutes; control group takes ≥20 minutes.
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
+
+---
+
+## H12: Adding spatial query parameter bounds to security checklist prevents DoS
+
+**Status**: untested
+**Proposed**: 2026-05-22
+**Rationale**: Unbounded `radius_meters` is a DoS vector. Geo endpoints are common in fitness builds.
+**Experiment**: Run 3 geo-enabled builds with current checklist. Run 3 with "spatial params must have upper bounds" rule. Count unbounded params.
+**Expected**: Control group: 3/3 unbounded. Treatment group: 0/3 unbounded.
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
+
+---
+
+## H13: State-machine alignment check catches domain mismatches early
+
+**Status**: untested
+**Proposed**: 2026-05-22
+**Rationale**: FB2 frontend used `'waiting' | 'starting'` while backend emitted `'lobby' | 'countdown'`. Only discovered in integration verification.
+**Experiment**: Run 5 builds with complex state machines. Use current checklist for 5 builds, modified checklist with state-machine check for 5 builds. Count mismatches caught before security gate.
+**Expected**: Control group catches 0-1 mismatches early. Treatment group catches 4-5.
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
+
+---
+
+## H14: Rate limiting in foundation wave requirements results in 80% implementation
+
+**Status**: untested
+**Proposed**: 2026-05-22
+**Rationale**: Both FB1 and FB2 lacked rate limiting until security gate. FB1 mutation added it to security lessons but not foundation wave requirements.
+**Experiment**: Run 5 auth-enabled builds with current foundation requirements. Run 5 with "rate limiting on auth endpoints" in foundation wave prompt. Count builds with rate limiting after implementation wave.
+**Expected**: Control group: 0-1 builds with rate limiting. Treatment group: 4-5 builds.
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
+
+---
+
 ## H[N]: [Hypothesis Title]
 
 **Status**: untested

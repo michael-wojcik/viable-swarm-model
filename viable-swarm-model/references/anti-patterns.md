@@ -240,3 +240,15 @@
 **When**: Backend and worker agents both wire routers into `main.py`.  
 **Prevention**: Either (a) serialize entry-point wiring to a single agent, or (b) have a dedicated "wiring" agent run after all implementation agents.  
 **Affected**: S1 coders in Phase 3.
+
+### 44. Docker-Compose Default-Value Fallbacks Embedding Secrets
+**What**: `docker-compose.yml` uses `${DATABASE_URL:-postgresql://user:pass@db/db}` or `POSTGRES_PASSWORD: geoquiz` as defaults.  
+**When**: Developer adds fallbacks to make local dev easier.  
+**Prevention**: Ban `:-` fallbacks in docker-compose entirely. Use `.env` files for local dev. Services must fail to start if required vars are missing. Grep for `:-` in docker-compose as a BLOCKER.  
+**Affected**: S1-DevOps, vsm_security.
+
+### 45. SQLAlchemy Column Names Shadowing Imported Functions
+**What**: A model column named `text` shadows `sqlalchemy.text`, causing `TypeError` at import time.  
+**When**: Model designer chooses intuitive column names without checking SQLAlchemy imports.  
+**Prevention**: Alias SQLAlchemy imports in model files (`sa_text`, `sa_select`). Add this to foundation wave checklist for SQLAlchemy projects.  
+**Affected**: S1-Backend, vsm_auditor.

@@ -236,3 +236,22 @@ checklist and integration checklist.
 vulnerable. In FB1, 8-character password minimum + no rate limiting = credential stuffing risk.
 Add rate limiting requirement to foundation wave for any build with auth.
 **Affected**: S1 coders in Phase 2, vsm_security.
+
+### L37: Docker-Compose Bash Fallbacks Embed Secrets Silently
+**Prevention rule**: Ban `:-` default-value fallbacks in `docker-compose.yml` for ALL
+variables, especially `DATABASE_URL`, `REDIS_URL`, `POSTGRES_PASSWORD`, and `CORS_ORIGINS`.
+Services must fail to start if required environment variables are missing. Fallbacks
+silently embed credentials and bypass fail-safe configuration.
+**Affected**: S1-DevOps, vsm_security.
+
+### L38: Infrastructure Security Is as Critical as Application Security
+**Prevention rule**: Security gate must inspect docker-compose.yml, Dockerfile, .env.example,
+and nginx config with the same rigor as application code. Check for hardcoded passwords,
+`:-` fallbacks, wildcard CORS in compose, and missing security headers in nginx.
+**Affected**: vsm_security, S1-DevOps.
+
+### L39: Rate Limiting Must Be in Foundation Wave for Auth Builds
+**Prevention rule**: Any build with authentication MUST include rate limiting scaffolding
+in the foundation wave (Phase 2), not just the security gate (Phase 6). Auth endpoints
+(`/register`, `/login`, `/refresh`) are brute-force vectors from day one.
+**Affected**: S1 coders in Phase 2, vsm_security.

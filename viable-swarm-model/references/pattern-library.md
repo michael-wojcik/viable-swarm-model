@@ -235,3 +235,15 @@
 **Implementation**: Use route `/ws/resource/{id}/{token}` where `{token}` is a short-lived JWT. Backend validates token from path param. NOT a query param — query params are logged by proxies; path segments are less commonly logged.  
 **Example**: `backend/app/websockets/yjs.py` + `frontend/src/hooks/useYjs.ts` in FB1.  
 **Caveat**: Token may still appear in server access logs. Ensure log sanitization for WS endpoints.
+
+### 39. Alias SQLAlchemy Imports in Model Files
+**Trigger**: SQLAlchemy models define columns whose names shadow imported functions (`text`, `select`, `join`).  
+**Solves**: `TypeError: 'MappedColumn' object is not callable` when `sqlalchemy.text` is shadowed by a column named `text`.  
+**Implementation**: Alias imports at the top of model files: `from sqlalchemy import text as sa_text, select as sa_select`. Use `sa_text("...")` throughout the file.  
+**Example**: FB2 `backend/app/models.py` — `Question.text` shadowed `sqlalchemy.text`, crashing imports.
+
+### 40. Validate Spatial Query Parameters with Upper Bounds
+**Trigger**: API accepts geospatial query parameters (`radius_meters`, `bbox`).  
+**Solves**: Unbounded spatial queries are a DoS vector — scanning an entire PostGIS table with `ST_DWithin(..., 99999999)`.  
+**Implementation**: Enforce `_MAX_RADIUS_METERS = 50_000` (50km) and return HTTP 400 if exceeded. For bbox, reject areas exceeding a threshold (e.g., 10,000 km²).  
+**Example**: FB2 `backend/app/routers/geo.py` initially accepted arbitrary `radius_meters`.

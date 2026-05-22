@@ -123,3 +123,8 @@ correction BEFORE quality gates.
 - [ ] Browser WebSocket auth uses path-based tokens (NOT query params) when headers are impossible
 - [ ] Backend validates token from path parameter before accepting connection
 - [ ] Token is short-lived (≤15 min) and scoped to the specific resource
+
+## 23. State Machine Domain Alignment
+- [ ] Backend state machine enum values match frontend TypeScript union types exactly
+- [ ] Every state value emitted by backend is handled by frontend switch/case
+- [ ] No frontend-only states that backend never emits (causes unreachable code)

@@ -63,3 +63,25 @@ Tester agent environment awareness will improve.
 - `references/anti-patterns.md` — Added Anti-Patterns #42-43 (fix false positives, entry point overwrites)
 - `references/security-lessons.md` — Added L25-L26 (GraphQL depth limit, rate limiting)
 - `references/integration-checklist.md` — Added checks #21-22 (parallel coordination, WebSocket auth)
+
+## Mutation [3] — 2026-05-22
+
+**Session**: Fitness build FB2 (GeoQuiz)
+**File**: Multiple references files
+**Type**: append
+**Rationale**: FB2 revealed 6 new systemic gaps: (1) docker-compose bash fallbacks embedding secrets,
+(2) SQLAlchemy import shadowing by column names, (3) unbounded spatial query parameters as DoS vector,
+(4) backend/frontend state machine domain mismatch, (5) tester agent wasting time installing missing deps,
+(6) rate limiting still not shifting left to foundation wave. These are empirical findings from a
+4000+ line multiplayer geospatial quiz platform with PostGIS, Socket.io, and Redis.
+**Expected effect**: Next session with docker-compose will have no `:-` fallbacks. SQLAlchemy model
+files will use aliased imports. Geo endpoints will have parameter bounds. State machine contracts
+will be validated during integration. Tester agents will install deps proactively.
+
+**Files modified**:
+- `references/hypotheses.md` — Added H9-H14
+- `references/security-lessons.md` — Added L37-L39 (docker-compose fallbacks, infra security, rate limiting in foundation)
+- `references/pattern-library.md` — Added Patterns #39-40 (SQLAlchemy alias, spatial bounds)
+- `references/integration-checklist.md` — Added Check #23 (state machine domain alignment)
+- `references/anti-patterns.md` — Added Anti-Patterns #44-45 (docker fallbacks, SQLAlchemy shadowing)
+- `references/custom-agent-prompts.md` — Added tester dep-install guidance and foundation rate-limiting note
