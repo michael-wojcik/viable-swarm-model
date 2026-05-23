@@ -293,7 +293,28 @@ agent prompt are both effective at detecting this pattern.
 
 ---
 
-## H[N+1]: A full product swarm (product + UX + research agents) would improve outcomes for problem-oriented prompts
+## H[N+1]: The vsm_product subagent reduces implementation defects for problem-oriented prompts
+
+**Status**: untested
+**Proposed**: 2026-05-22
+**Rationale**: The `vsm_product` agent was added to handle problem-oriented prompts ("Users need Z") by producing structured product briefs before architecture begins. Without it, the architect receives ambiguous input, which may lead to scope creep, missing acceptance criteria, and misaligned implementation.
+**Source**: Agent addition — `vsm_product`
+**Experiment**:
+  1. Design 5 problem-oriented prompts (e.g., "Users need to collaborate on documents in real-time")
+  2. **Build A** (control): Pass raw prompt directly to `vsm_architect`, run full workflow
+  3. **Build B** (test): Spawn `vsm_product` first, pass product brief to `vsm_architect`, run full workflow
+  4. Compare using `vsm_fitness_coach` / `vsm_trainer`:
+     - Phase 1 (Intelligence) scores: does Build B produce clearer architecture docs?
+     - Phase 3 (Implementation) BLOCKER counts
+     - "Scope creep" or "unclear requirements" gap frequency
+     - Fix iteration count in Phase 7
+**Expected**: Build B shows 20%+ fewer implementation-phase BLOCKERs and 30%+ fewer "unclear requirements" gaps. If no significant difference → `vsm_product` may be redundant; consider merging into architect prompt.
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
+
+---
+
+## H[N+2]: A full product swarm (product + UX + research agents) would improve outcomes for problem-oriented prompts
 
 **Status**: untested
 **Proposed**: 2026-05-22
