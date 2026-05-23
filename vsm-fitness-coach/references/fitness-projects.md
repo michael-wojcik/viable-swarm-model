@@ -178,3 +178,77 @@ SHARED:
 
 ### Project Spec
 [Detailed requirements]
+
+---
+
+## FB4: FleetSync — Real-Time Fleet & Field Operations Platform
+
+**Complexity**: High (4-5 waves, 3000+ lines, 4 services: API + worker + realtime + mobile-web)  
+**Estimated duration**: 3-4 hours  
+**Services**: FastAPI backend, Celery/Redis worker, Socket.io real-time service, React frontend
+
+### Coverage Map
+
+| Capability | Tested by |
+|---|---|
+| PostGIS / geospatial (FB2 carry-forward) | Technician locations, service area polygons, radius search, route bounding boxes |
+| File upload security | Image upload, signature capture, MIME validation, size limits |
+| Role-based access control | Admin / dispatcher / driver roles with permission middleware |
+| Real-time location streaming | Socket.io rooms for fleet tracking, server-side geofence alerts |
+| GraphQL + subscriptions | Complex nested queries, enum case sensitivity, depth limit |
+| Multi-service integration | API, worker, real-time service, frontend |
+| Docker build args | Frontend VITE_API_URL injected at build time |
+| Pydantic Settings testability | Lazy factory pattern or dependency injection |
+| Rate limiting middleware | SlowAPIMiddleware installed in foundation wave |
+
+### Known Stress Points
+- PostGIS spatial query bounds must have upper limits (FB2 gap carry-forward)
+- GraphQL enum case must match TypeScript exactly (H16)
+- Pydantic Settings must use lazy factory, not module-level singleton (H15)
+- SlowAPIMiddleware must be in foundation wave, not just decorators (H17)
+- Frontend Dockerfile must pass VITE_API_URL as build arg (H18)
+- File upload endpoints must validate MIME type and size before saving
+- WebSocket auth must be in-band, never URL query param
+- Role middleware must raise on failure, never return None
+
+### Project Spec
+
+```
+BACKEND (FastAPI + PostgreSQL + PostGIS + Redis):
+- User auth with JWT + bcrypt + role-based claims (role: admin | dispatcher | driver)
+- Rate limiting: SlowAPIMiddleware in main.py + decorators on auth endpoints (foundation wave)
+- Pydantic Settings via lazy factory (get_settings()) — never module-level singleton
+- Technician CRUD with PostGIS location (POINT), service area polygons (POLYGON)
+- PostGIS radius search with MAX_RADIUS_METERS = 50_000 bound
+- PostGIS bounding box query with area threshold limit
+- Job/WorkOrder CRUD with assignment to technicians
+- File upload: /uploads endpoint with MIME whitelist (image/jpeg, image/png, image/webp),
+  max 5MB, saved to S3-compatible local storage (minio or local filesystem)
+- Socket.io v4 rooms for real-time fleet tracking (one room per fleet/company)
+- Server-side geofence alerts: Celery worker checks if technician left assigned polygon,
+  publishes alert via Redis pub/sub
+- GraphQL API with subscriptions for job status updates
+- GraphQL depth limit (max 10) + complexity analysis
+- Enum alignment: JobStatus (PENDING | ASSIGNED | IN_PROGRESS | COMPLETED | CANCELLED)
+  must match exactly between backend GraphQL enum and frontend TypeScript union
+
+FRONTEND (React + Vite + TypeScript + Leaflet/MapLibre):
+- Dark theme, mobile-first, 60px min touch targets
+- Fleet map view with real-time technician markers (Socket.io)
+- Job assignment UI with technician search and drag-to-assign
+- Photo upload preview with client-side size validation
+- Role-aware navigation (driver sees jobs only, admin sees everything)
+- Vite proxy includes /api, /graphql, /ws, /uploads
+- Build args: VITE_API_URL and VITE_WS_URL passed in Dockerfile
+
+SHARED:
+- TypeScript types shared between frontend and backend
+- Socket.io event constants as single source of truth
+- JobStatus enum values defined once, used everywhere
+
+INFRASTRUCTURE:
+- Docker Compose: postgres (with postgis extension), redis, api, worker, realtime, frontend, minio
+- NO :- fallbacks in docker-compose.yml
+- Frontend Dockerfile passes VITE_API_URL and VITE_WS_URL as ARG
+- All env vars documented in .env.example
+```
