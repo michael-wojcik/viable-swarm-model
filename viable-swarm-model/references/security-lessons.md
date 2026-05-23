@@ -265,3 +265,25 @@ of 429. Both components are mandatory: (1) endpoint decorators on auth routes, (
 **Affected**: S1-Backend, vsm_security.
 **Source**: FB3 security gate MEDIUM-4 — decorators present in foundation wave but middleware
 missing until Phase 6.
+
+---
+
+### L38: GraphQL RBAC Must Match REST RBAC
+**Prevention rule**: When a project has BOTH REST and GraphQL endpoints, the security gate MUST verify that GraphQL resolvers enforce the SAME role-based access control as REST endpoints. GraphQL mutations are not exempt from authorization.
+**Affected**: vsm_security, vsm_auditor.
+**Source**: Fitness build FB5. GraphQL `createIncident` allowed any authenticated user while REST required `commander`/`dispatcher`.
+
+### L39: GraphQL List Endpoints Require Ownership Filtering
+**Prevention rule**: All GraphQL list queries (`incidents`, `resources`, `evidence`, etc.) MUST apply the same ownership/role scoping as their REST equivalents. A `responder` must not be able to enumerate all entities via GraphQL.
+**Affected**: vsm_security, vsm_auditor.
+**Source**: Fitness build FB5. GraphQL list queries returned unscoped data; REST endpoints were correctly scoped.
+
+### L40: Upload Filename Sanitization Prevents Stored XSS
+**Prevention rule**: Any user-provided filename stored in the database and rendered in the UI MUST be sanitized (strip HTML/JS characters) or replaced with a safe generated name before persistence.
+**Affected**: vsm_security, S1 backend coders.
+**Source**: Fitness build FB5. `uploads.py` stored `file.filename` verbatim without sanitization.
+
+### L41: JWT Storage in localStorage is a MEDIUM Security Risk
+**Prevention rule**: Flag JWT persisted to `localStorage` as MEDIUM severity. Prefer httpOnly, `SameSite=strict`, secure cookies. If Bearer tokens are required, recommend short-lived access tokens with refresh-token rotation.
+**Affected**: vsm_security.
+**Source**: Fitness build FB5. `authStore.ts` used Zustand `persist` middleware → token in `localStorage`.

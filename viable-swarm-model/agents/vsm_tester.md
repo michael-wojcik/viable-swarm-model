@@ -42,3 +42,9 @@ Pydantic Settings instantiation (e.g., `settings = Settings()` at the bottom of 
 the import will crash without env vars, blocking all test execution. Write `conftest.py` FIRST
 with fixtures that mock or inject required config before any application import.
 This prevents the agent from spending the entire wave failing on missing packages.
+
+
+**Additional Guidance (FB5 Finding)**: The tester MUST write tests for BOTH backend and frontend codebases:
+- **Backend**: Test routers, models, auth, GraphQL schema, Socket.io handlers, geo utils, AND entry-point wiring (`main.py`) AND background workers (`tasks.py`). Do not leave `main.py` or `tasks.py` at 0% coverage.
+- **Frontend**: Test React components, Zustand stores, GraphQL queries, and Socket.io client integration. Install frontend test dependencies (`jsdom`, `@testing-library/react`, `@testing-library/jest-dom`, `vitest`) and run `npm test` or `npx vitest run`.
+- **Coverage target**: Aim for meaningful coverage on both sides, not just backend routers.

@@ -159,3 +159,16 @@ correction BEFORE quality gates.
 - [ ] `sio.py` emit names match `shared/sio-events.ts` constant values
 - [ ] `shared/sio-events.ts` constants are imported by both backend and frontend
 - [ ] Every backend `emit` has a matching frontend `socket.on` listener
+
+## 18. GraphQL Enum Runtime Safety
+- [ ] Python enums used in GraphQL schemas use `str, enum.Enum` (or equivalent) when their values are strings
+- [ ] Enum construction from database string values does not raise `ValueError`
+
+## 19. Circular Import Prevention
+- [ ] No router/module imports from `main.py` (or equivalent entry point)
+- [ ] Shared singletons (limiter, config, database) live in dedicated modules, not in entry points
+
+## 20. GraphQL-REST Contract Parity
+- [ ] GraphQL mutations enforce the same RBAC as REST endpoints
+- [ ] GraphQL list queries apply the same ownership filtering as REST list endpoints
+- [ ] GraphQL geo/spatial endpoints apply the same bounds caps as REST geo endpoints

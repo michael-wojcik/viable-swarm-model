@@ -264,3 +264,19 @@ def get_settings() -> Settings:
 Never instantiate at module level. This allows tests to import modules and mock config.
 **Example**: FB3 tester agent timed out after 1800s because `config.py` crashed on import.
 **Affected**: S1-Backend, vsm_tester.
+
+---
+
+## GraphQL & Real-Time
+
+### 40. Strawberry `str, enum.Enum` for String-Valued GraphQL Enums
+**Trigger**: Backend defines GraphQL enums that map to database string columns.  
+**Solves**: `ValueError` when constructing `enum.Enum` from a string value (e.g., `Role("commander")` fails on `enum.Enum` but works on `str, enum.Enum`).  
+**Implementation**: Define enums as `class Role(str, enum.Enum): COMMANDER = "commander"`. Document this requirement in `api-spec.md` so implementation agents follow it.
+**Source**: Fitness build FB5. Coordinator caught `enum.Enum` runtime bug in `graphql.py`.
+
+### 41. Extract Shared Singletons to Dedicated Modules
+**Trigger**: Multiple modules need access to the same stateful singleton (limiter, config, event bus).  
+**Solves**: Circular imports when routers import from `main.py` to access the singleton.  
+**Implementation**: Create `app/limiter.py`, `app/events.py`, etc. Entry point (`main.py`) imports from these modules; routers also import from these modules. Never import from the entry point.
+**Source**: Fitness build FB5. `auth.py` imported `limiter` from `main.py`, causing circular import.

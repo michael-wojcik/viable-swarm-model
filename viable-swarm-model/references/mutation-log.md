@@ -191,3 +191,40 @@ hypotheses (H3-H8, H10-H18).
 - H22: WebSocket event name dictionary cross-check prevents emit/listen mismatches
 
 **Expected effect**: Gym skill can run targeted experiments to validate each hypothesis before checklist items are promoted to permanent prevention rules.
+
+---
+
+## Mutation [N] — 2026-05-23
+**Session**: FB5 ContractStress fitness build
+**File**: `references/security-lessons.md`
+**Type**: append
+**Rationale**: FB5 revealed three new security gaps: GraphQL RBAC drift from REST, GraphQL list endpoints lacking ownership filtering, and upload filename XSS. These were caught by the security gate but should be prevention rules in the security lessons.
+**Expected effect**: Future security gate audits will explicitly check GraphQL RBAC parity, GraphQL ownership filtering, and filename sanitization.
+
+## Mutation [N+1] — 2026-05-23
+**Session**: FB5 ContractStress fitness build
+**File**: `references/integration-checklist.md`
+**Type**: append
+**Rationale**: FB5 revealed gaps in the integration checklist: enum runtime safety (str, enum.Enum), circular import prevention (no imports from main.py), and GraphQL-REST contract parity.
+**Expected effect**: Future coordinators will verify these three contract dimensions before declaring integration complete.
+
+## Mutation [N+2] — 2026-05-23
+**Session**: FB5 ContractStress fitness build
+**File**: `references/pattern-library.md`
+**Type**: append
+**Rationale**: FB5 produced two proven patterns: (1) using `str, enum.Enum` for Strawberry enums to avoid ValueError, and (2) extracting shared singletons to dedicated modules to prevent circular imports.
+**Expected effect**: Future architects will document these patterns; future coders will apply them.
+
+## Mutation [N+3] — 2026-05-23
+**Session**: FB5 ContractStress fitness build
+**File**: `agents/vsm_tester.md`
+**Type**: refinement
+**Rationale**: FB5 tester wrote 86 backend tests but zero frontend tests, and left `main.py`/`tasks.py` at 0% coverage. The tester prompt did not explicitly require frontend or entry-point/worker tests.
+**Expected effect**: Future testing waves will produce tests for both backend and frontend, including entry-point wiring and background workers.
+
+## Mutation [N+4] — 2026-05-23
+**Session**: FB5 ContractStress fitness build
+**File**: `references/hypotheses.md`
+**Type**: append
+**Rationale**: FB5 fitness report identified 7 gaps. Seven falsifiable hypotheses were generated (H23-H29) to guide future gym experiments and build monitoring.
+**Expected effect**: Hypotheses H23-H29 are queued for testing by vsm-fitness-gym or validation in FB6+.

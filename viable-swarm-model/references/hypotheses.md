@@ -430,3 +430,122 @@ agent prompt are both effective at detecting this pattern.
 **Expected**: Mismatch count drops from 1-2 per build to 0 per build.
 **Result**: [to be filled]
 **Tested by**: [fitness build or gym experiment]
+
+---
+
+## H23: Adding GraphQL RBAC parity check to the security gate prevents REST/GraphQL authorization drift
+
+**Status**: untested
+**Proposed**: 2026-05-23
+**Rationale**: In FB5, GraphQL mutations (`createIncident`, `updateIncident`) lacked the same role guards as REST endpoints. The implementation auditor and coordinator did not catch this drift. Only the security gate flagged it as HIGH. If the security gate checklist explicitly requires "GraphQL resolvers enforce the same RBAC as REST endpoints", this drift would be caught earlier.
+**Source**: Fitness build FB5, Phase 3 & 6 gaps
+**Experiment**:
+  1. Review last 5 fitness builds with GraphQL + REST
+  2. Count instances where GraphQL RBAC diverged from REST RBAC
+  3. Add "GraphQL RBAC parity" check to security gate checklist
+  4. Run next 5 builds and compare drift counts
+**Expected**: Control group: 3-5 RBAC drifts. Treatment group: 0-1 drifts.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H24: Adding GraphQL ownership filtering check to the security gate prevents unscoped list queries
+
+**Status**: untested
+**Proposed**: 2026-05-23
+**Rationale**: In FB5, GraphQL list queries (`incidents`, `resources`, `evidence`) and geo queries returned unscoped data for any authenticated user, while REST endpoints correctly scoped responder views. The security gate caught this as HIGH. If the security gate checklist explicitly requires "GraphQL list endpoints apply the same ownership filtering as REST", this vulnerability would be caught during the gate, not after delivery.
+**Source**: Fitness build FB5, Phase 6 gap
+**Experiment**:
+  1. Review last 5 fitness builds with GraphQL list queries
+  2. Count unscoped GraphQL list endpoints per build
+  3. Add "GraphQL ownership filtering" check to security gate checklist
+  4. Run next 5 builds and compare unscoped counts
+**Expected**: Control group: 2-4 unscoped endpoints. Treatment group: 0 unscoped endpoints.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H25: Requiring frontend tests in the tester agent prompt results in >50% frontend test coverage
+
+**Status**: untested
+**Proposed**: 2026-05-23
+**Rationale**: In FB5, the tester agent wrote 86 backend tests but zero frontend tests. The tester prompt does not explicitly require frontend tests. If the prompt includes "write unit and integration tests for BOTH backend and frontend", the agent would likely produce frontend tests.
+**Source**: Fitness build FB5, Phase 4 gap
+**Experiment**:
+  1. Run 5 fitness builds with current tester prompt (no frontend test requirement)
+  2. Count frontend tests per build
+  3. Update tester prompt to require frontend tests
+  4. Run 5 builds with updated prompt
+**Expected**: Control group: 0-5 frontend tests. Treatment group: 10+ frontend tests per build.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H26: Adding entry-point and worker test requirements to the tester prompt increases coverage for main.py and tasks.py
+
+**Status**: untested
+**Proposed**: 2026-05-23
+**Rationale**: In FB5, `app/main.py` and `app/tasks.py` showed 0% test coverage. The tester focused on routers, models, and auth. If the tester prompt explicitly requires "test entry-point wiring (main.py) and background workers (tasks.py)", coverage for these files would increase.
+**Source**: Fitness build FB5, Phase 4 gap
+**Experiment**:
+  1. Run 5 fitness builds with current tester prompt
+  2. Measure main.py and tasks.py coverage
+  3. Update tester prompt with entry-point and worker test requirements
+  4. Run 5 builds and compare coverage
+**Expected**: Control group: 0% coverage for main.py/tasks.py. Treatment group: 30%+ coverage.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H27: Adding a structured meta-reflection template to Phase 8b results in actionable skill improvement
+
+**Status**: untested
+**Proposed**: 2026-05-23
+**Rationale**: In FB5, Phase 8b (Meta-Reflection) scored 2/5 — "essentially absent as a formal artifact." The `.kimi/lessons.md` contained some meta-learning bullets but no structured effectiveness audit, coverage audit, phase audit, agent audit, or hypothesis generation. If the skill provides a structured template or checklist for Phase 8b, the quality of meta-reflection would improve.
+**Source**: Fitness build FB5, Phase 8b gap
+**Experiment**:
+  1. Review last 5 fitness builds for formal meta-reflection artifacts
+  2. Score Phase 8b quality
+  3. Add structured Phase 8b template to SKILL.md or references/
+  4. Run next 5 builds and compare Phase 8b scores
+**Expected**: Control group: average Phase 8b score 2.0. Treatment group: average score 4.0+.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H28: Requiring the architect to document enum Python-type-to-GraphQL-value mapping prevents enum runtime bugs
+
+**Status**: untested
+**Proposed**: 2026-05-23
+**Rationale**: In FB5, `graphql.py` defined `class Role(enum.Enum)` (not `str, enum.Enum`), causing `ValueError` when constructing from string values like `"commander"`. The coordinator caught this, but the implementation coder did not. If the architect's `api-spec.md` explicitly documents whether enums should use `str, enum.Enum` or `enum.Enum`, and the auditor checks this, the bug would be prevented.
+**Source**: Fitness build FB5, coordinator finding
+**Experiment**:
+  1. Run 5 GraphQL-enabled builds with current architect prompt
+  2. Count enum runtime bugs per build
+  3. Update architect checklist to require `str, enum.Enum` for string-valued enums
+  4. Run 5 builds and compare bug counts
+**Expected**: Control group: 2-3 enum bugs. Treatment group: 0 bugs.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H29: Adding a "circular import risk" check to the integration checklist prevents main.py→router→main.py loops
+
+**Status**: untested
+**Proposed**: 2026-05-23
+**Rationale**: In FB5, `auth.py` imported `limiter` from `main.py`, creating a fatal circular import (`main.py` → `routers/auth.py` → `main.py`). The fix required extracting `limiter.py`. If the integration checklist included "verify no router imports from main.py", this would be caught before the first audit.
+**Source**: Fitness build FB5, foundation fix wave 2
+**Experiment**:
+  1. Review last 5 fitness builds for circular imports involving main.py
+  2. Count instances per build
+  3. Add "no router imports from main.py" to integration checklist
+  4. Run next 5 builds and compare counts
+**Expected**: Control group: 1-2 circular imports. Treatment group: 0 circular imports.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
