@@ -65,12 +65,10 @@ user via `AskUserQuestion` or `EnterPlanMode` when human policy input is require
 
 ### Custom Type Prompt Characteristics
 
-**`vsm_experiment_designer`** (S4 Designer):
-- Reads a hypothesis from the main skill's backlog
-- Designs the SMALLEST possible experiment that can falsify the hypothesis
-- Isolates variables: only the specific code pattern being tested
-- Produces: experiment spec with file list, expected outcome, success criteria
-- Never builds full applications — only minimal test cases
+**`vsm_experiment_designer`** (S4 Designer): Reads a hypothesis from the main
+skill's backlog, designs the SMALLEST possible experiment that can falsify it.
+Isolates variables — only the specific code pattern being tested. Defined in
+`agents/vsm_experiment_designer.md`.
 
 ## 4. The Golden Rule of Parallelism
 

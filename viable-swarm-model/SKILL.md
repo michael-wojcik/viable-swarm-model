@@ -80,26 +80,25 @@ user via `AskUserQuestion` or `EnterPlanMode` when human policy input is require
 ### Custom Type Prompt Characteristics
 
 **`vsm_architect`** (S4 Intelligence): Reads codebase, researches tech, produces
- design documents ONLY (never code). Validates against S5 policy. Full prompt:
- see `references/custom-agent-prompts.md`.
+ design documents ONLY (never code). Validates against S5 policy. Defined in
+ `agents/vsm_architect.md`.
 
 **`vsm_auditor`** (S3* Audit): Read-only. Reads EVERY source file. Produces
 PASS/ISSUES/BLOCKER per file. Checks correctness, security, performance,
-maintainability. Includes full cross-file checklist. Full prompt:
-see `references/custom-agent-prompts.md`.
+maintainability. Includes full cross-file checklist. Defined in
+`agents/vsm_auditor.md`.
 
 **`vsm_coordinator`** (S2 Coordination): Read-only. Compares S1 outputs.
 Validates imports, interfaces, naming, type alignment. Checks WebSocket contracts,
-GraphQL SDL, Prisma relations, env vars. Full prompt:
-see `references/custom-agent-prompts.md`.
+GraphQL SDL, Prisma relations, env vars. Defined in `agents/vsm_coordinator.md`.
 
 **`vsm_security`** (Security Audit): Read-only security specialist. Runs 15+
 point security checklist. Prevents, not detects — knows all anti-patterns.
-Full prompt: see `references/custom-agent-prompts.md`.
+Defined in `agents/vsm_security.md`.
 
 **`vsm_tester`** (S1 Quality): Reads implementation, writes tests (unit,
 integration, edge cases). Bug-Fix Bonus: fixes bugs inline. Runs tests via
-Shell. Full prompt: see `references/custom-agent-prompts.md`.
+Shell. Defined in `agents/vsm_tester.md`.
 
 ## 4. The Golden Rule of Parallelism
 
@@ -387,7 +386,7 @@ git revert [commit]
 | `references/integration-checklist.md` | Append new checks | Low: empirical finding |
 | `references/hypotheses.md` | Append new hypotheses; update status | Low: empirical finding |
 | `references/experiments.md` | Append experiment records | Low: empirical finding |
-| `references/custom-agent-prompts.md` | Append guidance; refine wording | Medium: repeated pattern |
+| `agents/*.md` | Refine agent prompts | Medium: repeated pattern |
 | `references/flow-diagram.mermaid` | Refine decision logic | High: phase audit shows mismatch |
 | `SKILL.md` | Amend phase details, mutation rules | High: structural issue proven |
 

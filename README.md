@@ -44,10 +44,15 @@ viable-swarm-model/                    ← the repo
 ├── README.md
 ├── viable-swarm-model/                ← main skill (the builder)
 │   ├── SKILL.md
+│   ├── agents/
+│   │   ├── vsm_architect.md
+│   │   ├── vsm_auditor.md
+│   │   ├── vsm_coordinator.md
+│   │   ├── vsm_security.md
+│   │   └── vsm_tester.md
 │   ├── references/
 │   │   ├── acquired-wisdom.md
 │   │   ├── anti-patterns.md
-│   │   ├── custom-agent-prompts.md
 │   │   ├── experiments.md             ← experiment log
 │   │   ├── flow-diagram.mermaid
 │   │   ├── hypotheses.md              ← hypothesis backlog
@@ -59,6 +64,8 @@ viable-swarm-model/                    ← the repo
 │       └── lessons-template.md
 ├── vsm-fitness-gym/             ← companion skill (the research lab)
 │   ├── SKILL.md
+│   ├── agents/
+│   │   └── vsm_experiment_designer.md
 │   ├── references/
 │   │   └── experiment-templates.md
 │   └── assets/
@@ -203,7 +210,7 @@ If empirical findings justify it, the skill **appends new knowledge to its own f
 - `references/integration-checklist.md` — new cross-file checks
 - `references/hypotheses.md` — new hypotheses to test
 - `references/experiments.md` — experiment records
-- `references/custom-agent-prompts.md` — refined agent prompts
+- `agents/*.md` — Kimi CLI custom subagent definitions
 - `SKILL.md` — phase structure and mutation rules themselves
 
 **What protects against corruption:**
