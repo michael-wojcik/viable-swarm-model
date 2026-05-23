@@ -111,7 +111,6 @@ Shell. Defined in `agents/vsm_tester.md`.
 **Writes implementation code:**
 - `coder` (built-in) — features, backend, frontend, infrastructure
 - `vsm_tester` (custom) — tests, bug fixes inline
-- `vsm_security` (custom, Security Fix Mode) — security tests, surgical security fixes
 
 **Writes design/requirements documents:**
 - `vsm_product` (custom) — product briefs, user stories, acceptance criteria
@@ -120,6 +119,7 @@ Shell. Defined in `agents/vsm_tester.md`.
 **Read-only evaluation (reports, audits, checklists):**
 - `vsm_auditor` (custom) — correctness audit per file
 - `vsm_coordinator` (custom) — cross-file contract validation
+- `vsm_security` (custom) — security audit, anti-pattern detection
 
 ## 4. The Golden Rule of Parallelism
 
