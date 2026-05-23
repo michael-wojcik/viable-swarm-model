@@ -219,6 +219,54 @@ Run 5 with modified requirements including rate limiting. Count builds with rate
 
 ---
 
+## H15: Moving Pydantic Settings out of module level enables test execution
+
+**Status**: untested
+**Proposed**: 2026-05-22
+**Rationale**: FB3 tester agent timed out after 1800s because `config.py` instantiated `Settings()` at module level, causing import crash without env vars. This blocked all test execution except pure unit tests.
+**Experiment**: Build a minimal FastAPI project with Pydantic Settings. Variant A: module-level `settings = Settings()`. Variant B: lazy factory `get_settings()`. Have a tester agent write and run pytest for both. Measure time to first passing test.
+**Expected**: Variant A: tester times out or fails within 5 minutes. Variant B: tests run successfully within 2 minutes.
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
+
+---
+
+## H16: Adding case-sensitivity check to integration checklist catches enum mismatches
+
+**Status**: untested
+**Proposed**: 2026-05-22
+**Rationale**: FB3 coordinator caught many contract mismatches but missed that GraphQL `LogStatus` enum used `SUCCESS`/`FAILURE` (uppercase) while frontend `NodeExecutionStatus` type used `"success" \| "failure"` (lowercase).
+**Experiment**: Run 5 builds with complex GraphQL enums. Use current checklist for 5 builds, modified checklist with case-sensitivity check for 5 builds. Count case mismatches caught before security gate.
+**Expected**: Control group catches 0-1 case mismatches. Treatment group catches 4-5.
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
+
+---
+
+## H17: Requiring SlowAPIMiddleware in foundation wave results in 90% installation rate
+
+**Status**: untested
+**Proposed**: 2026-05-22
+**Rationale**: FB3 had rate limiting decorators in foundation wave but `SlowAPIMiddleware` was missing until security gate found it. If the foundation wave prompt explicitly requires middleware installation, it would likely be included.
+**Experiment**: Run 5 auth-enabled builds with current foundation requirements. Run 5 with "install SlowAPIMiddleware in main.py" added to requirements. Count builds with middleware after implementation wave.
+**Expected**: Control group: 0-1 builds with middleware. Treatment group: 4-5 builds.
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
+
+---
+
+## H18: Build-arg validation in frontend Dockerfile prevents undefined API URLs
+
+**Status**: untested
+**Proposed**: 2026-05-22
+**Rationale**: FB3 frontend Dockerfile built the app without `VITE_API_URL`, baking `undefined` into the static bundle. Docker-compose passes them as runtime env vars, but nginx serves pre-built static files.
+**Experiment**: Build 5 frontend Docker images without build args. Build 5 with `ARG VITE_API_URL`. Inspect the generated JS bundle for `undefined` in API URL strings.
+**Expected**: Control group: 5/5 images have `undefined`. Treatment group: 0/5 have `undefined`.
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
+
+---
+
 ## H[N]: [Hypothesis Title]
 
 **Status**: untested

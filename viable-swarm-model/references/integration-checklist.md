@@ -128,3 +128,12 @@ correction BEFORE quality gates.
 - [ ] Backend state machine enum values match frontend TypeScript union types exactly
 - [ ] Every state value emitted by backend is handled by frontend switch/case
 - [ ] No frontend-only states that backend never emits (causes unreachable code)
+
+## 24. Case-Sensitive Enum Alignment
+- [ ] GraphQL enum values match TypeScript union types exactly (including case)
+- [ ] Backend string literals match frontend string literals exactly
+- [ ] Shared constants file is the single source of truth for enum values
+
+## 25. Frontend Dockerfile Build Args
+- [ ] `VITE_API_URL` and `VITE_WS_URL` passed as `ARG` in frontend Dockerfile
+- [ ] Runtime env vars are not silently baked as `undefined` into static bundles

@@ -247,3 +247,20 @@
 **Solves**: Unbounded spatial queries are a DoS vector — scanning an entire PostGIS table with `ST_DWithin(..., 99999999)`.  
 **Implementation**: Enforce `_MAX_RADIUS_METERS = 50_000` (50km) and return HTTP 400 if exceeded. For bbox, reject areas exceeding a threshold (e.g., 10,000 km²).  
 **Example**: FB2 `backend/app/routers/geo.py` initially accepted arbitrary `radius_meters`.
+
+### 41. Lazy Pydantic Settings Factory for Testability
+**Trigger**: Backend uses Pydantic Settings for configuration.  
+**Solves**: Module-level `settings = Settings()` crashes on import without env vars, blocking test discovery and CI execution.  
+**Implementation**: Use a lazy factory pattern:
+```python
+_settings: Settings | None = None
+
+def get_settings() -> Settings:
+    global _settings
+    if _settings is None:
+        _settings = Settings()
+    return _settings
+```
+Never instantiate at module level. This allows tests to import modules and mock config.
+**Example**: FB3 tester agent timed out after 1800s because `config.py` crashed on import.
+**Affected**: S1-Backend, vsm_tester.

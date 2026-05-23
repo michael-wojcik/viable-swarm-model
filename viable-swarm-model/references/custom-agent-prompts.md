@@ -164,4 +164,11 @@ technologies, and produce design documents ONLY (never implementation code).
 test dependencies before writing tests. Common dependencies that may be missing:
 `jsdom`, `@testing-library/jest-dom`, `@testing-library/user-event`, `@vitest/coverage-v8`,
 `pytest-asyncio`, `pytest-cov`, `httpx`. Run `npm install` or `pip install` as needed.
+
+**Additional Guidance (FB3 Finding)**: Before importing any backend module in test code,
+set ALL required environment variables (JWT_SECRET, DATABASE_URL, etc.) in `conftest.py`
+or via `os.environ` BEFORE importing application modules. If the backend uses module-level
+Pydantic Settings instantiation (e.g., `settings = Settings()` at the bottom of `config.py`),
+the import will crash without env vars, blocking all test execution. Write `conftest.py` FIRST
+with fixtures that mock or inject required config before any application import.
 This prevents the agent from spending the entire wave failing on missing packages.

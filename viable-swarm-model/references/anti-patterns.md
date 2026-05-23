@@ -252,3 +252,10 @@
 **When**: Model designer chooses intuitive column names without checking SQLAlchemy imports.  
 **Prevention**: Alias SQLAlchemy imports in model files (`sa_text`, `sa_select`). Add this to foundation wave checklist for SQLAlchemy projects.  
 **Affected**: S1-Backend, vsm_auditor.
+
+### 46. Module-Level Pydantic Settings Instantiation
+**What**: `settings = Settings()` at module scope crashes on import when env vars are missing.  
+**When**: Developer follows Pydantic docs example without considering testability.  
+**Prevention**: Use lazy factory (`get_settings()`) or dependency injection. Never instantiate at module level. This prevents test discovery, CI execution, and agent-based testing.  
+**Example**: FB3 `backend/app/config.py` had `settings = Settings()` at bottom. Tester agent could not import any backend module for 1800s until timeout.  
+**Affected**: S1-Backend, vsm_tester, vsm_auditor.

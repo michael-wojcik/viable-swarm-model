@@ -255,3 +255,13 @@ and nginx config with the same rigor as application code. Check for hardcoded pa
 in the foundation wave (Phase 2), not just the security gate (Phase 6). Auth endpoints
 (`/register`, `/login`, `/refresh`) are brute-force vectors from day one.
 **Affected**: S1 coders in Phase 2, vsm_security.
+
+### L40: Rate Limiting Requires Both Decorators AND Middleware
+**Prevention rule**: Rate limiting is incomplete without `SlowAPIMiddleware` installed in
+`main.py`. Endpoint decorators (`@limiter.limit(...)`) raise `RateLimitExceeded`, but without
+the middleware the exception propagates to the generic handler and returns HTTP 500 instead
+of 429. Both components are mandatory: (1) endpoint decorators on auth routes, (2) middleware
+`app.add_middleware(SlowAPIMiddleware)`, (3) `@app.exception_handler(RateLimitExceeded)` returning 429.
+**Affected**: S1-Backend, vsm_security.
+**Source**: FB3 security gate MEDIUM-4 — decorators present in foundation wave but middleware
+missing until Phase 6.

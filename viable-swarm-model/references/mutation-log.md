@@ -85,3 +85,19 @@ will be validated during integration. Tester agents will install deps proactivel
 - `references/integration-checklist.md` — Added Check #23 (state machine domain alignment)
 - `references/anti-patterns.md` — Added Anti-Patterns #44-45 (docker fallbacks, SQLAlchemy shadowing)
 - `references/custom-agent-prompts.md` — Added tester dep-install guidance and foundation rate-limiting note
+
+## Mutation [4] — 2026-05-22
+
+**Session**: Fitness build FB3 (TaskFlow)
+**File**: Multiple references files
+**Type**: append
+**Rationale**: FB3 revealed 4 new systemic gaps: (1) tester agent cannot execute tests because module-level Pydantic Settings instantiation crashes on import without env vars, (2) GraphQL enum case mismatches slip through coordinator (SUCCESS vs "success"), (3) rate limiting middleware (SlowAPIMiddleware) still missing despite decorators being present in foundation wave, (4) frontend Dockerfile bakes undefined API URLs because build args are missing. Additionally, FB3 validated that FB2 mutations worked: zero docker-compose fallbacks, SQLAlchemy aliased imports, GraphQL depth limiting installed, rate limiting scaffolding shifted left to foundation wave. Security gate had zero CRITICAL/HIGH findings for the first time.
+**Expected effect**: Next session with Pydantic Settings will use lazy factory pattern. Tester agents will write conftest.py before importing backend modules. GraphQL enum case will be checked during integration. Rate limiting will include both decorators and middleware. Frontend Docker builds will include API URL build args.
+
+**Files modified**:
+- `references/hypotheses.md` — Added H15-H18
+- `references/security-lessons.md` — Added L40 (rate limiting requires both decorators AND middleware)
+- `references/pattern-library.md` — Added Pattern #41 (lazy Pydantic Settings factory for testability)
+- `references/integration-checklist.md` — Added Checks #24-25 (enum case alignment, frontend Dockerfile build args)
+- `references/anti-patterns.md` — Added Anti-Pattern #46 (module-level Pydantic Settings instantiation)
+- `references/custom-agent-prompts.md` — Added tester env-var injection guidance (FB3 finding)
