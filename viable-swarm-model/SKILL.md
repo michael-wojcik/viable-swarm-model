@@ -44,7 +44,7 @@ Must be embedded in a message (e.g., `Let's build something. /flow:viable-swarm-
 **Reference loading**: `/skill:viable-swarm-model` loads knowledge without execution.
 
 **Path convention**: This skill assumes installation at
-`~/.kimi/skills/viable-swarm-model/`. When self-modifying, the model uses
+`~/vsm/viable-swarm-model/`. When self-modifying, the model uses
 absolute paths from this root. If installed elsewhere (e.g. via `extra_skill_dirs`),
 use symlinks or update paths in mutation commands.
 
@@ -207,14 +207,14 @@ flowchart TD
 Main agent (S5) performs:
 1. **Viability check**: trivial (<50 lines, one file)? If yes, respond directly.
 2. **Read project memory**: `.kimi/lessons.md` if exists.
-3. **Read acquired wisdom**: `~/.kimi/skills/viable-swarm-model/references/acquired-wisdom.md`
+3. **Read acquired wisdom**: `~/vsm/viable-swarm-model/references/acquired-wisdom.md`
    if exists.
-4. **Read hypotheses**: `~/.kimi/skills/viable-swarm-model/references/hypotheses.md`
+4. **Read hypotheses**: `~/vsm/viable-swarm-model/references/hypotheses.md`
    if exists. Note any untested hypotheses that are relevant to this project.
 5. **Self-test**: Verify all referenced files exist and are readable. Verify
 the flow diagram parses. Verify the skill can describe its own phase sequence
 without contradiction. If any check fails → emit algedonic, write diagnosis
-to `~/.kimi/skills/viable-swarm-model/references/mutation-log.md`, ask user to review.
+to `~/vsm/viable-swarm-model/references/mutation-log.md`, ask user to review.
 6. Write `plan.md`.
 
 ### Phase 1: Intelligence (S4)
@@ -268,7 +268,7 @@ After project reflection, evaluate the skill's own performance:
 5. **Anomaly detection**: What was surprising? What did the skill get wrong?
    What vulnerability class is completely absent from our knowledge base?
 6. **Propose hypotheses**: For each anomaly, write a new hypothesis to
-   `~/.kimi/skills/viable-swarm-model/references/hypotheses.md` with:
+   `~/vsm/viable-swarm-model/references/hypotheses.md` with:
    - Status: untested
    - Rationale: what was observed
    - Experiment: minimal test to validate
@@ -363,7 +363,7 @@ escalate to user.
 ## 10. The Mutation System
 
 This skill is a learning organism. It modifies its own files between sessions.
-All files in `~/.kimi/skills/viable-swarm-model/` are mutable.
+All files in `~/vsm/viable-swarm-model/` are mutable.
 
 ### Why Mutation Is Safe
 
@@ -371,7 +371,7 @@ The skill directory is a **git repository**. Every mutation is committed.
 If a mutation breaks viability, the user (or the skill itself) can revert:
 
 ```bash
-cd ~/.kimi/skills/viable-swarm-model
+cd ~/vsm/viable-swarm-model
 git log --oneline
 git revert [commit]
 ```
@@ -441,8 +441,8 @@ in `~/.kimi/config.toml`).
 
 When `--continue` resumes a session:
 1. Read `.kimi/lessons.md` at session start
-2. Read `~/.kimi/skills/viable-swarm-model/references/acquired-wisdom.md`
-3. Read `~/.kimi/skills/viable-swarm-model/references/hypotheses.md`
+2. Read `~/vsm/viable-swarm-model/references/acquired-wisdom.md`
+3. Read `~/vsm/viable-swarm-model/references/hypotheses.md`
 4. Apply relevant lessons to planning
 5. After delivery, append new lessons to both project-local and skill-global memory
 6. Over time, this creates both a project-specific and a cross-project knowledge base

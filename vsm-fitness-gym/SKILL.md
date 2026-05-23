@@ -39,7 +39,7 @@ Must be embedded in a message (e.g., `Let's test a hypothesis. /flow:vsm-fitness
 **Example**: `/flow:vsm-fitness-gym Test hypotheses H2, H7, H12`
 
 **Path convention**: This skill assumes the main skill is installed at
-`~/.kimi/skills/viable-swarm-model/`. If installed elsewhere,
+`~/vsm/viable-swarm-model/`. If installed elsewhere,
 adjust paths in Shell commands.
 
 ## 2. How to Invoke
@@ -82,7 +82,7 @@ Dependent experiments   -> sequential (TaskOutput block=true before next)
 ```mermaid
 flowchart TD
     BEGIN([BEGIN])
-    P0[Phase 0: Read Hypotheses<br/>Read ~/.kimi/skills/viable-swarm-model/references/hypotheses.md]
+    P0[Phase 0: Read Hypotheses<br/>Read ~/vsm/viable-swarm-model/references/hypotheses.md]
     P0S{<choice>hypotheses found</choice>?}
     P0P[Present to S5<br/>User selects which to test]
     P1[Phase 1: Design Experiments<br/>vsm_experiment_designer per hypothesis]
@@ -122,7 +122,7 @@ flowchart TD
 ## 6. Phase Details
 
 ### Phase 0: Read Hypotheses
-Read `~/.kimi/skills/viable-swarm-model/references/hypotheses.md`.
+Read `~/vsm/viable-swarm-model/references/hypotheses.md`.
 Filter for `status: untested`. Present to user (S5) for selection.
 
 ### Phase 1: Design Experiments
