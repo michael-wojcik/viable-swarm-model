@@ -147,6 +147,7 @@ flowchart TD
     P2[Phase 2: Foundation Wave<br/>2-3 coder agents<br/>run_in_background=true]
     P2S[TaskOutput block=true]
     P2A[Phase 2b: Audit<br/>vsm_auditor]
+    P2M[Phase 2c: Model Validation<br/>S5 checks models.py vs data-model.md]
     P2D{<choice>BLOCKERs</choice>?}
     P3[Phase 3: Implementation Wave<br/>Parallel coder agents]
     P3S[TaskOutput block=true]
@@ -165,6 +166,8 @@ flowchart TD
     P7R[Re-audit changed files]
     P7D{<choice>BLOCKERs remain<br/>iterations < 3</choice>?}
     P7E[Escalate to User<br/>AskUserQuestion]
+    P7S[Phase 7b: Post-Fix Security Re-Check<br/>vsm_security on modified auth/GraphQL/WebSocket]
+    P7F{<choice>regressions found</choice>?}
     P8[Phase 8: Reflection<br/>Append to .kimi/lessons.md]
     P8M[Phase 8b: Meta-Reflection + Hypothesis Generation<br/>Evaluate performance<br/>Write new hypotheses to hypotheses.md<br/>Bucket mutations: append-only vs refinement vs structural]
     P8W[Write append-only mutations<br/>security-lessons.md, pattern-library.md,<br/>anti-patterns.md, integration-checklist.md,<br/>experiments.md, hypotheses.md,<br/>mutation-log.md]
@@ -189,7 +192,8 @@ flowchart TD
     P1D -->|<choice>approved</choice>| P2
     P2 --> P2S
     P2S --> P2A
-    P2A --> P2D
+    P2A --> P2M
+    P2M --> P2D
     P2D -->|<choice>yes</choice>| P7
     P2D -->|<choice>no</choice>| P3
     P3 --> P3S
@@ -213,7 +217,10 @@ flowchart TD
     P7R --> P7D
     P7D -->|<choice>yes</choice>| P7
     P7D -->|<choice>no, max reached</choice>| P7E
-    P7D -->|<choice>no, all clear</choice>| P8
+    P7D -->|<choice>no, all clear</choice>| P7S
+    P7S --> P7F
+    P7F -->|<choice>yes</choice>| P7
+    P7F -->|<choice>no</choice>| P8
     P7E --> END
     P8 --> P8M
     P8M --> P8W
@@ -254,6 +261,13 @@ Rejected plans loop back.
 Spawn 2-3 `coder` subagents with `run_in_background=true`. Wait via
 `TaskOutput(block=true)`. Then spawn `vsm_auditor`. BLOCKERs trigger Phase 7.
 
+**Phase 2c: Model Validation (S5)** — After foundation audit passes and BEFORE
+spawning implementation agents, S5 MUST verify that `models.py` (or equivalent)
+matches `data-model.md` field names and types exactly. If `data-model.md` exists
+in the build directory and the models do not match, treat as a BLOCKER: send
+back to foundation agents for correction. This prevents cascade failures in
+GraphQL, frontend queries, and shared types.
+
 ### Phase 3: Implementation Wave
 Pass Wave 1 outputs as input references. Spawn parallel `coder` subagents.
 Entry point wiring MANDATORY after this wave. Audit + coordination check.
@@ -275,6 +289,14 @@ Gather vs. Stop: planned wave → gather; mid-build → emergency stop.
 Group fixes by file. Parallel across files, sequential within file. Spawn
 `coder` subagents. MANDATORY re-audit after. Max 3 iterations. Still blocked?
 Escalate to user.
+
+**Phase 7b: Post-Fix Security Re-Check** — After fix wave clears all BLOCKERs
+and BEFORE Phase 8 Reflection, S5 MUST run a lightweight security re-check on
+any file modified during the fix wave that touches auth, GraphQL, or WebSocket
+code. Spawn `vsm_security` with a focused scope (modified files only). If the
+re-check finds CRITICAL/HIGH regressions (e.g., a fix agent weakened auth),
+loop back to Phase 7. This prevents fix/test agents from introducing
+vulnerabilities after the main security gate.
 
 ### Phase 8: Reflection
 Append to `.kimi/lessons.md` with Source/Finding/Fix/Verification format.
