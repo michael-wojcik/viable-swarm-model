@@ -265,3 +265,44 @@ hypotheses (H3-H8, H10-H18).
 **Type**: refinement
 **Rationale**: FB6 architect agent timed out after 600s on a complex healthcare platform spec. The agent spent excessive time researching technologies already specified in the plan. Added chunking guidance: skip research for familiar specified stacks, write docs in dependency order (data-model → api-spec → architecture).
 **Expected effect**: Architect agents on large projects will complete within timeout limits by avoiding unnecessary research and writing in dependency order.
+
+---
+
+## Mutation 12 — 2026-05-23
+
+**Session**: FB7 JurisFlow fitness build evaluation
+**File**: `references/hypotheses.md`
+**Type**: append
+**Rationale**: FB7 revealed three new systemic gaps: (1) tester security regression (H34), (2) foundation model drift (H35), (3) security gate timing (H36). Each gap needs a falsifiable hypothesis for the gym to test.
+**Expected effect**: Gym experiments will validate whether these hypotheses hold across multiple builds.
+
+---
+
+## Mutation 13 — 2026-05-23
+
+**Session**: FB7 JurisFlow fitness build evaluation
+**File**: `references/integration-checklist.md`
+**Type**: append
+**Rationale**: No existing check verifies that SQLAlchemy models match the data-model.md spec. FB7 had 8+ field mismatches. Also, no check verifies security after fix waves.
+**Expected effect**: Future coordinators will catch model drift and security regressions before delivery.
+
+---
+
+## Mutation 14 — 2026-05-23
+
+**Session**: FB7 JurisFlow fitness build evaluation
+**File**: `agents/vsm_tester.md`
+**Type**: refinement
+**Rationale**: FB7 tester reverted a fail-closed GraphQL auth fix, believing 401 was a bug. The agent needs explicit guidance that auth restrictions are features, not bugs.
+**Expected effect**: Future testers will expect 401/403 in tests rather than weakening auth checks.
+
+---
+
+## Mutation 15 — 2026-05-23
+
+**Session**: FB7 JurisFlow fitness build evaluation
+**File**: `agents/vsm_architect.md`
+**Type**: refinement
+**Rationale**: FB7 architect (skipped) and foundation agent both failed to follow data-model.md. Explicit instruction to read existing design documents should reduce drift.
+**Expected effect**: Future architects/foundation agents will read and match existing specs.
+

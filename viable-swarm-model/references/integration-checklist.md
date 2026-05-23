@@ -178,3 +178,17 @@ correction BEFORE quality gates.
 - [ ] WebSocket room unsubscription handlers verify the socket session before leaving a room
 - [ ] Socket.io `cors_allowed_origins` uses the same explicit allowlist as HTTP CORS middleware, never `"*"`
 - [ ] Backend `authenticate` event stores user session; all subsequent room operations read and validate that session
+
+## 31. Model-Spec Alignment Check
+- [ ] SQLAlchemy/model field names match `data-model.md` exactly
+- [ ] SQLAlchemy/model field types match `data-model.md` exactly
+- [ ] All entities in `data-model.md` are represented in the ORM models
+- [ ] All relationships and constraints from `data-model.md` are implemented
+- [ ] If `data-model.md` does not exist, skip this check
+
+## 32. Post-Fix Security Re-Check
+- [ ] After any fix wave that modified auth, GraphQL, or WebSocket files, re-run security checks on those specific files
+- [ ] Verify auth middleware still raises on failure (never returns None)
+- [ ] Verify GraphQL `get_context` still propagates exceptions (no broad `except` added)
+- [ ] Verify WebSocket room handlers still verify session before room access
+- [ ] If security regression is found, escalate to S5 immediately

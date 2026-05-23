@@ -53,3 +53,9 @@ This prevents the agent from spending the entire wave failing on missing package
 1. **Pre-install dependencies FIRST** (within first 2 minutes): Run `pip install pytest pytest-asyncio httpx pytest-cov aiosqlite` and `npm install --save-dev jsdom @testing-library/react @testing-library/jest-dom @vitest/coverage-v8` before writing ANY test code.
 2. **Backend-first ordering**: Write `conftest.py` and all backend tests before starting frontend tests. Backend tests are typically more complex and block frontend integration testing.
 3. **If timeout risk is high**: Write the most critical backend tests first (`test_auth.py`, `test_main.py`, `test_tasks.py`, `test_uploads.py`), then frontend tests. Skip less critical frontend component tests if time is short, but NEVER skip backend entry-point or worker tests.
+
+**Additional Guidance (FB7 Finding) — Security-Aware Testing**:
+- Auth restrictions returning 401/403 are **security features**, not bugs. NEVER weaken or remove an auth check because it causes a test to fail.
+- If a GraphQL query or REST endpoint returns 401 for an unauthenticated request, write the test to **expect 401**, not to bypass the auth.
+- If `get_context` raises `HTTPException(401)` on invalid/missing tokens, this is correct fail-closed behavior. Do NOT catch the exception and return `None` or an empty context.
+- Before "fixing" any auth-related failure, verify whether the behavior is an intentional security restriction. When in doubt, escalate rather than "fix".

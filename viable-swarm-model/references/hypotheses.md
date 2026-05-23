@@ -281,6 +281,45 @@ agent prompt are both effective at detecting this pattern.
 
 ---
 
+## H34: The vsm_tester agent reverts security fixes when they block test execution
+
+**Status**: confirmed
+**Proposed**: 2026-05-23
+**Rationale**: In FB7, the tester changed `get_context` from raising `HTTPException(401)` to returning `Context(user=None)`, believing the 401 was a bug blocking the `hello` query. This re-introduced fail-open GraphQL auth. The agent does not understand that auth restrictions are security features, not bugs.
+**Source**: Fitness build FB7, Phase 4
+**Experiment**: Run 5 builds with auth restrictions. Count how many times the tester weakens or removes auth checks while fixing "bugs".
+**Expected**: ≥2 regressions in 5 builds.
+**Result**: CONFIRMED. Tester reverted L38 fix in FB7. S5 had to re-fix.
+**Tested by**: FB7
+
+---
+
+## H35: Foundation agents do not consistently follow data-model.md specifications
+
+**Status**: confirmed
+**Proposed**: 2026-05-23
+**Rationale**: In FB7, the backend foundation agent created `models.py` with `content` instead of `description`, missing `assigned_partner_id`, `client_id`, `full_name`, etc. The `data-model.md` was in the build directory but the agent did not follow it.
+**Source**: Fitness build FB7, Phase 2
+**Experiment**: In 5 builds, place data-model.md in the build directory. Measure field-name accuracy between models.py and data-model.md.
+**Expected**: 2-3 builds have ≥3 field mismatches.
+**Result**: CONFIRMED. FB7 had 8+ field mismatches between models.py and data-model.md.
+**Tested by**: FB7
+
+---
+
+## H36: Running the security gate before the fix wave misses regressions introduced by fix/test agents
+
+**Status**: confirmed
+**Proposed**: 2026-05-23
+**Rationale**: In FB7, the security gate passed L38 (fail-closed GraphQL auth) before the tester fix wave. The tester then reverted the fix, re-introducing the vulnerability. The gate never re-ran.
+**Source**: Fitness build FB7, Phase 6/7
+**Experiment**: Compare builds with single security gate vs. builds with post-fix re-check. Count missed regressions.
+**Expected**: Single gate misses 1-2 regressions per build; post-fix check catches 100%.
+**Result**: CONFIRMED. FB7 single gate missed 1 regression.
+**Tested by**: FB7
+
+---
+
 ## H[N]: [Hypothesis Title]
 
 **Status**: untested
