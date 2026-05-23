@@ -222,9 +222,9 @@ Present all proposed mutations to S5 in a structured report:
 `AskUserQuestion`). If rejected or ambiguous, log rationale to `mutation-log.md`.
 
 Write all applied mutations to:
-- Main skill's reference files
+- `references/*.md` (rules, patterns, anti-patterns, checklists)
 - `agents/*.md` (agent prompt refinements)
-- `hypotheses.md`, `experiments.md`, `mutation-log.md`
+- `references/hypotheses.md`, `references/experiments.md`, `references/mutation-log.md`
 - Fitness report using `assets/fitness-report-template.md`
 - `git commit` all changes with descriptive message
 
