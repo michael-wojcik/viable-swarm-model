@@ -144,10 +144,11 @@ flowchart TD
     P7D{<choice>BLOCKERs remain<br/>iterations < 3</choice>?}
     P7E[Escalate to User<br/>AskUserQuestion]
     P8[Phase 8: Reflection<br/>Append to .kimi/lessons.md]
-    P8M[Phase 8b: Meta-Reflection + Hypothesis Generation<br/>Evaluate performance<br/>Write new hypotheses to hypotheses.md<br/>Bucket mutations: append-only vs structural]
+    P8M[Phase 8b: Meta-Reflection + Hypothesis Generation<br/>Evaluate performance<br/>Write new hypotheses to hypotheses.md<br/>Bucket mutations: append-only vs refinement vs structural]
     P8W[Write append-only mutations<br/>security-lessons.md, pattern-library.md,<br/>anti-patterns.md, integration-checklist.md,<br/>experiments.md, hypotheses.md,<br/>mutation-log.md]
+    P8R[Apply refinement mutations<br/>Single file, preserve structure<br/>agents/*.md, references/*.md]
     P8A{<choice>structural mutations<br/>approved by user</choice>?}
-    P8WS[Write approved structural mutations<br/>agent prompts, flow diagram,<br/>phase logic]
+    P8WS[Write approved structural mutations<br/>SKILL.md, flow diagram,<br/>phase logic, agent architecture]
     P8L[Log rejection rationale<br/>to mutation-log.md]
     P8C[git commit all changes]
     END([END])
@@ -193,7 +194,8 @@ flowchart TD
     P7E --> END
     P8 --> P8M
     P8M --> P8W
-    P8W --> P8A
+    P8W --> P8R
+    P8R --> P8A
     P8A -->|<choice>yes</choice>| P8WS
     P8A -->|<choice>no</choice>| P8L
     P8WS --> P8C
@@ -274,7 +276,15 @@ After project reflection, evaluate the skill's own performance:
    - Experiment: minimal test to validate
    - Expected result
 
-**Append-only mutations** (autonomous — no user approval needed):
+**Three-tier mutation system:**
+
+| Tier | Scope | Approval | Logging |
+|---|---|---|---|
+| **Append-only** | Add new content. Zero modifications to existing text. | Autonomous | `mutation-log.md` |
+| **Refinement** | Modify existing content in a single file. Preserve structure (headings, sections, logic flow). Only in `references/` or `agents/`. No `SKILL.md`. | Autonomous | `mutation-log.md` + rationale |
+| **Structural** | Multi-file, architecture, `SKILL.md`, add/remove agents or phases. | User via `AskUserQuestion` | `mutation-log.md` + rejection rationale |
+
+**Tier 1 — Append-only** (autonomous):
 If empirical findings justify it, append directly:
 - New rules to `references/security-lessons.md`
 - New patterns to `references/pattern-library.md`
@@ -283,8 +293,19 @@ If empirical findings justify it, append directly:
 - Experiments to `references/experiments.md`
 - Rationale to `references/mutation-log.md`
 
-**Structural mutations** (user approval via AskUserQuestion):
-If findings justify modifying agent prompts, flow diagrams, or phase logic:
+**Tier 2 — Refinement** (autonomous, logged):
+If findings justify surgical changes to existing content:
+- Reword an agent prompt in `agents/*.md` for clarity
+- Update a criterion weight in `references/evaluation-rubric.md`
+- Fix a typo or unclear wording in any `references/*.md`
+- Update a hypothesis status from `untested` to `confirmed`
+- Refine a checklist item without adding/removing sections
+
+Constraints: single file, preserve structure, no `SKILL.md` changes.
+Log the rationale to `references/mutation-log.md`.
+
+**Tier 3 — Structural** (user approval via `AskUserQuestion`):
+If findings justify architecture changes:
 1. Present to user via `AskUserQuestion`:
    - Files that would change
    - What the change does
@@ -293,7 +314,7 @@ If findings justify modifying agent prompts, flow diagrams, or phase logic:
 3. If rejected: log the rejection rationale to `references/mutation-log.md`
 
 **Mutation amplitude limit**: Max 3 structural mutations per session.
-Append-only mutations are unlimited.
+Append-only and refinement mutations are unlimited.
 `git commit` all changes.
 
 ## 7. Cross-File Integration Verification Checklist

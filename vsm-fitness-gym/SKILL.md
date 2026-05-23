@@ -155,16 +155,31 @@ Compare expected vs. actual agent behavior.
 - **Inconclusive**: Experiment design was flawed. Redesign and retry (max 2).
 
 ### Phase 5: Propose Mutations
-If hypothesis confirmed, propose specific changes to the main skill:
-- Append prevention rule to `references/security-lessons.md`
-- Append check to `references/integration-checklist.md`
-- Refine agent prompt in relevant `agents/*.md` file
-- Update `references/hypotheses.md` status: `confirmed`
-- Append full record to `references/experiments.md`
-- Append rationale to `references/mutation-log.md`
 
-All gym mutations are autonomous — no S5 gate. The gym's controlled
-experiment provides strong, falsifiable evidence.
+Use the **three-tier mutation system** for all changes:
+
+| Tier | Scope | Approval |
+|---|---|---|
+| **Append-only** | Add new content. Zero modifications to existing text. | Autonomous |
+| **Refinement** | Modify existing content in a single file. Preserve structure. Only in `references/` or `agents/`. No `SKILL.md`. | Autonomous, logged |
+| **Structural** | Multi-file, architecture, `SKILL.md`, add/remove agents or phases. | User via `AskUserQuestion` |
+
+**Mutations to main skill's files** (the athlete):
+- Append-only: new prevention rules, new integration checks
+- Refinement: refine agent prompts, update checklist items, fix typos
+- Structural: phase logic changes, agent architecture changes
+
+**Mutations to gym's own files** (self-modification):
+- Append-only: new experiment templates
+- Refinement: refine `vsm_experiment_designer` prompt, update template instructions
+- Structural: changes to gym `SKILL.md` workflow or phase logic
+
+Apply append-only and refinement mutations autonomously. The gym's controlled
+experiment provides strong, falsifiable evidence for these.
+
+For structural mutations, present to user via `AskUserQuestion` with evidence
+from the experiment. If rejected, log rationale to `references/mutation-log.md`.
+
 `git commit` all changes.
 
 ## 7. Experiment Design Principles

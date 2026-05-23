@@ -210,15 +210,27 @@ Present all proposed mutations to S5 in a structured report:
 
 ### Phase 5: Apply Mutations
 
-**Append-only mutations**: Write directly to main skill's files.
+Use the **three-tier mutation system** for all changes:
 
-**Structural mutations**: Only if user approved (via natural language or
-`AskUserQuestion`). If rejected or ambiguous, log rationale to `mutation-log.md`.
+| Tier | Scope | Approval |
+|---|---|---|
+| **Append-only** | Add new content. Zero modifications to existing text. | Autonomous |
+| **Refinement** | Modify existing content in a single file. Preserve structure. Only in `references/` or `agents/`. No `SKILL.md`. | Autonomous, logged |
+| **Structural** | Multi-file, architecture, `SKILL.md`, add/remove agents or phases. | User via `AskUserQuestion` |
+
+**Mutations to main skill's files** (the athlete):
+- Append-only: new rules, patterns, anti-patterns, checklists
+- Refinement: reword agent prompts, update checklist items, fix typos
+- Structural: phase logic changes, flow diagram changes, agent architecture changes
+
+**Mutations to coach's own files** (self-modification):
+- Append-only: new fitness projects, new rubric criteria
+- Refinement: update `vsm_trainer` prompt, adjust rubric weights, reword criteria
+- Structural: changes to coach `SKILL.md` workflow or phase logic
 
 Write all applied mutations to:
-- `references/*.md` (rules, patterns, anti-patterns, checklists)
-- `agents/*.md` (agent prompt refinements)
-- `references/hypotheses.md`, `references/experiments.md`, `references/mutation-log.md`
+- Main skill: `references/*.md`, `agents/*.md`, `references/hypotheses.md`, `references/experiments.md`, `references/mutation-log.md`
+- Coach self: `references/*.md`, `agents/*.md`, `assets/*.md`
 - Fitness report using `assets/fitness-report-template.md`
 - `git commit` all changes with descriptive message
 
