@@ -162,3 +162,32 @@ hypotheses (H3-H8, H10-H18).
 - `vsm_security.md`: Added DTO stripping and audit re-read steps to Security Fix Mode.
 - H[N+1] status: `confirmed`; H[N+2] status: `rejected`
 - experiments.md: appended E4, E5
+
+
+---
+
+## Mutation [N+3] — 2026-05-23
+**Session**: FleetSync FB4 fitness build
+**File**: `references/integration-checklist.md`
+**Type**: append
+**Rationale**: FB4 revealed three new failure modes not covered by existing integration checks:
+1. GraphQL field name drift: Strawberry auto-camelCased `assigned_technician_id` to `assignedTechnicianId`, but frontend expected `technicianId`. This caused a BLOCKER that survived the first integration check and fix wave.
+2. Auth response contract mismatch: Backend returned `access_token`, frontend expected `token`. Recurring across FB2, FB3, FB4.
+3. Orphaned exports: `auth.py` defined `require_role()` never imported anywhere; duplicate of `roles.py` `require_roles()`.
+4. WebSocket event name drift: `api-spec.md` used `authenticate`/`authenticated`, but `sio.py` implemented `auth`/`auth_ok`.
+
+**Expected effect**: Future GraphQL-enabled builds will have field name alignment checked before integration gate. Future auth-enabled builds will have response contracts documented in foundation wave. Future builds will scan for orphaned exports.
+
+---
+
+## Mutation [N+4] — 2026-05-23
+**Session**: FleetSync FB4 fitness build
+**File**: `references/hypotheses.md`
+**Type**: append
+**Rationale**: Four new falsifiable hypotheses generated from FB4 gaps:
+- H19: GraphQL field name alignment checklist prevents Strawberry auto-camelCase drift
+- H20: Auth response contract documentation in foundation wave prevents login/register mismatches
+- H21: Orphaned exports scan prevents dead code accumulation
+- H22: WebSocket event name dictionary cross-check prevents emit/listen mismatches
+
+**Expected effect**: Gym skill can run targeted experiments to validate each hypothesis before checklist items are promoted to permanent prevention rules.

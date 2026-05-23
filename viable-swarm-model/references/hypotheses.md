@@ -364,3 +364,69 @@ agent prompt are both effective at detecting this pattern.
 **Expected**: Product-aware builds show 20%+ reduction in "wrong feature built" or "missing acceptance criteria" gaps in fitness reports
 **Result**: [to be filled]
 **Tested by**: [experiment ID or session]
+
+---
+
+## H19: Adding GraphQL field name alignment to integration checklist prevents Strawberry auto-camelCase drift
+
+**Status**: untested
+**Proposed**: 2026-05-23
+**Rationale**: In FB4, backend `graphql.py` used `assigned_technician_id` which Strawberry auto-camelCased to `assignedTechnicianId`. However, the frontend query used `technicianId` ( expecting `technician_id` → `technicianId`). The existing case-sensitive enum alignment check (Check 24) caught enum values but NOT field names. This caused a BLOCKER that survived the first integration check and fix wave.
+**Source**: Fitness build FB4
+**Experiment**:
+  1. Run 5 GraphQL-enabled fitness builds with current checklist (no field name check)
+  2. Run 5 with modified checklist including "GraphQL field names match frontend queries exactly"
+  3. Count field name mismatch BLOCKERs in each group
+**Expected**: Control group: 3-5 field name mismatches. Treatment group: 0-1 mismatches.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H20: Documenting auth response contract in foundation wave prevents login/register contract mismatches
+
+**Status**: untested
+**Proposed**: 2026-05-23
+**Rationale**: FB2, FB3, and FB4 all had login/register response shape mismatches between backend and frontend. The backend returned `access_token` while frontend expected `token`, or backend required `org_id` while frontend didn't send it. If the foundation wave explicitly documented the exact JSON keys and required fields for auth endpoints, implementation agents would follow the contract.
+**Source**: Fitness builds FB2, FB3, FB4
+**Experiment**:
+  1. Run 5 auth-enabled builds with current foundation requirements
+  2. Run 5 with "auth response contract must be documented in api-spec.md with exact JSON keys" added to architect checklist
+  3. Count login/register contract BLOCKERs in each group
+**Expected**: Control group: 3-5 contract mismatches. Treatment group: 0-1 mismatches.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H21: Orphaned exports scan in integration check prevents dead code accumulation
+
+**Status**: untested
+**Proposed**: 2026-05-23
+**Rationale**: In FB4, `auth.py` defined `require_role()` which was never imported by any router. `roles.py` defined an identical `require_roles()` which was used. This duplicate/orphaned code was not caught until the coordinator's integration check flagged it. A systematic scan for exported functions/classes that are never imported would catch this earlier.
+**Source**: Fitness build FB4
+**Experiment**:
+  1. Review last 5 fitness builds for orphaned exports
+  2. Count instances per build
+  3. Add "orphaned exports scan" to integration checklist
+  4. Run next 5 builds and compare orphan counts
+**Expected**: Average orphan count drops from 2-3 per build to 0-1 per build.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H22: WebSocket event name dictionary cross-check prevents emit/listen mismatches
+
+**Status**: untested
+**Proposed**: 2026-05-23
+**Rationale**: In FB4, `api-spec.md` defined WebSocket events `authenticate`/`authenticated`/`auth_error`, but `sio.py` implemented `auth`/`auth_ok`/`auth_err`. The shared `sio-events.ts` file had yet another variant. The integration checker focused on URL/proxy wiring but missed the event payload semantics. A cross-check between api-spec, sio.py, and sio-events.ts would catch this.
+**Source**: Fitness build FB4
+**Experiment**:
+  1. Review last 5 WebSocket-enabled fitness builds for event name mismatches
+  2. Count mismatches per build
+  3. Add "WebSocket event name dictionary cross-check" to integration checklist
+  4. Run next 5 builds and compare mismatch counts
+**Expected**: Mismatch count drops from 1-2 per build to 0 per build.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]

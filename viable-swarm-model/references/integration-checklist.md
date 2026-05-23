@@ -137,3 +137,25 @@ correction BEFORE quality gates.
 ## 25. Frontend Dockerfile Build Args
 - [ ] `VITE_API_URL` and `VITE_WS_URL` passed as `ARG` in frontend Dockerfile
 - [ ] Runtime env vars are not silently baked as `undefined` into static bundles
+
+## 26. GraphQL Field Name Alignment
+- [ ] GraphQL schema field names (after auto-camelCase) match frontend query field names exactly
+- [ ] For Strawberry: verify that `snake_case` backend fields produce the expected `camelCase` frontend fields
+- [ ] Every field queried by frontend exists in the backend schema
+- [ ] No frontend queries reference fields that were renamed or removed in backend
+
+## 27. Auth Response Contract Documentation
+- [ ] Auth endpoints (`/register`, `/login`, `/refresh`) have documented exact response JSON keys in api-spec.md
+- [ ] Backend implementation matches the documented contract exactly
+- [ ] Frontend consumes the exact keys documented in the contract
+
+## 28. Orphaned Exports / Dead Code Scan
+- [ ] Every exported function/class in backend is imported by at least one consumer file
+- [ ] Every exported function/class in frontend is imported by at least one consumer file
+- [ ] No duplicate implementations of the same utility in different files
+
+## 29. WebSocket Event Name Dictionary Cross-Check
+- [ ] `api-spec.md` WebSocket event names match `sio.py` emit/handler names
+- [ ] `sio.py` emit names match `shared/sio-events.ts` constant values
+- [ ] `shared/sio-events.ts` constants are imported by both backend and frontend
+- [ ] Every backend `emit` has a matching frontend `socket.on` listener
