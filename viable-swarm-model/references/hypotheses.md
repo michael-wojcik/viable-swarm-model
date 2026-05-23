@@ -332,7 +332,25 @@ agent prompt are both effective at detecting this pattern.
 
 ---
 
-## H[N+3]: A full product swarm (product + UX + research agents) would improve outcomes for problem-oriented prompts
+## H[N+3]: Native YAML custom subagents (via --agent-file) would improve agent consistency vs markdown prompts
+
+**Status**: untested  
+**Proposed**: 2026-05-22  
+**Rationale**: Currently, custom agents (`vsm_architect`, `vsm_auditor`, etc.) are defined as markdown prompt files spawned via the `Agent` tool using built-in `subagent_type` values (`coder`, `explore`, `plan`). Kimi CLI supports native custom subagent definitions in YAML agent files with `--agent-file`, including tool restrictions (`exclude_tools`), inheritance (`extend`), and template variables (`system_prompt_args`). This could reduce prompt drift, enforce tool boundaries at the CLI level, and simplify maintenance. However, this requires session-level agent configuration, making it incompatible with the current skill-loading model (`extra_skill_dirs`). This hypothesis is **low priority** — only test if prompt drift or tool misuse becomes a measurable problem in fitness builds.
+**Source**: CLI docs exploration
+**Experiment**:
+  1. Create `vsm-agent.yaml` defining all custom subagents with tool restrictions and inheritance
+  2. Start session with `kimi --agent-file vsm-agent.yaml`
+  3. Run 5 fitness builds with the YAML agent configuration
+  4. Run 5 fitness builds with the current markdown prompt approach
+  5. Compare: agent tool misuse rates, prompt consistency, build quality scores
+**Expected**: YAML approach shows measurable reduction in agent tool misuse (e.g., auditor writing files, architect coding) and more consistent outputs. If no difference → markdown approach is sufficient; close hypothesis.
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
+
+---
+
+## H[N+4]: A full product swarm (product + UX + research agents) would improve outcomes for problem-oriented prompts
 
 **Status**: untested
 **Proposed**: 2026-05-22
