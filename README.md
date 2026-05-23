@@ -171,11 +171,12 @@ This loads the skill's patterns, anti-patterns, and checklists without triggerin
 
 ### Custom sub-agent types
 
-The main skill defines **5 custom sub-agent types** that map to VSM roles:
+The main skill defines **6 custom sub-agent types** that map to VSM roles:
 
 | Role | Type | Job |
 |---|---|---|
 | Architect | `vsm_architect` | Reads codebase, researches tech, produces design docs |
+| Product | `vsm_product` | Analyzes user problems, defines success criteria, proposes MVP feature set |
 | Auditor | `vsm_auditor` | Read-only deep inspection. PASS / ISSUES / BLOCKER |
 | Coordinator | `vsm_coordinator` | Cross-file contract validation |
 | Security | `vsm_security` | Exhaustive security audit |

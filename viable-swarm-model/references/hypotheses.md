@@ -290,3 +290,20 @@ agent prompt are both effective at detecting this pattern.
 **Expected**: [What outcome confirms the hypothesis? What outcome rejects it?]
 **Result**: [to be filled after testing]
 **Tested by**: [experiment ID or session]
+
+---
+
+## H[N+1]: A full product swarm (product + UX + research agents) would improve outcomes for problem-oriented prompts
+
+**Status**: untested
+**Proposed**: 2026-05-22
+**Rationale**: The current skill handles prescriptive prompts well ("build X with Y") but has no product discovery phase for problem-oriented prompts ("users need Z"). A full product swarm with `vsm_product`, `vsm_ux`, and `vsm_researcher` agents could define user stories, acceptance criteria, and success metrics before architecture begins. The fitness builds have not yet tested whether problem-oriented inputs produce higher defect rates.
+**Source**: Design discussion
+**Experiment**:
+  1. Collect 10 problem-oriented prompts
+  2. Run with current skill — measure: does output match actual user need? Are acceptance criteria clear?
+  3. Run with lightweight `vsm_product` agent (product brief + user stories only)
+  4. Compare: does product agent reduce rework, improve user-facing outcomes?
+**Expected**: Product-aware builds show 20%+ reduction in "wrong feature built" or "missing acceptance criteria" gaps in fitness reports
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]

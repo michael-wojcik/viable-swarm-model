@@ -63,6 +63,7 @@ use symlinks or update paths in mutation commands.
 |---|---|---|---|---|
 | **S5 (Policy)** | Main conversation agent (you) | — | Always | Decisions, escalation, mutations |
 | **S4 (Intelligence)** | `vsm_architect` subagent | Custom | Phase 1 | Architecture doc, API spec |
+| **S4 (Intelligence)** | `vsm_product` subagent | Custom | Phase 0 (conditional) | Product brief, user stories, acceptance criteria |
 | **S3 (Control)** | Main agent via SetTodoList | — | All phases | Progress tracking, mutation decisions |
 | **S3* (Audit)** | `vsm_auditor` subagent | Custom | After waves | PASS/ISSUES/BLOCKER |
 | **S2 (Coordination)** | `vsm_coordinator` subagent | Custom | After Wave 3 | Integration report |
@@ -79,9 +80,14 @@ user via `AskUserQuestion` or `EnterPlanMode` when human policy input is require
 
 ### Custom Type Prompt Characteristics
 
-**`vsm_architect`** (S4 Intelligence): Reads codebase, researches tech, produces
- design documents ONLY (never code). Validates against S5 policy. Defined in
- `agents/vsm_architect.md`.
+**`vsm_product`** (S4 Intelligence — Product): Analyzes problem-oriented prompts,
+defines success criteria, proposes minimal viable feature set, outputs structured
+product brief with user stories and acceptance criteria. Does NOT design systems
+or write code. Defined in `agents/vsm_product.md`.
+
+**`vsm_architect`** (S4 Intelligence — Technical): Reads codebase, researches tech, produces
+ design documents ONLY (never code). Validates against S5 policy. Uses product
+brief (if present) as input. Defined in `agents/vsm_architect.md`.
 
 **`vsm_auditor`** (S3* Audit): Read-only. Reads EVERY source file. Produces
 PASS/ISSUES/BLOCKER per file. Checks correctness, security, performance,
@@ -117,8 +123,9 @@ flowchart TD
     BEGIN([BEGIN])
     P0[Phase 0: Viability Check + Self-Test<br/>S5 Main Agent]
     P0D{<choice>trivial</choice>?}
-    P0R[Read .kimi/lessons.md<br/>Read references/acquired-wisdom.md<br/>Read references/hypotheses.md<br/>Self-test skill files<br/>Write plan.md]
-    P1[Phase 1: Intelligence<br/>vsm_architect subagent]
+    P0R[Read .kimi/lessons.md<br/>Read references/acquired-wisdom.md<br/>Read references/hypotheses.md<br/>Self-test skill files<br/>Classify prompt<br/>Write plan.md]
+    P0P[Conditional: Spawn vsm_product<br/>If problem-oriented prompt]
+    P1[Phase 1: Intelligence<br/>vsm_architect subagent<br/>Uses product brief if present]
     P1H{<choice>S3/S4 deadlock</choice>?}
     P1A[EnterPlanMode<br/>User Approval]
     P1D{<choice>approved</choice>?}
@@ -154,10 +161,11 @@ flowchart TD
     END([END])
 
     BEGIN --> P0
-    P0 --> P0R
-    P0R --> P0D
+    P0 --> P0D
     P0D -->|<choice>yes</choice>| END
-    P0D -->|<choice>no</choice>| P1
+    P0D -->|<choice>no</choice>| P0R
+    P0R --> P0P
+    P0P --> P1
     P1 --> P1H
     P1H -->|<choice>yes</choice>| P1
     P1H -->|<choice>no</choice>| P1A
@@ -208,7 +216,10 @@ flowchart TD
 ### Phase 0: Viability Check + Self-Test
 Main agent (S5) performs:
 1. **Viability check**: trivial (<50 lines, one file)? If yes, respond directly.
-2. **Read project memory**: `.kimi/lessons.md` if exists.
+2. **Classify prompt**: Prescriptive ("Build X with Y") or problem-oriented
+   ("Users need Z")? If problem-oriented, spawn `vsm_product` subagent to
+   produce a product brief with user stories and acceptance criteria.
+3. **Read project memory**: `.kimi/lessons.md` if exists.
 3. **Read acquired wisdom**: `~/vsm/viable-swarm-model/references/acquired-wisdom.md`
    if exists.
 4. **Read hypotheses**: `~/vsm/viable-swarm-model/references/hypotheses.md`
