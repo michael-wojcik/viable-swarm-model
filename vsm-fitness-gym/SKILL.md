@@ -158,7 +158,7 @@ Compare expected vs. actual agent behavior.
 If hypothesis confirmed, propose specific changes to the main skill:
 - Append prevention rule to `security-lessons.md`
 - Append check to `integration-checklist.md`
-- Refine agent prompt in `custom-agent-prompts.md`
+- Refine agent prompt in relevant `agents/*.md` file
 - Update `hypotheses.md` status: `confirmed`
 - Append full record to `experiments.md`
 

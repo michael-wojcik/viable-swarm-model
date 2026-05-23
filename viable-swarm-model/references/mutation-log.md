@@ -84,7 +84,7 @@ will be validated during integration. Tester agents will install deps proactivel
 - `references/pattern-library.md` — Added Patterns #39-40 (SQLAlchemy alias, spatial bounds)
 - `references/integration-checklist.md` — Added Check #23 (state machine domain alignment)
 - `references/anti-patterns.md` — Added Anti-Patterns #44-45 (docker fallbacks, SQLAlchemy shadowing)
-- `references/custom-agent-prompts.md` — Added tester dep-install guidance and foundation rate-limiting note
+- `agents/vsm_tester.md` — Added tester dep-install guidance and foundation rate-limiting note
 
 ## Mutation [4] — 2026-05-22
 
@@ -100,7 +100,7 @@ will be validated during integration. Tester agents will install deps proactivel
 - `references/pattern-library.md` — Added Pattern #41 (lazy Pydantic Settings factory for testability)
 - `references/integration-checklist.md` — Added Checks #24-25 (enum case alignment, frontend Dockerfile build args)
 - `references/anti-patterns.md` — Added Anti-Pattern #46 (module-level Pydantic Settings instantiation)
-- `references/custom-agent-prompts.md` — Added tester env-var injection guidance (FB3 finding)
+- `agents/vsm_tester.md` — Added tester env-var injection guidance (FB3 finding)
 
 ## Mutation [5] — 2026-05-23
 

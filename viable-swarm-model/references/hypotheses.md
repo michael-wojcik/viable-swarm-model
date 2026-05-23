@@ -48,7 +48,7 @@ Does it flag the N+1?
 immediately and flagged it BLOCKER. The agent explicitly called out:
 "`list_documents()` first loads all `Document` rows, then iterates and emits
 a separate `SELECT count(comments.id)...` for each document."
-The auditor prompt (custom-agent-prompts.md) already includes "N+1 queries in
+The auditor prompt (`agents/vsm_auditor.md`) already includes "N+1 queries in
 both ORM and computed field loops" and the agent enforces it rigorously.
 **Tested by**: Gym-2026-05-23, Experiment E2
 
