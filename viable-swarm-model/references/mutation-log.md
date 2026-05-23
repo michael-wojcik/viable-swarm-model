@@ -134,3 +134,31 @@ hypotheses (H3-H8, H10-H18).
 **After**:
 - H1, H2, H9 status: `rejected` with full result rationale
 - experiments.md: appended E1, E2, E3 with methodology and findings
+
+---
+
+## Mutation 6 — 2026-05-23
+
+**Session**: vsm-fitness-gym — Gym run testing H[N+1] and H[N+2]
+**File**: `agents/vsm_architect.md`, `agents/vsm_security.md`, `references/hypotheses.md`, `references/experiments.md`
+**Type**: edit (status updates, agent prompt refinements), append (experiment records)
+**Rationale**: Two agent-focused hypotheses tested with minimal reproducible experiments.
+
+**H[N+1] — CONFIRMED**: The vsm_product agent produces structured product briefs that act as effective guardrails against architect scope creep. In a single-prompt experiment, the control architect (no brief) added an entire auth subsystem, multiple lists, and quantity/unit fields — all explicitly out of scope. The treatment architect (with brief) eliminated auth entirely and produced a design with only 3 core features and 12+ explicit scope exclusions. The product brief's "Out of Scope" list was the key guardrail.
+
+**H[N+2] — REJECTED**: The vsm_security Security Fix Mode did NOT outperform a generic coder. In a single-vulnerability experiment, the generic coder fixed all 4 CRITICAL/HIGH findings including sensitive-field stripping in response DTOs. The vsm_security agent missed Finding 4 (HIGH: public DTO exposes sensitive fields) and left `secret`/`owner` exposed. It also used overly broad `except Exception:` instead of specific `jwt.PyJWTError`. The generic coder produced cleaner, more complete fixes with 10 tests vs the security agent's 11.
+
+**Expected effect**:
+- Future problem-oriented prompts will spawn vsm_product BEFORE vsm_architect to prevent scope creep.
+- Future vsm_security Security Fix Mode sessions will explicitly check response DTOs for sensitive field exposure and re-read the full audit report before concluding fixes.
+
+**Before**:
+- `vsm_architect.md`: No mention of product briefs as design guardrails.
+- `vsm_security.md`: Security Fix Mode checklist did not include "strip sensitive fields from response DTOs" or "re-read audit report before concluding."
+- H[N+1], H[N+2] status: `untested`
+
+**After**:
+- `vsm_architect.md`: Added instruction to use product brief out-of-scope list and success criteria as guardrails.
+- `vsm_security.md`: Added DTO stripping and audit re-read steps to Security Fix Mode.
+- H[N+1] status: `confirmed`; H[N+2] status: `rejected`
+- experiments.md: appended E4, E5

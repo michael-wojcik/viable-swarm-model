@@ -109,3 +109,41 @@ default-value fallbacks were detected.
 **Proposed mutations**: No skill mutations needed. Prevention rule L37 and the
 security agent prompt are both effective. Append rejection note to H9.
 **Mutations applied**: Yes — updated `references/hypotheses.md` H9 status to rejected.
+
+---
+
+## Experiment E4 — 2026-05-23
+
+**Hypothesis**: H[N+1] — The vsm_product subagent reduces implementation defects for problem-oriented prompts
+**Designed by**: vsm-fitness-gym
+**Method**: Minimal single-prompt experiment. Control: raw ambiguous prompt ("Users need a way to share grocery lists with their household and see updates in real time") fed directly to vsm_architect. Treatment: same prompt fed to vsm_product first, then product brief + prompt fed to vsm_architect. Both architects used identical agent definitions.
+**Variables**: Presence/absence of structured product brief
+**Control**: Architect without brief — expected to over-scope (add auth, multiple lists, quantities)
+**Results**:
+- Control produced a 308-line architecture doc with JWT auth, bcrypt, 11 REST endpoints (including /auth/register, /auth/login), multiple lists per household, quantity/unit fields, and 5+ core features.
+- Treatment produced a 333-line architecture doc with NO auth, anonymous clientId access, 6 REST endpoints, single list per household, text-only items, and 3 core features.
+- Treatment explicitly referenced the product brief's out-of-scope list (12 exclusions with rationales) and success criteria (100 char limit, 2s latency, 3 taps).
+**Conclusion**: confirmed
+**Proposed mutations**:
+1. Refine `agents/vsm_architect.md` — instruct architect to use product brief guardrails when available
+2. Append to `references/acquired-wisdom.md` — product briefs prevent scope creep on ambiguous prompts
+**Mutations applied**: Yes — architect prompt refined, wisdom appended.
+
+---
+
+## Experiment E5 — 2026-05-23
+
+**Hypothesis**: H[N+2] — vsm_security with Security Fix Mode reduces security regressions compared to read-only audit
+**Designed by**: vsm-fitness-gym
+**Method**: Minimal single-vulnerability experiment. Intentionally vulnerable FastAPI app with 4 findings: hardcoded JWT secret, auth bypass (return None), missing ownership filtering, sensitive field exposure. Control path: vsm_security read-only audit → generic coder fixes. Treatment path: vsm_security Security Fix Mode (audit + fixes + tests inline).
+**Variables**: Who performs the fixes — generic coder vs vsm_security specialist
+**Control**: Generic coder should produce shallower fixes missing edge cases
+**Results**:
+- Control (generic coder): Fixed all 4 findings. Used specific `except jwt.PyJWTError`. Stripped `secret` and `owner` from response DTOs. Wrote 10 pytest tests covering missing/invalid/wrong-secret tokens, ownership filtering (3 variants), sensitive field exclusion, and env secret loading.
+- Treatment (vsm_security): Fixed only 3 of 4 findings. MISSED sensitive field exposure (Finding 4) — response DTOs still included `secret` and `owner`. Used overly broad `except Exception:`. Wrote 11 pytest tests covering missing/malformed/invalid-signature/expired tokens, missing/empty sub claims, ownership filtering (3 variants), and SQL-injection-like sub handling.
+- Re-audit implication: Treatment would have 1 remaining HIGH finding; control would have 0.
+**Conclusion**: rejected
+**Proposed mutations**:
+1. Refine `agents/vsm_security.md` — add "strip sensitive fields from response DTOs" to Security Fix Mode checklist
+2. Refine `agents/vsm_security.md` — add "re-read original audit report before concluding fixes" to ensure no findings are skipped
+**Mutations applied**: Yes — security agent prompt refined.

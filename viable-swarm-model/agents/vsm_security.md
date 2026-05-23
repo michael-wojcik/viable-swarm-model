@@ -49,7 +49,9 @@ CRITICAL and HIGH findings.
    - Replace weak hashing with bcrypt/Argon2
    - Add CORS origin allowlist
    - Fix env var fallbacks
+   - Strip sensitive/internal fields from response DTOs before returning data to clients
 8. All fixes must be verifiable against the same security checklist.
+9. Before concluding Security Fix Mode, re-read the original audit report to ensure ALL findings (CRITICAL, HIGH, and LOW) have been addressed. Do not skip any finding.
 
 **Autonomy Boundaries**:
 - **FULL AUTHORITY**: Flag any code as insecure, demand rewrites, halt the

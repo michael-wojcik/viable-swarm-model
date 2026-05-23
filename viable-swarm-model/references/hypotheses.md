@@ -65,8 +65,8 @@ Does the coordinator check .env.example against actual code usage?
 but code reads `DB_URL`, and .env.example documents neither. Run vsm_coordinator.
 Does it detect the triple mismatch?
 **Expected**: If coordinator PASSes → confirmed (gap exists).
-**Result**: [to be filled]
-**Tested by**: [experiment ID or session]
+**Result**: CONFIRMED. A minimal experiment with one ambiguous prompt ("Users need a way to share grocery lists...") showed dramatic scope-creep reduction. The control architect (raw prompt) added an entire auth subsystem (JWT/bcrypt/register/login), multiple lists per household, and quantity/unit fields — all explicitly out of scope. The treatment architect (with product brief) produced a design with only 3 core features, 12+ explicit scope boundaries, and no auth. The product brief's 'Out of Scope' list acted as effective guardrails.
+**Tested by**: Gym-2026-05-23, Experiment E4
 
 ---
 
@@ -295,7 +295,7 @@ agent prompt are both effective at detecting this pattern.
 
 ## H[N+1]: The vsm_product subagent reduces implementation defects for problem-oriented prompts
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-22
 **Rationale**: The `vsm_product` agent was added to handle problem-oriented prompts ("Users need Z") by producing structured product briefs before architecture begins. Without it, the architect receives ambiguous input, which may lead to scope creep, missing acceptance criteria, and misaligned implementation.
 **Source**: Agent addition — `vsm_product`
@@ -316,7 +316,7 @@ agent prompt are both effective at detecting this pattern.
 
 ## H[N+2]: vsm_security with Security Fix Mode reduces security regressions compared to read-only audit
 
-**Status**: untested
+**Status**: rejected
 **Proposed**: 2026-05-22
 **Rationale**: `vsm_security` was updated from read-only audit to include Security Fix Mode — writing security tests and surgical fixes for CRITICAL/HIGH findings. Previously, security findings were reported to generic `coder` agents who might implement fixes incorrectly or miss edge cases. The hypothesis is that security-specific tests and fixes written by the security agent itself are more correct and complete.
 **Source**: Agent update — `vsm_security` Security Fix Mode
@@ -327,8 +327,8 @@ agent prompt are both effective at detecting this pattern.
   4. Re-run `vsm_security` audit on both builds after fixes
   5. Compare: does Build B have fewer remaining vulnerabilities? Are security tests more comprehensive?
 **Expected**: Build B shows 30%+ fewer remaining CRITICAL/HIGH findings in re-audit. Security tests in Build B cover more attack vectors.
-**Result**: [to be filled]
-**Tested by**: [experiment ID or session]
+**Result**: REJECTED. In a minimal experiment with a single vulnerable FastAPI app, the generic coder (control) fixed all 4 CRITICAL/HIGH findings including sensitive-field stripping in response DTOs. The vsm_security Security Fix Mode agent (treatment) missed Finding 4 (HIGH: public DTO exposes sensitive fields) and left `secret`/`owner` exposed. The treatment also used overly broad `except Exception:` instead of specific `jwt.PyJWTError`. The generic coder produced cleaner, more complete fixes.
+**Tested by**: Gym-2026-05-23, Experiment E5
 
 ---
 
