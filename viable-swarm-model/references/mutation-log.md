@@ -101,3 +101,36 @@ will be validated during integration. Tester agents will install deps proactivel
 - `references/integration-checklist.md` — Added Checks #24-25 (enum case alignment, frontend Dockerfile build args)
 - `references/anti-patterns.md` — Added Anti-Pattern #46 (module-level Pydantic Settings instantiation)
 - `references/custom-agent-prompts.md` — Added tester env-var injection guidance (FB3 finding)
+
+## Mutation [5] — 2026-05-23
+
+**Session**: vsm-fitness-gym — Gym run testing H1, H2, H9
+**File**: `references/hypotheses.md`, `references/experiments.md`
+**Type**: edit (status updates), append (experiment records)
+**Rationale**: All three hypotheses tested in isolation with minimal reproducible
+experiments. Results were uniformly negative — the skill already detects all three
+patterns. This is strong empirical evidence that the existing prevention rules
+and agent prompts are effective. No new rules are needed. The skill learned what
+it already knows.
+
+**Hypotheses tested**:
+- **H1** (dynamic WebSocket JWT URL): Expected gap in dynamic URL detection.
+  Security agent flagged it CRITICAL immediately. Rejected.
+- **H2** (N+1 in computed field loops): Expected gap in auditor coverage beyond
+  ORM relationship loading. Auditor flagged it BLOCKER immediately. Rejected.
+- **H9** (docker-compose `:-` fallbacks): Expected gap because prompt emphasizes
+  `||` but not `:-`. Security agent detected all 4 `:-` fallbacks as CRITICAL.
+  Rejected.
+
+**Expected effect**: Future gym sessions can deprioritize these patterns. The
+skill's security and audit agents are performing as designed on these specific
+vulnerability classes. Gym resources should focus on the remaining 15 untested
+hypotheses (H3-H8, H10-H18).
+
+**Before**:
+- H1, H2, H9 status: `untested`
+- experiments.md: only template and Experiment 0
+
+**After**:
+- H1, H2, H9 status: `rejected` with full result rationale
+- experiments.md: appended E1, E2, E3 with methodology and findings

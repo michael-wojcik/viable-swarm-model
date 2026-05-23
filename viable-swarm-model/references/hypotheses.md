@@ -12,7 +12,7 @@
 
 ## H1: The security agent misses JWT in dynamically-constructed WebSocket URLs
 
-**Status**: untested
+**Status**: rejected
 **Proposed**: 2026-05-22
 **Rationale**: Current prevention rules check for static `?token=` patterns.
 But what if the URL is built via string concatenation or template literals?
@@ -22,14 +22,18 @@ leaks.
 assembled via `f"wss://api.example.com/ws?token={jwt}"`. Run vsm_security.
 Does it flag the leak?
 **Expected**: If security PASSes → confirmed (gap exists).
-**Result**: [to be filled]
-**Tested by**: [experiment ID or session]
+**Result**: REJECTED. vsm_security detected the dynamic construction immediately
+and flagged it CRITICAL: "WebSocket Auth via URL Query Parameter". The agent
+correctly identified `ws_url = f"{base_url}?token={JWT_TOKEN}"` as a credential
+exposure vulnerability. Dynamic f-strings, concatenation, and format methods
+are all within the agent's detection capability.
+**Tested by**: Gym-2026-05-23, Experiment E1
 
 ---
 
 ## H2: The auditor does not flag N+1 queries in computed field loops
 
-**Status**: untested
+**Status**: rejected
 **Proposed**: 2026-05-22
 **Rationale**: All N+1 prevention rules focus on ORM relationship loading
 (selectinload, joinedload). But computed fields (COUNT, SUM, AVG) fetched
@@ -40,8 +44,13 @@ with a `total_comments` field computed via `SELECT COUNT(*) FROM comments
 WHERE document_id = ?` inside a Python for-loop. Run vsm_auditor.
 Does it flag the N+1?
 **Expected**: If auditor PASSes → confirmed (gap exists).
-**Result**: [to be filled]
-**Tested by**: [experiment ID or session]
+**Result**: REJECTED. vsm_auditor detected the N+1 in the computed field loop
+immediately and flagged it BLOCKER. The agent explicitly called out:
+"`list_documents()` first loads all `Document` rows, then iterates and emits
+a separate `SELECT count(comments.id)...` for each document."
+The auditor prompt (custom-agent-prompts.md) already includes "N+1 queries in
+both ORM and computed field loops" and the agent enforces it rigorously.
+**Tested by**: Gym-2026-05-23, Experiment E2
 
 ---
 
@@ -149,13 +158,18 @@ Run 5 with modified requirements including rate limiting. Count builds with rate
 
 ## H9: Docker-compose bash fallbacks are a systemic vulnerability class
 
-**Status**: untested
+**Status**: rejected
 **Proposed**: 2026-05-22
 **Rationale**: FB2 revealed `:-` fallbacks embedding credentials in docker-compose. This pattern was not in any existing checklist. The security gate caught it but only after the foundation wave had already created the file.
-**Experiment**: Audit 5 fitness builds' docker-compose files for `:-` or `||` fallbacks. Count occurrences.
-**Expected**: ≥3 builds have at least one fallback. If so, add prevention rule.
-**Result**: [to be filled]
-**Tested by**: [experiment ID or session]
+**Experiment**: Build a minimal docker-compose.yml with `:-` fallbacks for POSTGRES_PASSWORD, DATABASE_URL, JWT_SECRET, and CORS_ORIGINS. Run vsm_security. Does it detect the `:-` fallbacks?
+**Expected**: If security PASSes → confirmed (gap exists).
+**Result**: REJECTED. vsm_security detected ALL 4 `:-` fallback instances and
+flagged them CRITICAL/HIGH. The agent explicitly answered "YES" to whether
+`:-` default-value fallbacks were detected, listing: POSTGRES_PASSWORD,
+DATABASE_URL, JWT_SECRET, and POSTGRES_USER. Prevention rule L37
+("Ban `:-` default-value fallbacks in docker-compose.yml") and the security
+agent prompt are both effective at detecting this pattern.
+**Tested by**: Gym-2026-05-23, Experiment E3
 
 ---
 
