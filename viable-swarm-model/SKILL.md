@@ -145,9 +145,9 @@ flowchart TD
     P7E[Escalate to User<br/>AskUserQuestion]
     P8[Phase 8: Reflection<br/>Append to .kimi/lessons.md]
     P8M[Phase 8b: Meta-Reflection + Hypothesis Generation<br/>Evaluate performance<br/>Write new hypotheses to hypotheses.md<br/>Bucket mutations: append-only vs structural]
-    P8W[Write append-only mutations<br/>references/security-lessons,<br/>pattern-library, anti-patterns,<br/>integration-checklist,<br/>experiments.md, hypotheses.md,<br/>mutation-log.md]
+    P8W[Write append-only mutations<br/>security-lessons, pattern-library,<br/>anti-patterns, integration-checklist,<br/>experiments.md, hypotheses.md,<br/>mutation-log.md]
     P8A{<choice>structural mutations<br/>approved by user</choice>?}
-    P8WS[Write approved structural mutations<br/>agents/*.md, flow diagram,<br/>phase logic]
+    P8WS[Write approved structural mutations<br/>agent prompts, flow diagram,<br/>phase logic]
     P8L[Log rejection rationale<br/>to mutation-log.md]
     P8C[git commit all changes]
     END([END])
@@ -284,7 +284,7 @@ If empirical findings justify it, append directly:
 - Rationale to `references/mutation-log.md`
 
 **Structural mutations** (user approval via AskUserQuestion):
-If findings justify modifying `agents/*.md` prompts, flow diagrams, or phase logic:
+If findings justify modifying agent prompts, flow diagrams, or phase logic:
 1. Present to user via `AskUserQuestion`:
    - Files that would change
    - What the change does
