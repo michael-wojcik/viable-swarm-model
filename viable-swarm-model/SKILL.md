@@ -106,6 +106,21 @@ Defined in `agents/vsm_security.md`.
 integration, edge cases). Bug-Fix Bonus: fixes bugs inline. Runs tests via
 Shell. Defined in `agents/vsm_tester.md`.
 
+### Agent Output Types
+
+**Writes implementation code:**
+- `coder` (built-in) — features, backend, frontend, infrastructure
+- `vsm_tester` (custom) — tests, bug fixes inline
+- `vsm_security` (custom, Security Fix Mode) — security tests, surgical security fixes
+
+**Writes design/requirements documents:**
+- `vsm_product` (custom) — product briefs, user stories, acceptance criteria
+- `vsm_architect` (custom) — architecture docs, API specs
+
+**Read-only evaluation (reports, audits, checklists):**
+- `vsm_auditor` (custom) — correctness audit per file
+- `vsm_coordinator` (custom) — cross-file contract validation
+
 ## 4. The Golden Rule of Parallelism
 
 ```

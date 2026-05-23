@@ -314,7 +314,25 @@ agent prompt are both effective at detecting this pattern.
 
 ---
 
-## H[N+2]: A full product swarm (product + UX + research agents) would improve outcomes for problem-oriented prompts
+## H[N+2]: vsm_security with Security Fix Mode reduces security regressions compared to read-only audit
+
+**Status**: untested
+**Proposed**: 2026-05-22
+**Rationale**: `vsm_security` was updated from read-only audit to include Security Fix Mode — writing security tests and surgical fixes for CRITICAL/HIGH findings. Previously, security findings were reported to generic `coder` agents who might implement fixes incorrectly or miss edge cases. The hypothesis is that security-specific tests and fixes written by the security agent itself are more correct and complete.
+**Source**: Agent update — `vsm_security` Security Fix Mode
+**Experiment**:
+  1. Design 3 projects with known security vulnerabilities (auth bypass, injection, CORS misconfig)
+  2. **Build A** (control): `vsm_security` reads-only, reports findings, generic `coder` fixes them
+  3. **Build B** (test): `vsm_security` writes security tests + surgical fixes inline
+  4. Re-run `vsm_security` audit on both builds after fixes
+  5. Compare: does Build B have fewer remaining vulnerabilities? Are security tests more comprehensive?
+**Expected**: Build B shows 30%+ fewer remaining CRITICAL/HIGH findings in re-audit. Security tests in Build B cover more attack vectors.
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
+
+---
+
+## H[N+3]: A full product swarm (product + UX + research agents) would improve outcomes for problem-oriented prompts
 
 **Status**: untested
 **Proposed**: 2026-05-22
