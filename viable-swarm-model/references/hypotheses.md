@@ -549,3 +549,71 @@ agent prompt are both effective at detecting this pattern.
 **Expected**: Control group: 1-2 circular imports. Treatment group: 0 circular imports.
 **Result**: [to be filled]
 **Tested by**: [fitness build or gym experiment]
+
+---
+
+## H30: Architect timeout on complex projects indicates the agent prompt needs chunking guidance
+
+**Status**: confirmed
+**Proposed**: 2026-05-23
+**Rationale**: In FB6, the `vsm_architect` agent timed out after 600s while reading design docs and producing architecture.md, api-spec.md, and data-model.md for a 5-service healthcare platform. The agent spent excessive time in research/file-reading before writing. For high-complexity builds, the architect prompt should explicitly instruct the agent to read the plan first, write the simplest doc (data-model) first, and avoid deep research for technologies already specified in the plan.
+**Source**: Fitness build FB6, Phase 1
+**Experiment**:
+  1. Run 5 high-complexity builds with current architect prompt
+  2. Measure architect agent completion rate and timeout frequency
+  3. Update architect prompt with chunking guidance: "Read plan.md only. Do NOT research technologies specified in the plan. Write data-model.md first, then api-spec.md, then architecture.md."
+  4. Run 5 identical builds with updated prompt
+**Expected**: Control group: 40%+ timeout rate. Treatment group: ≤10% timeout rate.
+**Result**: Architect timed out on FB6. S5 produced design docs directly.
+**Tested by**: FB6
+
+---
+
+## H31: Splitting tester agent into backend-tester and frontend-tester subagents prevents timeout
+
+**Status**: confirmed
+**Proposed**: 2026-05-23
+**Rationale**: In FB6, the `vsm_tester` agent timed out after 900s while attempting to write tests for both backend (14 test files) and frontend (4 test files) in a single session. The agent prompt explicitly requires BOTH backend and frontend tests. Splitting into two parallel subagents would halve the workload per agent and prevent timeouts.
+**Source**: Fitness build FB6, Phase 4
+**Experiment**:
+  1. Run 5 full-stack builds with single tester agent
+  2. Measure timeout rate and test coverage
+  3. Update workflow to spawn `vsm_tester_backend` and `vsm_tester_frontend` in parallel
+  4. Run 5 builds with split testers
+**Expected**: Control group: 50%+ timeout rate. Treatment group: ≤10% timeout rate.
+**Result**: Single tester timed out on FB6. S5 wrote tests manually.
+**Tested by**: FB6
+
+---
+
+## H32: Adding a dedicated WebSocket auth verification item to the integration checklist prevents Socket.io auth gaps
+
+**Status**: untested
+**Proposed**: 2026-05-23
+**Rationale**: In FB6, the security gate found that WebSocket room subscription (`subscribe_patient`) and unsubscription (`unsubscribe_patient`) did not verify the socket session before allowing room access. The integration checklist (Check 29) verifies event name dictionaries but does NOT verify that room-management handlers check authentication. This gap allowed unauthenticated sockets to join patient rooms.
+**Source**: Fitness build FB6, Phase 6
+**Experiment**:
+  1. Review last 5 WebSocket-enabled fitness builds for auth gaps in room subscription
+  2. Count unauthenticated room joins per build
+  3. Add check to integration checklist: "WebSocket room subscription/unsubscription handlers verify session/auth before allowing room access"
+  4. Run next 5 WebSocket builds and compare counts
+**Expected**: Control group: 3-5 builds with unauthenticated room access. Treatment group: 0 builds.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H33: Requiring the security gate to run BEFORE integration verification catches vulnerabilities earlier
+
+**Status**: untested
+**Proposed**: 2026-05-23
+**Rationale**: In FB6, security findings (CRITICAL Socket.io CORS, unrestricted registration) were discovered in Phase 6 after Phase 5 integration verification had already PASSed. If the security gate ran before integration, these vulnerabilities would be caught earlier, reducing fix wave scope.
+**Source**: Fitness build FB6, Phase 5 & 6 sequencing
+**Experiment**:
+  1. Run 5 builds with current order: Integration → Security → Fix
+  2. Count security findings discovered AFTER integration PASS
+  3. Run 5 builds with reversed order: Security → Integration → Fix
+  4. Compare: does reversed order reduce total fix iterations?
+**Expected**: Reversed order reduces average fix iterations by 1+ per build.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]

@@ -48,3 +48,8 @@ This prevents the agent from spending the entire wave failing on missing package
 - **Backend**: Test routers, models, auth, GraphQL schema, Socket.io handlers, geo utils, AND entry-point wiring (`main.py`) AND background workers (`tasks.py`). Do not leave `main.py` or `tasks.py` at 0% coverage.
 - **Frontend**: Test React components, Zustand stores, GraphQL queries, and Socket.io client integration. Install frontend test dependencies (`jsdom`, `@testing-library/react`, `@testing-library/jest-dom`, `vitest`) and run `npm test` or `npx vitest run`.
 - **Coverage target**: Aim for meaningful coverage on both sides, not just backend routers.
+
+**Additional Guidance (FB6 Finding)**: For large projects (3000+ lines), the tester agent frequently times out before completing both backend and frontend tests. To prevent this:
+1. **Pre-install dependencies FIRST** (within first 2 minutes): Run `pip install pytest pytest-asyncio httpx pytest-cov aiosqlite` and `npm install --save-dev jsdom @testing-library/react @testing-library/jest-dom @vitest/coverage-v8` before writing ANY test code.
+2. **Backend-first ordering**: Write `conftest.py` and all backend tests before starting frontend tests. Backend tests are typically more complex and block frontend integration testing.
+3. **If timeout risk is high**: Write the most critical backend tests first (`test_auth.py`, `test_main.py`, `test_tasks.py`, `test_uploads.py`), then frontend tests. Skip less critical frontend component tests if time is short, but NEVER skip backend entry-point or worker tests.

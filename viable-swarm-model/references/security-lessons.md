@@ -287,3 +287,15 @@ missing until Phase 6.
 **Prevention rule**: Flag JWT persisted to `localStorage` as MEDIUM severity. Prefer httpOnly, `SameSite=strict`, secure cookies. If Bearer tokens are required, recommend short-lived access tokens with refresh-token rotation.
 **Affected**: vsm_security.
 **Source**: Fitness build FB5. `authStore.ts` used Zustand `persist` middleware → token in `localStorage`.
+
+---
+
+### L38: GraphQL Context Builders Must Be Fail-Closed
+**Prevention rule**: GraphQL `get_context` or equivalent context builders MUST NOT catch all exceptions from authentication and set `user = None`. This creates a fail-open auth bypass: if a resolver forgets to check `user is None`, unauthenticated requests proceed silently. Let `get_current_user` raise its `HTTPException` (or `AuthenticationError`) so Strawberry/FastAPI can translate it to a GraphQL error.
+**Affected**: vsm_security, backend implementation agents.
+**Evidence**: FB6 security gate found `graphql.py` catching `Exception` and setting `user = None`, rated MEDIUM but is actually HIGH severity.
+
+### L39: httpOnly Cookie Auth Requires Backend Cookie Setting
+**Prevention rule**: If the spec requires "frontend uses httpOnly cookies (not localStorage)", the foundation wave MUST implement backend cookie setting (`response.set_cookie`) in the login endpoint. Returning the JWT in JSON body and storing it in Zustand memory does NOT satisfy the httpOnly requirement — the token is still accessible to JavaScript via the response body.
+**Affected**: vsm_security, foundation wave agents.
+**Evidence**: FB6 frontend stored token in Zustand (not localStorage), but backend still returned it in JSON. Security gate noted as MEDIUM but is actually HIGH.

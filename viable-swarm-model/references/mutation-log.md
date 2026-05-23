@@ -228,3 +228,40 @@ hypotheses (H3-H8, H10-H18).
 **Type**: append
 **Rationale**: FB5 fitness report identified 7 gaps. Seven falsifiable hypotheses were generated (H23-H29) to guide future gym experiments and build monitoring.
 **Expected effect**: Hypotheses H23-H29 are queued for testing by vsm-fitness-gym or validation in FB6+.
+
+---
+
+## Mutation [N] — 2026-05-23
+**Session**: FB6 Fitness Build — DeepContract
+**File**: `references/hypotheses.md`
+**Type**: append
+**Rationale**: FB6 revealed architect and tester agent timeouts on 3000+ line projects, WebSocket auth gaps, and sequencing issues between security and integration gates. Appended H30–H33 with full experiment designs.
+**Expected effect**: Next fitness build will test whether split testers and architect chunking guidance reduce timeouts.
+
+## Mutation [N+1] — 2026-05-23
+**Session**: FB6 Fitness Build — DeepContract
+**File**: `references/integration-checklist.md`
+**Type**: append
+**Rationale**: FB6 security gate found that WebSocket room subscription/unsubscription handlers did not verify socket authentication. Existing Check 29 only verified event name dictionaries, not auth. Added Check 30 for WebSocket auth & authorization.
+**Expected effect**: Future WebSocket-enabled builds will catch unauthenticated room joins before the security gate.
+
+## Mutation [N+2] — 2026-05-23
+**Session**: FB6 Fitness Build — DeepContract
+**File**: `references/security-lessons.md`
+**Type**: append
+**Rationale**: FB6 security gate found fail-open GraphQL auth context (catch-all exception → user=None) and missing httpOnly cookie implementation. Both were downgraded to MEDIUM when they are HIGH severity. Added L38 and L39 as prevention rules.
+**Expected effect**: Security agent will flag auth bypass in GraphQL context builders as HIGH/BLOCKER, not MEDIUM.
+
+## Mutation [N+3] — 2026-05-23
+**Session**: FB6 Fitness Build — DeepContract
+**File**: `agents/vsm_tester.md`
+**Type**: refinement
+**Rationale**: FB6 tester agent timed out after 900s while trying to write both backend and frontend tests. Added FB6 Finding guidance: pre-install deps first, backend-first ordering, and prioritization of critical backend tests if timeout risk is high.
+**Expected effect**: Tester agents in future large builds will install dependencies immediately and write backend tests before frontend, reducing timeout frequency.
+
+## Mutation [N+4] — 2026-05-23
+**Session**: FB6 Fitness Build — DeepContract
+**File**: `agents/vsm_architect.md`
+**Type**: refinement
+**Rationale**: FB6 architect agent timed out after 600s on a complex healthcare platform spec. The agent spent excessive time researching technologies already specified in the plan. Added chunking guidance: skip research for familiar specified stacks, write docs in dependency order (data-model → api-spec → architecture).
+**Expected effect**: Architect agents on large projects will complete within timeout limits by avoiding unnecessary research and writing in dependency order.
