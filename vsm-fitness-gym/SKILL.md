@@ -45,7 +45,7 @@ adjust paths in Shell commands.
 ## 2. How to Invoke
 
 - **`/flow:vsm-fitness-gym [hypothesis IDs or description]`** — Execute
-  the experiment workflow. The chamber reads the main skill's hypotheses.md,
+  the experiment workflow. The gym reads the main skill's hypotheses.md,
   selects untested items, designs experiments, runs them, and records results.
 - **`/skill:vsm-fitness-gym`** — Load as knowledge reference.
 

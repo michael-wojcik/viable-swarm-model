@@ -145,7 +145,7 @@ flowchart TD
     P7E[Escalate to User<br/>AskUserQuestion]
     P8[Phase 8: Reflection<br/>Append to .kimi/lessons.md]
     P8M[Phase 8b: Meta-Reflection + Hypothesis Generation<br/>Evaluate performance<br/>Write new hypotheses to hypotheses.md<br/>Bucket mutations: append-only vs structural]
-    P8W[Write append-only mutations<br/>security-lessons, pattern-library,<br/>anti-patterns, integration-checklist,<br/>experiments.md, hypotheses.md,<br/>mutation-log.md]
+    P8W[Write append-only mutations<br/>security-lessons.md, pattern-library.md,<br/>anti-patterns.md, integration-checklist.md,<br/>experiments.md, hypotheses.md,<br/>mutation-log.md]
     P8A{<choice>structural mutations<br/>approved by user</choice>?}
     P8WS[Write approved structural mutations<br/>agent prompts, flow diagram,<br/>phase logic]
     P8L[Log rejection rationale<br/>to mutation-log.md]

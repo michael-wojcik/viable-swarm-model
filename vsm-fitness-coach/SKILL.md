@@ -278,6 +278,6 @@ See `assets/fitness-report-template.md` for the full template. Summary:
    assessments. Every score needs evidence.
 4. **Hypothesis-driven improvement**: Every gap becomes a falsifiable claim
    that the gym can test later.
-5. **Co-evolution**: The coach evaluates the main skill; the evolution
-   chamber validates the hypotheses; the main skill improves. All three
+5. **Co-evolution**: The coach evaluates the main skill; the gym validates
+   the hypotheses; the main skill improves. All three
    skills grow together.
