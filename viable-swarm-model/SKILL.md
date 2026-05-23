@@ -145,9 +145,9 @@ flowchart TD
     P7E[Escalate to User<br/>AskUserQuestion]
     P8[Phase 8: Reflection<br/>Append to .kimi/lessons.md]
     P8M[Phase 8b: Meta-Reflection + Hypothesis Generation<br/>Evaluate performance<br/>Write new hypotheses to hypotheses.md<br/>Bucket mutations: append-only vs structural]
-    P8W[Write append-only mutations<br/>security-lessons, patterns, anti-patterns,<br/>integration-checklist, experiments.md,<br/>hypotheses.md, mutation-log.md]
+    P8W[Write append-only mutations<br/>references/security-lessons,<br/>pattern-library, anti-patterns,<br/>integration-checklist,<br/>experiments.md, hypotheses.md,<br/>mutation-log.md]
     P8A{<choice>structural mutations<br/>approved by user</choice>?}
-    P8WS[Write approved structural mutations<br/>agent prompts, flow diagram, phase logic]
+    P8WS[Write approved structural mutations<br/>agents/*.md, flow diagram,<br/>phase logic]
     P8L[Log rejection rationale<br/>to mutation-log.md]
     P8C[git commit all changes]
     END([END])
@@ -274,23 +274,23 @@ After project reflection, evaluate the skill's own performance:
    - Experiment: minimal test to validate
    - Expected result
 
-**Append-only mutations** (autonomous — no S5 gate):
+**Append-only mutations** (autonomous — no user approval needed):
 If empirical findings justify it, append directly:
-- New rules to `security-lessons.md`
-- New patterns to `pattern-library.md`
-- New anti-patterns to `anti-patterns.md`
-- New checks to `integration-checklist.md`
-- Experiments to `experiments.md`
-- Rationale to `mutation-log.md`
+- New rules to `references/security-lessons.md`
+- New patterns to `references/pattern-library.md`
+- New anti-patterns to `references/anti-patterns.md`
+- New checks to `references/integration-checklist.md`
+- Experiments to `references/experiments.md`
+- Rationale to `references/mutation-log.md`
 
 **Structural mutations** (user approval via AskUserQuestion):
-If findings justify modifying prompts, flow diagrams, or phase logic:
+If findings justify modifying `agents/*.md` prompts, flow diagrams, or phase logic:
 1. Present to user via `AskUserQuestion`:
    - Files that would change
    - What the change does
    - Evidence from this build
 2. If approved: write the changes
-3. If rejected: log the rejection rationale to `mutation-log.md`
+3. If rejected: log the rejection rationale to `references/mutation-log.md`
 
 **Mutation amplitude limit**: Max 3 structural mutations per session.
 Append-only mutations are unlimited.

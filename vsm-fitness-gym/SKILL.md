@@ -156,16 +156,15 @@ Compare expected vs. actual agent behavior.
 
 ### Phase 5: Propose Mutations
 If hypothesis confirmed, propose specific changes to the main skill:
-- Append prevention rule to `security-lessons.md`
-- Append check to `integration-checklist.md`
+- Append prevention rule to `references/security-lessons.md`
+- Append check to `references/integration-checklist.md`
 - Refine agent prompt in relevant `agents/*.md` file
-- Update `hypotheses.md` status: `confirmed`
-- Append full record to `experiments.md`
+- Update `references/hypotheses.md` status: `confirmed`
+- Append full record to `references/experiments.md`
+- Append rationale to `references/mutation-log.md`
 
 All gym mutations are autonomous — no S5 gate. The gym's controlled
 experiment provides strong, falsifiable evidence.
-
-Write mutation rationale to main skill's `mutation-log.md`.
 `git commit` all changes.
 
 ## 7. Experiment Design Principles
