@@ -81,7 +81,7 @@ viable-swarm-model/                    ← the repo
 
 ## Installation
 
-Because this repo contains two skills, use `extra_skill_dirs`:
+Because this repo contains three skills, use `extra_skill_dirs`:
 
 ```bash
 # Clone to a known location
@@ -91,12 +91,13 @@ git clone https://github.com/michael-wojcik/viable-swarm-model.git ~/vsm
 echo 'extra_skill_dirs = ["~/vsm"]' >> ~/.kimi/config.toml
 ```
 
-Or symlink both skills individually:
+Or symlink all three skills individually:
 
 ```bash
 git clone https://github.com/michael-wojcik/viable-swarm-model.git ~/vsm
 ln -s ~/vsm/viable-swarm-model ~/.kimi/skills/viable-swarm-model
 ln -s ~/vsm/vsm-fitness-gym ~/.kimi/skills/vsm-fitness-gym
+ln -s ~/vsm/vsm-fitness-coach ~/.kimi/skills/vsm-fitness-coach
 ```
 
 ## Usage
@@ -186,11 +187,9 @@ The gym adds:
 |---|---|---|
 | Experiment Designer | `vsm_experiment_designer` | Designs minimal, isolated experiments |
 
-The fitness coach adds:
-
-| Role | Type | Job |
-|---|---|---|
-| Fitness Coach | `vsm_fitness_coach` | Designs comprehensive builds, scores performance, identifies systemic weaknesses |
+The fitness coach operates as **S5 (Policy)** itself — it does not add a custom
+subagent, but rather guides the main skill through builds and evaluates its
+performance.
 
 ### The mutation system
 
