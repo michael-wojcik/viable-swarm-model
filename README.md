@@ -187,9 +187,11 @@ The gym adds:
 |---|---|---|
 | Experiment Designer | `vsm_experiment_designer` | Designs minimal, isolated experiments |
 
-The fitness coach operates as **S5 (Policy)** itself — it does not add a custom
-subagent, but rather guides the main skill through builds and evaluates its
-performance.
+The fitness coach adds:
+
+| Role | Type | Job |
+|---|---|---|
+| Trainer | `vsm_trainer` | Reads build artifacts + rubric, scores phases, identifies gaps, produces fitness report |
 
 ### The mutation system
 

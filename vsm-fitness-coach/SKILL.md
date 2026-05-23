@@ -68,7 +68,7 @@ user via `AskUserQuestion` or `EnterPlanMode` when human policy input is require
 | **S5 (Policy)** | Main conversation agent (you) | — | Phase 0 | Project selection, mutation approval |
 | **S4 (Selector)** | Main agent reads catalog | — | Phase 0 | Fitness project spec |
 | **S1 (Builder)** | `viable-swarm-model` workflow | Flow skill | Phase 1 | Substantial project |
-| **S3* (Evaluator)** | Main agent reads rubric | — | Phase 3 | Scored evaluation per phase |
+| **S3* (Evaluator)** | `vsm_trainer` subagent | Custom | Phase 2 | Reads artifacts + rubric, scores phases, identifies gaps |
 | **S2 (Synthesizer)** | Main agent | — | Phase 4 | Hypotheses, mutations |
 
 ## 4. The Golden Rule
@@ -86,7 +86,7 @@ flowchart TD
     P0S{<choice>project selected</choice>?}
     P1[Phase 1: Execute Build<br/>Run viable-swarm-model workflow<br/>Build the selected project]
     P1A[Collect all artifacts:<br/>plan.md, audit reports, security reports,<br/>integration report, test results, fix logs]
-    P2[Phase 2: Evaluate Performance<br/>Read references/evaluation-rubric.md<br/>Score each phase 1-5]
+    P2[Phase 2: Evaluate Performance<br/>Spawn vsm_trainer<br/>Read artifacts + rubric<br/>Score each phase 1-5]
     P2S{<choice>any phase scored < 4</choice>?}
     P3[Phase 3: Generate Hypotheses<br/>One hypothesis per gap identified]
     P4[Phase 4: Propose Mutations<br/>Present structured report to S5]
@@ -161,26 +161,20 @@ The coach does NOT interfere during the build. It observes and records.
 - Main skill's own meta-reflection output
 
 ### Phase 2: Evaluate Performance
-Read `~/vsm/vsm-fitness-coach/references/evaluation-rubric.md`.
-Score each phase of the main skill's execution from 1-5:
 
-| Score | Meaning |
-|---|---|
-| 5 | Exceeded expectations. Caught issues that weren't obvious. |
-| 4 | Performed as designed. No gaps. |
-| 3 | Adequate but had minor gaps or inefficiencies. |
-| 2 | Significant gaps. Missed important issues. |
-| 1 | Failed. Phase was misleading, redundant, or harmful. |
+Spawn `vsm_trainer` subagent with:
+- Build directory: `~/vsm-fitness-builds/coach/[project-id]-[date]/`
+- Rubric: `~/vsm/vsm-fitness-coach/references/evaluation-rubric.md`
 
-For each phase scored < 4, write a detailed note:
-- What was expected
-- What actually happened
-- Root cause (if identifiable)
-- Severity (cosmetic, moderate, critical)
+The trainer reads all build artifacts and the rubric, then returns a structured
+fitness report with phase scores, gap analysis, surprises, and false positives.
+
+**Do not score manually.** The trainer handles all evaluation.
 
 ### Phase 3: Generate Hypotheses
-For every gap identified in Phase 2, write a hypothesis to the main skill's
-`references/hypotheses.md`:
+
+Read the trainer's fitness report. For every gap identified (phases scored < 4),
+generate a hypothesis and append to the main skill's `references/hypotheses.md`:
 
 ```markdown
 ## H[N]: [Specific falsifiable claim]
