@@ -306,3 +306,25 @@ hypotheses (H3-H8, H10-H18).
 **Rationale**: FB7 architect (skipped) and foundation agent both failed to follow data-model.md. Explicit instruction to read existing design documents should reduce drift.
 **Expected effect**: Future architects/foundation agents will read and match existing specs.
 
+
+---
+
+## Mutation 16 — 2026-05-23
+
+**Session**: FB7 JurisFlow fitness build evaluation
+**File**: `SKILL.md`
+**Type**: structural
+**Rationale**: User approved both structural mutations proposed in the fitness report:
+1. Add Phase 2c Model Validation — S5 checks models.py against data-model.md before implementation wave
+2. Add Phase 7b Post-Fix Security Re-Check — vsm_security re-audits modified auth/GraphQL/WebSocket files after fix wave
+FB7 demonstrated that foundation model drift causes cascade failures, and that fix/test agents can introduce security regressions after the main security gate.
+**Expected effect**: Future builds will catch model-schema drift before implementation begins, and security regressions introduced during fix waves will be caught before reflection.
+
+**Before**:
+- Phase 2: Foundation → Audit → Implementation (no model validation)
+- Phase 7: Fix Wave → Re-audit → Reflection (no post-fix security check)
+
+**After**:
+- Phase 2: Foundation → Audit → Model Validation → Implementation
+- Phase 7: Fix Wave → Re-audit → Post-Fix Security Re-Check → Reflection
+
