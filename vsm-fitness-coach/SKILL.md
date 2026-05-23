@@ -223,6 +223,7 @@ Present all proposed mutations to S5 in a structured report:
 
 Write all applied mutations to:
 - Main skill's reference files
+- `agents/*.md` (agent prompt refinements)
 - `hypotheses.md`, `experiments.md`, `mutation-log.md`
 - Fitness report using `assets/fitness-report-template.md`
 - `git commit` all changes with descriptive message
