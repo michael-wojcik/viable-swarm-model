@@ -317,3 +317,22 @@ missing until Phase 6.
 ### L29: Fix Agents Can Introduce Vulnerabilities
 **Prevention rule**: Fix agents (especially generic coders fixing security-related code) can accidentally introduce vulnerabilities while trying to be helpful. The security gate MUST re-audit ALL files modified during any fix wave, not just the originally flagged files.
 **Affected**: S3 (main agent), vsm_security.
+
+---
+
+## FB10 Discoveries
+
+### L38: Self-Registration Must Never Accept User-Supplied Role Elevation
+**Prevention rule**: Registration endpoints (REST and GraphQL) MUST NOT accept a `role` field from the client. All self-registered users MUST default to the lowest-privilege role (e.g., `customer`). Admin or seller elevation MUST require a separate privileged operation (admin-only endpoint, email verification, or manual approval).
+**Affected**: vsm_architect, vsm_security, all backend S1 agents.
+**Rationale**: FB10 security gate found that both REST `POST /auth/register` and GraphQL `register` mutation accepted a user-supplied `role`, allowing immediate privilege escalation to `admin`.
+
+### L39: GraphQL Context Builders Must Propagate Auth Exceptions
+**Prevention rule**: GraphQL `get_context` or equivalent context builders MUST NOT silently catch auth exceptions (e.g., `jwt.PyJWTError`) and fall back to an anonymous context. Auth failures MUST propagate as GraphQL errors or raise `AuthenticationError`. Fail-closed, not fail-open.
+**Affected**: vsm_security, backend S1 agents.
+**Rationale**: FB10 security gate found that `get_context` caught `jwt.PyJWTError` and set `user = None`, creating a fail-open pattern where malformed tokens were treated as anonymous requests.
+
+### L40: Rate Limiting Must Be Explicit on Auth Endpoints
+**Prevention rule**: Auth endpoints (`/register`, `/login`, password reset) MUST have explicit `@limiter.limit(...)` decorators, even if global `SlowAPIMiddleware` is installed. Global middleware alone is insufficient for per-endpoint control.
+**Affected**: vsm_security, backend S1 agents.
+**Rationale**: FB10 security gate found that `/register` and `/login` had no per-endpoint rate limits despite `SlowAPIMiddleware` being wired globally.

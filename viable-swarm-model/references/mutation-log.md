@@ -529,3 +529,54 @@ main-skill mutations.
   (format template, rollback procedure). Updated Section 8 epistemic rules to
   acknowledge gym self-modification. Updated Phase 5 to reference gym's own
   mutation-log.md.
+
+---
+
+## Mutation 23 — 2026-05-24
+
+**Session**: FB10 fitness build — integration checklist append-only mutations
+**File**: `references/integration-checklist.md`
+**Type**: append
+**Rationale**: FB10 revealed that in-process code review misses module-level NameErrors (missing imports) that only surface at runtime. The integration checklist now requires a subprocess import check.
+**Expected effect**: Future builds catch `NameError` and `ImportError` before test execution.
+
+---
+
+## Mutation 24 — 2026-05-24
+
+**Session**: FB10 fitness build — frontend build verification
+**File**: `references/integration-checklist.md`
+**Type**: append
+**Rationale**: FB10 frontend infra agent verified `vite build` but `npm run build` (which included `tsc -b`) failed due to missing `@types/node`. The checklist now requires verifying the package.json build script, not just the underlying tool.
+**Expected effect**: Future builds catch script-level build failures.
+
+---
+
+## Mutation 25 — 2026-05-24
+
+**Session**: FB10 fitness build — GraphQL enum serialization alignment
+**File**: `references/integration-checklist.md`
+**Type**: append
+**Rationale**: FB10 integration found Strawberry enum values were uppercase (`CUSTOMER`) while frontend TypeScript and REST expected lowercase (`customer`). The checklist now requires verifying GraphQL enum values match frontend contracts.
+**Expected effect**: Future builds catch enum serialization drift before integration.
+
+---
+
+## Mutation 26 — 2026-05-24
+
+**Session**: FB10 fitness build — security lessons from security gate
+**File**: `references/security-lessons.md`
+**Type**: append
+**Rationale**: FB10 security gate discovered three high-value findings: privilege escalation via user-supplied role in registration, GraphQL context fail-open on JWT errors, and missing explicit rate limits on auth endpoints. These are now prevention rules.
+**Expected effect**: Future builds prevent privilege escalation, fail-open auth contexts, and rate-limiting gaps.
+
+---
+
+## Mutation 27 — 2026-05-24
+
+**Session**: FB10 fitness build — hypothesis backlog update
+**File**: `references/hypotheses.md`
+**Type**: refinement + append
+**Rationale**: Updated statuses for 10 hypotheses tested by FB10 (H13, H21, H23, H24, H25, H26, H29, H32, H33, H41 — all confirmed). Appended 4 new hypotheses from trainer report (H45-H48) covering subprocess import checks, fix wave test suite regression, meta-reflection verification, and frontend build script verification.
+**Expected effect**: Hypothesis backlog stays current. New hypotheses provide falsifiable targets for FB11 or gym experiments.
+

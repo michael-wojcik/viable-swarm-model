@@ -193,3 +193,18 @@ correction BEFORE quality gates.
 - [ ] Verify GraphQL `get_context` still propagates exceptions (no broad `except` added)
 - [ ] Verify WebSocket room handlers still verify session before room access
 - [ ] If security regression is found, escalate to S5 immediately
+
+## 33. Subprocess Import Verification
+- [ ] After implementation wave and after fix wave, run `python -c "import app.main; import app.graphql; import app.sio"` (or equivalent entry points) in a subprocess
+- [ ] If any module raises `NameError`, `ImportError`, or `ModuleNotFoundError`, treat as BLOCKER
+- [ ] In-process code review (ReadFile) is insufficient — it does not catch missing imports that are only referenced at runtime
+
+## 34. Frontend Build Script Verification
+- [ ] Run `npm run build` (or equivalent package.json script), not just the underlying tool (`vite build`, `next build`, etc.)
+- [ ] Package.json scripts may include additional type-checking or linting steps that `vite build` alone does not exercise
+- [ ] Verify `tsconfig.json` includes all necessary types (e.g., `@types/node` for `vite.config.ts`)
+
+## 35. GraphQL Enum Serialization Alignment
+- [ ] GraphQL enum values returned to the client match the values expected by frontend TypeScript unions and REST API contracts
+- [ ] For Strawberry: `strawberry.enum` member names (which become GraphQL enum values) must match frontend enum literals exactly
+- [ ] Changing GraphQL enum definitions must trigger synchronized updates to frontend queries, tests, and shared types

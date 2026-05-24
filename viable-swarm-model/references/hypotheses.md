@@ -211,13 +211,13 @@ agent prompt are both effective at detecting this pattern.
 
 ## H13: State-machine alignment check catches domain mismatches early
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-22
 **Rationale**: FB2 frontend used `'waiting' | 'starting'` while backend emitted `'lobby' | 'countdown'`. Only discovered in integration verification.
 **Experiment**: Run 5 builds with complex state machines. Use current checklist for 5 builds, modified checklist with state-machine check for 5 builds. Count mismatches caught before security gate.
 **Expected**: Control group catches 0-1 mismatches early. Treatment group catches 4-5.
-**Result**: [to be filled]
-**Tested by**: [experiment ID or session]
+**Result**: FB10: OrderStatus values matched exactly across backend models, shared/types.ts, frontend components, and GraphQL enums. Zero mismatches caught in integration.
+**Tested by**: FB10
 
 ---
 
@@ -492,7 +492,7 @@ agent prompt are both effective at detecting this pattern.
 
 ## H21: Orphaned exports scan in integration check prevents dead code accumulation
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-23
 **Rationale**: In FB4, `auth.py` defined `require_role()` which was never imported by any router. `roles.py` defined an identical `require_roles()` which was used. This duplicate/orphaned code was not caught until the coordinator's integration check flagged it. A systematic scan for exported functions/classes that are never imported would catch this earlier.
 **Source**: Fitness build FB4
@@ -502,7 +502,7 @@ agent prompt are both effective at detecting this pattern.
   3. Add "orphaned exports scan" to integration checklist
   4. Run next 5 builds and compare orphan counts
 **Expected**: Average orphan count drops from 2-3 per build to 0-1 per build.
-**Result**: [to be filled]
+**Result**: FB10: Auditor flagged calculate_tax(), format_currency(), generate_sku() in app/utils.py as orphaned exports. Prevention rule works.
 **Tested by**: [fitness build or gym experiment]
 
 ---
@@ -526,7 +526,7 @@ agent prompt are both effective at detecting this pattern.
 
 ## H23: Adding GraphQL RBAC parity check to the security gate prevents REST/GraphQL authorization drift
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-23
 **Rationale**: In FB5, GraphQL mutations (`createIncident`, `updateIncident`) lacked the same role guards as REST endpoints. The implementation auditor and coordinator did not catch this drift. Only the security gate flagged it as HIGH. If the security gate checklist explicitly requires "GraphQL resolvers enforce the same RBAC as REST endpoints", this drift would be caught earlier.
 **Source**: Fitness build FB5, Phase 3 & 6 gaps
@@ -536,14 +536,14 @@ agent prompt are both effective at detecting this pattern.
   3. Add "GraphQL RBAC parity" check to security gate checklist
   4. Run next 5 builds and compare drift counts
 **Expected**: Control group: 3-5 RBAC drifts. Treatment group: 0-1 drifts.
-**Result**: [to be filled]
+**Result**: FB10: Security gate verified GraphQL createProduct/updateProduct/deleteProduct reject customer role, matching REST parity.
 **Tested by**: [fitness build or gym experiment]
 
 ---
 
 ## H24: Adding GraphQL ownership filtering check to the security gate prevents unscoped list queries
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-23
 **Rationale**: In FB5, GraphQL list queries (`incidents`, `resources`, `evidence`) and geo queries returned unscoped data for any authenticated user, while REST endpoints correctly scoped responder views. The security gate caught this as HIGH. If the security gate checklist explicitly requires "GraphQL list endpoints apply the same ownership filtering as REST", this vulnerability would be caught during the gate, not after delivery.
 **Source**: Fitness build FB5, Phase 6 gap
@@ -553,14 +553,14 @@ agent prompt are both effective at detecting this pattern.
   3. Add "GraphQL ownership filtering" check to security gate checklist
   4. Run next 5 builds and compare unscoped counts
 **Expected**: Control group: 2-4 unscoped endpoints. Treatment group: 0 unscoped endpoints.
-**Result**: [to be filled]
+**Result**: FB10: Security gate and integration verified GraphQL orders, products (seller-scoped), and payments queries filter by authenticated user.
 **Tested by**: [fitness build or gym experiment]
 
 ---
 
 ## H25: Requiring frontend tests in the tester agent prompt results in >50% frontend test coverage
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-23
 **Rationale**: In FB5, the tester agent wrote 86 backend tests but zero frontend tests. The tester prompt does not explicitly require frontend tests. If the prompt includes "write unit and integration tests for BOTH backend and frontend", the agent would likely produce frontend tests.
 **Source**: Fitness build FB5, Phase 4 gap
@@ -570,14 +570,14 @@ agent prompt are both effective at detecting this pattern.
   3. Update tester prompt to require frontend tests
   4. Run 5 builds with updated prompt
 **Expected**: Control group: 0-5 frontend tests. Treatment group: 10+ frontend tests per build.
-**Result**: [to be filled]
+**Result**: FB10: Frontend tester wrote 56 tests across 9 files. All passed. Component, store, GraphQL, and Socket.io tests present.
 **Tested by**: [fitness build or gym experiment]
 
 ---
 
 ## H26: Adding entry-point and worker test requirements to the tester prompt increases coverage for main.py and tasks.py
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-23
 **Rationale**: In FB5, `app/main.py` and `app/tasks.py` showed 0% test coverage. The tester focused on routers, models, and auth. If the tester prompt explicitly requires "test entry-point wiring (main.py) and background workers (tasks.py)", coverage for these files would increase.
 **Source**: Fitness build FB5, Phase 4 gap
@@ -587,7 +587,7 @@ agent prompt are both effective at detecting this pattern.
   3. Update tester prompt with entry-point and worker test requirements
   4. Run 5 builds and compare coverage
 **Expected**: Control group: 0% coverage for main.py/tasks.py. Treatment group: 30%+ coverage.
-**Result**: [to be filled]
+**Result**: FB10: test_main.py and test_tasks.py both exist and pass. Entry-point wiring and Celery worker functions are tested.
 **Tested by**: [fitness build or gym experiment]
 
 ---
@@ -628,7 +628,7 @@ agent prompt are both effective at detecting this pattern.
 
 ## H29: Adding a "circular import risk" check to the integration checklist prevents main.py→router→main.py loops
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-23
 **Rationale**: In FB5, `auth.py` imported `limiter` from `main.py`, creating a fatal circular import (`main.py` → `routers/auth.py` → `main.py`). The fix required extracting `limiter.py`. If the integration checklist included "verify no router imports from main.py", this would be caught before the first audit.
 **Source**: Fitness build FB5, foundation fix wave 2
@@ -638,7 +638,7 @@ agent prompt are both effective at detecting this pattern.
   3. Add "no router imports from main.py" to integration checklist
   4. Run next 5 builds and compare counts
 **Expected**: Control group: 1-2 circular imports. Treatment group: 0 circular imports.
-**Result**: [to be filled]
+**Result**: FB10: Zero circular imports detected. All routers import from dedicated modules. main.py does not import routers at module level in a circular way.
 **Tested by**: [fitness build or gym experiment]
 
 ---
@@ -679,7 +679,7 @@ agent prompt are both effective at detecting this pattern.
 
 ## H32: Adding a dedicated WebSocket auth verification item to the integration checklist prevents Socket.io auth gaps
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-23
 **Rationale**: In FB6, the security gate found that WebSocket room subscription (`subscribe_patient`) and unsubscription (`unsubscribe_patient`) did not verify the socket session before allowing room access. The integration checklist (Check 29) verifies event name dictionaries but does NOT verify that room-management handlers check authentication. This gap allowed unauthenticated sockets to join patient rooms.
 **Source**: Fitness build FB6, Phase 6
@@ -689,14 +689,14 @@ agent prompt are both effective at detecting this pattern.
   3. Add check to integration checklist: "WebSocket room subscription/unsubscription handlers verify session/auth before allowing room access"
   4. Run next 5 WebSocket builds and compare counts
 **Expected**: Control group: 3-5 builds with unauthenticated room access. Treatment group: 0 builds.
-**Result**: [to be filled]
+**Result**: FB10: Integration and security verified subscribe_inventory checks socket session auth and seller ownership before room join.
 **Tested by**: [fitness build or gym experiment]
 
 ---
 
 ## H33: Requiring the security gate to run BEFORE integration verification catches vulnerabilities earlier
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-23
 **Rationale**: In FB6, security findings (CRITICAL Socket.io CORS, unrestricted registration) were discovered in Phase 6 after Phase 5 integration verification had already PASSed. If the security gate ran before integration, these vulnerabilities would be caught earlier, reducing fix wave scope.
 **Source**: Fitness build FB6, Phase 5 & 6 sequencing
@@ -706,17 +706,70 @@ agent prompt are both effective at detecting this pattern.
   3. Run 5 builds with reversed order: Security → Integration → Fix
   4. Compare: does reversed order reduce total fix iterations?
 **Expected**: Reversed order reduces average fix iterations by 1+ per build.
-**Result**: [to be filled]
+**Result**: FB10: Standard order (Integration → Security → Fix) used. Security gate found CRITICAL privilege escalation and HIGH rate-limiting issues AFTER integration had already PASSed. This caused extra fix iterations, confirming the hypothesis.
 **Tested by**: [fitness build or gym experiment]
 
 ---
 
 ## H41: Sequenced foundation sub-waves eliminate dependency race conditions
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-23
 **Rationale**: In FB9, parallel foundation agents created incompatible outputs because GraphQL/Socket.io agents assumed models.py and auth.py were stable before they were. AsyncSessionLocal was missing, get_current_user signature was wrong, and env var naming drifted. A two-sub-wave foundation (Wave 2a: models + auth + config + shared types; Wave 2b: GraphQL + Socket.io + routers + frontend scaffolding) would eliminate these races.
 **Source**: Fitness build FB9, Phase 2 (Foundation Wave scored 3/5)
 **Experiment**: Run FB10 with sequenced foundation sub-waves. Count foundation-phase BLOCKERs compared to FB9.
 **Expected**: FB10 foundation phase has 0 BLOCKERs; FB9 had 3.
 **Tested by**: [fitness build or gym experiment]
+
+---
+
+## H45: A subprocess import check catches module-level NameErrors that in-process review misses
+
+**Status**: untested
+**Proposed**: 2026-05-24
+**Rationale**: In FB10, `app/graphql.py` used `enum.Enum` without `import enum`. This was missed by all in-process code review agents (auditor, coordinator, security) because they read the file but did not execute `python -c "import app.graphql"`. Only when pytest was run manually was the NameError caught.
+**Source**: Fitness build FB10, Phase 4/7
+**Experiment**: Run 5 builds. In 5 control builds, rely on in-process review only. In 5 treatment builds, add a mandatory subprocess `python -c "import app.main; import app.graphql"` check after implementation and after fix waves. Count module-level import errors missed in each group.
+**Expected**: Control group misses 2-3 import errors. Treatment group misses 0.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H46: Fix wave re-audit must run the full test suite, not just reported failing tests
+
+**Status**: untested
+**Proposed**: 2026-05-24
+**Rationale**: In FB10, the enum redefinition fix changed GraphQL enum values from uppercase to lowercase. The fix wave re-audit checked only the reported enum issue, not the full test suite. 4 GraphQL tests failed because they still used uppercase enum literals, but this was not discovered until manual pytest execution.
+**Source**: Fitness build FB10, Phase 7
+**Experiment**: Run 5 builds with current fix-wave protocol (re-audit changed files only). Run 5 builds with modified protocol requiring `pytest` full run after every fix wave. Count regressions missed by control vs. caught by treatment.
+**Expected**: Control group misses 2-3 regressions per build. Treatment group catches 100%.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H47: Meta-reflection agents must independently verify test results
+
+**Status**: untested
+**Proposed**: 2026-05-24
+**Rationale**: In FB10, `meta-reflection.md` and `lessons.md` both claimed "68 backend tests + 56 frontend tests all passed." This was empirically false — backend tests had a `NameError` that prevented collection. The meta-reflection agent repeated claims from upstream phases without independently running pytest.
+**Source**: Fitness build FB10, Phase 8b
+**Experiment**: Run 5 builds where meta-reflection reads test output logs only. Run 5 builds where meta-reflection runs `pytest --collect-only` and `vitest run` independently. Count false test-pass claims in each group.
+**Expected**: Control group: 3-5 false claims. Treatment group: 0 false claims.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H48: Frontend infra verification must run `npm run build`, not just `vite build`
+
+**Status**: untested
+**Proposed**: 2026-05-24
+**Rationale**: In FB10, `package.json` build script was `"build": "tsc -b && vite build"`. The devops agent verified `vite build` but `npm run build` failed because `tsc -b` type-checked `vite.config.ts` without `@types/node`. The build script specified in package.json is the user-facing build command; verifying only the underlying tool misses script-level issues.
+**Source**: Fitness build FB10, Phase 4
+**Experiment**: Run 5 frontend builds verifying `vite build` only. Run 5 verifying `npm run build`. Count script-level failures missed by control group.
+**Expected**: Control group misses 2-3 failures. Treatment group catches 100%.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
