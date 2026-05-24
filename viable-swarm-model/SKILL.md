@@ -244,9 +244,9 @@ Main agent (S5) performs:
    ("Users need Z")? If problem-oriented, spawn `vsm_product` subagent to
    produce a product brief with user stories and acceptance criteria.
 3. **Read project memory**: `.kimi/lessons.md` if exists.
-3. **Read acquired wisdom**: `~/vsm/viable-swarm-model/references/acquired-wisdom.md`
+4. **Read acquired wisdom**: `~/vsm/viable-swarm-model/references/acquired-wisdom.md`
    if exists.
-4. **Read hypotheses**: `~/vsm/viable-swarm-model/references/hypotheses.md`
+5. **Read hypotheses**: `~/vsm/viable-swarm-model/references/hypotheses.md`
    if exists. Note any untested hypotheses that are relevant to this project.
 5. **Self-test**: Verify all referenced files exist and are readable. Verify
 the flow diagram parses. Verify the skill can describe its own phase sequence
