@@ -380,3 +380,29 @@ misattribution.
 **After**:
 - Description claims "based on Stafford Beer's Viable System Model"
 - Section 11 titled "Comprehension Checkpoint"
+
+---
+
+## Mutation Log Entry — FB9-20260523
+
+**Fitness Build**: FB9 (HealthBridge)
+**Overall Score**: 4.0 / 5.0
+**Gap**: Phase 2 Foundation Wave scored 3/5 due to dependency race conditions between parallel foundation agents.
+
+### Mutations Applied (Autonomous)
+1. **Append-only**: Added Anti-Pattern #19 (JWT Signature Verification Bypass) to `references/anti-patterns.md`
+2. **Append-only**: Added Security Lessons L28 (JWT Signature Verification is Non-Negotiable) and L29 (Fix Agents Can Introduce Vulnerabilities) to `references/security-lessons.md`
+3. **Append-only**: Added Pattern #22 (Foundation Wave Sequencing) to `references/pattern-library.md`
+4. **Refinement**: Updated `agents/vsm_auditor.md` to flag `verify_signature=False` as CRITICAL/BLOCKER
+5. **Refinement**: Updated `agents/vsm_tester.md` with FB9 Finding on JWT Payload / ORM Type Mismatch on SQLite
+6. **Append-only**: Added Hypothesis H41 (Sequenced foundation sub-waves eliminate dependency race conditions) to `references/hypotheses.md`
+
+### Mutations Proposed but Not Applied (Structural)
+7. **Structural**: Split Foundation Wave into two sequential sub-waves in `SKILL.md` flow diagram and Phase 2 logic:
+   - Sub-Wave 2a: models + auth + config + shared types + env contract
+   - Sub-Wave 2b: GraphQL + Socket.io + routers + frontend scaffolding
+   - Rationale: Eliminates dependency race conditions observed in FB9
+   - Status: Pending approval
+
+### Rejected Mutations
+- None

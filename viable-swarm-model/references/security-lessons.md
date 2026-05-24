@@ -309,3 +309,11 @@ missing until Phase 6.
 **Prevention rule**: If the spec requires "frontend uses httpOnly cookies (not localStorage)", the foundation wave MUST implement backend cookie setting (`response.set_cookie`) in the login endpoint. Returning the JWT in JSON body and storing it in Zustand memory does NOT satisfy the httpOnly requirement — the token is still accessible to JavaScript via the response body.
 **Affected**: vsm_security, foundation wave agents.
 **Evidence**: FB6 frontend stored token in Zustand (not localStorage), but backend still returned it in JSON. Security gate noted as MEDIUM but is actually HIGH.
+
+### L28: JWT Signature Verification is Non-Negotiable
+**Prevention rule**: Any code that calls `jwt.decode` with `options={"verify_signature": False}` or equivalent is a CRITICAL security vulnerability. This includes "convenience" helpers like `decode_token` that bypass verification. All JWT decoding MUST use the secret key and verify the signature. If the secret is "unavailable" in a context (e.g., Socket.IO), pass `settings.secret_key` explicitly.
+**Affected**: S1-Backend, vsm_security.
+
+### L29: Fix Agents Can Introduce Vulnerabilities
+**Prevention rule**: Fix agents (especially generic coders fixing security-related code) can accidentally introduce vulnerabilities while trying to be helpful. The security gate MUST re-audit ALL files modified during any fix wave, not just the originally flagged files.
+**Affected**: S3 (main agent), vsm_security.

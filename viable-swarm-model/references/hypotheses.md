@@ -708,3 +708,15 @@ agent prompt are both effective at detecting this pattern.
 **Expected**: Reversed order reduces average fix iterations by 1+ per build.
 **Result**: [to be filled]
 **Tested by**: [fitness build or gym experiment]
+
+---
+
+## H41: Sequenced foundation sub-waves eliminate dependency race conditions
+
+**Status**: untested
+**Proposed**: 2026-05-23
+**Rationale**: In FB9, parallel foundation agents created incompatible outputs because GraphQL/Socket.io agents assumed models.py and auth.py were stable before they were. AsyncSessionLocal was missing, get_current_user signature was wrong, and env var naming drifted. A two-sub-wave foundation (Wave 2a: models + auth + config + shared types; Wave 2b: GraphQL + Socket.io + routers + frontend scaffolding) would eliminate these races.
+**Source**: Fitness build FB9, Phase 2 (Foundation Wave scored 3/5)
+**Experiment**: Run FB10 with sequenced foundation sub-waves. Count foundation-phase BLOCKERs compared to FB9.
+**Expected**: FB10 foundation phase has 0 BLOCKERs; FB9 had 3.
+**Tested by**: [fitness build or gym experiment]

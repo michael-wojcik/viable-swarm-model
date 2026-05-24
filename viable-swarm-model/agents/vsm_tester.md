@@ -59,3 +59,9 @@ This prevents the agent from spending the entire wave failing on missing package
 - If a GraphQL query or REST endpoint returns 401 for an unauthenticated request, write the test to **expect 401**, not to bypass the auth.
 - If `get_context` raises `HTTPException(401)` on invalid/missing tokens, this is correct fail-closed behavior. Do NOT catch the exception and return `None` or an empty context.
 - Before "fixing" any auth-related failure, verify whether the behavior is an intentional security restriction. When in doubt, escalate rather than "fix".
+
+**Additional Guidance (FB9 Finding) — JWT Payload / ORM Type Mismatch on SQLite**:
+- JWT `sub` claims are strings (e.g., `"550e8400-e29b-41d4-a716-446655440000"`), but SQLAlchemy `UUID(as_uuid=True)` columns on SQLite require `uuid.UUID` objects in `WHERE` clauses.
+- If tests fail with type errors when querying UUID columns using `user["sub"]`, convert with `uuid.UUID(user["sub"])` at the query boundary.
+- When comparing UUID results in assertions, compare `str(result.id)` against `user["sub"]` to avoid `UUID != str` mismatches.
+- Prefer normalizing `sub` to `uuid.UUID` in `get_current_user` or a helper rather than in every resolver/router.

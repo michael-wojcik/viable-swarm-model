@@ -259,3 +259,8 @@
 **Prevention**: Use lazy factory (`get_settings()`) or dependency injection. Never instantiate at module level. This prevents test discovery, CI execution, and agent-based testing.  
 **Example**: FB3 `backend/app/config.py` had `settings = Settings()` at bottom. Tester agent could not import any backend module for 1800s until timeout.  
 **Affected**: S1-Backend, vsm_tester, vsm_auditor.
+
+### 19. JWT Signature Verification Bypass
+**What**: A `decode_token` helper or similar function uses `jwt.decode(token, options={"verify_signature": False}, ...)` to "conveniently" read the payload without verifying the signature.  
+**When**: Developer thinks they need to decode the token in a context where the secret is "unavailable" (e.g., WebSocket auth, logging, debugging).  
+**Prevention**: NEVER disable JWT signature verification. If the secret is needed, pass it explicitly. Ban any function that sets `verify_signature=False`. The security gate must flag this as CRITICAL.
