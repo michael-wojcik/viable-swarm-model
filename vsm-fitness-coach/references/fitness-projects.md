@@ -376,3 +376,37 @@ S5 must explicitly choose and log the rationale.
 - Integration: 1-2 BLOCKERs from enum drift or orphaned exports
 - Security: 1-2 HIGH findings from GraphQL ownership filtering or public DTO exposure
 - Fix wave: 2 iterations max if mutations work
+
+---
+
+## FB12: HealthBridge — Telemedicine & Patient Health Records Platform
+
+**Complexity**: High (4-5 waves, 2500-3500 lines, 4 services: API + worker + realtime + frontend)
+**Estimated duration**: 3-4 hours
+**Expected Tier**: Tier 2
+**Services**: FastAPI backend, Celery/Redis worker, Socket.io real-time service, React frontend
+**Date**: 2026-05-24
+
+### Coverage Map
+
+| Capability | Tested by |
+|---|---|
+| Prevention rule transfer (H49-H53) | All 9 traps from FB11 deliberately recreated to validate new rules |
+| GraphQL/Strawberry specifics | Strawberry auto-camelCase, extension version drift, RBAC parity |
+| Security severity calibration | Connection string defaults vs. secret fallbacks |
+| GraphQL context fail-closed | Auth exception propagation in get_context |
+| Sequenced foundation sub-waves | H41 validated — 0 BLOCKERs in foundation |
+| Tester timeout | Split backend/frontend testers attempted |
+
+### Known Stress Points
+- GraphQL field name camelCase alignment (H58)
+- Strawberry extension version drift (H55)
+- Security agent false positive CRITICALs on connection strings (H56)
+- GraphQL fail-open context (H57)
+- GraphQL RBAC parity with REST (T9)
+
+### Result
+- **Score**: ~3.7/5.0
+- **BLOCKERs**: 1 (GraphQL patients query ownership filtering)
+- **Fix iterations**: 1
+- **All FB11 traps prevented or caught early**
