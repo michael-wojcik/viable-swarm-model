@@ -21,6 +21,7 @@ description: >
    - Prisma relation names match on both sides
    - Environment variable names match across docker-compose/.env/code
    - Celery task names and signatures match across services
+   - **Subprocess import verification**: ALL backend entry-point modules MUST import cleanly in a fresh Python subprocess (`python -c "import app.main; import app.graphql; import app.sio; import app.tasks"`). NameError / ImportError at module level is a BLOCKER regardless of in-process review results.
 4. Produce: integration contract report, dependency map, conflict list.
 5. **Mid-wave coordination**: When invoked during active waves (not just after completion),
    flag ONLY the critical contract violations that will block agents still running.

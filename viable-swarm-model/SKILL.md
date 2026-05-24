@@ -337,7 +337,9 @@ Gather vs. Stop: planned wave → gather; mid-build → emergency stop.
 
 ### Phase 7: Fix Wave (conditional)
 Group fixes by file. Parallel across files, sequential within file. Spawn
-`coder` subagents. MANDATORY re-audit after. Max 3 iterations. Still blocked?
+`coder` subagents. MANDATORY re-audit after. **MANDATORY full test suite run after**
+(`pytest tests/` and `vitest run` / `npm test`). Re-auditing changed files alone
+misses regressions in unrelated tests. Max 3 iterations. Still blocked?
 Escalate to user.
 
 **Phase 7b: Post-Fix Security Re-Check** — After fix wave clears all BLOCKERs
@@ -353,7 +355,15 @@ Append to `.kimi/lessons.md` with Source/Finding/Fix/Verification format.
 See `assets/lessons-template.md`.
 
 ### Phase 8b: Meta-Reflection + Hypothesis Generation
-After project reflection, evaluate the skill's own performance:
+After project reflection, evaluate the skill's own performance.
+
+**Independent verification requirement**: Before writing `meta-reflection.md`,
+S5 MUST independently run the full test suite (`pytest tests/` and `vitest run` /
+`npm test`) and record the ACTUAL pass/fail counts. Do NOT repeat claims from
+upstream phases without verification. If tests fail, the meta-reflection must
+acknowledge the failure and propose a root-cause hypothesis.
+
+After verification, proceed with:
 
 1. **Effectiveness audit**: Which prevention rules caught real bugs? Which
    flagged safe code as risky (false positive)?

@@ -580,3 +580,34 @@ main-skill mutations.
 **Rationale**: Updated statuses for 10 hypotheses tested by FB10 (H13, H21, H23, H24, H25, H26, H29, H32, H33, H41 — all confirmed). Appended 4 new hypotheses from trainer report (H45-H48) covering subprocess import checks, fix wave test suite regression, meta-reflection verification, and frontend build script verification.
 **Expected effect**: Hypothesis backlog stays current. New hypotheses provide falsifiable targets for FB11 or gym experiments.
 
+
+---
+
+## Mutation 28 — 2026-05-24
+
+**Session**: FB10 structural mutations — user approved direct application
+**File**: `agents/vsm_coordinator.md`
+**Type**: structural
+**Rationale**: FB10 revealed that in-process file review (ReadFile) misses module-level NameErrors that only surface at import time. The coordinator must enforce a subprocess import check as part of integration verification.
+**Expected effect**: Future builds catch `NameError` and `ImportError` during integration verification, before test execution begins.
+
+---
+
+## Mutation 29 — 2026-05-24
+
+**Session**: FB10 structural mutations — user approved direct application
+**File**: `agents/vsm_tester.md`
+**Type**: structural
+**Rationale**: FB10 fix wave introduced test-schema regressions (enum redefinition broke 4 GraphQL tests) because only changed files were re-audited. The tester agent must now run the full test suite after any fix wave.
+**Expected effect**: Fix-wave regressions in unrelated tests are caught immediately, preventing false "fix complete" claims.
+
+---
+
+## Mutation 30 — 2026-05-24
+
+**Session**: FB10 structural mutations — user approved direct application
+**File**: `SKILL.md` (Phase 7 and Phase 8b sections)
+**Type**: structural
+**Rationale**: FB10 meta-reflection repeated false test-pass claims from upstream phases. Phase 7 fix wave missed regressions because full test suite was not mandatory. Both phases need explicit verification requirements in the skill's core workflow.
+**Expected effect**: Phase 7 fix waves are gated on full test suite pass. Phase 8b meta-reflections include independently verified test results.
+

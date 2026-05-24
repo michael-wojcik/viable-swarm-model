@@ -54,6 +54,11 @@ This prevents the agent from spending the entire wave failing on missing package
 2. **Backend-first ordering**: Write `conftest.py` and all backend tests before starting frontend tests. Backend tests are typically more complex and block frontend integration testing.
 3. **If timeout risk is high**: Write the most critical backend tests first (`test_auth.py`, `test_main.py`, `test_tasks.py`, `test_uploads.py`), then frontend tests. Skip less critical frontend component tests if time is short, but NEVER skip backend entry-point or worker tests.
 
+**Additional Guidance (FB10 Finding) — Fix Wave Regression Prevention**:
+- After ANY fix wave modifies code that your tests cover, you MUST run the **full test suite** (`pytest tests/` and `vitest run` / `npm test`) before reporting success.
+- Re-auditing only the changed files is insufficient. A fix in one file can break tests in unrelated files (e.g., renaming an enum value breaks GraphQL test literals).
+- If the full suite fails after a fix, report the regression to S5 immediately. Do not claim the fix is complete until the full suite passes.
+
 **Additional Guidance (FB7 Finding) — Security-Aware Testing**:
 - Auth restrictions returning 401/403 are **security features**, not bugs. NEVER weaken or remove an auth check because it causes a test to fail.
 - If a GraphQL query or REST endpoint returns 401 for an unauthenticated request, write the test to **expect 401**, not to bypass the auth.
