@@ -290,6 +290,16 @@ missing until Phase 6.
 
 ---
 
+### L42: GraphQL RBAC Must Be Explicitly Verified Against REST
+**Prevention rule**: When a project has BOTH REST and GraphQL endpoints, the security gate MUST verify that GraphQL mutations enforce the SAME role-based access control as REST endpoints. GraphQL mutations are not exempt from authorization. Check every mutation: `create_*`, `update_*`, `delete_*` against REST `require_role()` constraints.
+**Affected**: vsm_security, vsm_auditor.
+**Source**: Fitness build FB8. GraphQL `update_course`/`delete_course` allowed any authenticated user while REST required `admin`/`instructor`.
+
+### L43: WebSocket Room Handlers Must Verify Course Enrollment
+**Prevention rule**: WebSocket `join_room` / `subscribe_*` handlers must verify BOTH authentication (valid session) AND authorization (user is enrolled in the target course / is the instructor). Session-only verification allows any authenticated user to access any room.
+**Affected**: vsm_security, S1 backend coders.
+**Source**: Fitness build FB8. `join_classroom` verified socket session but not course enrollment.
+
 ### L38: GraphQL Context Builders Must Be Fail-Closed
 **Prevention rule**: GraphQL `get_context` or equivalent context builders MUST NOT catch all exceptions from authentication and set `user = None`. This creates a fail-open auth bypass: if a resolver forgets to check `user is None`, unauthenticated requests proceed silently. Let `get_current_user` raise its `HTTPException` (or `AuthenticationError`) so Strawberry/FastAPI can translate it to a GraphQL error.
 **Affected**: vsm_security, backend implementation agents.

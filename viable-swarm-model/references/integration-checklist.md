@@ -178,6 +178,7 @@ correction BEFORE quality gates.
 - [ ] WebSocket room unsubscription handlers verify the socket session before leaving a room
 - [ ] Socket.io `cors_allowed_origins` uses the same explicit allowlist as HTTP CORS middleware, never `"*"`
 - [ ] Backend `authenticate` event stores user session; all subsequent room operations read and validate that session
+- [ ] WebSocket room handlers verify the user is ENROLLED in the target course (or is the instructor/admin) before allowing room access. Session auth alone is insufficient.
 
 ## 31. Model-Spec Alignment Check
 - [ ] SQLAlchemy/model field names match `data-model.md` exactly

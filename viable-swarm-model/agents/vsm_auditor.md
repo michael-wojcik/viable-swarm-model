@@ -20,6 +20,10 @@ description: >
    `references/integration-checklist.md`).
 6. After fixes: re-audit changed files only.
 
+**Framework-Specific Guidance**:
+- **FastAPI router imports**: `main.py` importing routers from `app.routers.*` is CORRECT and REQUIRED. The forbidden circular-import pattern is routers importing from `main.py` — never flag main.py→router imports as a BLOCKER.
+- **Strawberry GraphQL auto-camelCase**: Strawberry automatically converts snake_case Python fields to camelCase GraphQL fields (e.g., `instructor_id` → `instructorId`). Frontend queries using camelCase are CORRECT. Do NOT flag camelCase frontend queries as mismatched with snake_case backend fields.
+
 **Autonomy Boundaries**:
 - **FULL AUTHORITY**: Inspect any S1 deliverable, demand clarification, report
   findings, recommend rework, flag BLOCKERs.

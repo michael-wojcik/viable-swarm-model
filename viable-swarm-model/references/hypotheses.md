@@ -320,6 +320,58 @@ agent prompt are both effective at detecting this pattern.
 
 ---
 
+## H37: GraphQL RBAC parity check must be in the security gate checklist
+
+**Status**: confirmed
+**Proposed**: 2026-05-23
+**Rationale**: GraphQL mutations lacked the same role guards as REST endpoints. The security gate caught this, but the architect, implementation agents, and integration coordinator did not. If the security gate checklist explicitly requires "GraphQL mutations enforce the same RBAC as REST endpoints", this drift would be caught earlier.
+**Source**: Fitness build FB8, Phase 6
+**Experiment**: Add "GraphQL RBAC parity" to security gate checklist. Run next 5 builds and count RBAC drifts.
+**Expected**: 0 drifts after checklist addition.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H38: WebSocket enrollment authorization check must be added to integration checklist
+
+**Status**: confirmed
+**Proposed**: 2026-05-23
+**Rationale**: Implementation agent added session verification to WebSocket room handlers but missed enrollment/course-membership verification. The integration checklist verifies session auth but not course enrollment.
+**Source**: Fitness build FB8, Phase 5 & 6
+**Experiment**: Add "WebSocket room handlers verify user is enrolled in the target course" to integration checklist. Run next 5 WebSocket builds.
+**Expected**: 0 builds with unscoped room access.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H39: Auditor prompt needs Strawberry auto-camelCase clarification
+
+**Status**: confirmed
+**Proposed**: 2026-05-23
+**Rationale**: Auditor falsely flagged frontend GraphQL camelCase queries as mismatched with backend snake_case fields. The coordinator correctly understood Strawberry's auto-camelCase behavior.
+**Source**: Fitness build FB8, Phase 3b
+**Experiment**: Add "Strawberry auto-camelCase: snake_case Python fields become camelCase GraphQL fields" to auditor prompt. Run next 3 GraphQL builds.
+**Expected**: 0 false positive camelCase BLOCKERs.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H40: Auditor prompt needs FastAPI router import pattern clarification
+
+**Status**: confirmed
+**Proposed**: 2026-05-23
+**Rationale**: Auditor flagged `main.py` importing routers as a BLOCKER, misinterpreting circular-import prevention. The rule "routers must not import from main.py" was read as "main.py must not import routers".
+**Source**: Fitness build FB8, Phase 3b
+**Experiment**: Add explicit example to auditor prompt: "main.py importing routers is CORRECT and REQUIRED in FastAPI. The forbidden pattern is routers importing from main.py." Run next 3 FastAPI builds.
+**Expected**: 0 false positive router import BLOCKERs.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
 ## H[N]: [Hypothesis Title]
 
 **Status**: untested

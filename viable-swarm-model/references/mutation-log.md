@@ -328,3 +328,23 @@ FB7 demonstrated that foundation model drift causes cascade failures, and that f
 - Phase 2: Foundation → Audit → Model Validation → Implementation
 - Phase 7: Fix Wave → Re-audit → Post-Fix Security Re-Check → Reflection
 
+---
+
+## Mutation 17 — 2026-05-23
+
+**Session**: FB8 EduFlow fitness build evaluation
+**File**: `references/hypotheses.md`, `references/security-lessons.md`, `references/integration-checklist.md`, `agents/vsm_auditor.md`
+**Type**: append (hypotheses, security lessons, integration checklist), refinement (auditor agent)
+**Rationale**: FB8 validated all FB7 prevention rules (H34–H36, Check 31–32, H30, H31) and identified four new gaps:
+1. GraphQL RBAC parity with REST — implementation agents missed it, security gate caught it (H37, L42)
+2. WebSocket enrollment authorization — session verified but course enrollment was not (H38, L43)
+3. Auditor false positive on FastAPI router imports — misread circular-import rule (H40)
+4. Auditor false positive on Strawberry auto-camelCase — lacked framework guidance (H39)
+**Expected effect**: Future security gates will explicitly verify GraphQL RBAC parity. Future integration checks will verify WebSocket enrollment. Future auditors will not falsely flag FastAPI router imports or Strawberry camelCase fields.
+
+**Files modified**:
+- `references/hypotheses.md` — Appended H37–H40
+- `references/security-lessons.md` — Added L42 (GraphQL RBAC parity) and L43 (WebSocket enrollment auth)
+- `references/integration-checklist.md` — Added enrollment authorization to Check 30
+- `agents/vsm_auditor.md` — Added FastAPI router import and Strawberry auto-camelCase guidance
+
