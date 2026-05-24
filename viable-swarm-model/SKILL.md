@@ -151,6 +151,7 @@ flowchart TD
     P2D{<choice>BLOCKERs</choice>?}
     P3[Phase 3: Implementation Wave<br/>Parallel coder agents]
     P3S[TaskOutput block=true]
+    P3M[Phase 3c: Mid-Wave S2 Check<br/>vsm_coordinator (conditional, Tier 2+)]
     P3A[Phase 3b: Audit + Coordination<br/>vsm_auditor + vsm_coordinator]
     P3D{<choice>BLOCKERs</choice>?}
     P3E[Entry Point Wiring<br/>MANDATORY]
@@ -197,7 +198,8 @@ flowchart TD
     P2D -->|<choice>yes</choice>| P7
     P2D -->|<choice>no</choice>| P3
     P3 --> P3S
-    P3S --> P3A
+    P3S --> P3M
+    P3M --> P3A
     P3A --> P3D
     P3D -->|<choice>yes</choice>| P7
     P3D -->|<choice>no</choice>| P3E
@@ -250,12 +252,23 @@ Main agent (S5) performs:
 the flow diagram parses. Verify the skill can describe its own phase sequence
 without contradiction. If any check fails → emit algedonic, write diagnosis
 to `~/vsm/viable-swarm-model/references/mutation-log.md`, ask user to review.
-6. Write `plan.md`.
+6. **Variety Assessment** (Ashby's Law): Estimate project complexity and classify tier:
+   - **Tier 1** (<1000 lines, 1-2 services): Standard flow, 2-3 parallel agents
+   - **Tier 2** (1000-3000 lines, 2-3 services): Add mid-wave S2 check, extend timeouts, 3-4 agents
+   - **Tier 3** (3000+ lines, 3+ services): Split into sub-builds OR accept that single-session coverage will be partial. Do not pretend the metasystem has requisite variety it lacks.
+   Log the tier in `plan.md`. Adjust agent allocation and timeout expectations accordingly.
+7. Write `plan.md`.
 
 ### Phase 1: Intelligence (S4)
 Spawn `vsm_architect` subagent. Review output. S3/S4 homeostat: max 3
-iterations before escalating to S5. EnterPlanMode for user approval.
-Rejected plans loop back.
+iterations before escalating to S5.
+
+**S5 Policy Check** (before approval): Explicitly weigh:
+- **S3 concern**: Can the metasystem regulate this complexity? (Check Variety Assessment tier. Do we have enough agents, time, and context?)
+- **S4 concern**: Does this design position the project well for future evolution?
+- **If conflict**: S5 decides which takes precedence. Security and correctness (S3*) always win over speed. Log the rationale in `plan.md`.
+
+EnterPlanMode for user approval. Rejected plans loop back.
 
 ### Phase 2: Foundation Wave
 
@@ -303,6 +316,12 @@ GraphQL, frontend queries, and shared types.
 Pass Wave 1 outputs as input references. Spawn parallel `coder` subagents.
 Entry point wiring MANDATORY after this wave. Audit + coordination check.
 BLOCKERs trigger Phase 7.
+
+**Phase 3c: Mid-Wave S2 Check (conditional)** — If project is Tier 2+ and 2+
+parallel coder agents were spawned, spawn a lightweight `vsm_coordinator` check
+on shared contracts after the first 1-2 agents complete. Flag ONLY critical
+drift that would block incomplete agents. If drift found → emit algedonic,
+halt remaining agents, inject corrections.
 
 ### Phase 4: Testing & Infra Wave
 Spawn `vsm_tester` + `coder` (devops) in parallel. Run tests via Shell.

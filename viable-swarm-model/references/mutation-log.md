@@ -406,3 +406,66 @@ misattribution.
 
 ### Rejected Mutations
 - None
+
+---
+
+## Mutation 19 — 2026-05-23
+
+**Session**: Epistemic audit of VSM fidelity + proposed refinements
+**File**: `agents/vsm_architect.md`, `agents/vsm_coordinator.md`, `SKILL.md`, `references/pattern-library.md`
+**Type**: refinement (4 files), append (1 file)
+**Rationale**: Comprehensive audit revealed that while the skill's VSM mapping is
+reasonably faithful in S3* (audit) and algedonic signals, it falls short in:
+- S4 (Intelligence): Produces single designs, usurping S5's decision role
+- S2 (Coordination): Retrospective checker, not real-time oscillator damper
+- S3 (Control): Todo tracking ≠ continuous regulation
+- S5 (Policy): Flow-follower, not S3/S4 balancer
+- Recursion: Absent (platform limitation)
+- Variety (Ashby's Law): No explicit complexity assessment; empirical timeouts prove violation
+
+Four Tier 2 refinements and one Tier 1 append applied autonomously per the
+skill's epistemic rule. Tier 3 structural mutation (mid-wave S2 check in Phase 3)
+reserved for user approval.
+
+**Expected effect**: 
+- Architects generate options; S5 chooses (restores Beerian S4/S5 boundary)
+- Coordinators have mid-wave authority and verbatim correction power (strengthens S2)
+- Phase 0 variety assessment prevents Ashby violations by right-sizing metasystem capacity
+- Phase 1 policy check makes S5 an explicit balancer, not a flowchart executor
+- Pseudo-recursion pattern distributes minimal metasystem function into S1 agents
+
+**Files modified**:
+- `agents/vsm_architect.md` — Added step 7: generate 2-3 design options
+- `agents/vsm_coordinator.md` — Added mid-wave coordination and correction authority
+- `SKILL.md` Phase 0 — Added step 6: Variety Assessment (Ashby's Law)
+- `SKILL.md` Phase 1 — Added S5 Policy Check before EnterPlanMode
+- `references/pattern-library.md` — Added Pattern [N]: Pseudo-Recursion
+
+---
+
+## Mutation 20 — 2026-05-23
+
+**Session**: Same epistemic audit (Tier 3 structural mutation)
+**File**: `SKILL.md` + `references/flow-diagram.mermaid`
+**Type**: structural
+**Rationale**: FB9 already sequenced the foundation wave (Sub-Wave 2a/2b) to prevent
+dependency races. The remaining coordination gap is in Phase 3 (Implementation Wave),
+where parallel feature agents drift on shared contracts. Empirical evidence from FB4-FB7
+shows GraphQL field drift, auth contract mismatches, and WebSocket event name drift all
+originate in Phase 3. A lightweight mid-wave S2 check after the first 1-2 agents complete
+catches drift before all agents finish, as close to Beerian real-time coordination as
+the platform allows.
+
+**User approval**: Approved. User explicitly rejected concern about diagram bloat,
+stating "I'm not concerned about 'bloat' if it's genuinely useful." Phase 3c was
+selected over Phase 2d because foundation wave sequencing (FB9) already addresses
+coordination there; implementation wave has no mid-wave gate and is where empirical
+drift occurs.
+
+**Expected effect**: Tier 2+ builds will catch contract drift during implementation
+before all agents complete, reducing BLOCKERs in Phase 3b and Phase 5.
+
+**Files modified**:
+- `SKILL.md` Phase 3 — Added Phase 3c: Mid-Wave S2 Check
+- `SKILL.md` Mermaid diagram — Inserted P3M node between P3S and P3A
+- `references/flow-diagram.mermaid` — Inserted P3M node between P3S and P3A

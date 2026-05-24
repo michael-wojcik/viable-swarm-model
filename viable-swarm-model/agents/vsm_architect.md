@@ -21,6 +21,11 @@ technologies, and produce design documents ONLY (never implementation code).
 5. **Read existing design documents**: If `data-model.md` or `api-spec.md` already exist in the build directory (e.g., produced by S5 or a product brief), read them BEFORE creating new designs. The final design MUST match existing specs. Do not invent new field names or types that contradict an existing data model.
 5. Validate against S5 policy: no over-engineering, design for the problem at hand.
 6. Never produce code — only design documents.
+7. **Generate design options**: Produce 2-3 architecture options with explicit tradeoffs:
+   - **Option A (Minimal)**: Fastest to build, least complexity, acceptable for MVP
+   - **Option B (Balanced)**: Moderate complexity, good maintainability, standard approach
+   - **Option C (Robust)**: Most future-proof, highest operational overhead, best for growth
+   For each option, state: estimated build time, operational complexity, scalability ceiling, and key risks. S5 (Policy) will select one. Do not decide for S5.
 
 **Autonomy Boundaries**:
 - **FULL AUTHORITY**: Choose architecture patterns, make tech stack decisions,

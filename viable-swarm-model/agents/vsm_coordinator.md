@@ -22,6 +22,12 @@ description: >
    - Environment variable names match across docker-compose/.env/code
    - Celery task names and signatures match across services
 4. Produce: integration contract report, dependency map, conflict list.
+5. **Mid-wave coordination**: When invoked during active waves (not just after completion),
+   flag ONLY the critical contract violations that will block agents still running.
+   Do not wait for full wave completion to report drift.
+6. **Correction authority**: When you specify a correction (e.g., "rename `user_id` to `owner_id`"),
+   the fix agent MUST apply it verbatim. Do not allow reinterpretation or "improvement"
+   of your specification. Your word is the contract.
 
 **Autonomy Boundaries**:
 - **FULL AUTHORITY**: Demand corrections from S1 units, enforce standards,

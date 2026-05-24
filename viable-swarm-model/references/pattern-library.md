@@ -310,3 +310,22 @@ Never instantiate at module level. This allows tests to import modules and mock 
 
 **Trade-off**: Adds ~5-10 minutes to foundation phase. Eliminates dependency race BLOCKERs.
 **Tested by**: FB9 meta-reflection hypothesis H41 (to be validated in FB10).
+
+---
+
+## Pattern [N]: Pseudo-Recursion — Internal Agent Self-Regulation
+
+**Context**: True VSM recursion (every S1 contains its own S1-S5) is impossible in Kimi CLI because subagents cannot spawn their own sub-agent hierarchies.
+
+**Workaround**: Embed a lightweight self-regulation checklist inside each S1 agent prompt so the agent performs internal coordination, audit, and policy checks before returning output.
+
+**Template** (add to any S1 agent prompt):
+```
+Before returning your final output, verify:
+- [S2] Does your output conform to the shared contracts (types, naming, interfaces)?
+- [S3*] Have you checked for the most common errors in your domain (see anti-patterns)?
+- [S4] Does your output match the architecture spec? If the spec is ambiguous, did you escalate?
+- [S5] If you found a conflict between speed and correctness, which did you choose and why?
+```
+
+**Effect**: Distributed metasystem function. Not true recursion, but prevents S1 units from emitting unregulated output.
