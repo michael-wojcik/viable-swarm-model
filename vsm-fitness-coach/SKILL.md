@@ -264,20 +264,89 @@ After the fitness report is written and mutations are committed, ask the user:
 
 > "Generate execution prompt for the next fitness build (FB[N+1])?"
 
-If the user approves:
-1. Read `assets/prompt-template.md`
-2. Fill in the template using:
-   - The current build's fitness report (score, gaps, surprises)
-   - Updated hypothesis statuses from Phase 2b
-   - New mutations applied in Phase 5
-   - A new project domain not yet covered
-3. Write the filled prompt to `~/vsm-fitness-builds/coach/FB[N+1]-prompt-draft.md`
-
 If the user rejects: end the session.
 
-**Why this is last**: The next build prompt depends on the current build's results.
-It cannot be written before evaluation, hypothesis updates, and mutation application
-are complete.
+If the user approves, follow this synthesis protocol **exactly**. Do not skip steps.
+
+#### Step 1: Read all source material
+Read these files in order:
+1. `assets/fitness-report-template.md` — current build's fitness report
+2. `~/vsm/viable-swarm-model/references/hypotheses.md` — updated statuses from Phase 2b
+3. `~/vsm/viable-swarm-model/references/mutation-log.md` — mutations applied in Phase 5
+4. `references/fitness-projects.md` — previous build domains (do not repeat)
+5. `assets/prompt-template.md` — the template to fill
+
+#### Step 2: Extract synthesis inputs
+From the fitness report, extract:
+- **Lowest-scoring phase(s)** (score 1-3): these are the primary targets
+- **Specific gaps**: quote the exact gap descriptions
+- **False positives**: any agent flagged something correct as wrong
+- **Surprises**: what went unexpectedly well or badly
+
+From hypotheses.md, extract:
+- **Confirmed hypotheses**: prevention rules that work — must be validated again
+- **Rejected hypotheses**: rules that were wrong — must NOT be tested again
+- **Untested hypotheses relevant to gaps**: link gap → hypothesis
+
+From mutation-log.md, extract:
+- **New prevention rules**: what was added in this session
+- **Agent prompt refinements**: what agent behavior changed
+- **Structural mutations**: what workflow changes were made
+
+#### Step 3: Select domain and complexity
+Rules:
+- Domain MUST NOT appear in `references/fitness-projects.md` previously
+- Domain MUST naturally require the capability where the lowest-scoring phase operates
+- Complexity MUST be one tier higher than the previous build if score ≥ 4.0, SAME tier if score < 4.0
+  (do not increase complexity on a failing build; fix the fundamentals first)
+- If previous build was Tier 3 and scored < 4.0, reduce to Tier 2 for the next build
+
+#### Step 4: Map gaps to deliberate traps
+For EACH gap from the fitness report:
+1. Design a specific condition in the new domain that would trigger the same failure mode
+2. State the EXACT expected behavior if the prevention rule works
+3. State the EXACT failure indicator if the prevention rule fails
+4. Assign severity: if the original gap was a BLOCKER, the trap MUST be a BLOCKER-equivalent
+
+Example mapping:
+- Gap: "GraphQL enum case mismatch (FB4)"
+- Trap: "OrderStatus uses `str, enum.Enum` but frontend queries use camelCase field name that doesn't match auto-camelCase output"
+- Expected if rule works: Coordinator flags mismatch, frontend fixes query
+- Failure indicator: Runtime ValueError on enum construction
+
+#### Step 5: Map hypotheses to critical requirements
+For EACH untested hypothesis being targeted:
+1. Write a specific requirement that exercises the hypothesis
+2. State which agent/phase is responsible for catching it
+3. State the PASS/FAIL criteria
+
+For EACH confirmed hypothesis being re-validated:
+1. Write a lighter-touch check (don't waste full trap complexity on proven rules)
+2. Include it in Exit Criteria, not Deliberate Traps
+
+#### Step 6: Verify coherence (mandatory checklist)
+Before writing the prompt file, verify ALL of the following:
+- [ ] At least one trap maps to each gap from the lowest-scoring phase
+- [ ] No trap contradicts another trap
+- [ ] All traps are testable (verifiable by audit, security, or coordinator)
+- [ ] The new domain has NOT been used in any previous fitness build
+- [ ] Complexity tier is appropriate (not higher after a failing build)
+- [ ] Data model field names are EXACT and unambiguous (Phase 2c validation target)
+- [ ] Every enum value is specified exactly (no ambiguity for Strawberry auto-camelCase)
+- [ ] Exit criteria include build-specific checks derived from hypotheses
+- [ ] The Purpose paragraph references the previous build score and specific gap IDs
+
+If ANY check fails: revise the prompt. Do NOT write the file with known gaps.
+
+#### Step 7: Write the prompt file
+1. Fill `assets/prompt-template.md` with the synthesized content
+2. Write to `~/vsm-fitness-builds/coach/FB[N+1]-prompt-draft.md`
+3. Verify the file is complete and self-contained (no references to external context)
+
+**Why this is last**: The next build prompt is a causal output of the current build's
+empirical results. It cannot be written before evaluation, hypothesis updates, and
+mutation application are complete. Skipping the synthesis protocol produces prompts
+that test the wrong things, waste build resources, and fail to validate prevention rules.
 
 ## 8. The Mutation System
 
