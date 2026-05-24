@@ -492,3 +492,40 @@ This keeps the hypothesis backlog accurate and prevents redundant gym experiment
 - `vsm-fitness-coach/SKILL.md` — Added Phase 2b: Update Hypothesis Statuses between
   Phase 2 (Evaluate Performance) and Phase 3 (Generate Hypotheses). Updated Mermaid
   flow diagram to include P2H node.
+
+---
+
+## Mutation 22 — 2026-05-23
+
+**Session**: Ecosystem-wide mutation-log infrastructure
+**File**: `vsm-fitness-coach/SKILL.md`, `vsm-fitness-gym/SKILL.md`,
+  `vsm-fitness-coach/references/mutation-log.md`, `vsm-fitness-gym/references/mutation-log.md`
+**Type**: structural
+**Rationale**: The vsm-fitness-coach and vsm-fitness-gym skills both referenced
+self-modification and the three-tier mutation system, but neither had the
+supporting infrastructure to actually do it: no mutation-log.md files, no format
+templates, no rollback procedures. The coach lacked epistemic rules entirely.
+All companion-skill mutations were being logged in the main skill's
+mutation-log.md, violating the principle that each skill should maintain its own
+audit trail. This created a single point of failure and made it impossible to
+revert companion-skill mutations independently.
+
+**Expected effect**: Both companion skills are now fully self-documenting
+learning organisms with their own mutation logs, format templates, rollback
+procedures, and epistemic infrastructure. Future mutations to coach prompts,
+rubrics, fitness projects, gym templates, or experiment designs will be logged
+locally. The main skill's mutation-log.md will only record ecosystem-wide or
+main-skill mutations.
+
+**Files modified**:
+- `vsm-fitness-coach/references/mutation-log.md` — Created with template and
+  initial entries (Mutation 1: infrastructure creation, Mutation 2: Phase 2b)
+- `vsm-fitness-gym/references/mutation-log.md` — Created with template and
+  initial entry (Mutation 1: infrastructure creation)
+- `vsm-fitness-coach/SKILL.md` — Added Section 8: The Mutation System
+  (format template, epistemic rules, rollback procedure). Updated Phase 5 to
+  reference coach's own mutation-log.md.
+- `vsm-fitness-gym/SKILL.md` — Added Section 9: The Mutation System
+  (format template, rollback procedure). Updated Section 8 epistemic rules to
+  acknowledge gym self-modification. Updated Phase 5 to reference gym's own
+  mutation-log.md.

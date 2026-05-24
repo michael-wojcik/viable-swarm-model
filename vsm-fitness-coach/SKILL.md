@@ -247,9 +247,63 @@ Use the **three-tier mutation system** for all changes:
 
 Write all applied mutations to:
 - Main skill: `references/*.md`, `agents/*.md`, `references/hypotheses.md`, `references/experiments.md`, `references/mutation-log.md`
-- Coach self: `references/*.md`, `agents/*.md`, `assets/*.md`
+- Coach self: `references/*.md`, `agents/*.md`, `assets/*.md`, `references/mutation-log.md`
 - Fitness report using `assets/fitness-report-template.md`
 - `git commit` all changes with descriptive message
+
+## 8. The Mutation System
+
+This skill is a learning organism. It modifies its own files between sessions.
+All files in `~/vsm/vsm-fitness-coach/` are mutable.
+
+### Why Mutation Is Safe
+
+The skill directory is a **git repository**. Every mutation is committed.
+If a mutation breaks viability, the user (or the skill itself) can revert:
+
+```bash
+cd ~/vsm/vsm-fitness-coach
+git log --oneline
+git revert [commit]
+```
+
+### What Can Mutate
+
+| File | Mutation Mode | Justification Required |
+|---|---|---|
+| `references/fitness-projects.md` | Append new projects; mark obsolete | Low: empirical finding |
+| `references/evaluation-rubric.md` | Append criteria; adjust weights | Medium: repeated pattern |
+| `agents/*.md` | Refine agent prompts | Medium: repeated pattern |
+| `assets/*.md` | Refine templates | Low: empirical finding |
+| `SKILL.md` | Amend phase details, mutation rules | High: structural issue proven |
+
+### Mutation Log Format
+
+Every mutation is recorded in `references/mutation-log.md`:
+```markdown
+## Mutation [N] — YYYY-MM-DD
+**Session**: [task description]
+**File**: [path]
+**Type**: [append | refinement | structural]
+**Rationale**: [why this change improves the skill]
+**Expected effect**: [what should happen in next session]
+```
+
+### Epistemic Rule for Self-Modification
+
+"If a mutation contradicts the original design intent, the mutation wins IF it
+was validated by empirical results. Design intent is a hypothesis; empirical
+results are evidence."
+
+### Rollback Procedure
+
+If Phase 0 self-test fails because of a bad mutation:
+1. Read `references/mutation-log.md` to identify the offending mutation
+2. `git revert` the commit
+3. Re-run Phase 0 self-test
+4. Document the reversion as a new mutation entry (learning what NOT to change)
+
+---
 
 ## 7. Fitness Report Template
 

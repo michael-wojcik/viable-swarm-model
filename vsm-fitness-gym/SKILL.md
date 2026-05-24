@@ -180,7 +180,10 @@ experiment provides strong, falsifiable evidence for these.
 For structural mutations, present to user via `AskUserQuestion` with evidence
 from the experiment. If rejected, log rationale to `references/mutation-log.md`.
 
-`git commit` all changes.
+Write all applied mutations to:
+- Main skill: `references/*.md`, `agents/*.md`, `references/hypotheses.md`, `references/experiments.md`, `references/mutation-log.md`
+- Gym self: `references/*.md`, `agents/*.md`, `assets/*.md`, `references/mutation-log.md`
+- `git commit` all changes with descriptive message
 
 ## 7. Experiment Design Principles
 
@@ -200,5 +203,53 @@ from the experiment. If rejected, log rationale to `references/mutation-log.md`.
 2. **Corrections beat deletions**: If a hypothesis is rejected, append a
    correction rather than deleting the hypothesis. The skill should learn what
    it already knows, not just what it doesn't.
-3. **The main skill is the subject**: The fitness gym does not mutate
-   itself. It mutates the main skill based on experimental evidence.
+3. **The main skill is the subject**: The fitness gym mutates the main skill
+   based on experimental evidence. The gym also mutates itself when its own
+   process (experiment design, analysis, reporting) proves flawed.
+
+---
+
+## 9. The Mutation System
+
+This skill is a learning organism. It modifies its own files between sessions.
+All files in `~/vsm/vsm-fitness-gym/` are mutable.
+
+### Why Mutation Is Safe
+
+The skill directory is a **git repository**. Every mutation is committed.
+If a mutation breaks viability, the user (or the skill itself) can revert:
+
+```bash
+cd ~/vsm/vsm-fitness-gym
+git log --oneline
+git revert [commit]
+```
+
+### What Can Mutate
+
+| File | Mutation Mode | Justification Required |
+|---|---|---|
+| `references/experiment-templates.md` | Append new templates | Low: empirical finding |
+| `assets/*.md` | Refine templates | Low: empirical finding |
+| `agents/*.md` | Refine agent prompts | Medium: repeated pattern |
+| `SKILL.md` | Amend phase details, mutation rules | High: structural issue proven |
+
+### Mutation Log Format
+
+Every mutation is recorded in `references/mutation-log.md`:
+```markdown
+## Mutation [N] — YYYY-MM-DD
+**Session**: [task description]
+**File**: [path]
+**Type**: [append | refinement | structural]
+**Rationale**: [why this change improves the skill]
+**Expected effect**: [what should happen in next session]
+```
+
+### Rollback Procedure
+
+If Phase 0 self-test fails because of a bad mutation:
+1. Read `references/mutation-log.md` to identify the offending mutation
+2. `git revert` the commit
+3. Re-run Phase 0 self-test
+4. Document the reversion as a new mutation entry (learning what NOT to change)
