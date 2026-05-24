@@ -96,6 +96,7 @@ flowchart TD
     P5L[Log rejections to mutation-log.md]
     P5R[Write fitness report<br/>assets/fitness-report-template.md]
     P5G[git commit all changes]
+    P5X{<choice>Structural Mutation Gate<br/>user asked about<br/>structural mutations?</choice>?}
     P6[Phase 6: Prepare Next Build Prompt<br/>AskUserQuestion: Generate next prompt?<br/>If yes → write prompt using assets/prompt-template.md]
     P6A{<choice>user approved</choice>?}
     P6W[Write FB[N+1]-prompt-draft.md<br/>to ~/vsm-fitness-builds/coach/]
@@ -119,7 +120,9 @@ flowchart TD
     P5 --> P5R
     P5L --> P5R
     P5R --> P5G
-    P5G --> P6
+    P5G --> P5X
+    P5X -->|<choice>no — gate not cleared</choice>| P5X
+    P5X -->|<choice>yes — gate cleared</choice>| P6
     P6 --> P6A
     P6A -->|<choice>yes</choice>| P6W
     P6A -->|<choice>no</choice>| END
@@ -257,6 +260,19 @@ Write all applied mutations to:
 - Coach self: `references/*.md`, `agents/*.md`, `assets/*.md`, `references/mutation-log.md`
 - Fitness report using `assets/fitness-report-template.md`
 - `git commit` all changes with descriptive message
+
+**Structural Mutation Gate (MANDATORY)** — Before Phase 6 can begin:
+1. If any structural mutations were proposed in Phase 4, S5 MUST present them to the user via `AskUserQuestion` with:
+   - Exact files that would change
+   - What the change does
+   - Evidence from the fitness build
+2. If the user approves: apply structural mutations, log them, git commit.
+3. If the user rejects: log rejection rationale to `mutation-log.md`.
+4. If the user defers: log deferral rationale and proceed.
+5. **Phase 6 MUST NOT begin until this gate is explicitly cleared.**
+   If you find yourself about to write `FB[N+1]-prompt-draft.md` without having
+   asked the user about structural mutations, STOP. This is an algedonic signal.
+   Return to the Structural Mutation Gate.
 
 ### Phase 6: Prepare Next Build Prompt (Optional)
 
