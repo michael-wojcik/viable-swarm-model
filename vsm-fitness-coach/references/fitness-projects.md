@@ -410,3 +410,43 @@ S5 must explicitly choose and log the rationale.
 - **BLOCKERs**: 1 (GraphQL patients query ownership filtering)
 - **Fix iterations**: 1
 - **All FB11 traps prevented or caught early**
+
+---
+
+## FB13: LegalVault — Legal Document & Contract Management Platform
+
+**Complexity**: High (4-5 waves, 2500-3500 lines, 4 services: API + worker + realtime + frontend)
+**Estimated duration**: 3-4 hours
+**Expected Tier**: Tier 2
+**Services**: FastAPI backend, Celery/Redis worker, Socket.io real-time service, React frontend
+**Date**: 2026-05-24
+
+### Coverage Map
+
+| Capability | Tested by |
+|---|---|
+| Prevention rule transfer (H55-H58) | 9 traps from FB12 deliberately recreated to validate Mutations 34-37 |
+| Strawberry extension awareness | T1: agent must discover QueryDepthLimiter without exact class name |
+| Security severity calibration | T2: REDIS_URL default must be rated LOW, not CRITICAL |
+| GraphQL context fail-closed | T3: get_context must propagate JWT exceptions |
+| GraphQL field name camelCase | T4: frontend queries must match auto-camelCased schema |
+| Sequenced foundation sub-waves | H41 validated — 0 BLOCKERs expected in foundation |
+| Domain coder pilot (H59) | Backend/frontend domain-specific prompts (observational) |
+
+### Known Stress Points
+- Strawberry extension version drift (H55)
+- Security severity calibration on connection strings (H56)
+- GraphQL fail-open context (H57)
+- GraphQL field name camelCase alignment (H58)
+- Frontend queries.ts orphaned exports
+- WebSocket auth protocol mismatch
+- Vite proxy port mismatch
+- Docker-compose env var prefix inconsistency
+
+### Result
+- **Score**: 3.2/5.0
+- **BLOCKERs**: 12 total (Foundation: 2, Implementation: 9, Security: 1 CRITICAL)
+- **Fix iterations**: 2
+- **Prevention rules validated**: H55 (Strawberry extension), H56 (severity calibration), H57 (fail-closed context), H58 (camelCase alignment)
+- **Prevention rules inconclusive**: H59 (domain coders)
+- **New mutations applied**: M38-M41

@@ -359,6 +359,10 @@ If ANY check fails: revise the prompt. Do NOT write the file with known gaps.
 2. Write to `~/vsm-fitness-builds/coach/FB[N+1]-prompt-draft.md`
 3. Verify the file is complete and self-contained (no references to external context)
 
+**Git scope**: The prompt draft is a build artifact for the *next* fitness build. It lives
+in `~/vsm-fitness-builds/coach/` (outside the skill repo) and **must NOT be committed**
+to the skill's git repository. The `git commit` in Phase 5 covers skill mutations only.
+
 **Why this is last**: The next build prompt is a causal output of the current build's
 empirical results. It cannot be written before evaluation, hypothesis updates, and
 mutation application are complete. Skipping the synthesis protocol produces prompts

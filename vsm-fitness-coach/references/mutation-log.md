@@ -66,3 +66,10 @@ because of this mutation.]
 ```
 [content or summary of what replaced it]
 ```
+
+## Mutation 42 — YYYY-MM-DD (FB13 Documentation Fix)
+**Session**: FB13 fitness build evaluation — user feedback
+**File**: `SKILL.md` (Phase 6, Step 7)
+**Type**: refinement
+**Rationale**: User pointed out that Phase 6 does not explicitly state the FB[N+1] prompt draft is a build artifact that must NOT be committed to the skill repo. The flow diagram shows git commit before prompt writing, but the text was ambiguous. Added explicit git scope note to prevent accidental commits of build artifacts.
+**Expected effect**: Future sessions do not commit `~/vsm-fitness-builds/coach/FB*-prompt-draft.md` files to the skill repo.
