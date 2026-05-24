@@ -611,3 +611,34 @@ main-skill mutations.
 **Rationale**: FB10 meta-reflection repeated false test-pass claims from upstream phases. Phase 7 fix wave missed regressions because full test suite was not mandatory. Both phases need explicit verification requirements in the skill's core workflow.
 **Expected effect**: Phase 7 fix waves are gated on full test suite pass. Phase 8b meta-reflections include independently verified test results.
 
+
+---
+
+## Mutation 31 — 2026-05-24
+
+**Session**: FB11 fitness build — integration checklist expansion
+**File**: `references/integration-checklist.md`
+**Type**: append
+**Rationale**: FB11 security gate found frontend `||` fallbacks for API URLs, CORS defaulting to `*`, and unauthenticated REST endpoints. These were missed by all earlier phases. Three new checklist items added: Frontend Config Fallback Check (36), CORS Configuration Validation (37), REST Endpoint Auth Guard Check (38).
+**Expected effect**: Future builds catch frontend fallbacks, CORS misconfigs, and REST auth gaps before the security gate.
+
+---
+
+## Mutation 32 — 2026-05-24
+
+**Session**: FB11 fitness build — hypothesis backlog update
+**File**: `references/hypotheses.md`
+**Type**: refinement + append
+**Rationale**: H45 (subprocess import check) confirmed by FB11 — caught T1 and T5. H47 (meta-reflection independent verification) confirmed — FB11 meta-reflection independently ran tests. H48 (frontend build script) marked inconclusive — trap condition insufficient. Added 5 new hypotheses (H49-H53) from FB11 gaps.
+**Expected effect**: Hypothesis backlog stays current. New targets for FB12 or gym experiments.
+
+---
+
+## Mutation 33 — 2026-05-24
+
+**Session**: FB11 fitness build — fitness report and lessons
+**File**: `~/vsm-fitness-builds/coach/FB11-20260524/fitness-report.md`
+**Type**: append
+**Rationale**: FB11 overall score 3.7/5.0 (improvement from FB10's 3.3/5.0). 5 of 6 traps caught. Key improvements: sequenced foundation sub-waves, subprocess import check, split testers. Key gaps: frontend config validation, CORS checks, REST auth guard verification.
+**Expected effect**: Structured record of FB11 performance for trainer evaluation and next build design.
+

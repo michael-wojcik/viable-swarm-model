@@ -725,14 +725,14 @@ agent prompt are both effective at detecting this pattern.
 
 ## H45: A subprocess import check catches module-level NameErrors that in-process review misses
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-24
 **Rationale**: In FB10, `app/graphql.py` used `enum.Enum` without `import enum`. This was missed by all in-process code review agents (auditor, coordinator, security) because they read the file but did not execute `python -c "import app.graphql"`. Only when pytest was run manually was the NameError caught.
 **Source**: Fitness build FB10, Phase 4/7
 **Experiment**: Run 5 builds. In 5 control builds, rely on in-process review only. In 5 treatment builds, add a mandatory subprocess `python -c "import app.main; import app.graphql"` check after implementation and after fix waves. Count module-level import errors missed in each group.
 **Expected**: Control group misses 2-3 import errors. Treatment group misses 0.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: FB11: T1 (enum shadow in graphql.py) was missed by Phase 2b in-process audit but caught by subprocess import check. T5 (`from auth import get_current_user` in checkin.py) was also caught by subprocess import check. Both were module-level errors invisible to static review.
+**Tested by**: FB11
 
 ---
 
@@ -751,25 +751,91 @@ agent prompt are both effective at detecting this pattern.
 
 ## H47: Meta-reflection agents must independently verify test results
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-24
 **Rationale**: In FB10, `meta-reflection.md` and `lessons.md` both claimed "68 backend tests + 56 frontend tests all passed." This was empirically false — backend tests had a `NameError` that prevented collection. The meta-reflection agent repeated claims from upstream phases without independently running pytest.
 **Source**: Fitness build FB10, Phase 8b
 **Experiment**: Run 5 builds where meta-reflection reads test output logs only. Run 5 builds where meta-reflection runs `pytest --collect-only` and `vitest run` independently. Count false test-pass claims in each group.
 **Expected**: Control group: 3-5 false claims. Treatment group: 0 false claims.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: FB11 meta-reflection independently ran `pytest tests/` (91 passed) and `npm test` (50 passed). Reported counts matched actual execution. No false claims.
+**Tested by**: FB11
 
 ---
 
 ## H48: Frontend infra verification must run `npm run build`, not just `vite build`
 
-**Status**: untested
+**Status**: inconclusive
 **Proposed**: 2026-05-24
 **Rationale**: In FB10, `package.json` build script was `"build": "tsc -b && vite build"`. The devops agent verified `vite build` but `npm run build` failed because `tsc -b` type-checked `vite.config.ts` without `@types/node`. The build script specified in package.json is the user-facing build command; verifying only the underlying tool misses script-level issues.
 **Source**: Fitness build FB10, Phase 4
 **Experiment**: Run 5 frontend builds verifying `vite build` only. Run 5 verifying `npm run build`. Count script-level failures missed by control group.
 **Expected**: Control group misses 2-3 failures. Treatment group catches 100%.
+**Result**: FB11: `npm run build` was run and SUCCEEDED despite missing `@types/node`. The trap condition was insufficient because `tsconfig.json` only included `src/` (not `vite.config.ts`), so `tsc -b` never type-checked the file that needed Node types. The hypothesis remains plausible but the experiment design needs revision.
+**Tested by**: FB11
+
+
+---
+
+## H49: Frontend config fallback checks must be in the integration checklist
+
+**Status**: untested
+**Proposed**: 2026-05-24
+**Rationale**: FB11 had frontend `||` fallbacks for API URLs in `src/graphql/client.ts` and `src/sio/client.ts`. These were missed by foundation, implementation, and integration phases. Only the security gate caught them (as HIGH findings). If the integration checklist explicitly checked for `||` in frontend config files, they would be caught earlier.
+**Source**: Fitness build FB11, Phase 6
+**Experiment**: Add "No `||` fallbacks in frontend API/WS config" to integration checklist. Run next 5 builds. Count missed fallbacks.
+**Expected**: 0 missed fallbacks after checklist addition.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H50: CORS validation must be in the foundation wave requirements
+
+**Status**: untested
+**Proposed**: 2026-05-24
+**Rationale**: FB11's CORS middleware defaulted to `*` with `allow_credentials=True`. This was not caught by foundation, implementation, or integration phases. Only the security gate flagged it as HIGH. If the foundation wave prompt explicitly required "CORS origin must be explicit allowlist, never `*` with credentials", the backend foundation agent would likely implement it correctly.
+**Source**: Fitness build FB11, Phase 6
+**Experiment**: Add CORS requirement to foundation wave prompt. Run 5 builds. Count CORS misconfigs.
+**Expected**: 0 misconfigs after requirement addition.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H51: REST router auth audit must be a separate checklist item
+
+**Status**: untested
+**Proposed**: 2026-05-24
+**Rationale**: FB11's REST `events.py` list/get endpoints were completely unauthenticated, exposing draft events. The auditor checked GraphQL auth but missed REST endpoint auth gaps. A dedicated checklist item "All REST list/detail endpoints have auth guards or explicit public documentation" would catch these.
+**Source**: Fitness build FB11, Phase 3b/6
+**Experiment**: Add REST auth checklist item to auditor prompt. Run 5 builds. Count unauthenticated REST endpoints.
+**Expected**: 0 unauthenticated endpoints after addition.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H52: The subprocess import check catches 100% of module-level import errors
+
+**Status**: confirmed
+**Proposed**: 2026-05-24
+**Rationale**: H45 was validated by T1 and T5 in FB11. Both were module-level import errors caught by `python -c "import app.main"`. No import errors survived to runtime. This hypothesis generalizes H45 to claim 100% effectiveness.
+**Source**: Fitness build FB11, Phase 2b/3b
+**Experiment**: Continue running subprocess import checks in all future builds. Track any import errors missed.
+**Expected**: 0 missed import errors.
+**Result**: FB11: 2 import errors caught (T1, T5), 0 missed.
+**Tested by**: FB11
+
+---
+
+## H53: Trap T4 condition was insufficient because tsconfig include scope excluded vite.config.ts
+
+**Status**: confirmed
+**Proposed**: 2026-05-24
+**Rationale**: FB11 T4 was designed to test H48 (frontend build script verification). But `npm run build` succeeded because `tsconfig.json` only included `src/`, not `vite.config.ts`. The trap condition needs to include `vite.config.ts` in the tsconfig include array.
+**Source**: Fitness build FB11, Phase 4
+**Experiment**: In next build, ensure `tsconfig.json` includes both `src` and `vite.config.ts`. Omit `@types/node`. Verify `tsc -b` fails.
+**Expected**: `tsc -b` fails with "Cannot find module 'vite' or its corresponding type declarations".
 **Result**: [to be filled]
 **Tested by**: [fitness build or gym experiment]
 

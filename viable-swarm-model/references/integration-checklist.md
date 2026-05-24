@@ -208,3 +208,20 @@ correction BEFORE quality gates.
 - [ ] GraphQL enum values returned to the client match the values expected by frontend TypeScript unions and REST API contracts
 - [ ] For Strawberry: `strawberry.enum` member names (which become GraphQL enum values) must match frontend enum literals exactly
 - [ ] Changing GraphQL enum definitions must trigger synchronized updates to frontend queries, tests, and shared types
+
+## 36. Frontend Config Fallback Check
+- [ ] No `||` fallbacks in frontend API/WS/GraphQL config files (`src/graphql/client.ts`, `src/sio/client.ts`, etc.)
+- [ ] All API URLs are required build-time env vars with no localhost fallback
+- [ ] Missing env vars cause build-time failure, not silent fallback to localhost
+
+## 37. CORS Configuration Validation
+- [ ] CORS origin is explicit allowlist, never `*` or `true` when `allow_credentials=True`
+- [ ] `Settings.CORS_ORIGINS` has no default wildcard; app refuses to start if CORS_ORIGINS is unset
+- [ ] FastAPI CORS middleware and Socket.io `cors_allowed_origins` use the same explicit allowlist
+
+## 38. REST Endpoint Auth Guard Check
+- [ ] All REST list endpoints (`GET /`) have explicit auth guards or public documentation
+- [ ] All REST detail endpoints (`GET /{id}`) have explicit auth guards or public documentation
+- [ ] Unauthenticated REST endpoints do not expose draft/private data
+- [ ] GraphQL RBAC parity: every GraphQL mutation enforces the same role requirements as its REST equivalent
+
