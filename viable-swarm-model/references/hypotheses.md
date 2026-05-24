@@ -891,3 +891,30 @@ agent prompt are both effective at detecting this pattern.
 **Expected**: 3/3 mismatches caught early.
 **Result**: [to be filled]
 **Tested by**: [fitness build or gym experiment]
+
+---
+
+## H59: Domain-specific coder prompts reduce systematic backend/frontend false negatives vs generic coders
+
+**Status**: untested
+**Proposed**: 2026-05-24
+**Rationale**: FB5–FB12 show recurring backend mistakes (Strawberry extension drift H55,
+GraphQL ownership filtering H57, security severity over-classification H56, Celery status
+query bugs) and frontend mistakes (GraphQL camelCase mismatch H58, missing vite.config.ts
+proxy, tsconfig.json exclusion of vite.config.ts). Generic `coder` subagents receive only
+task-level prompts; domain knowledge is implicit in the architect brief and integration
+checklist, which agents may not internalize. A `vsm_backend_coder` prompt with explicit
+"Known Stack Gotchas" (e.g., "Use `QueryDepthLimiter`; `QueryComplexityExtension` may not
+exist in your Strawberry version") could cut these false negatives. Similarly, a
+`vsm_frontend_coder` prompt with "Strawberry auto-camelCases fields; verify queries match
+introspected schema" could prevent H58.
+**Source**: Fitness builds FB5–FB12, backend/frontend recurring gaps
+**Experiment**:
+  1. **Control**: 5 minimal builds (FastAPI + React) with known bugs from H55, H56, H57, H58.
+     Use generic `coder` subagents. Count false negatives.
+  2. **Treatment**: Same 5 builds. Use domain-specific `coder` subagents with backend/frontend
+     system prompts embedding known-gotcha rules. Count false negatives.
+  3. Compare: does treatment group reduce systematic misses by 50%+
+**Expected**: Treatment group reduces backend/frontend systematic false negatives by ≥50%.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
