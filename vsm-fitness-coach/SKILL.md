@@ -49,13 +49,15 @@ in the user's actual project directory.
 
 ## 2. How to Invoke
 
-- **`/flow:vsm-fitness-coach [fitness project name or ID]`** — Execute a
-  fitness build. The coach reads the fitness project catalog, presents
-  options to S5 (you), guides the main skill through the build, and then
-  evaluates performance. Must include some natural language text before or
-  around the command for Kimi CLI to process it.
+- **`/flow:vsm-fitness-coach [optional: domain hint or 'run next']`** —
+  Execute a fitness build. The coach reads the coverage ledger, consumes a
+  pre-generated prompt draft if available (from Phase 6 of the previous
+  build), or synthesizes a new build design from scratch. Guides the main
+  skill through execution, then evaluates performance. Must include some
+  natural language text before or around the command for Kimi CLI to
+  process it.
 - **`/skill:vsm-fitness-coach`** — Load as knowledge reference. Use when
-  you need the evaluation rubric or fitness project catalog.
+  you need the evaluation rubric or coverage ledger.
 
 **Terminology**: `S5` refers to the main conversation agent (you, the LLM executing
 this skill). The word `user` refers to the human operator. S5 may escalate to the
@@ -65,8 +67,8 @@ user via `AskUserQuestion` or `EnterPlanMode` when human policy input is require
 
 | VSM System | CLI Implementation | Custom Type | Activation | Produces |
 |---|---|---|---|---|
-| **S5 (Policy)** | Main conversation agent (you) | — | Phase 0 | Project selection, mutation approval |
-| **S4 (Selector)** | Main agent reads catalog | — | Phase 0 | Fitness project spec |
+| **S5 (Policy)** | Main conversation agent (you) | — | Phase 0, Phase 4 | Build synthesis, mutation approval |
+| **S4 (Selector)** | Main agent synthesizes build | — | Phase 0 | Build design, prompt draft |
 | **S1 (Builder)** | `viable-swarm-model` workflow | Flow skill | Phase 1 | Substantial project |
 | **S3* (Evaluator)** | `vsm_trainer` subagent | Custom | Phase 2 | Reads artifacts + rubric, scores phases, identifies gaps |
 | **S2 (Synthesizer)** | Main agent | — | Phase 4 | Hypotheses, mutations |
@@ -82,9 +84,10 @@ value is in **selection, evaluation, and synthesis**.
 ```mermaid
 flowchart TD
     BEGIN([BEGIN])
-    P0[Phase 0: Select Fitness Project<br/>Read references/fitness-projects.md]
-    P0S{<choice>project selected</choice>?}
-    P1[Phase 1: Execute Build<br/>Run viable-swarm-model workflow<br/>Build the selected project]
+    P0[Phase 0: Synthesize Next Build<br/>Read coverage ledger + skill state]
+    P0E{<choice>FB[N+1]-prompt-draft.md<br/>exists from Phase 6?</choice>}
+    P0S[Phase 0b: Synthesize Build Design<br/>Analyze gaps → select domain →<br/>draft build parameters]
+    P1[Phase 1: Execute Build<br/>Run viable-swarm-model workflow<br/>Build from prompt draft]
     P1A[Collect all artifacts:<br/>plan.md, audit reports, security reports,<br/>integration report, test results, fix logs]
     P2[Phase 2: Evaluate Performance<br/>Spawn vsm_trainer<br/>Read artifacts + rubric<br/>Score each phase 1-5]
     P2H[Phase 2b: Update Hypothesis Statuses<br/>Read hypotheses.md → update tested items]
@@ -97,15 +100,15 @@ flowchart TD
     P5R[Write fitness report<br/>assets/fitness-report-template.md]
     P5G[git commit all changes]
     P5X{<choice>Structural Mutation Gate<br/>user asked about<br/>structural mutations?</choice>?}
-    P6[Phase 6: Prepare Next Build Prompt<br/>AskUserQuestion: Generate next prompt?<br/>If yes → write prompt using assets/prompt-template.md]
-    P6A{<choice>user approved</choice>?}
+    P6[Phase 6: Prepare Next Build Prompt<br/>Synthesize prompt from empirical results<br/>Write using assets/prompt-template.md]
     P6W[Write FB[N+1]-prompt-draft.md<br/>to ~/vsm-fitness-builds/coach/]
     END([END])
 
     BEGIN --> P0
-    P0 --> P0S
-    P0S -->|<choice>none</choice>| END
-    P0S -->|<choice>selected</choice>| P0D[Create build directory<br/>~/vsm-fitness-builds/coach/[id]-[date]/]
+    P0 --> P0E
+    P0E -->|<choice>yes</choice>| P0D[Create build directory<br/>~/vsm-fitness-builds/coach/[id]-[date]/]
+    P0E -->|<choice>no</choice>| P0S
+    P0S --> P0D
     P0D --> P1
     P1 --> P1A
     P1A --> P2
@@ -123,24 +126,46 @@ flowchart TD
     P5G --> P5X
     P5X -->|<choice>no — gate not cleared</choice>| P5X
     P5X -->|<choice>yes — gate cleared</choice>| P6
-    P6 --> P6A
-    P6A -->|<choice>yes</choice>| P6W
-    P6A -->|<choice>no</choice>| END
+    P6 --> P6W
     P6W --> END
 ```
 
 ## 6. Phase Details
 
-### Phase 0: Select Fitness Project
-Read `~/vsm/vsm-fitness-coach/references/fitness-projects.md`.
-Present the catalog to S5 (you). Each project includes:
-- **Name & ID**: e.g., "FB1: DocuFlow"
-- **Complexity**: Estimated agent waves, lines of code, services
-- **Coverage**: Which skill capabilities it exercises
-- **Known stress points**: Specific patterns/anti-patterns it should trigger
+### Phase 0: Synthesize Next Build
 
-If invoked without argument, present all projects and let S5 select.
-If invoked with argument (e.g., "Run FB1"), load that project directly.
+The fitness coach does not select from a menu. It **synthesizes** the next
+experiment based on empirical state. Prompt drafts are ephemeral build
+specifications — they live in `~/vsm-fitness-builds/coach/` and are consumed
+by the next build.
+
+**Step 0a: Read operational state**
+1. Read `~/vsm/vsm-fitness-coach/references/fitness-projects.md` (coverage ledger)
+2. Read `~/vsm/viable-swarm-model/references/hypotheses.md`
+3. Read `~/vsm/viable-swarm-model/references/mutation-log.md`
+4. Check for `~/vsm-fitness-builds/coach/FB[N+1]-prompt-draft.md` (from Phase 6 of previous build)
+
+**Step 0b: Consume or synthesize**
+- **If a prompt draft exists**: Use it directly as the build specification.
+  This is the normal path for build N+1 after build N completed Phase 6.
+- **If no prompt draft exists** (first build, or user requested fresh):
+  Synthesize a new build design:
+  1. Identify the lowest-scoring phase from the most recent build (or default
+     to Foundation phase if this is the first build)
+  2. Select a domain that naturally exercises that phase's capabilities
+  3. Ensure the domain has NOT appeared in the coverage ledger previously
+  4. Set complexity tier: same as previous if previous scored < 4.0;
+     one tier higher if previous scored ≥ 4.0 (first build defaults to Tier 2)
+  5. Draft build parameters: domain, complexity, target phase, key hypotheses
+
+**Step 0c: Create build directory**
+```bash
+mkdir -p ~/vsm-fitness-builds/coach/FB[N]-[date]
+cd ~/vsm-fitness-builds/coach/FB[N]-[date]
+```
+
+Copy the prompt draft into the build directory as `prompt.md` so the athlete
+skill has a stable reference during the build.
 
 ### Phase 1: Create Build Directory + Execute Build
 
@@ -154,9 +179,10 @@ The athlete builds the project in this directory — never in the user's
 actual project directory. This isolates the fitness build from real work.
 
 **Step 1b: Execute build**
-Instruct the model to run the `viable-swarm-model` workflow on the selected
-project, building in `~/vsm-fitness-builds/coach/[project-id]-[date]/`. The main
-skill's full 10-phase flow executes:
+Instruct the model to run the `viable-swarm-model` workflow using the prompt
+draft as the build specification, building in
+`~/vsm-fitness-builds/coach/[project-id]-[date]/`. The main skill's full
+10-phase flow executes:
 - Intelligence, Foundation, Implementation, Testing, Integration, Security, Fix
 - Phase 8b meta-reflection (the main skill's own evaluation)
 
@@ -188,7 +214,7 @@ fitness report with phase scores, gap analysis, surprises, and false positives.
 Before generating new hypotheses, update the status of any hypotheses tested by this build:
 
 1. Read `~/vsm/viable-swarm-model/references/hypotheses.md`.
-2. Identify hypotheses linked to this fitness build (check the **Tested by** field and the fitness project's Coverage Map).
+2. Identify hypotheses linked to this fitness build (check the **Tested by** field and the build's prompt draft Coverage Map).
 3. For each hypothesis tested, update its status based on build results:
    - **Confirmed**: Build results match the expected outcome
    - **Rejected**: Build results contradict the hypothesis
@@ -251,7 +277,7 @@ Use the **three-tier mutation system** for all changes:
 - Structural: phase logic changes, flow diagram changes, agent architecture changes
 
 **Mutations to coach's own files** (self-modification):
-- Append-only: new fitness projects, new rubric criteria
+- Append-only: new build results to coverage ledger, new rubric criteria
 - Refinement: update `vsm_trainer` prompt, adjust rubric weights, reword criteria
 - Structural: changes to coach `SKILL.md` workflow or phase logic
 
@@ -274,22 +300,21 @@ Write all applied mutations to:
    asked the user about structural mutations, STOP. This is an algedonic signal.
    Return to the Structural Mutation Gate.
 
-### Phase 6: Prepare Next Build Prompt (Optional)
+### Phase 6: Prepare Next Build Prompt
 
-After the fitness report is written and mutations are committed, ask the user:
+After the fitness report is written, mutations are committed, and the
+Structural Mutation Gate is cleared, **automatically synthesize** the next
+build prompt. This is not optional — it is the causal output of the current
+build's empirical results.
 
-> "Generate execution prompt for the next fitness build (FB[N+1])?"
-
-If the user rejects: end the session.
-
-If the user approves, follow this synthesis protocol **exactly**. Do not skip steps.
+Follow this synthesis protocol **exactly**. Do not skip steps.
 
 #### Step 1: Read all source material
 Read these files in order:
 1. `assets/fitness-report-template.md` — current build's fitness report
 2. `~/vsm/viable-swarm-model/references/hypotheses.md` — updated statuses from Phase 2b
 3. `~/vsm/viable-swarm-model/references/mutation-log.md` — mutations applied in Phase 5
-4. `references/fitness-projects.md` — previous build domains (do not repeat)
+4. `references/fitness-projects.md` — coverage ledger: previous build domains and results (do not repeat domains)
 5. `assets/prompt-template.md` — the template to fill
 
 #### Step 2: Extract synthesis inputs
@@ -311,7 +336,7 @@ From mutation-log.md, extract:
 
 #### Step 3: Select domain and complexity
 Rules:
-- Domain MUST NOT appear in `references/fitness-projects.md` previously
+- Domain MUST NOT appear in the coverage ledger (`references/fitness-projects.md`) previously
 - Domain MUST naturally require the capability where the lowest-scoring phase operates
 - Complexity MUST be one tier higher than the previous build if score ≥ 4.0, SAME tier if score < 4.0
   (do not increase complexity on a failing build; fix the fundamentals first)
@@ -388,7 +413,7 @@ git revert [commit]
 
 | File | Mutation Mode | Justification Required |
 |---|---|---|
-| `references/fitness-projects.md` | Append new projects; mark obsolete | Low: empirical finding |
+| `references/fitness-projects.md` | Append build results (coverage ledger) | Low: empirical finding |
 | `references/evaluation-rubric.md` | Append criteria; adjust weights | Medium: repeated pattern |
 | `agents/*.md` | Refine agent prompts | Medium: repeated pattern |
 | `assets/*.md` | Refine templates | Low: empirical finding |

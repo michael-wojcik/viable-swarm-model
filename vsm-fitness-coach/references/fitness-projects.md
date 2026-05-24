@@ -1,16 +1,22 @@
-# Fitness Project Catalog
+# Fitness Build Coverage Ledger
 
-> **Mutation rules**: Append new fitness projects as new technology patterns
-> emerge. Mark obsolete projects (e.g., deprecated frameworks) with notes.
-> Each project should exercise a unique combination of skill capabilities.
+> **Purpose**: Historical record of all fitness builds. This is NOT a selectable
+> menu — it is a coverage ledger documenting what has been tested, what was
+> learned, and which domains have been used. The coach synthesizes new builds
+> from empirical state; it does not select from a catalog.
+>
+> **Mutation rules**: Append build results after each fitness build. Do NOT
+> add Project Spec sections here — build specifications live as ephemeral prompt
+> drafts in `~/vsm-fitness-builds/coach/`.
 
 ---
 
 ## FB1: DocuFlow — Collaborative Document Editor
 
-**Complexity**: High (4-5 waves, 2000+ lines, 2 services: API + worker)  
-**Estimated duration**: 2-3 hours  
+**Complexity**: High (4-5 waves, 2000+ lines, 2 services: API + worker)
+**Date**: 2026-05-22
 **Services**: FastAPI backend, React frontend, Redis worker
+**Note**: Pre-ledger entry — executed before structured result format.
 
 ### Coverage Map
 
@@ -35,38 +41,14 @@
 - SSE requires short-lived token exchange (L33)
 - Frontend scaffolding often forgotten (Pattern #3)
 
-### Project Spec
-
-```
-BACKEND (FastAPI + PostgreSQL + Redis):
-- User auth: JWT with bcrypt, no defaults, no || fallbacks
-- Document CRUD with strict ownership filtering
-- pgvector semantic search (text-embedding-3-small, 1536 dims)
-- Yjs CRDT updates persisted to PostgreSQL BYTEA
-- Redis task queue for background AI summarization
-- SSE endpoint for streaming AI summaries
-- WebSocket presence/awareness with in-band auth
-- GraphQL API with subscriptions for document lists
-
-FRONTEND (React + Vite + TypeScript):
-- TipTap v2 rich text editor with Yjs collaborative editing
-- Mobile-first responsive UI
-- Vite path alias @docuflow/shared
-- GraphQL split link (HTTP + ws subscriptions)
-- Dark theme, 60px min touch targets
-
-SHARED:
-- TypeScript types shared between frontend and backend
-- WebSocket event constants as single source of truth
-```
-
 ---
 
 ## FB2: GeoQuiz — Multiplayer Geospatial Quiz Platform
 
-**Complexity**: Medium-High (3-4 waves, 1500+ lines, 2 services)  
-**Estimated duration**: 2 hours  
+**Complexity**: Medium-High (3-4 waves, 1500+ lines, 2 services)
+**Date**: 2026-05-22
 **Services**: FastAPI backend, React frontend
+**Note**: Pre-ledger entry — executed before structured result format.
 
 ### Coverage Map
 
@@ -86,38 +68,14 @@ SHARED:
 - PostGIS dynamic MVT generation (Pattern #6)
 - Mobile-first design constraints (Pattern #18)
 
-### Project Spec
-
-```
-BACKEND (FastAPI + PostgreSQL + Redis):
-- User auth with JWT
-- Quiz CRUD with question/answer management
-- PostGIS: quiz locations with radius search, bounding box, MVT tiles
-- Socket.io v4 rooms for game session isolation
-- Server-authoritative countdown timer (asyncio task)
-- Scoreboard with real-time updates
-- Redis for matchmaking queue
-
-FRONTEND (React + Vite):
-- Mobile-first game UI
-- Map view with quiz locations (Leaflet or MapLibre)
-- Real-time game lobby with Socket.io
-- Countdown display (160px+ font)
-- Scoreboard
-
-SECURITY:
-- PublicQuestion DTO must omit correct_answer_index
-- Document ownership on quiz lists (users see their own quizzes)
-- CORS explicit allowlist
-```
-
 ---
 
 ## FB3: TaskFlow — Workflow Orchestration Platform
 
-**Complexity**: High (4-5 waves, 2500+ lines, 3 services: API + worker + scheduler)  
-**Estimated duration**: 3 hours  
+**Complexity**: High (4-5 waves, 2500+ lines, 3 services: API + worker + scheduler)
+**Date**: 2026-05-22
 **Services**: FastAPI backend, Celery/Redis worker, React frontend
+**Note**: Pre-ledger entry — executed before structured result format.
 
 ### Coverage Map
 
@@ -138,54 +96,14 @@ SECURITY:
 - GraphQL depth limiting (L25)
 - N+1 queries in computed fields (L34)
 
-### Project Spec
-
-```
-BACKEND (FastAPI + PostgreSQL + Redis):
-- User auth with JWT
-- Workflow DAG editor: nodes/edges stored as JSONB
-- DAG validation: 3-color DFS cycle detection, Kahn topological sort
-- Redis task queue for workflow execution
-- Celery workers that execute DAG nodes in topological order
-- GraphQL API with subscriptions for execution progress
-- SSE for real-time execution status
-
-FRONTEND (React + Vite):
-- D3.js v7 interactive DAG visualization
-- Drag-and-drop node editor
-- Click-to-connect edges
-- Real-time execution progress via GraphQL subscriptions
-- Dark theme
-
-SHARED:
-- DAG validation logic shared between backend and frontend
-- Celery task names defined in shared constants
-```
-
----
-
-## FB[N]: [Project Name]
-
-**Complexity**: [Low/Medium/High]  
-**Estimated duration**: [hours]  
-**Services**: [list]
-
-### Coverage Map
-[Which skill capabilities this project exercises]
-
-### Known Stress Points
-[Specific patterns/anti-patterns this build should trigger]
-
-### Project Spec
-[Detailed requirements]
-
 ---
 
 ## FB4: FleetSync — Real-Time Fleet & Field Operations Platform
 
-**Complexity**: High (4-5 waves, 3000+ lines, 4 services: API + worker + realtime + mobile-web)  
-**Estimated duration**: 3-4 hours  
+**Complexity**: High (4-5 waves, 3000+ lines, 4 services: API + worker + realtime + mobile-web)
+**Date**: 2026-05-22
 **Services**: FastAPI backend, Celery/Redis worker, Socket.io real-time service, React frontend
+**Note**: Pre-ledger entry — executed before structured result format.
 
 ### Coverage Map
 
@@ -211,56 +129,15 @@ SHARED:
 - WebSocket auth must be in-band, never URL query param
 - Role middleware must raise on failure, never return None
 
-### Project Spec
-
-```
-BACKEND (FastAPI + PostgreSQL + PostGIS + Redis):
-- User auth with JWT + bcrypt + role-based claims (role: admin | dispatcher | driver)
-- Rate limiting: SlowAPIMiddleware in main.py + decorators on auth endpoints (foundation wave)
-- Pydantic Settings via lazy factory (get_settings()) — never module-level singleton
-- Technician CRUD with PostGIS location (POINT), service area polygons (POLYGON)
-- PostGIS radius search with MAX_RADIUS_METERS = 50_000 bound
-- PostGIS bounding box query with area threshold limit
-- Job/WorkOrder CRUD with assignment to technicians
-- File upload: /uploads endpoint with MIME whitelist (image/jpeg, image/png, image/webp),
-  max 5MB, saved to S3-compatible local storage (minio or local filesystem)
-- Socket.io v4 rooms for real-time fleet tracking (one room per fleet/company)
-- Server-side geofence alerts: Celery worker checks if technician left assigned polygon,
-  publishes alert via Redis pub/sub
-- GraphQL API with subscriptions for job status updates
-- GraphQL depth limit (max 10) + complexity analysis
-- Enum alignment: JobStatus (PENDING | ASSIGNED | IN_PROGRESS | COMPLETED | CANCELLED)
-  must match exactly between backend GraphQL enum and frontend TypeScript union
-
-FRONTEND (React + Vite + TypeScript + Leaflet/MapLibre):
-- Dark theme, mobile-first, 60px min touch targets
-- Fleet map view with real-time technician markers (Socket.io)
-- Job assignment UI with technician search and drag-to-assign
-- Photo upload preview with client-side size validation
-- Role-aware navigation (driver sees jobs only, admin sees everything)
-- Vite proxy includes /api, /graphql, /ws, /uploads
-- Build args: VITE_API_URL and VITE_WS_URL passed in Dockerfile
-
-SHARED:
-- TypeScript types shared between frontend and backend
-- Socket.io event constants as single source of truth
-- JobStatus enum values defined once, used everywhere
-
-INFRASTRUCTURE:
-- Docker Compose: postgres (with postgis extension), redis, api, worker, realtime, frontend, minio
-- NO :- fallbacks in docker-compose.yml
-- Frontend Dockerfile passes VITE_API_URL and VITE_WS_URL as ARG
-- All env vars documented in .env.example
-```
-
 ---
 
 ## FB10: CommerceHub — Real-Time Marketplace Platform
 
-**Complexity**: High (4-5 waves, 2500-3500 lines, 3-4 services: API + worker + realtime + frontend)  
-**Estimated duration**: 3-4 hours  
-**Expected Tier**: Tier 2 or Tier 3 (tests Variety Assessment)  
+**Complexity**: High (4-5 waves, 2500-3500 lines, 3-4 services: API + worker + realtime + frontend)
+**Date**: 2026-05-24
+**Expected Tier**: Tier 2 or Tier 3 (tests Variety Assessment)
 **Services**: FastAPI backend, Celery/Redis worker, Socket.io real-time service, React frontend
+**Note**: Pre-ledger entry — executed before structured result format. First build to test structural mutations (Variety Assessment, S4 option generation, S5 Policy Check, Phase 3c mid-wave S2, S2 verbatim authority, pseudo-recursion).
 
 ### Coverage Map
 
@@ -311,71 +188,6 @@ INFRASTRUCTURE:
 14. **Pydantic Settings lazy factory**: `get_settings()` not module-level singleton (Pattern #41).
 15. **Rate limiting**: SlowAPIMiddleware in foundation wave + decorators on auth endpoints.
 16. **Docker build args**: `VITE_API_URL` and `VITE_WS_URL` passed as ARG in frontend Dockerfile.
-
-### Project Spec
-
-```
-BACKEND (FastAPI + PostgreSQL + Redis):
-- User auth with JWT + bcrypt + role-based claims (role: customer | seller | admin)
-- Rate limiting: SlowAPIMiddleware in main.py + decorators on auth endpoints (foundation wave)
-- Pydantic Settings via lazy factory (get_settings()) — never module-level singleton
-- Product catalog: CRUD with categories, tags, images, inventory count
-- Product search: full-text search (PostgreSQL tsvector) + filter by category/price/rating
-- Shopping cart: Redis-backed session with 30-minute TTL, merge on login
-- Checkout flow: creates Order from Cart, reserves inventory via Redis lock
-- Order management: status state machine (PENDING → CONFIRMED → SHIPPED → DELIVERED → REFUNDED)
-- Payment mock: /payments endpoint simulates Stripe-like flow (intent → confirm → capture)
-- Inventory management: optimistic locking or Redis-based reservation to prevent overselling
-- GraphQL API with subscriptions for real-time order status updates
-- GraphQL depth limit (max 10) + complexity analysis
-- Enum alignment: OrderStatus must match exactly between backend GraphQL enum and frontend TypeScript union
-- WebSocket (Socket.io v4): real-time inventory updates per product room
-- WebSocket room auth: subscribe_inventory verifies session before room join
-- Admin endpoints: product CRUD, order management, sales analytics (role-protected)
-- File upload: product images with MIME whitelist (image/jpeg, image/png, image/webp), max 5MB
-- Celery worker: processes order confirmation emails, inventory restock alerts, cart expiry cleanup
-
-FRONTEND (React + Vite + TypeScript):
-- Dark theme, mobile-first, 60px min touch targets
-- Product catalog with search, filters, pagination
-- Product detail page with real-time inventory status (Socket.io)
-- Shopping cart with add/remove/quantity update
-- Checkout flow with order summary and payment mock
-- Order history with status tracking
-- Admin dashboard: product management, order list, sales charts
-- Role-aware navigation (customer sees shop, admin sees dashboard)
-- Vite proxy includes /api, /graphql, /ws, /uploads
-- Build args: VITE_API_URL and VITE_WS_URL passed in Dockerfile
-
-SHARED:
-- TypeScript types shared between frontend and backend
-- Socket.io event constants as single source of truth
-- OrderStatus enum values defined once, used everywhere
-
-INFRASTRUCTURE:
-- Docker Compose: postgres, redis, api, worker, realtime, frontend
-- NO :- fallbacks in docker-compose.yml
-- Frontend Dockerfile passes VITE_API_URL and VITE_WS_URL as ARG
-- All env vars documented in .env.example
-```
-
-### S3/S4 Tension for S5 Policy Check
-
-This build is designed to force an explicit S5 Policy Check decision:
-
-- **S3 concern (operations/speed)**: "We need to ship an MVP fast. A monolithic FastAPI app with SQLite and in-memory cart is sufficient for validation."
-- **S4 concern (intelligence/future)**: "A marketplace needs inventory consistency, payment integrity, and real-time updates. A service-oriented architecture with Redis, Celery, and GraphQL subscriptions positions us for scale."
-- **S3* concern (audit/security)**: "Payment state machines and inventory locks are security-critical. A minimal design risks race conditions and data loss."
-
-S5 must explicitly choose and log the rationale.
-
-### Expected BLOCKERs (for trainer scoring)
-
-- Foundation wave: 0 BLOCKERs if FB9 sequencing works (H41 validation)
-- Implementation wave: 1-2 BLOCKERs from parallel agent drift (tests Phase 3c effectiveness)
-- Integration: 1-2 BLOCKERs from enum drift or orphaned exports
-- Security: 1-2 HIGH findings from GraphQL ownership filtering or public DTO exposure
-- Fix wave: 2 iterations max if mutations work
 
 ---
 
