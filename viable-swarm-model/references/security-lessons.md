@@ -36,9 +36,10 @@ after implementation wave. Without it, solver->API integration mismatches go
 undetected.
 **Affected**: S3 (main agent).
 
-### L6: 5 Parallel Agents is Practical Maximum
-**Prevention rule**: Wave size ≤5 agents. Beyond 5: use recursive sub-VSMs.
-Orchestrator bandwidth is the limiting factor.
+### L6: Agent Ceiling is Host-Configured
+**Prevention rule**: Wave size is limited by `background.max_running_tasks` in the
+host's `~/.kimi/config.toml`. Beyond that: queue additional agents or use recursive
+sub-VSMs. Do not invent arbitrary sub-limits.
 **Affected**: S3 (main agent).
 
 ### L7: Gather vs. Stop for Security Findings

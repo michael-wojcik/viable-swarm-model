@@ -124,7 +124,7 @@
 ### 22. Sequential everything
 **What**: Dispatching one agent at a time wastes swarm power.  
 **When**: Orchestrator unsure about dependencies.  
-**Prevention**: Parallelize aggressively, max 5 per wave.
+**Prevention**: Parallelize aggressively.
 
 ### 23. Vague prompts
 **What**: Prompts without specific input/output file paths.  
@@ -149,7 +149,7 @@
 ### 27. Nested orchestration for simple tasks
 **What**: Sub-orchestrators for <10 agent swarms.  
 **When**: Over-application of VSM recursion.  
-**Prevention**: Main agent handles directly up to 10 agents.
+**Prevention**: Main agent handles directly; use sub-orchestrators only when recursion is warranted.
 
 ### 28. Not reading outputs between waves
 **What**: Dispatching Wave N+1 before Wave N outputs ready.  
@@ -159,7 +159,7 @@
 ### 29. S1 proliferation
 **What**: More S1 agents than task justifies.  
 **When**: Orchestrator thinks more agents = faster.  
-**Prevention**: Prefer 3-5 focused agents over 10+ general ones.
+**Prevention**: Prefer focused agents over general ones.
 
 ### 30. Ignoring algedonic signals
 **What**: Suppressing pain signals.  
@@ -184,12 +184,12 @@
 ### 34. Flat-only structure
 **What**: Not using recursion when warranted.  
 **When**: Complex subsystem built by generalists instead of specialists.  
-**Prevention**: >3 agents or >3 tightly-coupled files → consider recursion.
+**Prevention**: Many agents or many tightly-coupled files → consider recursion.
 
 ### 35. Spawning S2/S3 for small sessions
 **What**: Standalone Coordination/Control agents for <10 agents.  
 **When**: Over-formal application of VSM.  
-**Prevention**: Main agent performs S2/S3 directly for small sessions.
+**Prevention**: Main agent performs S2/S3 directly when the task does not warrant standalone agents.
 
 ### 36. Using unmaintained react-beautiful-dnd
 **What**: Unmaintained since 2022, critical React 18 bugs.  
