@@ -155,14 +155,15 @@ flowchart TD
     P3A[Phase 3b: Audit + Coordination<br/>vsm_auditor + vsm_coordinator]
     P3D{<choice>BLOCKERs</choice>?}
     P3E[Entry Point Wiring<br/>MANDATORY]
+    P3D2[Phase 3d: Frontend Config Validation<br/>S5 checks frontend config files]
     P4[Phase 4: Testing + Infra Wave<br/>vsm_tester + coder]
     P4S[TaskOutput block=true]
     P4R[Shell: run tests]
-    P5[Phase 5: Integration Verification<br/>vsm_coordinator + vsm_auditor]
-    P5D{<choice>ANY failure</choice>?}
     P6[Phase 6: Security Gate<br/>vsm_security]
     P6D{<choice>CRITICAL/HIGH</choice>?}
     P6L[Document LOW as<br/>known limitation]
+    P5[Phase 5: Integration Verification<br/>vsm_coordinator + vsm_auditor]
+    P5D{<choice>ANY failure</choice>?}
     P7[Phase 7: Fix Wave<br/>coder agents]
     P7R[Re-audit changed files]
     P7D{<choice>BLOCKERs remain<br/>iterations < 3</choice>?}
@@ -203,18 +204,19 @@ flowchart TD
     P3A --> P3D
     P3D -->|<choice>yes</choice>| P7
     P3D -->|<choice>no</choice>| P3E
-    P3E --> P4
+    P3E --> P3D2
+    P3D2 --> P4
     P4 --> P4S
     P4S --> P4R
-    P4R --> P5
-    P5 --> P5D
-    P5D -->|<choice>yes</choice>| P3
-    P5D -->|<choice>no</choice>| P6
+    P4R --> P6
     P6 --> P6D
     P6D -->|<choice>yes</choice>| P7
     P6D -->|<choice>LOW only</choice>| P6L
-    P6D -->|<choice>none</choice>| P8
-    P6L --> P8
+    P6D -->|<choice>none</choice>| P5
+    P6L --> P5
+    P5 --> P5D
+    P5D -->|<choice>yes</choice>| P3
+    P5D -->|<choice>no</choice>| P8
     P7 --> P7R
     P7R --> P7D
     P7D -->|<choice>yes</choice>| P7
@@ -323,17 +325,36 @@ on shared contracts after the first 1-2 agents complete. Flag ONLY critical
 drift that would block incomplete agents. If drift found → emit algedonic,
 halt remaining agents, inject corrections.
 
+### Phase 3d: Frontend Config Validation
+After entry point wiring and BEFORE the testing wave, S5 MUST perform a
+lightweight frontend config validation check:
+
+1. Read `src/graphql/client.ts` and `src/sio/client.ts`
+2. Verify NO `||` fallbacks for API/WS/GraphQL URLs
+3. Verify NO `localhost` hardcoded as fallback in frontend config
+4. Verify `vite.config.ts` proxy includes `/api`, `/graphql`, `/ws`
+5. Verify `tsconfig.json` includes all files that `tsc -b` will type-check
+
+ANY failure → back to Phase 3 (frontend implementation agent fixes).
+
+This prevents frontend configuration bugs from surviving to the security gate,
+where they are currently discovered too late.
+
 ### Phase 4: Testing & Infra Wave
 Spawn `vsm_tester` + `coder` (devops) in parallel. Run tests via Shell.
 Report coverage.
 
-### Phase 5: Integration Verification
-Spawn `vsm_coordinator` + `vsm_auditor`. Full 20+ point checklist (see
-`references/integration-checklist.md`). ANY failure → back to Phase 3.
-
 ### Phase 6: Security Gate
 Spawn `vsm_security`. CRITICAL/HIGH → stop, fix, re-audit. LOW → document.
 Gather vs. Stop: planned wave → gather; mid-build → emergency stop.
+
+**Security gate runs BEFORE integration verification** so that vulnerabilities
+are caught before the coordinator invests effort in cross-file contract checks.
+This reduces total fix iterations.
+
+### Phase 5: Integration Verification
+Spawn `vsm_coordinator` + `vsm_auditor`. Full 20+ point checklist (see
+`references/integration-checklist.md`). ANY failure → back to Phase 3.
 
 ### Phase 7: Fix Wave (conditional)
 Group fixes by file. Parallel across files, sequential within file. Spawn
