@@ -252,3 +252,127 @@ INFRASTRUCTURE:
 - Frontend Dockerfile passes VITE_API_URL and VITE_WS_URL as ARG
 - All env vars documented in .env.example
 ```
+
+---
+
+## FB10: CommerceHub — Real-Time Marketplace Platform
+
+**Complexity**: High (4-5 waves, 2500-3500 lines, 3-4 services: API + worker + realtime + frontend)  
+**Estimated duration**: 3-4 hours  
+**Expected Tier**: Tier 2 or Tier 3 (tests Variety Assessment)  
+**Services**: FastAPI backend, Celery/Redis worker, Socket.io real-time service, React frontend
+
+### Coverage Map
+
+| Capability | Tested by |
+|---|---|
+| **New mutations** | |
+| Variety Assessment | Large enough to force Tier 2/3 classification in Phase 0 |
+| S4 option generation | Architect must produce Minimal/Balanced/Robust design options |
+| S5 Policy Check | Explicit speed-vs-correctness decision between monolith and service-oriented designs |
+| Phase 3c mid-wave S2 | Parallel agents build product catalog, cart, checkout, orders — shared Product/Order/Cart types |
+| S2 verbatim authority | Coordinator specifies exact corrections; fix agents apply verbatim |
+| Pseudo-recursion | S1 agents self-check against contracts before returning output |
+| **Hypotheses tested** | |
+| H4 | Entry-point wiring conflicts with parallel implementation agents |
+| H13 | State-machine alignment (order status: pending → confirmed → shipped → delivered → refunded) |
+| H21 | Orphaned exports scan (utility functions never imported) |
+| H22 | WebSocket event name dictionary cross-check |
+| H23 | GraphQL RBAC parity with REST |
+| H24 | GraphQL ownership filtering on list queries |
+| H25 | Frontend test coverage >50% |
+| H26 | Entry-point and worker test coverage |
+| H29 | Circular import risk (routers importing from main.py) |
+| H32 | WebSocket room auth verification |
+| H33 | Security gate sequencing (Security → Integration vs. Integration → Security) |
+| H41 | Sequenced foundation sub-waves eliminate dependency races |
+| **Existing capabilities** | |
+| Foundation wave sequencing | FB9 structural mutation — first test in a real build |
+| Security gate | Payment state machine, inventory race conditions, admin access control |
+| Integration verification | Cross-file contracts, enum alignment, orphaned exports |
+| Testing wave | Backend + frontend + entry-point + worker tests |
+| Fix wave | Likely needed due to complexity and parallel agent drift |
+
+### Known Stress Points
+
+1. **Inventory race conditions**: Two users buying the last item simultaneously. Requires optimistic locking or Redis-based inventory reservation.
+2. **Payment state machine drift**: REST endpoint allows `pending → confirmed` but GraphQL mutation might allow `pending → shipped` (skipping confirmation).
+3. **Cart abandonment/expiry**: Cart items must expire after 30 minutes. Redis TTL vs. database consistency.
+4. **Public DTO exposure**: Product DTOs must NOT expose `cost_price`, `supplier_id`, `margin` to customers. Admin DTOs must include them.
+5. **GraphQL list query scoping**: `orders` query must return only the authenticated user's orders (H24).
+6. **WebSocket inventory sync**: Real-time stock updates must use consistent event names across `api-spec.md`, `sio.py`, and `sio-events.ts` (H22).
+7. **WebSocket room auth**: `subscribe_inventory` must verify auth before allowing room join (H32).
+8. **Circular imports**: Routers must NOT import from `main.py` to access shared singletons (H29).
+9. **SQLAlchemy shadowing**: Model columns like `text`, `select`, `join` must use aliased imports (H10 pattern).
+10. **Orphaned exports**: Utility modules often define helpers never imported anywhere (H21).
+11. **Entry-point conflicts**: Parallel agents building `main.py` (product router, cart router, order router registration) overwrite each other (H4).
+12. **Frontend test gap**: Tester agent must write frontend tests for React components, Zustand stores, and cart logic (H25).
+13. **Enum runtime safety**: `OrderStatus` must use `str, enum.Enum` for GraphQL compatibility (H27).
+14. **Pydantic Settings lazy factory**: `get_settings()` not module-level singleton (Pattern #41).
+15. **Rate limiting**: SlowAPIMiddleware in foundation wave + decorators on auth endpoints.
+16. **Docker build args**: `VITE_API_URL` and `VITE_WS_URL` passed as ARG in frontend Dockerfile.
+
+### Project Spec
+
+```
+BACKEND (FastAPI + PostgreSQL + Redis):
+- User auth with JWT + bcrypt + role-based claims (role: customer | seller | admin)
+- Rate limiting: SlowAPIMiddleware in main.py + decorators on auth endpoints (foundation wave)
+- Pydantic Settings via lazy factory (get_settings()) — never module-level singleton
+- Product catalog: CRUD with categories, tags, images, inventory count
+- Product search: full-text search (PostgreSQL tsvector) + filter by category/price/rating
+- Shopping cart: Redis-backed session with 30-minute TTL, merge on login
+- Checkout flow: creates Order from Cart, reserves inventory via Redis lock
+- Order management: status state machine (PENDING → CONFIRMED → SHIPPED → DELIVERED → REFUNDED)
+- Payment mock: /payments endpoint simulates Stripe-like flow (intent → confirm → capture)
+- Inventory management: optimistic locking or Redis-based reservation to prevent overselling
+- GraphQL API with subscriptions for real-time order status updates
+- GraphQL depth limit (max 10) + complexity analysis
+- Enum alignment: OrderStatus must match exactly between backend GraphQL enum and frontend TypeScript union
+- WebSocket (Socket.io v4): real-time inventory updates per product room
+- WebSocket room auth: subscribe_inventory verifies session before room join
+- Admin endpoints: product CRUD, order management, sales analytics (role-protected)
+- File upload: product images with MIME whitelist (image/jpeg, image/png, image/webp), max 5MB
+- Celery worker: processes order confirmation emails, inventory restock alerts, cart expiry cleanup
+
+FRONTEND (React + Vite + TypeScript):
+- Dark theme, mobile-first, 60px min touch targets
+- Product catalog with search, filters, pagination
+- Product detail page with real-time inventory status (Socket.io)
+- Shopping cart with add/remove/quantity update
+- Checkout flow with order summary and payment mock
+- Order history with status tracking
+- Admin dashboard: product management, order list, sales charts
+- Role-aware navigation (customer sees shop, admin sees dashboard)
+- Vite proxy includes /api, /graphql, /ws, /uploads
+- Build args: VITE_API_URL and VITE_WS_URL passed in Dockerfile
+
+SHARED:
+- TypeScript types shared between frontend and backend
+- Socket.io event constants as single source of truth
+- OrderStatus enum values defined once, used everywhere
+
+INFRASTRUCTURE:
+- Docker Compose: postgres, redis, api, worker, realtime, frontend
+- NO :- fallbacks in docker-compose.yml
+- Frontend Dockerfile passes VITE_API_URL and VITE_WS_URL as ARG
+- All env vars documented in .env.example
+```
+
+### S3/S4 Tension for S5 Policy Check
+
+This build is designed to force an explicit S5 Policy Check decision:
+
+- **S3 concern (operations/speed)**: "We need to ship an MVP fast. A monolithic FastAPI app with SQLite and in-memory cart is sufficient for validation."
+- **S4 concern (intelligence/future)**: "A marketplace needs inventory consistency, payment integrity, and real-time updates. A service-oriented architecture with Redis, Celery, and GraphQL subscriptions positions us for scale."
+- **S3* concern (audit/security)**: "Payment state machines and inventory locks are security-critical. A minimal design risks race conditions and data loss."
+
+S5 must explicitly choose and log the rationale.
+
+### Expected BLOCKERs (for trainer scoring)
+
+- Foundation wave: 0 BLOCKERs if FB9 sequencing works (H41 validation)
+- Implementation wave: 1-2 BLOCKERs from parallel agent drift (tests Phase 3c effectiveness)
+- Integration: 1-2 BLOCKERs from enum drift or orphaned exports
+- Security: 1-2 HIGH findings from GraphQL ownership filtering or public DTO exposure
+- Fix wave: 2 iterations max if mutations work

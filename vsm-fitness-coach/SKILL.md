@@ -87,6 +87,7 @@ flowchart TD
     P1[Phase 1: Execute Build<br/>Run viable-swarm-model workflow<br/>Build the selected project]
     P1A[Collect all artifacts:<br/>plan.md, audit reports, security reports,<br/>integration report, test results, fix logs]
     P2[Phase 2: Evaluate Performance<br/>Spawn vsm_trainer<br/>Read artifacts + rubric<br/>Score each phase 1-5]
+    P2H[Phase 2b: Update Hypothesis Statuses<br/>Read hypotheses.md → update tested items]
     P2S{<choice>any phase scored < 4</choice>?}
     P3[Phase 3: Generate Hypotheses<br/>One hypothesis per gap identified]
     P4[Phase 4: Propose Mutations<br/>Present structured report to S5]
@@ -104,7 +105,8 @@ flowchart TD
     P0D --> P1
     P1 --> P1A
     P1A --> P2
-    P2 --> P2S
+    P2 --> P2H
+    P2H --> P2S
     P2S -->|<choice>yes</choice>| P3
     P2S -->|<choice>no</choice>| P4
     P3 --> P4
@@ -170,6 +172,21 @@ The trainer reads all build artifacts and the rubric, then returns a structured
 fitness report with phase scores, gap analysis, surprises, and false positives.
 
 **Do not score manually.** The trainer handles all evaluation.
+
+### Phase 2b: Update Hypothesis Statuses
+
+Before generating new hypotheses, update the status of any hypotheses tested by this build:
+
+1. Read `~/vsm/viable-swarm-model/references/hypotheses.md`.
+2. Identify hypotheses linked to this fitness build (check the **Tested by** field and the fitness project's Coverage Map).
+3. For each hypothesis tested, update its status based on build results:
+   - **Confirmed**: Build results match the expected outcome
+   - **Rejected**: Build results contradict the hypothesis
+   - **Inconclusive**: Experiment design was flawed or results were ambiguous
+4. Fill in the **Result** field with specific evidence from the build artifacts.
+5. Fill in the **Tested by** field with the fitness build ID (e.g., "FB10").
+
+This step prevents the hypothesis backlog from accumulating stale untested items.
 
 ### Phase 3: Generate Hypotheses
 

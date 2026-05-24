@@ -469,3 +469,26 @@ before all agents complete, reducing BLOCKERs in Phase 3b and Phase 5.
 - `SKILL.md` Phase 3 — Added Phase 3c: Mid-Wave S2 Check
 - `SKILL.md` Mermaid diagram — Inserted P3M node between P3S and P3A
 - `references/flow-diagram.mermaid` — Inserted P3M node between P3S and P3A
+
+---
+
+## Mutation 21 — 2026-05-23
+
+**Session**: Coach skill refinement — hypothesis status tracking gap
+**File**: `vsm-fitness-coach/SKILL.md`
+**Type**: refinement (coach self-modification)
+**Rationale**: The vsm-fitness-coach skill generated new hypotheses from fitness build gaps
+but never explicitly updated the status of existing hypotheses that were tested by the build.
+This left the hypothesis backlog with stale "untested" items that had actually been validated
+or falsified in previous builds. The coach's Phase 3 only created new hypotheses; it did not
+close the loop on old ones.
+
+**Expected effect**: After every fitness build, the coach will explicitly check which
+hypotheses were tested, update their status (confirmed / rejected / inconclusive),
+fill in the Result field with build evidence, and record the build ID in the Tested by field.
+This keeps the hypothesis backlog accurate and prevents redundant gym experiments.
+
+**Files modified**:
+- `vsm-fitness-coach/SKILL.md` — Added Phase 2b: Update Hypothesis Statuses between
+  Phase 2 (Evaluate Performance) and Phase 3 (Generate Hypotheses). Updated Mermaid
+  flow diagram to include P2H node.
