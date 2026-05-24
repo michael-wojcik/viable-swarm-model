@@ -96,6 +96,9 @@ flowchart TD
     P5L[Log rejections to mutation-log.md]
     P5R[Write fitness report<br/>assets/fitness-report-template.md]
     P5G[git commit all changes]
+    P6[Phase 6: Prepare Next Build Prompt<br/>AskUserQuestion: Generate next prompt?<br/>If yes → write prompt using assets/prompt-template.md]
+    P6A{<choice>user approved</choice>?}
+    P6W[Write FB[N+1]-prompt-draft.md<br/>to ~/vsm-fitness-builds/coach/]
     END([END])
 
     BEGIN --> P0
@@ -116,7 +119,11 @@ flowchart TD
     P5 --> P5R
     P5L --> P5R
     P5R --> P5G
-    P5G --> END
+    P5G --> P6
+    P6 --> P6A
+    P6A -->|<choice>yes</choice>| P6W
+    P6A -->|<choice>no</choice>| END
+    P6W --> END
 ```
 
 ## 6. Phase Details
@@ -250,6 +257,27 @@ Write all applied mutations to:
 - Coach self: `references/*.md`, `agents/*.md`, `assets/*.md`, `references/mutation-log.md`
 - Fitness report using `assets/fitness-report-template.md`
 - `git commit` all changes with descriptive message
+
+### Phase 6: Prepare Next Build Prompt (Optional)
+
+After the fitness report is written and mutations are committed, ask the user:
+
+> "Generate execution prompt for the next fitness build (FB[N+1])?"
+
+If the user approves:
+1. Read `assets/prompt-template.md`
+2. Fill in the template using:
+   - The current build's fitness report (score, gaps, surprises)
+   - Updated hypothesis statuses from Phase 2b
+   - New mutations applied in Phase 5
+   - A new project domain not yet covered
+3. Write the filled prompt to `~/vsm-fitness-builds/coach/FB[N+1]-prompt-draft.md`
+
+If the user rejects: end the session.
+
+**Why this is last**: The next build prompt depends on the current build's results.
+It cannot be written before evaluation, hypothesis updates, and mutation application
+are complete.
 
 ## 8. The Mutation System
 
