@@ -397,12 +397,12 @@ misattribution.
 5. **Refinement**: Updated `agents/vsm_tester.md` with FB9 Finding on JWT Payload / ORM Type Mismatch on SQLite
 6. **Append-only**: Added Hypothesis H41 (Sequenced foundation sub-waves eliminate dependency race conditions) to `references/hypotheses.md`
 
-### Mutations Proposed but Not Applied (Structural)
-7. **Structural**: Split Foundation Wave into two sequential sub-waves in `SKILL.md` flow diagram and Phase 2 logic:
-   - Sub-Wave 2a: models + auth + config + shared types + env contract
-   - Sub-Wave 2b: GraphQL + Socket.io + routers + frontend scaffolding
-   - Rationale: Eliminates dependency race conditions observed in FB9
-   - Status: Pending approval
+### Structural Mutations Applied
+7. **Structural**: Split Foundation Wave into two sequential sub-waves:
+   - Updated `SKILL.md` Section 6 "Phase 2: Foundation Wave" with Sub-Wave 2a (Core Contracts) and Sub-Wave 2b (Dependent Infrastructure), including mini-audit verification gate.
+   - Updated `references/flow-diagram.mermaid` to show P2A → P2AV → P2B sequence instead of single P2 node.
+   - Rationale: FB9 Foundation Wave scored 3/5 due to parallel agents racing on shared dependencies (AsyncSessionLocal missing, get_current_user signature mismatch, env var drift).
+   - Status: **Applied** (user approved)
 
 ### Rejected Mutations
 - None

@@ -2,6 +2,12 @@
 > workflow doesn't match reality, update the diagram. Always preserve BEGIN
 > and END nodes. Decision diamonds must remain clear. Append a note below
 > the diagram explaining the change.
+>
+> **Change log**:
+> - 2026-05-23: Split Phase 2 into Sub-Wave 2a (Core Contracts) and Sub-Wave 2b
+>   (Dependent Infrastructure) with a mini-audit verification gate between them.
+>   Rationale: FB9 showed parallel foundation agents racing on shared dependencies
+>   (AsyncSessionLocal missing, get_current_user signature mismatch, env drift).
 
 flowchart TD
     BEGIN([BEGIN])
@@ -12,10 +18,16 @@ flowchart TD
     P1H{<choice>S3/S4 deadlock</choice>?}
     P1A[EnterPlanMode<br/>User Approval]
     P1D{<choice>approved</choice>?}
-    P2[Phase 2: Foundation Wave<br/>2-3 coder agents<br/>run_in_background=true]
-    P2S[TaskOutput block=true]
-    P2A[Phase 2b: Audit<br/>vsm_auditor]
+
+    P2A[Sub-Wave 2a: Core Contracts<br/>models + auth + config + shared types<br/>2-3 coder agents, parallel]
+    P2AS[TaskOutput block=true]
+    P2AV{<choice>2a mini-audit<br/>passes</choice>?}
+    P2B[Sub-Wave 2b: Dependent Infrastructure<br/>GraphQL + Socket.io + routers + frontend<br/>2-3 coder agents, parallel]
+    P2BS[TaskOutput block=true]
+    P2A_AUDIT[Phase 2b: Audit<br/>vsm_auditor on all foundation files]
+    P2M[Phase 2c: Model Validation<br/>S5 checks models.py vs data-model.md]
     P2D{<choice>BLOCKERs</choice>?}
+
     P3[Phase 3: Implementation Wave<br/>Parallel coder agents]
     P3S[TaskOutput block=true]
     P3A[Phase 3b: Audit + Coordination<br/>vsm_auditor + vsm_coordinator]
@@ -33,25 +45,35 @@ flowchart TD
     P7R[Re-audit changed files]
     P7D{<choice>BLOCKERs remain<br/>iterations < 3</choice>?}
     P7E[Escalate to User<br/>AskUserQuestion]
+    P7S[Phase 7b: Post-Fix Security Re-Check<br/>vsm_security on modified auth/GraphQL/WebSocket]
+    P7F{<choice>regressions found</choice>?}
     P8[Phase 8: Reflection<br/>Append to .kimi/lessons.md]
+    P8M[Phase 8b: Meta-Reflection + Hypothesis Generation]
     END([END])
 
     BEGIN --> P0
-    P0 --> P0R
-    P0R --> P0D
+    P0 --> P0D
     P0D -->|<choice>yes</choice>| END
-    P0D -->|<choice>no</choice>| P1
+    P0D -->|<choice>no</choice>| P0R
+    P0R --> P1
     P1 --> P1H
     P1H -->|<choice>yes</choice>| P1
     P1H -->|<choice>no</choice>| P1A
     P1A --> P1D
     P1D -->|<choice>rejected</choice>| P1
-    P1D -->|<choice>approved</choice>| P2
-    P2 --> P2S
-    P2S --> P2A
-    P2A --> P2D
+    P1D -->|<choice>approved</choice>| P2A
+
+    P2A --> P2AS
+    P2AS --> P2AV
+    P2AV -->|<choice>no</choice>| P7
+    P2AV -->|<choice>yes</choice>| P2B
+    P2B --> P2BS
+    P2BS --> P2A_AUDIT
+    P2A_AUDIT --> P2M
+    P2M --> P2D
     P2D -->|<choice>yes</choice>| P7
     P2D -->|<choice>no</choice>| P3
+
     P3 --> P3S
     P3S --> P3A
     P3A --> P3D
@@ -73,6 +95,10 @@ flowchart TD
     P7R --> P7D
     P7D -->|<choice>yes</choice>| P7
     P7D -->|<choice>no, max reached</choice>| P7E
-    P7D -->|<choice>no, all clear</choice>| P8
+    P7D -->|<choice>no, all clear</choice>| P7S
+    P7S --> P7F
+    P7F -->|<choice>yes</choice>| P7
+    P7F -->|<choice>no</choice>| P8
     P7E --> END
-    P8 --> END
+    P8 --> P8M
+    P8M --> END

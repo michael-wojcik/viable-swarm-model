@@ -258,8 +258,39 @@ iterations before escalating to S5. EnterPlanMode for user approval.
 Rejected plans loop back.
 
 ### Phase 2: Foundation Wave
-Spawn 2-3 `coder` subagents with `run_in_background=true`. Wait via
-`TaskOutput(block=true)`. Then spawn `vsm_auditor`. BLOCKERs trigger Phase 7.
+
+**For multi-service or complex projects, split the foundation wave into two
+sequential sub-waves to eliminate dependency race conditions.**
+
+**Sub-Wave 2a — Core Contracts (parallel, then verify)**:
+Spawn 2-3 `coder` subagents with `run_in_background=true` for:
+- `models.py` (including engine + session factory like `AsyncSessionLocal`)
+- `auth.py` + `roles.py` (stable signatures: `get_current_user`, `require_role`)
+- `config.py` (lazy factory, NO default secrets)
+- `shared/types.ts` + `shared/sio-events.ts`
+- `requirements.txt`, `package.json`
+- `.env.example` (env var naming contract established HERE)
+
+Wait via `TaskOutput(block=true)`. Then S5 runs a **mini-audit**:
+- Does `models.py` define `AsyncSessionLocal`?
+- Does `auth.py` have stable `get_current_user` / `require_role` signatures?
+- Are `.env.example` names finalized and consistent?
+- Do all 2a files compile/import cleanly?
+
+If any check fails → fix BEFORE dispatching Sub-Wave 2b.
+
+**Sub-Wave 2b — Dependent Infrastructure (parallel, then verify)**:
+Spawn 2-3 `coder` subagents with `run_in_background=true` for:
+- `graphql.py` (imports from models, auth)
+- `sio.py` (imports from models, auth)
+- `main.py` scaffolding (imports from config, registers middleware)
+- Frontend scaffolding (Vite config, App.tsx skeleton, path aliases)
+- `docker-compose.yml`
+
+Wait via `TaskOutput(block=true)`.
+
+**Phase 2b: Audit** — Spawn `vsm_auditor` on ALL foundation outputs (2a + 2b).
+BLOCKERs trigger Phase 7.
 
 **Phase 2c: Model Validation (S5)** — After foundation audit passes and BEFORE
 spawning implementation agents, S5 MUST verify that `models.py` (or equivalent)
