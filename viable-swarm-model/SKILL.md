@@ -2,8 +2,8 @@
 name: viable-swarm-model
 description: >
   A self-modifying cybernetic development swarm for Kimi Code CLI based on
-  Stafford Beer's VSM and Gordon Pask's Conversation Theory. This skill is a
-  learning organism: it reads its own acquired wisdom at startup, executes
+  Stafford Beer's Viable System Model. This skill is a learning organism:
+  it reads its own acquired wisdom at startup, executes
   builds with custom sub-agent types, and appends new lessons to BOTH the
   project-local memory AND its own files. Invoke with /flow:viable-swarm-model.
 type: flow
@@ -485,7 +485,7 @@ If Phase 0 self-test fails because of a bad mutation:
 3. Re-run Phase 0 self-test
 4. Document the reversion as a new mutation entry (learning what NOT to change)
 
-## 11. Teachback Protocol (from Pask CT)
+## 11. Comprehension Checkpoint
 
 Before declaring a phase complete, explain what was built:
 

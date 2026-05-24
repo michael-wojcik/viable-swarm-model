@@ -1,6 +1,6 @@
 # viable-swarm-model
 
-A self-modifying cybernetic development swarm for [Kimi Code CLI](https://github.com/MoonshotAI/Kimi-Chat), based on Stafford Beer's Viable System Model (VSM) and Gordon Pask's Conversation Theory.
+A self-modifying cybernetic development swarm for [Kimi Code CLI](https://github.com/MoonshotAI/Kimi-Chat), based on Stafford Beer's Viable System Model (VSM).
 
 This is not a static prompt. It is a **learning organism** that evolves its own files between sessions.
 

@@ -348,3 +348,35 @@ FB7 demonstrated that foundation model drift causes cascade failures, and that f
 - `references/integration-checklist.md` — Added enrollment authorization to Check 30
 - `agents/vsm_auditor.md` — Added FastAPI router import and Strawberry auto-camelCase guidance
 
+
+---
+
+## Mutation 18 — 2026-05-23
+
+**Session**: Epistemic audit of skill theoretical foundations
+**File**: `viable-swarm-model/SKILL.md`, `README.md`
+**Type**: refinement (structural claims removed)
+**Rationale**: Empirical analysis of Kimi Code CLI's subagent architecture confirmed
+that Gordon Pask's Conversation Theory cannot be implemented in this platform.
+Subagents are stateless batch workers with no peer-to-peer communication channel,
+no persistent P-individual identity, and no recursive mutual teachback capability.
+The skill's Section 11 "Teachback Protocol" was actually a self-explanation
+checklist — useful, but not Paskian teachback (which requires a minimum of two
+participants, reproduction in own terms, and comparison by the originator).
+Continuing to claim CT as a structural foundation was a known falsehood per the
+skill's own epistemic rule: "Design intent is a hypothesis; empirical results are
+evidence." The mutation wins.
+
+**Expected effect**: Future users and agents will not expect conversational
+dynamics that the platform cannot support. The VSM architecture is honestly
+represented as the sole cybernetic foundation. The comprehension checkpoint
+retains its value as a pre-completion validation step without theoretical
+misattribution.
+
+**Before**:
+- Description claimed "based on Stafford Beer's VSM and Gordon Pask's CT"
+- Section 11 titled "Teachback Protocol (from Pask CT)"
+
+**After**:
+- Description claims "based on Stafford Beer's Viable System Model"
+- Section 11 titled "Comprehension Checkpoint"
