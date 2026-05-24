@@ -642,3 +642,14 @@ main-skill mutations.
 **Rationale**: FB11 overall score 3.7/5.0 (improvement from FB10's 3.3/5.0). 5 of 6 traps caught. Key improvements: sequenced foundation sub-waves, subprocess import check, split testers. Key gaps: frontend config validation, CORS checks, REST auth guard verification.
 **Expected effect**: Structured record of FB11 performance for trainer evaluation and next build design.
 
+
+---
+
+## Mutation 34 — 2026-05-24
+
+**Session**: FB11 structural mutations — user approved both
+**File**: `SKILL.md` (flow diagram + phase details)
+**Type**: structural
+**Rationale**: FB11 revealed that frontend config fallbacks and CORS misconfigs survive all phases until the security gate. Adding Phase 3d (Frontend Config Validation) catches these after implementation. Reordering security gate before integration verification (H33) reduces total fix iterations by catching vulnerabilities before cross-file contract checks.
+**Expected effect**: Future builds catch frontend config issues earlier. Security vulnerabilities are fixed before integration verification, reducing coordinator rework.
+
