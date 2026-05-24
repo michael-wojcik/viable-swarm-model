@@ -844,7 +844,7 @@ agent prompt are both effective at detecting this pattern.
 
 ## H55: Strawberry extension names drift between package versions
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-24
 **Rationale**: FB12 foundation agent used `DepthLimitExtension` and `QueryComplexityExtension` from `strawberry.extensions`, but the installed version only provides `QueryDepthLimiter`. No `QueryComplexityExtension` exists. S5 had to manually fix the import. Agent prompts assume specific extension names without version awareness.
 **Source**: Fitness build FB12, Phase 2b
@@ -857,7 +857,7 @@ agent prompt are both effective at detecting this pattern.
 
 ## H56: Security agent over-classifies non-secret config fallbacks as CRITICAL
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-24
 **Rationale**: FB12 security gate rated `REDIS_URL` default (`redis://localhost:6379`) and `DATABASE_URL` fallback as CRITICAL findings. These are connection strings, not secrets. The security agent lacks nuance to distinguish between secret fallbacks (JWT_SECRET, POSTGRES_PASSWORD) and non-secret connection defaults (DATABASE_URL, REDIS_URL).
 **Source**: Fitness build FB12, Phase 5
@@ -876,8 +876,8 @@ agent prompt are both effective at detecting this pattern.
 **Source**: Fitness build FB12, Phase 5
 **Experiment**: Add "GraphQL get_context MUST propagate auth exceptions; never return anonymous context on JWT failure" to security checklist and foundation wave requirements. Run 5 GraphQL builds. Count fail-open contexts.
 **Expected**: 0 fail-open contexts after checklist addition.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: FB13: get_context propagates JWT exceptions. Security gate verified. 0 fail-open contexts.
+**Tested by**: FB13
 
 ---
 
@@ -889,14 +889,14 @@ agent prompt are both effective at detecting this pattern.
 **Source**: Fitness build FB12, Phase 3b/5
 **Experiment**: Add "Strawberry auto-camelCase: verify frontend queries use camelCase matching the actual schema (run `python -c 'from app.graphql import schema; print(schema)'`)" to coordinator checklist. Run 3 GraphQL builds. Count field name mismatches caught before runtime.
 **Expected**: 3/3 mismatches caught early.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: FB13: Schema introspection confirms camelCase fields (attorneyId, clientId, orderIndex, signatureUrl, versionNumber, uploadedById, fullName, createdAt, updatedAt). Frontend queries use camelCase. Zero mismatches.
+**Tested by**: FB13
 
 ---
 
 ## H59: Domain-specific coder prompts reduce systematic backend/frontend false negatives vs generic coders
 
-**Status**: untested
+**Status**: inconclusive
 **Proposed**: 2026-05-24
 **Rationale**: FB5–FB12 show recurring backend mistakes (Strawberry extension drift H55,
 GraphQL ownership filtering H57, security severity over-classification H56, Celery status
@@ -916,5 +916,83 @@ introspected schema" could prevent H58.
      system prompts embedding known-gotcha rules. Count false negatives.
   3. Compare: does treatment group reduce systematic misses by 50%+
 **Expected**: Treatment group reduces backend/frontend systematic false negatives by ≥50%.
+**Result**: FB13 piloted domain-specific prompts in the prompt draft. Backend/frontend agents avoided known traps (camelCase, no || fallbacks, explicit CORS). However, graphql.py agent timed out after 10+ minutes, suggesting domain prompts may add overhead. Need controlled gym experiment to measure false negatives.
+**Tested by**: FB13 (observational pilot)
+
+---
+
+## H60: Docker-compose env var prefix consistency prevents runtime misconfigurations
+
+**Status**: untested
+**Proposed**: 2026-05-24
+**Rationale**: FB13 had `API_SECRET_KEY`, `API_DATABASE_URL`, `API_REDIS_URL` in docker-compose but `SECRET_KEY`, `DATABASE_URL`, `REDIS_URL` in config.py. This prefix mismatch means containerized deployments will fail to start because env vars are not read. The integration checklist does not verify env var naming consistency across docker-compose, .env.example, and code.
+**Source**: Fitness build FB13, Phase 5/6
+**Experiment**: Add "Env var names must match exactly across docker-compose, .env.example, and config.py" to integration checklist. Run 5 builds with intentional prefix mismatches. Count mismatches caught.
+**Expected**: 5/5 mismatches caught before deployment.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H61: Vite proxy port validation must be in the integration checklist
+
+**Status**: untested
+**Proposed**: 2026-05-24
+**Rationale**: FB13 frontend vite.config.ts proxied `/api`, `/graphql`, `/ws` to `localhost:4000`, but the API service runs on `8000` and realtime on `8001`. This mismatch means all frontend API calls fail in local development. The integration checklist checks that proxy routes exist but does not verify the target ports match the actual service ports.
+**Source**: Fitness build FB13, Phase 5
+**Experiment**: Add "Vite proxy target ports must match docker-compose exposed ports" to integration checklist. Run 5 builds with port mismatches. Count mismatches caught.
+**Expected**: 5/5 mismatches caught.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H62: App.tsx placeholder shadowing is a recurring pattern that needs prevention rule
+
+**Status**: rejected
+**Proposed**: 2026-05-24
+**Rationale**: FB13 implementation auditor claimed App.tsx had inline placeholder components shadowing real page imports. This was a FALSE POSITIVE — App.tsx correctly imported pages. However, the pattern of inline placeholders in App.tsx IS a real risk in early fitness builds (FB1, FB2). A prevention rule might help, but the FB13 false positive suggests auditors already flag it correctly when it happens.
+**Source**: Fitness build FB13, Phase 3b (false positive)
+**Experiment**: Review last 10 fitness builds for actual App.tsx placeholder shadowing. Count instances. If >3, add prevention rule; if ≤3, close hypothesis.
+**Expected**: ≤3 instances in 10 builds.
+**Result**: REJECTED. The auditor's claim was false for FB13. No evidence this is a current gap.
+**Tested by**: FB13
+
+---
+
+## H63: WebSocket auth protocol must be explicitly defined in api-spec.md
+
+**Status**: untested
+**Proposed**: 2026-05-24
+**Rationale**: FB13 had a WebSocket auth protocol mismatch: frontend used Socket.IO `auth` callback (`socket.io-client` built-in), backend expected custom `authenticate` event after `connect`. This meant the WebSocket handshake never completed. The api-spec.md described the events but did not explicitly define the auth handshake sequence, leading to parallel agents making incompatible assumptions.
+**Source**: Fitness build FB13, Phase 3/5
+**Experiment**: Add explicit "WebSocket Auth Handshake Sequence" section to architect checklist (api-spec.md must define: connect → auth event name → payload shape → server response → room join). Run 5 WebSocket builds. Count auth protocol mismatches.
+**Expected**: 0 mismatches after checklist addition.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H64: Auditor false positive rate correlates with file count in single audit batch
+
+**Status**: untested
+**Proposed**: 2026-05-24
+**Rationale**: FB13 implementation auditor produced 3 major BLOCKER-level false positives (App.tsx placeholder shadowing, sio.py CORS wildcard, GraphQL schema snake_case) when asked to audit 26 files in one batch. The foundation auditor (same agent type, 12 files) produced 0 false positives. Large batch sizes may cause the auditor to skim or misremember file contents.
+**Source**: Fitness build FB13, Phase 2b vs 3b
+**Experiment**: Run 10 audits. Split into 2 conditions: Condition A audits all files in one batch; Condition B audits files in batches of 8 max. Count false positives per condition.
+**Expected**: Condition A has ≥3x more false positives than Condition B.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H65: models.py hardcoded engine is a systemic pattern not caught by fix waves
+
+**Status**: untested
+**Proposed**: 2026-05-24
+**Rationale**: In FB13, `models.py` hardcoded `postgresql+asyncpg://user:pass@localhost/db` at module level. This was flagged in foundation audit, implementation audit, and security gate, yet survived all phases. Fix waves focus on implementation-phase BLOCKERs and may skip "already completed" foundation files. The hardcoded engine is a placeholder pattern that agents create when they don't know how to lazy-load the engine.
+**Source**: Fitness builds FB9–FB13 (recurring in 3+ builds)
+**Experiment**: Add "models.py engine must read DATABASE_URL from get_settings() or use lazy factory" to foundation wave requirements AND auditor prompt. Run 5 builds. Count hardcoded engines.
+**Expected**: 0 hardcoded engines after checklist addition.
 **Result**: [to be filled]
 **Tested by**: [fitness build or gym experiment]

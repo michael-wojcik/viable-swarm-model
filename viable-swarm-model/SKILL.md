@@ -393,8 +393,16 @@ weakened auth), loop back to Phase 7. This prevents fix/test agents from
 introducing vulnerabilities after the main security gate.
 
 ### Phase 8: Reflection
-Append to `.kimi/lessons.md` with Source/Finding/Fix/Verification format.
-See `assets/lessons-template.md`.
+Write a standalone `.kimi/lessons.md` in the build directory.
+
+**Required structure**: Follow `references/lessons-template.md`:
+- One entry per significant issue or pattern discovered
+- Each entry must include: Source, Finding, Fix, Verification, Prevention rule
+- Never merge reflection content into `meta-reflection.md`
+
+**Minimum entries**: At least one entry for each phase that scored < 4 or produced a BLOCKER.
+
+See `references/lessons-template.md` for the full template.
 
 ### Phase 8b: Meta-Reflection + Hypothesis Generation
 After project reflection, evaluate the skill's own performance.

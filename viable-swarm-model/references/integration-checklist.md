@@ -240,3 +240,19 @@ correction BEFORE quality gates.
 - [ ] GraphQL `get_context` or equivalent context builders MUST propagate auth exceptions (JWT errors, missing tokens)
 - [ ] Never silently catch auth exceptions and return an anonymous/unauthenticated context
 - [ ] Auth failures MUST result in GraphQL errors or `AuthenticationError`, not `user = None`
+
+## 39. Vite Proxy Port Verification
+- [ ] Vite proxy target ports must match the actual exposed ports in docker-compose.yml
+- [ ] `/api` and `/graphql` proxy targets must match the API service port (e.g., 8000)
+- [ ] `/ws` proxy target must match the realtime service port (e.g., 8001)
+- [ ] Never proxy to a default port (e.g., 4000) unless that port is explicitly exposed in docker-compose
+
+## 40. WebSocket Auth Handshake Sequence
+- [ ] `api-spec.md` explicitly documents the WebSocket auth handshake: connect → auth event → payload shape → server response → room join
+- [ ] Frontend and backend use the SAME auth mechanism (either Socket.IO `auth` option OR custom `authenticate` event, not both)
+- [ ] Backend rejects all room operations until auth handshake completes
+
+## 41. SQLAlchemy Engine Configuration
+- [ ] `models.py` does NOT hardcode database connection strings at module level
+- [ ] Engine is created from `get_settings().DATABASE_URL` or uses a lazy factory pattern
+- [ ] Engine creation does not trigger side effects at import time

@@ -681,3 +681,31 @@ main-skill mutations.
 **Type**: refinement
 **Rationale**: Security agent over-classified connection string defaults as CRITICAL and missed GraphQL fail-open context pattern.
 **Expected effect**: Security agent will distinguish secret fallbacks from connection defaults and check GraphQL context propagation.
+
+## Mutation 38 — YYYY-MM-DD (FB13 Evaluation)
+**Session**: FB13 LegalVault fitness build evaluation
+**File**: `references/integration-checklist.md`
+**Type**: append
+**Rationale**: FB13 revealed Vite proxy port mismatch (4000 vs 8000/8001), WebSocket auth handshake protocol mismatch, and models.py hardcoded engine. Three new checks added to prevent recurrence.
+**Expected effect**: Next build catches port mismatches, WS auth protocol drift, and hardcoded engines before integration verification.
+
+## Mutation 39 — YYYY-MM-DD (FB13 Evaluation)
+**Session**: FB13 LegalVault fitness build evaluation
+**File**: `agents/vsm_auditor.md`
+**Type**: refinement
+**Rationale**: FB13 implementation auditor produced 3 BLOCKER-level false positives when auditing 26 files in one batch. Adding batch size limit (≤10 files) and BLOCKER verification rule (re-read source before elevating) should reduce false positive rate.
+**Expected effect**: Auditor false positive rate drops by 50%+ in builds with >15 source files.
+
+## Mutation 40 — YYYY-MM-DD (FB13 Evaluation)
+**Session**: FB13 LegalVault fitness build evaluation
+**File**: `references/hypotheses.md`
+**Type**: append
+**Rationale**: FB13 generated 6 new hypotheses (H60–H65) from gaps in env var consistency, Vite proxy ports, WS auth protocols, auditor batch size, and hardcoded engines.
+**Expected effect**: Structured backlog of falsifiable claims for gym experiments and next fitness builds.
+
+## Mutation 41 — YYYY-MM-DD (FB13 Structural)
+**Session**: FB13 LegalVault fitness build evaluation
+**File**: `SKILL.md` (Phase 8) + `references/lessons-template.md` (new)
+**Type**: structural
+**Rationale**: FB13 Phase 8 scored 2/5 because `.kimi/lessons.md` was missing entirely — reflection was merged into `meta-reflection.md` without structure. Adding a dedicated template and explicit SKILL.md requirement ensures standalone, structured reflection artifacts in all future builds.
+**Expected effect**: Every future build produces `.kimi/lessons.md` with Source/Finding/Fix/Verification/Prevention structure.

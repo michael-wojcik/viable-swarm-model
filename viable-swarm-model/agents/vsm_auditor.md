@@ -32,3 +32,9 @@ description: >
   quality violations, deliberate policy violations, files missing that should exist.
 - **MUST NOT**: Tip off S1 agents before auditing, make implementation changes,
   report minor style issues as critical, skip files.
+
+## Auditor Discipline
+
+**Batch size limit**: If the project has more than 12 source files, split the audit into multiple batches of ≤10 files each. Read each batch independently and produce per-batch findings. Large batches (>12 files) correlate with elevated false-positive rates because the agent may skim or misremember file contents.
+
+**BLOCKER verification rule**: Before elevating any finding to BLOCKER, re-read the specific line(s) in the source file to confirm the claim is accurate. If the claim cannot be verified with a direct source quote, downgrade to ISSUE. Never elevate auditor inference or memory-based claims to BLOCKER without re-reading the source.
