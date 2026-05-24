@@ -70,7 +70,7 @@ use symlinks or update paths in mutation commands.
 | **S1-Backend** | `coder` subagent | Built-in | Phases 2,3 | Backend code |
 | **S1-Frontend** | `coder` subagent | Built-in | Phases 2,3 | Frontend code |
 | **S1-Tester** | `vsm_tester` subagent | Custom | Phase 4 | Tests, coverage |
-| **S1-Security** | `vsm_security` subagent | Custom | Phase 6 | Security findings |
+| **S1-Security** | `vsm_security` subagent | Custom | Phase 5 | Security findings |
 | **S1-DevOps** | `coder` subagent | Built-in | Phase 4 | Docker, CI/CD |
 | **Algedonic** | Main agent detects/stops | — | Any phase | TaskStop, AskUserQuestion |
 
@@ -159,11 +159,11 @@ flowchart TD
     P4[Phase 4: Testing + Infra Wave<br/>vsm_tester + coder]
     P4S[TaskOutput block=true]
     P4R[Shell: run tests]
-    P6[Phase 6: Security Gate<br/>vsm_security]
-    P6D{<choice>CRITICAL/HIGH</choice>?}
-    P6L[Document LOW as<br/>known limitation]
-    P5[Phase 5: Integration Verification<br/>vsm_coordinator + vsm_auditor]
-    P5D{<choice>ANY failure</choice>?}
+    P5[Phase 5: Security Gate<br/>vsm_security]
+    P5D{<choice>CRITICAL/HIGH</choice>?}
+    P5L[Document LOW as<br/>known limitation]
+    P6[Phase 6: Integration Verification<br/>vsm_coordinator + vsm_auditor]
+    P6D{<choice>ANY failure</choice>?}
     P7[Phase 7: Fix Wave<br/>coder agents]
     P7R[Re-audit changed files]
     P7D{<choice>BLOCKERs remain<br/>iterations < 3</choice>?}
@@ -196,35 +196,42 @@ flowchart TD
     P2S --> P2A
     P2A --> P2M
     P2M --> P2D
-    P2D -->|<choice>yes</choice>| P7
+    P2D -->|<choice>yes</choice>| P7_FOUNDATION
     P2D -->|<choice>no</choice>| P3
     P3 --> P3S
     P3S --> P3M
     P3M --> P3A
     P3A --> P3D
-    P3D -->|<choice>yes</choice>| P7
+    P3D -->|<choice>yes</choice>| P7_IMPL
     P3D -->|<choice>no</choice>| P3E
     P3E --> P3D2
     P3D2 --> P4
     P4 --> P4S
     P4S --> P4R
-    P4R --> P6
-    P6 --> P6D
-    P6D -->|<choice>yes</choice>| P7
-    P6D -->|<choice>LOW only</choice>| P6L
-    P6D -->|<choice>none</choice>| P5
-    P6L --> P5
+    P4R --> P5
     P5 --> P5D
-    P5D -->|<choice>yes</choice>| P3
-    P5D -->|<choice>no</choice>| P8
-    P7 --> P7R
-    P7R --> P7D
-    P7D -->|<choice>yes</choice>| P7
-    P7D -->|<choice>no, max reached</choice>| P7E
-    P7D -->|<choice>no, all clear</choice>| P7S
+    P5D -->|<choice>yes</choice>| P7_IMPL
+    P5D -->|<choice>LOW only</choice>| P5L
+    P5D -->|<choice>none</choice>| P6
+    P5L --> P6
+    P6 --> P6D
+    P6D -->|<choice>yes</choice>| P7_IMPL
+    P6D -->|<choice>no</choice>| P8
+    P7_FOUNDATION[Phase 7: Fix Wave<br/>Foundation BLOCKERs]
+    P7_FOUNDATION --> P7R_F[Re-audit changed files]
+    P7R_F --> P7D_F{BLOCKERs remain<br/>iterations < 3?}
+    P7D_F -->|<choice>yes</choice>| P7_FOUNDATION
+    P7D_F -->|<choice>no, max reached</choice>| P7E
+    P7D_F -->|<choice>no, all clear</choice>| P2
+    P7_IMPL[Phase 7: Fix Wave<br/>Implementation BLOCKERs]
+    P7_IMPL --> P7R_I[Re-audit changed files]
+    P7R_I --> P7D_I{BLOCKERs remain<br/>iterations < 3?}
+    P7D_I -->|<choice>yes</choice>| P7_IMPL
+    P7D_I -->|<choice>no, max reached</choice>| P7E
+    P7D_I -->|<choice>no, all clear</choice>| P7S
     P7S --> P7F
-    P7F -->|<choice>yes</choice>| P7
-    P7F -->|<choice>no</choice>| P8
+    P7F -->|<choice>yes</choice>| P7_IMPL
+    P7F -->|<choice>no</choice>| P4
     P7E --> END
     P8 --> P8M
     P8M --> P8W
@@ -344,7 +351,7 @@ where they are currently discovered too late.
 Spawn `vsm_tester` + `coder` (devops) in parallel. Run tests via Shell.
 Report coverage.
 
-### Phase 6: Security Gate
+### Phase 5: Security Gate
 Spawn `vsm_security`. CRITICAL/HIGH → stop, fix, re-audit. LOW → document.
 Gather vs. Stop: planned wave → gather; mid-build → emergency stop.
 
@@ -352,7 +359,7 @@ Gather vs. Stop: planned wave → gather; mid-build → emergency stop.
 are caught before the coordinator invests effort in cross-file contract checks.
 This reduces total fix iterations.
 
-### Phase 5: Integration Verification
+### Phase 6: Integration Verification
 Spawn `vsm_coordinator` + `vsm_auditor`. Full 20+ point checklist (see
 `references/integration-checklist.md`). ANY failure → back to Phase 3.
 
@@ -363,13 +370,21 @@ Group fixes by file. Parallel across files, sequential within file. Spawn
 misses regressions in unrelated tests. Max 3 iterations. Still blocked?
 Escalate to user.
 
+**Return paths differ by BLOCKER source**:
+- **Foundation BLOCKERs** (Phase 2b/2c audit): After fix clears, return to
+  Sub-Wave 2b (Dependent Infrastructure) to re-verify the foundation.
+- **Implementation BLOCKERs** (Phase 3b, 5, or 6): After fix clears, return to
+  Phase 4 (Testing) → Phase 5 (Security) → Phase 6 (Integration) before
+  proceeding to Phase 8. NEVER skip Testing, Security, or Integration after
+  fixing implementation-phase issues.
+
 **Phase 7b: Post-Fix Security Re-Check** — After fix wave clears all BLOCKERs
-and BEFORE Phase 8 Reflection, S5 MUST run a lightweight security re-check on
-any file modified during the fix wave that touches auth, GraphQL, or WebSocket
-code. Spawn `vsm_security` with a focused scope (modified files only). If the
-re-check finds CRITICAL/HIGH regressions (e.g., a fix agent weakened auth),
-loop back to Phase 7. This prevents fix/test agents from introducing
-vulnerabilities after the main security gate.
+and BEFORE returning to the main flow, S5 MUST run a lightweight security
+re-check on any file modified during the fix wave that touches auth, GraphQL,
+or WebSocket code. Spawn `vsm_security` with a focused scope (modified files
+only). If the re-check finds CRITICAL/HIGH regressions (e.g., a fix agent
+weakened auth), loop back to Phase 7. This prevents fix/test agents from
+introducing vulnerabilities after the main security gate.
 
 ### Phase 8: Reflection
 Append to `.kimi/lessons.md` with Source/Finding/Fix/Verification format.

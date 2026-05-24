@@ -527,7 +527,7 @@ main-skill mutations.
   reference coach's own mutation-log.md.
 - `vsm-fitness-gym/SKILL.md` — Added Section 9: The Mutation System
   (format template, rollback procedure). Updated Section 8 epistemic rules to
-  acknowledge gym self-modification. Updated Phase 5 to reference gym's own
+  acknowledge gym self-modification. Updated Phase 6 to reference gym's own
   mutation-log.md.
 
 ---

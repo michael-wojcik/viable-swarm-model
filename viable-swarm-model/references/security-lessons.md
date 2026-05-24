@@ -252,7 +252,7 @@ and nginx config with the same rigor as application code. Check for hardcoded pa
 
 ### L39: Rate Limiting Must Be in Foundation Wave for Auth Builds
 **Prevention rule**: Any build with authentication MUST include rate limiting scaffolding
-in the foundation wave (Phase 2), not just the security gate (Phase 6). Auth endpoints
+in the foundation wave (Phase 2), not just the security gate (Phase 5). Auth endpoints
 (`/register`, `/login`, `/refresh`) are brute-force vectors from day one.
 **Affected**: S1 coders in Phase 2, vsm_security.
 
@@ -264,7 +264,7 @@ of 429. Both components are mandatory: (1) endpoint decorators on auth routes, (
 `app.add_middleware(SlowAPIMiddleware)`, (3) `@app.exception_handler(RateLimitExceeded)` returning 429.
 **Affected**: S1-Backend, vsm_security.
 **Source**: FB3 security gate MEDIUM-4 — decorators present in foundation wave but middleware
-missing until Phase 6.
+missing until Phase 5.
 
 ---
 
@@ -349,9 +349,9 @@ missing until Phase 6.
 ### L45: GraphQL Context Builders Must Propagate Auth Exceptions
 **Prevention rule**: GraphQL `get_context` MUST NOT catch JWT/auth exceptions and fall back to anonymous context. Auth failures MUST propagate as GraphQL errors. Fail-closed, never fail-open.
 **Affected**: vsm_security, S1-Backend, vsm_auditor.
-**Source**: Fitness build FB12, Phase 6. Security gate found `get_context` catching JWT errors and returning `user = None`, creating a fail-open auth bypass.
+**Source**: Fitness build FB12, Phase 5. Security gate found `get_context` catching JWT errors and returning `user = None`, creating a fail-open auth bypass.
 
 ### L46: Connection String Defaults Are Not CRITICAL Secrets
 **Prevention rule**: `DATABASE_URL` and `REDIS_URL` defaults (e.g., `postgresql+asyncpg://user:pass@localhost/db`, `redis://localhost:6379`) are LOW severity unless they contain production credentials. Distinguish between: (1) secret fallbacks (JWT_SECRET, POSTGRES_PASSWORD) = CRITICAL, and (2) connection string defaults = LOW/MEDIUM.
 **Affected**: vsm_security.
-**Source**: Fitness build FB12, Phase 6. Security gate incorrectly rated REDIS_URL default and DATABASE_URL fallback as CRITICAL.
+**Source**: Fitness build FB12, Phase 5. Security gate incorrectly rated REDIS_URL default and DATABASE_URL fallback as CRITICAL.

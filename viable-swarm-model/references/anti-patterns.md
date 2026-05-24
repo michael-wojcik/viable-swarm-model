@@ -167,7 +167,7 @@
 **Prevention**: Always investigate. CRITICAL bypasses to S5.
 
 ### 31. Skipping learning phase
-**What**: Not running Phase 5 (reflection).  
+**What**: Not running Phase 8 (reflection).  
 **When**: Session declared "done" after delivery.  
 **Prevention**: Session is NOT COMPLETE without learning.
 

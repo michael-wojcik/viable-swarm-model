@@ -312,7 +312,7 @@ agent prompt are both effective at detecting this pattern.
 **Status**: confirmed
 **Proposed**: 2026-05-23
 **Rationale**: In FB7, the security gate passed L38 (fail-closed GraphQL auth) before the tester fix wave. The tester then reverted the fix, re-introducing the vulnerability. The gate never re-ran.
-**Source**: Fitness build FB7, Phase 6/7
+**Source**: Fitness build FB7, Phase 5/7
 **Experiment**: Compare builds with single security gate vs. builds with post-fix re-check. Count missed regressions.
 **Expected**: Single gate misses 1-2 regressions per build; post-fix check catches 100%.
 **Result**: CONFIRMED. FB7 single gate missed 1 regression.
@@ -325,7 +325,7 @@ agent prompt are both effective at detecting this pattern.
 **Status**: confirmed
 **Proposed**: 2026-05-23
 **Rationale**: GraphQL mutations lacked the same role guards as REST endpoints. The security gate caught this, but the architect, implementation agents, and integration coordinator did not. If the security gate checklist explicitly requires "GraphQL mutations enforce the same RBAC as REST endpoints", this drift would be caught earlier.
-**Source**: Fitness build FB8, Phase 6
+**Source**: Fitness build FB8, Phase 5
 **Experiment**: Add "GraphQL RBAC parity" to security gate checklist. Run next 5 builds and count RBAC drifts.
 **Expected**: 0 drifts after checklist addition.
 **Result**: [to be filled]
@@ -546,7 +546,7 @@ agent prompt are both effective at detecting this pattern.
 **Status**: confirmed
 **Proposed**: 2026-05-23
 **Rationale**: In FB5, GraphQL list queries (`incidents`, `resources`, `evidence`) and geo queries returned unscoped data for any authenticated user, while REST endpoints correctly scoped responder views. The security gate caught this as HIGH. If the security gate checklist explicitly requires "GraphQL list endpoints apply the same ownership filtering as REST", this vulnerability would be caught during the gate, not after delivery.
-**Source**: Fitness build FB5, Phase 6 gap
+**Source**: Fitness build FB5, Phase 5 gap
 **Experiment**:
   1. Review last 5 fitness builds with GraphQL list queries
   2. Count unscoped GraphQL list endpoints per build
@@ -682,7 +682,7 @@ agent prompt are both effective at detecting this pattern.
 **Status**: confirmed
 **Proposed**: 2026-05-23
 **Rationale**: In FB6, the security gate found that WebSocket room subscription (`subscribe_patient`) and unsubscription (`unsubscribe_patient`) did not verify the socket session before allowing room access. The integration checklist (Check 29) verifies event name dictionaries but does NOT verify that room-management handlers check authentication. This gap allowed unauthenticated sockets to join patient rooms.
-**Source**: Fitness build FB6, Phase 6
+**Source**: Fitness build FB6, Phase 5
 **Experiment**:
   1. Review last 5 WebSocket-enabled fitness builds for auth gaps in room subscription
   2. Count unauthenticated room joins per build
@@ -698,8 +698,8 @@ agent prompt are both effective at detecting this pattern.
 
 **Status**: confirmed
 **Proposed**: 2026-05-23
-**Rationale**: In FB6, security findings (CRITICAL Socket.io CORS, unrestricted registration) were discovered in Phase 6 after Phase 5 integration verification had already PASSed. If the security gate ran before integration, these vulnerabilities would be caught earlier, reducing fix wave scope.
-**Source**: Fitness build FB6, Phase 5 & 6 sequencing
+**Rationale**: In FB6, security findings (CRITICAL Socket.io CORS, unrestricted registration) were discovered in the Security gate after Integration verification had already PASSed. If the security gate ran before integration, these vulnerabilities would be caught earlier, reducing fix wave scope.
+**Source**: Fitness build FB6, Security-before-Integration sequencing experiment
 **Experiment**:
   1. Run 5 builds with current order: Integration → Security → Fix
   2. Count security findings discovered AFTER integration PASS
@@ -781,7 +781,7 @@ agent prompt are both effective at detecting this pattern.
 **Status**: confirmed
 **Proposed**: 2026-05-24
 **Rationale**: FB11 had frontend `||` fallbacks for API URLs in `src/graphql/client.ts` and `src/sio/client.ts`. These were missed by foundation, implementation, and integration phases. Only the security gate caught them (as HIGH findings). If the integration checklist explicitly checked for `||` in frontend config files, they would be caught earlier.
-**Source**: Fitness build FB11, Phase 6
+**Source**: Fitness build FB11, Phase 5
 **Experiment**: Add "No `||` fallbacks in frontend API/WS config" to integration checklist. Run next 5 builds. Count missed fallbacks.
 **Expected**: 0 missed fallbacks after checklist addition.
 **Result**: FB12: Both frontend config agents (implementation and fix) explicitly avoided `||` fallbacks. Verification grep found zero matches. Prevention rule successfully transferred.
@@ -794,7 +794,7 @@ agent prompt are both effective at detecting this pattern.
 **Status**: confirmed
 **Proposed**: 2026-05-24
 **Rationale**: FB11's CORS middleware defaulted to `*` with `allow_credentials=True`. This was not caught by foundation, implementation, or integration phases. Only the security gate flagged it as HIGH. If the foundation wave prompt explicitly required "CORS origin must be explicit allowlist, never `*` with credentials", the backend foundation agent would likely implement it correctly.
-**Source**: Fitness build FB11, Phase 6
+**Source**: Fitness build FB11, Phase 5
 **Experiment**: Add CORS requirement to foundation wave prompt. Run 5 builds. Count CORS misconfigs.
 **Expected**: 0 misconfigs after requirement addition.
 **Result**: FB12: Both main.py and sio.py used explicit allowlist from settings. No `*` found. Security gate verified explicit allowlist. Prevention rule successfully transferred.
@@ -860,7 +860,7 @@ agent prompt are both effective at detecting this pattern.
 **Status**: untested
 **Proposed**: 2026-05-24
 **Rationale**: FB12 security gate rated `REDIS_URL` default (`redis://localhost:6379`) and `DATABASE_URL` fallback as CRITICAL findings. These are connection strings, not secrets. The security agent lacks nuance to distinguish between secret fallbacks (JWT_SECRET, POSTGRES_PASSWORD) and non-secret connection defaults (DATABASE_URL, REDIS_URL).
-**Source**: Fitness build FB12, Phase 6
+**Source**: Fitness build FB12, Phase 5
 **Experiment**: Add "Connection string defaults (DATABASE_URL, REDIS_URL) are LOW severity unless they contain embedded passwords" rule to security agent prompt. Run 5 builds. Count false positive CRITICAL ratings.
 **Expected**: 0 false positive CRITICAL ratings for connection string defaults.
 **Result**: [to be filled]
@@ -873,7 +873,7 @@ agent prompt are both effective at detecting this pattern.
 **Status**: confirmed
 **Proposed**: 2026-05-24
 **Rationale**: FB12 security gate found that GraphQL `get_context` in `app/graphql.py` catches JWT errors and returns an unauthenticated context instead of raising. This creates a fail-open pattern where malformed tokens are treated as anonymous requests. The auditor and coordinator did NOT catch this.
-**Source**: Fitness build FB12, Phase 6
+**Source**: Fitness build FB12, Phase 5
 **Experiment**: Add "GraphQL get_context MUST propagate auth exceptions; never return anonymous context on JWT failure" to security checklist and foundation wave requirements. Run 5 GraphQL builds. Count fail-open contexts.
 **Expected**: 0 fail-open contexts after checklist addition.
 **Result**: [to be filled]
