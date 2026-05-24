@@ -291,7 +291,7 @@ EnterPlanMode for user approval. Rejected plans loop back.
 sequential sub-waves to eliminate dependency race conditions.**
 
 **Sub-Wave 2a — Core Contracts (parallel, then verify)**:
-Spawn 2-3 `coder` subagents with `run_in_background=true` for:
+Spawn parallel `coder` subagents with `run_in_background=true` for:
 - `models.py` (including engine + session factory like `AsyncSessionLocal`)
 - `auth.py` + `roles.py` (stable signatures: `get_current_user`, `require_role`)
 - `config.py` (lazy factory, NO default secrets)
@@ -308,7 +308,7 @@ Wait via `TaskOutput(block=true)`. Then S5 runs a **mini-audit**:
 If any check fails → fix BEFORE dispatching Sub-Wave 2b.
 
 **Sub-Wave 2b — Dependent Infrastructure (parallel, then verify)**:
-Spawn 2-3 `coder` subagents with `run_in_background=true` for:
+Spawn parallel `coder` subagents with `run_in_background=true` for:
 - `graphql.py` (imports from models, auth)
 - `sio.py` (imports from models, auth)
 - `main.py` scaffolding (imports from config, registers middleware)

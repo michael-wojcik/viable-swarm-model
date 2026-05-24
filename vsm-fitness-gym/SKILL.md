@@ -73,7 +73,7 @@ Isolates variables — only the specific code pattern being tested. Defined in
 ## 4. The Golden Rule of Parallelism
 
 ```
-Independent experiments -> run_in_background=true (parallel, up to 4)
+Independent experiments -> run_in_background=true (parallel, up to configured limit)
 Dependent experiments   -> sequential (TaskOutput block=true before next)
 ```
 

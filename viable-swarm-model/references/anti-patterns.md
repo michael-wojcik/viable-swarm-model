@@ -147,7 +147,7 @@
 **Prevention**: 80/20 rule — 80% code/configs, 20% docs max.
 
 ### 27. Nested orchestration for simple tasks
-**What**: Sub-orchestrators for <10 agent swarms.  
+**What**: Sub-orchestrators for small agent swarms.  
 **When**: Over-application of VSM recursion.  
 **Prevention**: Main agent handles directly; use sub-orchestrators only when recursion is warranted.
 
@@ -187,7 +187,7 @@
 **Prevention**: Many agents or many tightly-coupled files → consider recursion.
 
 ### 35. Spawning S2/S3 for small sessions
-**What**: Standalone Coordination/Control agents for <10 agents.  
+**What**: Standalone Coordination/Control agents for small sessions.  
 **When**: Over-formal application of VSM.  
 **Prevention**: Main agent performs S2/S3 directly when the task does not warrant standalone agents.
 
