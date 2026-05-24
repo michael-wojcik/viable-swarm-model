@@ -336,3 +336,22 @@ missing until Phase 6.
 **Prevention rule**: Auth endpoints (`/register`, `/login`, password reset) MUST have explicit `@limiter.limit(...)` decorators, even if global `SlowAPIMiddleware` is installed. Global middleware alone is insufficient for per-endpoint control.
 **Affected**: vsm_security, backend S1 agents.
 **Rationale**: FB10 security gate found that `/register` and `/login` had no per-endpoint rate limits despite `SlowAPIMiddleware` being wired globally.
+
+---
+
+## FB12 Discoveries
+
+### L44: Strawberry Auto-CamelCase Requires Explicit Verification
+**Prevention rule**: When using Strawberry GraphQL, ALWAYS verify frontend queries use camelCase field names matching the auto-generated schema. Run `python -c "from app.graphql import schema; print(schema)"` and cross-check against frontend `gql` documents. Snake_case in frontend queries is a BLOCKER when Strawberry is configured for auto-camelCase.
+**Affected**: vsm_coordinator, vsm_auditor, S1-Frontend.
+**Source**: Fitness build FB12, Phase 3b/5. Coordinator falsely claimed "no runtime breakage" because both sides used snake_case, but Strawberry auto-camelCased backend fields.
+
+### L45: GraphQL Context Builders Must Propagate Auth Exceptions
+**Prevention rule**: GraphQL `get_context` MUST NOT catch JWT/auth exceptions and fall back to anonymous context. Auth failures MUST propagate as GraphQL errors. Fail-closed, never fail-open.
+**Affected**: vsm_security, S1-Backend, vsm_auditor.
+**Source**: Fitness build FB12, Phase 6. Security gate found `get_context` catching JWT errors and returning `user = None`, creating a fail-open auth bypass.
+
+### L46: Connection String Defaults Are Not CRITICAL Secrets
+**Prevention rule**: `DATABASE_URL` and `REDIS_URL` defaults (e.g., `postgresql+asyncpg://user:pass@localhost/db`, `redis://localhost:6379`) are LOW severity unless they contain production credentials. Distinguish between: (1) secret fallbacks (JWT_SECRET, POSTGRES_PASSWORD) = CRITICAL, and (2) connection string defaults = LOW/MEDIUM.
+**Affected**: vsm_security.
+**Source**: Fitness build FB12, Phase 6. Security gate incorrectly rated REDIS_URL default and DATABASE_URL fallback as CRITICAL.

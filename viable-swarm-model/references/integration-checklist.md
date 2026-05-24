@@ -225,3 +225,18 @@ correction BEFORE quality gates.
 - [ ] Unauthenticated REST endpoints do not expose draft/private data
 - [ ] GraphQL RBAC parity: every GraphQL mutation enforces the same role requirements as its REST equivalent
 
+
+---
+
+## 36. Strawberry GraphQL Field Name Alignment
+- [ ] Run `python -c "from app.graphql import schema; print(schema)"` to inspect the actual GraphQL schema
+- [ ] Verify that Strawberry auto-camelCased field names (`patientId`, `scheduledAt`) match frontend query field names exactly
+- [ ] Frontend queries MUST use camelCase, not snake_case, when the backend uses Strawberry
+- [ ] Every field queried by frontend exists in the backend schema with matching case
+
+---
+
+## 37. GraphQL Context Fail-Closed
+- [ ] GraphQL `get_context` or equivalent context builders MUST propagate auth exceptions (JWT errors, missing tokens)
+- [ ] Never silently catch auth exceptions and return an anonymous/unauthenticated context
+- [ ] Auth failures MUST result in GraphQL errors or `AuthenticationError`, not `user = None`

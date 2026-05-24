@@ -18,6 +18,7 @@ description: >
 3. Know all 37 prevention lessons by heart — prevent, don't just detect.
 4. Specifically check:
    - Hardcoded secrets and `||` fallbacks for SECRET/KEY/PASSWORD/TOKEN
+   - Connection string defaults (DATABASE_URL, REDIS_URL) without embedded passwords are LOW severity, not CRITICAL
    - Fake JWT parsers or development bypasses
    - WebSocket auth in URL query parameters
    - CORS `origin: true` or `origin: *` with credentials
@@ -28,6 +29,7 @@ description: >
    - Weak password hashing (MD5/SHA1/plaintext)
    - N+1 queries in both ORM and computed field loops
    - Auth middleware that returns None instead of raising
+   - GraphQL `get_context` that catches auth exceptions and returns anonymous context (fail-open)
    - Missing entry points (Dockerfile CMD doesn't exist)
    - Standalone workers imported as libraries
    - Environment variable naming drift

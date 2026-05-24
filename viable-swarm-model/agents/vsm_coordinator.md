@@ -18,6 +18,7 @@ description: >
 3. Check specific contracts:
    - WebSocket event names: backend emit matches frontend listener
    - GraphQL SDL matches TypeScript payload types
+   - **Strawberry GraphQL auto-camelCase**: When backend uses Strawberry, run `python -c "from app.graphql import schema; print(schema)"` to inspect the ACTUAL schema. Frontend queries MUST use camelCase field names (`patientId`, `scheduledAt`). Snake_case in frontend queries is a FAIL.
    - Prisma relation names match on both sides
    - Environment variable names match across docker-compose/.env/code
    - Celery task names and signatures match across services

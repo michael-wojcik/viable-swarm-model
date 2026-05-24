@@ -778,40 +778,40 @@ agent prompt are both effective at detecting this pattern.
 
 ## H49: Frontend config fallback checks must be in the integration checklist
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-24
 **Rationale**: FB11 had frontend `||` fallbacks for API URLs in `src/graphql/client.ts` and `src/sio/client.ts`. These were missed by foundation, implementation, and integration phases. Only the security gate caught them (as HIGH findings). If the integration checklist explicitly checked for `||` in frontend config files, they would be caught earlier.
 **Source**: Fitness build FB11, Phase 6
 **Experiment**: Add "No `||` fallbacks in frontend API/WS config" to integration checklist. Run next 5 builds. Count missed fallbacks.
 **Expected**: 0 missed fallbacks after checklist addition.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: FB12: Both frontend config agents (implementation and fix) explicitly avoided `||` fallbacks. Verification grep found zero matches. Prevention rule successfully transferred.
+**Tested by**: FB12
 
 ---
 
 ## H50: CORS validation must be in the foundation wave requirements
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-24
 **Rationale**: FB11's CORS middleware defaulted to `*` with `allow_credentials=True`. This was not caught by foundation, implementation, or integration phases. Only the security gate flagged it as HIGH. If the foundation wave prompt explicitly required "CORS origin must be explicit allowlist, never `*` with credentials", the backend foundation agent would likely implement it correctly.
 **Source**: Fitness build FB11, Phase 6
 **Experiment**: Add CORS requirement to foundation wave prompt. Run 5 builds. Count CORS misconfigs.
 **Expected**: 0 misconfigs after requirement addition.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: FB12: Both main.py and sio.py used explicit allowlist from settings. No `*` found. Security gate verified explicit allowlist. Prevention rule successfully transferred.
+**Tested by**: FB12
 
 ---
 
 ## H51: REST router auth audit must be a separate checklist item
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-24
 **Rationale**: FB11's REST `events.py` list/get endpoints were completely unauthenticated, exposing draft events. The auditor checked GraphQL auth but missed REST endpoint auth gaps. A dedicated checklist item "All REST list/detail endpoints have auth guards or explicit public documentation" would catch these.
 **Source**: Fitness build FB11, Phase 3b/6
 **Experiment**: Add REST auth checklist item to auditor prompt. Run 5 builds. Count unauthenticated REST endpoints.
 **Expected**: 0 unauthenticated endpoints after addition.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: FB12: All REST list endpoints (`GET /patients/`, `GET /appointments/`, `GET /prescriptions/`, `GET /labs/`) have explicit `Depends(get_current_user)`. Auditor verified this. Prevention rule successfully transferred.
+**Tested by**: FB12
 
 ---
 
@@ -839,3 +839,55 @@ agent prompt are both effective at detecting this pattern.
 **Result**: [to be filled]
 **Tested by**: [fitness build or gym experiment]
 
+
+---
+
+## H55: Strawberry extension names drift between package versions
+
+**Status**: untested
+**Proposed**: 2026-05-24
+**Rationale**: FB12 foundation agent used `DepthLimitExtension` and `QueryComplexityExtension` from `strawberry.extensions`, but the installed version only provides `QueryDepthLimiter`. No `QueryComplexityExtension` exists. S5 had to manually fix the import. Agent prompts assume specific extension names without version awareness.
+**Source**: Fitness build FB12, Phase 2b
+**Experiment**: Check strawberry-graphql version in 3 different environments. Document available extensions. Update agent prompt with version-aware guidance.
+**Expected**: Agent prompt includes "Use QueryDepthLimiter; QueryComplexityExtension may not be available in all versions."
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H56: Security agent over-classifies non-secret config fallbacks as CRITICAL
+
+**Status**: untested
+**Proposed**: 2026-05-24
+**Rationale**: FB12 security gate rated `REDIS_URL` default (`redis://localhost:6379`) and `DATABASE_URL` fallback as CRITICAL findings. These are connection strings, not secrets. The security agent lacks nuance to distinguish between secret fallbacks (JWT_SECRET, POSTGRES_PASSWORD) and non-secret connection defaults (DATABASE_URL, REDIS_URL).
+**Source**: Fitness build FB12, Phase 6
+**Experiment**: Add "Connection string defaults (DATABASE_URL, REDIS_URL) are LOW severity unless they contain embedded passwords" rule to security agent prompt. Run 5 builds. Count false positive CRITICAL ratings.
+**Expected**: 0 false positive CRITICAL ratings for connection string defaults.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H57: GraphQL context builders fail-open when auth exceptions are swallowed
+
+**Status**: confirmed
+**Proposed**: 2026-05-24
+**Rationale**: FB12 security gate found that GraphQL `get_context` in `app/graphql.py` catches JWT errors and returns an unauthenticated context instead of raising. This creates a fail-open pattern where malformed tokens are treated as anonymous requests. The auditor and coordinator did NOT catch this.
+**Source**: Fitness build FB12, Phase 6
+**Experiment**: Add "GraphQL get_context MUST propagate auth exceptions; never return anonymous context on JWT failure" to security checklist and foundation wave requirements. Run 5 GraphQL builds. Count fail-open contexts.
+**Expected**: 0 fail-open contexts after checklist addition.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H58: GraphQL field name alignment check must explicitly verify Strawberry auto-camelCase
+
+**Status**: confirmed
+**Proposed**: 2026-05-24
+**Rationale**: FB12 coordinator gave a **false negative** on GraphQL field names, claiming "no runtime breakage" because both frontend and backend used snake_case. In reality, Strawberry auto-camelCased backend fields to `patientId`, `scheduledAt`, etc., while frontend queries used `patient_id`, `scheduled_at`. This would cause runtime errors. The coordinator agent does not understand Strawberry's auto-camelCase behavior.
+**Source**: Fitness build FB12, Phase 3b/5
+**Experiment**: Add "Strawberry auto-camelCase: verify frontend queries use camelCase matching the actual schema (run `python -c 'from app.graphql import schema; print(schema)'`)" to coordinator checklist. Run 3 GraphQL builds. Count field name mismatches caught before runtime.
+**Expected**: 3/3 mismatches caught early.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]

@@ -653,3 +653,31 @@ main-skill mutations.
 **Rationale**: FB11 revealed that frontend config fallbacks and CORS misconfigs survive all phases until the security gate. Adding Phase 3d (Frontend Config Validation) catches these after implementation. Reordering security gate before integration verification (H33) reduces total fix iterations by catching vulnerabilities before cross-file contract checks.
 **Expected effect**: Future builds catch frontend config issues earlier. Security vulnerabilities are fixed before integration verification, reducing coordinator rework.
 
+
+## Mutation 34 — 2026-05-24
+**Session**: FB12 fitness build evaluation
+**File**: `~/vsm/viable-swarm-model/references/integration-checklist.md`
+**Type**: append
+**Rationale**: Coordinator gave false negative on GraphQL field names in FB12. Adding explicit Strawberry auto-camelCase verification check.
+**Expected effect**: Future builds with Strawberry GraphQL will have field name mismatches caught during integration, not at runtime.
+
+## Mutation 35 — 2026-05-24
+**Session**: FB12 fitness build evaluation
+**File**: `~/vsm/viable-swarm-model/references/security-lessons.md`
+**Type**: append
+**Rationale**: Three new security lessons from FB12: (1) Strawberry camelCase verification, (2) GraphQL fail-closed context, (3) connection string default severity calibration.
+**Expected effect**: Security agent and S1 agents will have better guidance for GraphQL-specific vulnerabilities and severity classification.
+
+## Mutation 36 — 2026-05-24
+**Session**: FB12 fitness build evaluation
+**File**: `~/vsm/viable-swarm-model/agents/vsm_coordinator.md`
+**Type**: refinement
+**Rationale**: Coordinator did not understand Strawberry auto-camelCase behavior, causing false negative.
+**Expected effect**: Coordinator will now explicitly run schema introspection and verify camelCase alignment.
+
+## Mutation 37 — 2026-05-24
+**Session**: FB12 fitness build evaluation
+**File**: `~/vsm/viable-swarm-model/agents/vsm_security.md`
+**Type**: refinement
+**Rationale**: Security agent over-classified connection string defaults as CRITICAL and missed GraphQL fail-open context pattern.
+**Expected effect**: Security agent will distinguish secret fallbacks from connection defaults and check GraphQL context propagation.
