@@ -24,10 +24,10 @@ flowchart TD
     P1A[EnterPlanMode<br/>User Approval]
     P1D{<choice>approved</choice>?}
 
-    P2A[Sub-Wave 2a: Core Contracts<br/>models + auth + config + shared types<br/>2-3 coder agents, parallel]
+    P2A[Sub-Wave 2a: Core Contracts<br/>models + auth + config + shared types<br/>parallel coder agents]
     P2AS[TaskOutput block=true]
     P2AV{<choice>2a mini-audit<br/>passes</choice>?}
-    P2B[Sub-Wave 2b: Dependent Infrastructure<br/>GraphQL + Socket.io + routers + frontend<br/>2-3 coder agents, parallel]
+    P2B[Sub-Wave 2b: Dependent Infrastructure<br/>GraphQL + Socket.io + routers + frontend<br/>parallel coder agents]
     P2BS[TaskOutput block=true]
     P2A_AUDIT[Phase 2b: Audit<br/>vsm_auditor on all foundation files]
     P2M[Phase 2c: Model Validation<br/>S5 checks models.py vs data-model.md]

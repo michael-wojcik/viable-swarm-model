@@ -124,7 +124,7 @@ Shell. Defined in `agents/vsm_tester.md`.
 ## 4. The Golden Rule of Parallelism
 
 ```
-Independent subagents -> run_in_background=true (parallel, up to 4)
+Independent subagents -> run_in_background=true (parallel, up to configured limit in `background.max_running_tasks`)
 Dependent subagents   -> sequential (TaskOutput block=true before next)
 ```
 
@@ -144,7 +144,7 @@ flowchart TD
     P1H{<choice>S3/S4 deadlock</choice>?}
     P1A[EnterPlanMode<br/>User Approval]
     P1D{<choice>approved</choice>?}
-    P2[Phase 2: Foundation Wave<br/>2-3 coder agents<br/>run_in_background=true]
+    P2[Phase 2: Foundation Wave<br/>parallel coder agents<br/>run_in_background=true]
     P2S[TaskOutput block=true]
     P2A[Phase 2b: Audit<br/>vsm_auditor]
     P2M[Phase 2c: Model Validation<br/>S5 checks models.py vs data-model.md]
@@ -261,11 +261,17 @@ Main agent (S5) performs:
 the flow diagram parses. Verify the skill can describe its own phase sequence
 without contradiction. If any check fails → emit algedonic, write diagnosis
 to `~/vsm/viable-swarm-model/references/mutation-log.md`, ask user to review.
-6. **Variety Assessment** (Ashby's Law): Estimate project complexity and classify tier:
-   - **Tier 1** (<1000 lines, 1-2 services): Standard flow, 2-3 parallel agents
-   - **Tier 2** (1000-3000 lines, 2-3 services): Add mid-wave S2 check, extend timeouts, 3-4 agents
+6. **Read runtime capacity**: Read `~/.kimi/config.toml` and extract
+   `background.max_running_tasks` (default 4 if absent). Log this value in
+   `plan.md` as the parallel agent ceiling. NEVER exceed this limit when
+   spawning background subagents.
+7. **Variety Assessment** (Ashby's Law): Estimate project complexity and classify tier.
+   Use the `max_running_tasks` value read in step 6 as the agent ceiling.
+   Do not invent artificial sub-limits — if the host allows 8, use up to 8.
+   - **Tier 1** (<1000 lines, 1-2 services): Standard flow, no mid-wave gates needed
+   - **Tier 2** (1000-3000 lines, 2-3 services): Add Phase 3c mid-wave S2 check, extend timeouts
    - **Tier 3** (3000+ lines, 3+ services): Split into sub-builds OR accept that single-session coverage will be partial. Do not pretend the metasystem has requisite variety it lacks.
-   Log the tier in `plan.md`. Adjust agent allocation and timeout expectations accordingly.
+   Log the tier and the agent ceiling in `plan.md`. Adjust timeout expectations accordingly.
 7. Write `plan.md`.
 
 ### Phase 1: Intelligence (S4)
@@ -328,7 +334,7 @@ BLOCKERs trigger Phase 7.
 
 **Phase 3c: Mid-Wave S2 Check (conditional)** — If project is Tier 2+ and 2+
 parallel coder agents were spawned, spawn a lightweight `vsm_coordinator` check
-on shared contracts after the first 1-2 agents complete. Flag ONLY critical
+on shared contracts after the first agents complete. Flag ONLY critical
 drift that would block incomplete agents. If drift found → emit algedonic,
 halt remaining agents, inject corrections.
 
@@ -599,8 +605,8 @@ Use `TaskList` to monitor active tasks. Use `TaskOutput(block=true)` to
 synchronize dependent waves. Use `TaskStop` to cancel on algedonic signals.
 Use `/tasks` command for interactive browser.
 
-Max 4 concurrent background tasks (configurable via `max_background_tasks`
-in `~/.kimi/config.toml`).
+Max concurrent background tasks defaults to 4, configurable via `background.max_running_tasks`
+in `~/.kimi/config.toml` (e.g., `max_running_tasks = 8`).
 
 ## 13. Session Resumption for Learning
 
