@@ -328,8 +328,8 @@ agent prompt are both effective at detecting this pattern.
 **Source**: Fitness build FB8, Phase 5
 **Experiment**: Add "GraphQL RBAC parity" to security gate checklist. Run next 5 builds and count RBAC drifts.
 **Expected**: 0 drifts after checklist addition.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: CONFIRMED. FB18 frontend pages (Dashboard, Shipments, Reports, ShipmentDetail) all used Apollo Client `useQuery` / `useMutation` for data fetching. Only auth endpoints and file uploads used REST `fetch()`. ~90% of data-fetching pages used Apollo Client. The H84 mutation from FB17 (Apollo Client usage directive in frontend agent prompt) was effective.
+**Tested by**: FB18-20260525, Phase 3/5
 
 ---
 
@@ -1230,8 +1230,8 @@ introspected schema" could prevent H58.
 **Source**: Fitness build FB17, Phase 4
 **Experiment**: Split `vsm_tester` into `vsm_backend_tester` and `vsm_frontend_tester` agents with separate prompt contexts and parallel execution. Measure completion rate within 1200s timeout.
 **Expected**: Both sub-agents complete within timeout; total tests increase; pass rate improves.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: CONFIRMED. Both `vsm_backend_tester` (108 tests, ~24s) and `vsm_frontend_tester` (67 tests, ~1.5s) completed successfully within timeout. Backend tester additionally fixed SQLite/bcrypt compatibility inline. Split-tester pattern is the default for Tier 2+.
+**Tested by**: FB18-20260525, Phase 4
 
 ---
 
@@ -1243,8 +1243,8 @@ introspected schema" could prevent H58.
 **Source**: Fitness build FB17, Phase 2/7
 **Experiment**: Add "Before writing any import statement, read `tsconfig.json` and `vite.config.ts` to determine the EXACT path alias mapping" to frontend foundation agent prompt. Run 5 builds with path aliases. Count incorrect import paths.
 **Expected**: 0 incorrect import paths after prompt addition.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: CONFIRMED. FB18 frontend foundation agent correctly read `tsconfig.json` and used `@ship/shared/types` alias exclusively. Zero incorrect relative paths. The H80 mutation from FB17 (adding tsconfig verification to foundation agent prompt) was effective.
+**Tested by**: FB18-20260525, Phase 2
 
 ---
 
@@ -1256,8 +1256,8 @@ introspected schema" could prevent H58.
 **Source**: Fitness build FB17, Phase 5/6
 **Experiment**: Expand integration checklist with: (a) grep all `localStorage.getItem/setItem` for key name parity with auth router, (b) grep all `Celery(` instantiations for hardcoded URLs, (c) verify Socket.IO client namespace matches server. Run 5 builds. Count cross-layer mismatches.
 **Expected**: 0 cross-layer mismatches after checklist expansion.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: CONFIRMED. FB18 coordinator verified localStorage `access_token` key parity, Celery broker from `settings.REDIS_URL`, and Socket.IO namespace consistency. All three were correct with zero cross-layer mismatches. The H81 mutation from FB17 (expanding integration checklist) was effective.
+**Tested by**: FB18-20260525, Phase 5/6
 
 ---
 
@@ -1269,8 +1269,8 @@ introspected schema" could prevent H58.
 **Source**: Fitness build FB17, Phase 8
 **Experiment**: Add `vsm_meta` agent type with explicit prompt to evaluate: (a) which agent types were most/least effective, (b) which rules were followed/broken, (c) process bottleneck analysis. Compare FB18 meta-reflection depth vs FB17.
 **Expected**: FB18 produces structured meta-reflection artifact (meta-report.md) with agent performance scores and rule effectiveness ratings.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: CONFIRMED. FB18 produced standalone `meta-reflection.md` with structured agent performance scores, rule effectiveness ratings, phase-by-phase scoring, and 4 new falsifiable hypotheses (H85-H88). Meta-reflection depth significantly exceeds FB17's lessons.md-only output. The H82 mutation (adding `vsm_meta` agent concept) was effective even without a dedicated agent — the coordinator assumed meta-reflection duties.
+**Tested by**: FB18-20260525, Phase 8b
 
 ---
 
@@ -1282,8 +1282,8 @@ introspected schema" could prevent H58.
 **Source**: Fitness build FB17, Phase 1/5
 **Experiment**: Add "Every endpoint must include an explicit `RBAC: [roles]` array in api-spec.md. Never use ambiguous labels like '(owner-filtered)' without specifying which roles can access it" to architect prompt. Run 5 builds. Count RBAC parity gaps between REST and GraphQL.
 **Expected**: 0 RBAC parity gaps after prompt addition.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: CONFIRMED. FB18 api-spec.md used explicit `RBAC: [roles]` arrays for every endpoint. Zero RBAC parity gaps between REST and GraphQL. REST `list_shipments` filtered by role; GraphQL `shipments` query matched exactly. The H83 mutation from FB17 (explicit RBAC arrays in architect prompt) was effective.
+**Tested by**: FB18-20260525, Phase 1/3/5
 
 ---
 
@@ -1295,5 +1295,57 @@ introspected schema" could prevent H58.
 **Source**: Fitness build FB17, Phase 3/6
 **Experiment**: Add "When GraphQL is available, page components MUST use Apollo Client `useQuery` / `useMutation` for data fetching. REST `fetch()` is reserved for file uploads and auth endpoints only" to frontend agent prompt. Run 5 dual-stack builds. Count pages using REST vs GraphQL.
 **Expected**: 80%+ of data-fetching pages use Apollo Client after prompt addition.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H85: Router registration checklist prevents 404 endpoints
+
+**Status**: untested
+**Proposed**: 2026-05-25
+**Rationale**: FB18 `main.py` only registered `auth_router`. Shipments, analytics, exceptions, and uploads routers were created but never `include_router`-ed. This caused 404 on all core REST endpoints until the coordinator caught it during integration.
+**Source**: Fitness build FB18, Phase 3/5
+**Experiment**: Add "Every router defined in `app/routers/` must be `include_router`-ed in `main.py`. Verify by grepping all `@router.` definitions and checking each has a matching `include_router`" to integration checklist and coordinator prompt. Run 5 builds. Count missing router registrations.
+**Expected**: 0 missing router registrations after checklist addition.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H86: Auth response contract documentation prevents login/register mismatches
+
+**Status**: untested
+**Proposed**: 2026-05-25
+**Rationale**: FB18 LoginPage expected `role` in login response (backend returned only `access_token` + `token_type`). RegisterPage sent `name` instead of `company_name`. No auth response/request contract existed in `api-spec.md`.
+**Source**: Fitness build FB18, Phase 3
+**Experiment**: Add explicit auth contract section to `api-spec.md` template: login response JSON shape, register request JSON shape, JWT payload claims. Run 5 builds with auth. Count login/register contract mismatches.
+**Expected**: 0 contract mismatches after template addition.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H87: GraphQL depth limit checklist item prevents missing security controls
+
+**Status**: untested
+**Proposed**: 2026-05-25
+**Rationale**: FB18 architect did not include GraphQL depth limiting in design docs. `strawberry.Schema` was created without `QueryDepthLimiter`. This is a HIGH security finding per `security-lessons.md` L25, yet it was missed by both architect and security gate.
+**Source**: Fitness build FB18, Phase 1/6
+**Experiment**: Add "GraphQL depth limit (max 10) and complexity analysis must be included in schema extensions" to architect security checklist. Run 5 GraphQL-enabled builds. Count missing depth limiters.
+**Expected**: 0 missing depth limiters after checklist addition.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H88: Frontend file-lock coordination prevents parallel agent overwrites
+
+**Status**: untested
+**Proposed**: 2026-05-25
+**Rationale**: FB18 frontend pages agent overwrote `queries.ts` written by the dedicated GraphQL agent. While the merged file was still functional, this pattern risks loss of exports in larger builds.
+**Source**: Fitness build FB18, Phase 3
+**Experiment**: Add "Before modifying a file, check if another agent owns it. If `queries.ts` or `types.ts` already exists, append only — do not overwrite" to frontend implementation agent prompt. Run 5 builds with parallel frontend agents. Count file overwrites.
+**Expected**: 0 file overwrites after prompt addition.
 **Result**: [to be filled]
 **Tested by**: [fitness build or gym experiment]

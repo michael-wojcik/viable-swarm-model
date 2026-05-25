@@ -418,3 +418,57 @@
 - **Auditor false positive**: camelCase GraphQL queries flagged as BLOCKER (recurring H39/H58 false positive)
 
 ---
+
+---
+
+## FB18: ShipFlow — Logistics & Shipment Tracking Platform
+
+**Complexity**: High (4-5 waves, ~3500 lines, 4 app services + 2 infra services)
+**Expected Tier**: Tier 2 (same tier as FB16; score < 4.0 prevents escalation)
+**Services**: FastAPI backend, Celery/Redis worker, Socket.io real-time service, React frontend
+**Date**: 2026-05-25
+**Build ID**: FB18-20260525
+
+### Coverage Map
+
+| Capability | Tested by |
+|---|---|
+| **Prevention rule validation** | |
+| H79 (Split testers for Tier 2+) | Backend 108 tests + frontend 67 tests; both completed within timeout |
+| H80 (tsconfig import path verification) | Zero incorrect import paths; `@ship/shared/types` used correctly |
+| H81 (Cross-layer runtime consistency) | localStorage `access_token`, Celery broker from settings, Socket.IO namespace all consistent |
+| H82 (Phase 8b meta-reflection) | Standalone `meta-reflection.md` produced with agent audit, phase scores, hypothesis generation |
+| H83 (Explicit RBAC arrays) | api-spec.md used explicit `RBAC: [roles]` arrays; zero RBAC parity gaps between REST and GraphQL |
+| H84 (Apollo Client usage) | All data-fetching pages use `useQuery` / `useMutation`; REST reserved for uploads/auth |
+| H65 (Lazy engine factory) | `_get_async_engine()` lazy factory in models.py |
+| H69 (Auth router in foundation) | Auth router created in foundation wave with all endpoints |
+| **New hypotheses generated** | |
+| H85 | Router registration checklist prevents 404 endpoints |
+| H86 | Auth response contract documentation prevents login/register mismatches |
+| H87 | GraphQL depth limit checklist item prevents missing security controls |
+| H88 | Frontend file-lock coordination prevents parallel agent overwrites |
+| **Gaps targeted from FB16** | |
+| G1 | Foundation types misalignment — caught by foundation auditor (not zero, but caught) |
+| G2 | Apollo Client dead code — trap passed; all pages use Apollo |
+| G3 | Router registration gap — coordinator caught missing registrations |
+| G4 | GraphQL argument parity — coordinator verified field names and arguments |
+| G5 | Non-existent framework parameters — architect did not propagate traps into api-spec.md |
+
+### Known Stress Points
+- Router registration in main.py is a recurring integration failure mode
+- Auth request/response contracts between frontend and backend are never explicitly documented
+- GraphQL depth limiting is consistently missed in architect design docs
+- Security gate agent (`vsm_security`) failed with LLM provider error — manual fallback required
+- Parallel frontend agents overwrite shared files (queries.ts)
+- Docker-compose `:-` fallbacks persist despite FB2 mutations
+- Strawberry auto-camelCase causes auditor false positives (recurring FB16 issue)
+
+### Result
+- **Score**: 3.6/5.0
+- **BLOCKERs**: 0 after fix wave (foundation: 2 pre-fix, implementation: 3+ pre-fix, integration: 1 pre-fix)
+- **Fix iterations**: 1 major fix wave
+- **Traps caught**: T1 (H83), T2 (H80), T3 (H84), T4 (H81), T5 (H79), T6 (H82)
+- **Traps missed/partial**: None — all 6 deliberate traps passed
+- **Prevention rules validated**: H79, H80, H81, H82, H83, H84, H65, H69
+- **New mutations**: H85-H88, security-lessons.md L25 reinforcement, integration-checklist.md router registration check
+- **Auditor false positive**: camelCase GraphQL queries flagged as BLOCKER (recurring FB16 issue)

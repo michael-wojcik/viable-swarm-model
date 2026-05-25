@@ -406,3 +406,17 @@ missing until Phase 5.
 **Prevention rule**: ALL `Celery()` instantiations MUST use `broker=get_settings().REDIS_URL` (or equivalent settings reference). Hardcoded `redis://localhost:6379/0` breaks containerized deployments and is a HIGH severity configuration error.
 **Affected**: S1-Backend, vsm_security, vsm_coordinator.
 **Source**: Fitness build FB17, Phase 3/6. Celery broker was initially hardcoded to `redis://localhost:6379/0`. Integration coordinator caught it as BLOCKER.
+
+---
+
+## FB18 Discoveries
+
+### L55: GraphQL Depth Limit Must Be in Architect Checklist
+**Prevention rule**: For EVERY build with GraphQL, the architect MUST explicitly specify `QueryDepthLimiter(max_depth=10)` (or similar depth limit) in the schema design. The security gate MUST verify it is installed. "GraphQL depth limiting" is NOT optional — it is a HIGH severity security control for preventing DoS via deeply nested queries.
+**Affected**: vsm_architect, vsm_security, vsm_wiring.
+**Source**: Fitness build FB18, Phase 1/6. Architect did not include depth limiting in design docs. `strawberry.Schema` was created without `QueryDepthLimiter`. Security agent failed with LLM error, so manual scan caught it.
+
+### L56: docker-compose `:-` Fallbacks Persist Despite Prior Mutations
+**Prevention rule**: `docker-compose.yml` MUST NEVER contain `:-` default value syntax (e.g., `${VAR:-default}`). This embeds predictable secrets into container configs. The foundation auditor MUST flag ANY `:-` fallback as ISSUE (or BLOCKER if the default is a password/secret).
+**Affected**: vsm_auditor (foundation), S1-Backend.
+**Source**: Fitness build FB18, Phase 2. `POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-shipflow}` was present despite FB2 mutation adding this rule. The rule exists but was not enforced in this build — suggesting auditor prompt drift or batch-size pressure.

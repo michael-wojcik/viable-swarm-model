@@ -336,3 +336,23 @@ correction BEFORE quality gates.
 - [ ] The handler MUST return JSON with `{"error": "Rate limit exceeded"}` and status 429
 
 **Source**: FB17 backend installed SlowAPIMiddleware but lacked exception handler for RateLimitExceeded (active issue)
+
+## Check 54: Router Registration Completeness
+- [ ] List ALL Python files in `app/routers/` that define a `APIRouter` instance
+- [ ] Verify EVERY router is `include_router`-ed in `main.py` or the ASGI entry point
+- [ ] If a router exists in `app/routers/` but is NOT included in `main.py`, this is a BLOCKER
+- [ ] Verify router prefixes match `api-spec.md` exactly (e.g., `/shipments` not `/shipment`)
+- [ ] Verify the GraphQL router (`GraphQLRouter`) is included if `graphql.py` exists
+
+**Source**: FB18 `main.py` only registered `auth_router`. Shipments, analytics, exceptions, and uploads routers were created but never registered, causing 404 on all core REST endpoints (H85)
+
+## Check 55: Auth Response Contract Documentation
+- [ ] `api-spec.md` MUST include an explicit "Auth Contracts" section with:
+  - Login response JSON shape (exact keys: `access_token`, `token_type`, `role?`, `expires_in?`)
+  - Register request JSON shape (exact keys: `email`, `password`, `company_name`, `role`)
+  - JWT payload claims (exact keys: `sub`, `role`, `exp`, `iat`)
+- [ ] Frontend login page MUST destructure only keys documented in the login response contract
+- [ ] Frontend register page MUST send only keys documented in the register request contract
+- [ ] Any mismatch between frontend expectation and backend response is a BLOCKER
+
+**Source**: FB18 LoginPage expected `role` in login response (backend returned only `access_token` + `token_type`). RegisterPage sent `name` instead of `company_name`. No auth contract existed in api-spec.md (H86)

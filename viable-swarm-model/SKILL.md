@@ -74,6 +74,7 @@ use symlinks or update paths in mutation commands.
 | **S1-Frontend-Tester** | `vsm_frontend_tester` subagent | Custom | Phase 4 | Frontend tests (vitest), build verification |
 | **S1-Tester** | `vsm_tester` subagent | Custom | Phase 4 (Tier 1 only) | Tests, coverage (legacy single-agent mode) |
 | **S1-Security** | `vsm_security` subagent | Custom | Phase 5 | Security findings |
+| **S1-Meta** | `vsm_meta` subagent | Custom | Phase 8b | Performance evaluation, hypothesis generation |
 | **S1-DevOps** | `coder` subagent | Built-in | Phase 4 | Docker, CI/CD |
 | **Algedonic** | Main agent detects/stops | — | Any phase | TaskStop, AskUserQuestion |
 
@@ -349,6 +350,29 @@ Pass Wave 1 outputs as input references. Spawn parallel `coder` subagents.
 Entry point wiring MANDATORY after this wave. Audit + coordination check.
 BLOCKERs trigger Phase 7.
 
+**Frontend Implementation Sub-Wave 3a — Shared Files (sequential, BEFORE pages)**:
+For frontend builds, a **single shared-files agent** runs FIRST and exclusively
+owns these files:
+- `src/graphql/queries.ts` — all queries, mutations, subscriptions
+- `src/graphql/client.ts` — Apollo split link configuration
+- `src/shared/types.ts` — domain types and enums
+- `src/shared/sio-events.ts` — WebSocket event constants
+- `src/stores/*.ts` — all Zustand stores
+
+No other frontend agent may modify these files. The shared-files agent reads
+`data-model.md` and `api-spec.md` to produce complete, correct exports.
+
+**Frontend Implementation Sub-Wave 3b — Pages & Components (parallel)**:
+After shared files are complete and verified, spawn parallel `coder` subagents
+for pages and components. These agents IMPORT from shared files; they never
+write to them. If a page agent needs a new query, it documents the requirement
+and the shared-files agent adds it.
+
+**Backend Implementation (parallel routers)**:
+Backend routers (`app/routers/*.py`) can run in parallel safely because each
+router is a separate file. The wiring agent (`vsm_wiring`) handles `main.py`
+registration exclusively.
+
 **Phase 3c: Mid-Wave S2 Check (conditional)** — If project is Tier 2+ and 2+
 parallel coder agents were spawned, spawn a lightweight `vsm_coordinator` check
 on shared contracts after the first agents complete. Flag ONLY critical
@@ -419,8 +443,28 @@ exceeds single-agent capacity and must be further subdivided or scoped down.
 Report combined coverage.
 
 ### Phase 5: Security Gate
+
+**Step 5a: Automated Scan (vsm_security)**
 Spawn `vsm_security`. CRITICAL/HIGH → stop, fix, re-audit. LOW → document.
 Gather vs. Stop: planned wave → gather; mid-build → emergency stop.
+
+**Step 5b: Mandatory Manual Fallback Checklist (S5)**
+Regardless of whether `vsm_security` succeeds, fails, or errors out, S5 MUST
+run this manual checklist. A single agent failure must never bypass security.
+
+Manual checklist (verify by reading source, not trusting agent report):
+1. **Hardcoded secrets**: grep for `SECRET`, `KEY`, `PASSWORD`, `TOKEN` with `=` or `:` assignment. No `||` fallbacks.
+2. **JWT handling**: Verify `jwt.decode` uses proper signature verification. No `verify_signature=False`.
+3. **Auth middleware**: Verify `get_current_user` raises 401 on ALL failure paths. Never returns `None`.
+4. **CORS**: Verify explicit allowlist. No `*` or `origin: true` with credentials.
+5. **Ownership filtering**: Verify ALL list endpoints filter by authenticated user.
+6. **GraphQL security**: Verify `QueryDepthLimiter` in schema extensions (if GraphQL enabled).
+7. **Password hashing**: Verify bcrypt. No plaintext/MD5/SHA1.
+8. **WebSocket auth**: Verify in-band auth. No JWT in URL query params.
+9. **docker-compose fallbacks**: Verify NO `:-` syntax for secrets.
+
+If the manual checklist finds CRITICAL/HIGH issues that `vsm_security` missed
+or could not report, treat them exactly as automated findings: stop, fix, re-audit.
 
 **Security gate runs BEFORE integration verification** so that vulnerabilities
 are caught before the coordinator invests effort in cross-file contract checks.

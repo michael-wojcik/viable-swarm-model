@@ -379,3 +379,18 @@ Ownership: owner_id == current_user.id (ignored for admin)
 3. grep `src/graphql/queries.ts` exports against `src/pages/` imports
 4. If queries are orphaned → ISSUE: queries exist but no consumer
 **Source**: FB17 ApolloProvider initialized but all 10 pages used REST fetch() (H84)
+
+### Pattern: Auth Request/Response Contract Documentation
+**When**: Any build with authentication (login, register, JWT).
+**What**: The `api-spec.md` MUST include an explicit "Auth Contracts" section documenting:
+1. **Login Response**: exact JSON keys returned by `POST /auth/login` (e.g., `access_token`, `token_type`, `role`, `expires_in`)
+2. **Register Request**: exact JSON keys expected by `POST /auth/register` (e.g., `email`, `password`, `company_name`, `role`)
+3. **JWT Payload**: exact claims in the token payload (e.g., `sub`, `role`, `exp`, `iat`)
+4. **Refresh Response**: exact JSON keys returned by `POST /auth/refresh` (if applicable)
+**Why**: Frontend and backend agents independently implement auth code. Without an explicit contract, frontend agents assume response shapes that backend agents don't return, causing login/register failures that are only caught during integration.
+**How**:
+1. Architect includes Auth Contracts section in `api-spec.md` before any implementation begins
+2. Foundation auditor verifies Auth Contracts section exists and is complete
+3. Frontend tester verifies login/register pages use ONLY keys documented in the contract
+4. Backend tester verifies auth router returns EXACTLY the keys documented in the contract
+**Source**: FB18 LoginPage expected `role` in login response (backend returned only `access_token` + `token_type`). RegisterPage sent `name` instead of `company_name`. No auth contract existed (H86)

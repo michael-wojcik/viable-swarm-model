@@ -850,3 +850,81 @@ main-skill mutations.
 **Type**: refinement
 **Rationale**: FB17 coordinator caught some cross-layer issues but missed others until fix wave. Expanded coordinator scope to include localStorage key parity, Celery broker verification, Apollo Client usage, and rate-limit handler verification.
 **Expected effect**: Coordinator catches cross-layer mismatches before they become BLOCKERs.
+
+## Mutation FB18-1 — 2026-05-25
+
+**Session**: FB18 ShipFlow fitness build evaluation
+**File**: `references/integration-checklist.md`
+**Type**: append
+**Rationale**: FB18 coordinator found that `main.py` only registered `auth_router` while shipments, analytics, exceptions, and uploads routers were created but never `include_router`-ed. This caused 404 on all core REST endpoints.
+**Expected effect**: Future integration checks will explicitly verify every router in `app/routers/` has a matching `include_router()` in `main.py`.
+
+## Mutation FB18-2 — 2026-05-25
+
+**Session**: FB18 ShipFlow fitness build evaluation
+**File**: `references/pattern-library.md`
+**Type**: append
+**Rationale**: FB18 LoginPage expected `role` in login response (backend returned only `access_token` + `token_type`). RegisterPage sent `name` instead of `company_name`. No auth response/request contract existed in `api-spec.md`.
+**Expected effect**: Future builds with auth will include an explicit Auth Contracts section in `api-spec.md` before implementation begins, preventing frontend/backend contract mismatches.
+
+## Mutation FB18-3 — 2026-05-25
+
+**Session**: FB18 ShipFlow fitness build evaluation
+**File**: `references/security-lessons.md`
+**Type**: append
+**Rationale**: FB18 architect did not include GraphQL depth limiting in design docs. `strawberry.Schema` was created without `QueryDepthLimiter`. Security agent failed with LLM error, so manual scan caught it.
+**Expected effect**: Future GraphQL-enabled builds will have depth limiting explicitly required in the architect checklist and verified by the security gate.
+
+## Mutation FB18-4 — 2026-05-25
+
+**Session**: FB18 ShipFlow fitness build evaluation
+**File**: `references/hypotheses.md`
+**Type**: append
+**Rationale**: FB18 revealed four new gaps: (1) router registration missing from integration checklist, (2) auth response contract missing from api-spec.md template, (3) GraphQL depth limit missing from architect checklist, (4) parallel frontend agents overwriting shared files.
+**Expected effect**: Future gym experiments will validate whether these checklist additions prevent their respective failure modes.
+
+## Mutation FB18-5 — 2026-05-25
+
+**Session**: FB18 ShipFlow fitness build evaluation
+**File**: `references/security-lessons.md`
+**Type**: append
+**Rationale**: FB18 docker-compose.yml contained `POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-shipflow}` despite FB2 mutation L37 forbidding `:-` fallbacks. The rule exists but was not enforced in this build.
+**Expected effect**: Foundation auditor will be more vigilant about `:-` fallbacks. If this persists, a structural mutation to auditor prompt may be needed.
+
+## Mutation FB18-6 — 2026-05-25 (Structural Mutation Gate: CLEARED)
+
+**Session**: FB18 ShipFlow fitness build evaluation
+**Structural mutations proposed**: NONE
+**Structural mutations approved**: N/A
+**Structural mutations rejected**: N/A
+**Gate cleared by**: No structural mutations required. All gaps addressed via append-only and refinement mutations.
+
+## Mutation FB18-7 — 2026-05-25 (Structural — USER APPROVED)
+
+**Session**: FB18 ShipFlow fitness build evaluation
+**File**: `SKILL.md` (Phase 3 section)
+**Type**: structural
+**Rationale**: FB18 frontend pages agent overwrote `queries.ts` written by the dedicated GraphQL agent. This is a recurring multi-build pattern (FB1, FB17, FB18). Parallel frontend agents cannot safely share files without explicit sequencing.
+**Expected effect**: Future frontend implementation waves will use a single shared-files agent for `queries.ts`, `types.ts`, `client.ts`, and stores, followed by parallel page agents that import but do not modify shared files.
+**Before**: Phase 3 spawned all frontend agents in parallel with no sequencing rule for shared files.
+**After**: Phase 3 has explicit Sub-Wave 3a (shared files, sequential) and Sub-Wave 3b (pages, parallel).
+
+## Mutation FB18-8 — 2026-05-25 (Structural — USER APPROVED)
+
+**Session**: FB18 ShipFlow fitness build evaluation
+**File**: `SKILL.md` (Phase 5 section), `agents/vsm_security.md`
+**Type**: structural
+**Rationale**: FB18 `vsm_security` agent failed with LLM provider error, leaving the security gate with zero automated coverage. A single agent failure must never bypass an entire phase.
+**Expected effect**: Every future security gate will include a mandatory manual S5 checklist (9 points) regardless of whether `vsm_security` succeeds or fails.
+**Before**: Phase 5 relied solely on `vsm_security` agent output.
+**After**: Phase 5 has Step 5a (automated) + Step 5b (mandatory manual fallback checklist).
+
+## Mutation FB18-9 — 2026-05-25 (Structural — USER APPROVED)
+
+**Session**: FB18 ShipFlow fitness build evaluation
+**File**: `SKILL.md` (agent role map, Phase 8b section), `agents/vsm_meta.md` (new)
+**Type**: structural
+**Rationale**: H82 proposed a `vsm_meta` agent but FB18 produced meta-reflection opportunistically via the coordinator. The SKILL.md already referenced `vsm_meta` in Phase 8b but it was not in the agent role map and had no agent definition file.
+**Expected effect**: Phase 8b will systematically spawn `vsm_meta` with a defined prompt, producing consistent meta-evaluation artifacts across builds.
+**Before**: `vsm_meta` referenced in Phase 8b text but absent from agent role map and agents/ directory.
+**After**: `vsm_meta` added to agent role map; `agents/vsm_meta.md` created with explicit evaluation prompt.

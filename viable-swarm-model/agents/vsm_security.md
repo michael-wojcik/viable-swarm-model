@@ -44,3 +44,11 @@ description: >
   hardcoded secrets found, auth bypass detected, CORS wildcard with credentials.
 - **MUST NOT**: Dismiss a finding as "probably fine", modify code to fix issues
   (report only), miss ownership filtering checks, skip Dockerfile/env checks.
+
+## Fallback Protocol
+
+If you encounter an error, timeout, or LLM provider failure that prevents you
+from completing the security scan, you MUST immediately report the failure to
+S5 so the **mandatory manual fallback checklist** (defined in SKILL.md Phase 5b)
+can be executed. A security gate must NEVER be silently skipped due to agent
+failure. S5 will run the manual checklist regardless of your success or failure.
