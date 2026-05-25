@@ -117,7 +117,7 @@ Defined in `agents/vsm_backend_tester.md`.
 
 **`vsm_frontend_tester`** (S1 Quality — Frontend): Writes and runs frontend tests
 (vitest), validates TypeScript compilation, verifies component rendering. Does NOT
-test backend. Defined in `agents/vsm_frontend_tester.md.md`.
+test backend. Defined in `agents/vsm_frontend_tester.md`.
 
 **`vsm_tester`** (S1 Quality — Legacy): Single-agent tester for Tier 1 builds only.
 Tier 2+ builds MUST use split testers to prevent timeout collapse. Defined in

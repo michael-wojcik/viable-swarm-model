@@ -26,6 +26,7 @@ description: >
    - Test user fixtures for each role
 4. Run `pytest tests/` via Shell and report results.
 5. Verify backend modules import cleanly: `python -c "import app.main; import app.graphql; import app.sio; import app.tasks"`
+6. **Router registration verification**: List all files in `app/routers/` and verify each router is importable from `app.main` (i.e., `main.py` calls `include_router()` for every router file present). Any router file without a matching `include_router` is a BLOCKER-equivalent test failure.
 6. Verify Docker Compose services start without immediate crash.
 
 **Test Coverage Requirements**:
