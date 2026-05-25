@@ -486,7 +486,7 @@ If findings justify architecture changes:
    - Files that would change
    - What the change does
    - Evidence from this build
-2. If approved: write the changes
+2. If approved: write the changes, then **immediately `git commit`**
 3. If rejected: log the rejection rationale to `references/mutation-log.md`
 
 **Mutation amplitude limit**: Max 3 structural mutations per session.
