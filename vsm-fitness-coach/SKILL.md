@@ -211,6 +211,19 @@ The coach does NOT interfere during the build. It observes and records.
 - Project lessons (`~/vsm-fitness-builds/coach/[id]-[date]/.kimi/lessons.md`)
 - Main skill's own meta-reflection output
 
+### Phase 1c: Coach Completion Verification (MANDATORY — HARD BLOCK)
+
+**This gate is NOT optional.** S5 MUST NOT proceed to Phase 2 until ALL of the following are verified. Failure to verify ANY item means the build is NOT complete.
+
+1. **VSM Phase 8b is fully complete** — meta-reflection written, mutations bucketed, skill logs updated.
+2. **Security Gate has zero unfixed HIGH/MEDIUM findings** — LOW findings may be documented, but HIGH/MEDIUM must be fixed or explicitly escalated to the user with written rationale.
+3. **Integration Verification has zero unfixed HIGH/MEDIUM findings** — same rule as Security Gate.
+4. **All tests pass** — backend pytest green, frontend build green, import checks green.
+5. **`.kimi/lessons.md` exists** in the build directory.
+6. **S5 explicitly states**: "Coach Phase 1 complete. VSM build artifacts collected. Proceeding to Coach Phase 2 (Evaluate Performance)."
+
+> **Algedonic signal**: If you find yourself about to declare the fitness build "complete" or ask the user "what next?" before running Coach Phases 2-6, STOP immediately. This is a critical process violation. The coach flow has 6 phases. Phase 1 is only the build execution.
+
 ### Phase 2: Evaluate Performance
 
 Spawn `vsm_trainer` subagent with:
@@ -334,7 +347,14 @@ Write all applied mutations to:
    "Structural Mutation Gate: [X approved, Y rejected, Z deferred]. Proceeding to Phase 6."
    If you cannot say this sentence, the gate is NOT cleared.
 
-5. **Algedonic signal**: If you find yourself about to write
+5. **Structural mutations MUST NOT be applied before this gate is cleared**.
+   If S5 has already written changes to `SKILL.md`, agent definitions, or flow
+   diagrams before presenting them to the user, REVERT those changes immediately
+   and present them as proposals instead. Applying structural mutations without
+   explicit user approval is a critical process violation regardless of whether
+   the user later says "commit the changes."
+
+6. **Algedonic signal**: If you find yourself about to write
    `FB[N+1]-prompt-draft.md` without having asked the user about structural
    mutations, STOP immediately. This is a critical process violation.
    - Halt all Phase 6 activity
@@ -432,6 +452,12 @@ If ANY check fails: revise the prompt. Do NOT write the file with known gaps.
 **Git scope**: The prompt draft is a build artifact for the *next* fitness build. It lives
 in `~/vsm-fitness-builds/coach/` (outside the skill repo) and **must NOT be committed**
 to the skill's git repository. The `git commit` in Phase 5 covers skill mutations only.
+
+> **Algedonic signal**: If you find yourself about to end the session, tell the user
+> "the build is complete," or ask "what would you like to do next?" without having
+> produced `~/vsm-fitness-builds/coach/FB[N+1]-prompt-draft.md`, STOP immediately.
+> This is a critical process violation. Phase 6 is MANDATORY. The coach flow is not
+> complete until the next build prompt is written.
 
 **Why this is last**: The next build prompt is a causal output of the current build's
 empirical results. It cannot be written before evaluation, hypothesis updates, and

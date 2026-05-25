@@ -556,6 +556,26 @@ S5 MUST independently run the full test suite (`pytest tests/` and `vitest run` 
 upstream phases without verification. If tests fail, the meta-reflection must
 acknowledge the failure and propose a root-cause hypothesis.
 
+### Phase 8d: Build Completion Rules (MANDATORY)
+
+Before declaring the VSM workflow "complete," S5 MUST verify:
+
+1. **No unfixed HIGH/MEDIUM findings**: If the Security Gate (Phase 5) or
+   Integration Verification (Phase 6) produced HIGH or MEDIUM findings, they
+   must be fixed or explicitly escalated to the user with written rationale.
+   Documenting them as "known limitations" and declaring completion is a
+   process violation. LOW findings may be documented.
+
+2. **Parent flow handoff**: If this VSM workflow was invoked BY A PARENT FLOW
+   (e.g., `/flow:vsm-fitness-coach`), Phase 8 completion does NOT mean the
+   session is over. S5 MUST return control to the parent flow for its post-build
+   phases. Do NOT ask the user "what next?" or declare the overall task complete
+   until the parent flow's phases are finished.
+
+> **Algedonic signal**: If you find yourself about to say "all phases complete"
+> while HIGH/MEDIUM findings remain unfixed, or while a parent flow still has
+> phases to run, STOP immediately. The build is NOT complete.
+
 After verification, proceed with:
 
 1. **Effectiveness audit**: Which prevention rules caught real bugs? Which

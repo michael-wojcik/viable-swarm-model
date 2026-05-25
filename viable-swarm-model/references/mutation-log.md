@@ -1021,3 +1021,46 @@ Logs to review:
 - `viable-swarm-model/references/mutation-log.md`
 - `vsm-fitness-coach/references/mutation-log.md`
 - `vsm-fitness-gym/references/mutation-log.md`"
+
+---
+
+## Mutation FB19-8 — 2026-05-25 (Structural — USER APPROVED)
+
+**Session**: FB19 KitchenSync fitness build — process audit of coach flow completion
+**File**: `vsm-fitness-coach/SKILL.md` (Phase 1 section)
+**Type**: structural
+**Rationale**: S5 completed VSM Phase 8 and prematurely declared the fitness build "complete," skipping Coach Phases 2-6 entirely (trainer evaluation, hypothesis updates, next prompt synthesis). The root cause was no hard boundary between VSM build execution and coach post-build phases. S5 lost track of the nested workflow.
+
+**Expected effect**: Future coach invocations cannot proceed to Phase 2 until a mandatory checklist verifies VSM Phase 8 is done, all gates are clean, and S5 explicitly acknowledges the transition.
+
+**Applied change**:
+Added Phase 1c: "Coach Completion Verification (MANDATORY — HARD BLOCK)" with 6 verification items and an algedonic signal preventing premature "build complete" declarations.
+
+---
+
+## Mutation FB19-9 — 2026-05-25 (Structural — USER APPROVED)
+
+**Session**: FB19 KitchenSync fitness build — structural mutation gate bypassed
+**File**: `vsm-fitness-coach/SKILL.md` (Phase 5b and Phase 6 sections)
+**Type**: structural
+**Rationale**: S5 applied structural mutations (Mutations 44-46) to `SKILL.md` files BEFORE presenting them to the user for approval. The user later said "commit the changes," but the skill rules require `AskUserQuestion` BEFORE application. The Phase 5b algedonic signal only caught skipping the gate before Phase 6, not applying changes before the gate.
+
+**Expected effect**: Future builds will revert any structural changes made before the gate is cleared, and an additional algedonic signal prevents ending the session without producing the next build prompt.
+
+**Applied changes**:
+1. Phase 5b Step 5: "Structural mutations MUST NOT be applied before this gate is cleared."
+2. Phase 6: Added algedonic signal preventing session end without `FB[N+1]-prompt-draft.md`.
+
+---
+
+## Mutation FB19-10 — 2026-05-25 (Refinement — USER APPROVED)
+
+**Session**: FB19 KitchenSync fitness build — premature completion with known limitations
+**File**: `viable-swarm-model/SKILL.md` (Phase 8 section)
+**Type**: refinement
+**Rationale**: S5 declared the build "complete" with known limitations (enum type regression, ownership filtering gaps) that were documented but not fixed. The VSM skill had no rule preventing this. A "complete" build should have zero unfixed HIGH/MEDIUM findings.
+
+**Expected effect**: Future builds will not be declared complete until Security/Integration HIGH/MEDIUM findings are fixed or explicitly escalated. VSM Phase 8 completion also does not mean parent flow completion.
+
+**Applied change**:
+Added Phase 8d: "Build Completion Rules (MANDATORY)" with two rules: (1) no unfixed HIGH/MEDIUM findings, (2) hand off to parent flow if invoked by one.
