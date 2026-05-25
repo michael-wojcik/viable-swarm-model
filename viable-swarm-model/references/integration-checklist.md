@@ -356,3 +356,23 @@ correction BEFORE quality gates.
 - [ ] Any mismatch between frontend expectation and backend response is a BLOCKER
 
 **Source**: FB18 LoginPage expected `role` in login response (backend returned only `access_token` + `token_type`). RegisterPage sent `name` instead of `company_name`. No auth contract existed in api-spec.md (H86)
+
+## Check 56: Zero Deprecation Warnings From Application Code
+- [ ] Run `pytest tests/` and capture all warnings
+- [ ] Filter for warnings originating from application code (not test frameworks, not dependencies)
+- [ ] Pydantic class-based `Config` MUST NOT be used — use `ConfigDict` instead
+- [ ] FastAPI `@app.on_event("startup")` / `@app.on_event("shutdown")` MUST NOT be used — use `lifespan` context managers instead
+- [ ] Any deprecation warning from application code is an ISSUE (moderate severity)
+- [ ] Any deprecation warning that will break on next major version is a BLOCKER
+
+**Source**: FB20 embedded Pydantic V2 class-based `Config` in 4 files (`config.py`, `properties.py`, `leases.py`, `tenants.py`) and FastAPI `@app.on_event` in `main.py`. Neither foundation auditor nor security gate flagged these. They will break on Pydantic V3 / next FastAPI major.
+
+## Check 57: Re-Audit Report Artifact Exists After Fix Wave
+- [ ] After Phase 7 fix wave, a re-audit report MUST be written to the build directory
+- [ ] The report lists every file modified during the fix wave
+- [ ] For each modified file: PASS / ISSUE / BLOCKER with rationale
+- [ ] The report explicitly states whether any regressions were introduced
+- [ ] If no re-audit report exists, Phase 7 is NOT complete
+
+**Source**: FB20 resolved 9 security findings in Phase 7, but no re-audit report file exists in the build directory. `meta-report.md` notes: "no re-audit report file exists... implying re-audit occurred, but no re-audit report file exists."
+

@@ -125,6 +125,12 @@ test backend. Defined in `agents/vsm_frontend_tester.md`.
 Tier 2+ builds MUST use split testers to prevent timeout collapse. Defined in
 `agents/vsm_tester.md`.
 
+**`vsm_meta`** (S1 Meta — Evaluation): Evaluates the skill's own performance after a
+build. Reads build artifacts, runs independent test verification, scores agent
+effectiveness, audits prevention rules, and generates falsifiable hypotheses.
+Does NOT write code or design systems. Produces `meta-report.md`. Defined in
+`agents/vsm_meta.md`.
+
 ### Agent Output Types
 
 **Writes implementation code:**
@@ -516,6 +522,19 @@ After project reflection, spawn `vsm_meta` subagent to evaluate the skill's own
 performance. This agent produces a standalone `meta-report.md` with independent
 test verification, agent performance scores, rule effectiveness ratings, and
 process bottleneck analysis.
+
+**Step 8b-1: Spawn `vsm_meta` (MANDATORY — HARD BLOCK)**
+S5 MUST spawn `vsm_meta` before proceeding. S5 MUST NOT write meta-reflection
+content directly.
+
+**Step 8b-2: Verify `meta-report.md` exists**
+Before declaring Phase 8b complete, verify `meta-report.md` exists in the build
+directory. If it does not exist, Phase 8b is NOT complete. Re-spawn `vsm_meta`
+or fix whatever prevented it from writing the file.
+
+> **Algedonic signal**: If S5 is about to write `meta-reflection.md` manually,
+> STOP immediately. This is a process violation. The builder cannot evaluate
+> itself. Spawn `vsm_meta`.
 
 ### Phase 8c: Mutation Verification Checkpoint (MANDATORY)
 Before declaring Phase 8 complete, S5 MUST run the Mutation Verification

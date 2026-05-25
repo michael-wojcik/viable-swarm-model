@@ -420,3 +420,30 @@ missing until Phase 5.
 **Prevention rule**: `docker-compose.yml` MUST NEVER contain `:-` default value syntax (e.g., `${VAR:-default}`). This embeds predictable secrets into container configs. The foundation auditor MUST flag ANY `:-` fallback as ISSUE (or BLOCKER if the default is a password/secret).
 **Affected**: vsm_auditor (foundation), S1-Backend.
 **Source**: Fitness build FB18, Phase 2. `POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-shipflow}` was present despite FB2 mutation adding this rule. The rule exists but was not enforced in this build — suggesting auditor prompt drift or batch-size pressure.
+
+---
+
+## FB20 Discoveries
+
+### L57: GraphQL Subscription Resolvers Must Verify Resource Ownership Before Yielding
+**Prevention rule**: Any GraphQL subscription resolver that filters by `resource_id` (e.g., `property_id`, `room_id`, `project_id`) MUST verify that `current_user` has access to that specific resource BEFORE yielding events. Role checks (`_ensure_role`) are NOT sufficient — a tenant with role="tenant" could subscribe to `property_id=None` and receive ALL events, or subscribe to another tenant's `property_id` and receive cross-tenant data.
+**Affected**: vsm_security, S1-Backend, vsm_backend_tester.
+**Source**: Fitness build FB20, Phase 5/8b. `vsm_security` found 9 findings but missed subscription ACL. `vsm_meta` later identified that `maintenance_status_update` and `payment_received` yielded events without ownership verification. Severity: HIGH (information disclosure across tenant boundaries).
+**Checklist addition**:
+- [ ] Every subscription resolver with a `resource_id` parameter queries the database to verify ownership/lease/membership
+- [ ] `property_id=None` subscriptions are REJECTED with 403 unless the user is a super-admin
+- [ ] The verification happens BEFORE entering the `while True` generator loop
+
+### L58: Rate Limiting Must Be Distributed-Safe
+**Prevention rule**: In-memory rate limiting (`defaultdict` + `asyncio.Lock`) is NOT acceptable for production deployments. Under multi-process uvicorn workers, each process has isolated memory, allowing `limit × N_workers` requests before any 429 is returned. Rate limiting MUST use a shared store (Redis, memcached) or be documented as a known limitation.
+**Affected**: vsm_security, S1-Backend.
+**Source**: Fitness build FB20, Phase 3/6. `graphql.py:33` used `_rate_limit_store: defaultdict(list)` for GraphQL auth mutation rate limiting. Security gate did not flag this because the checklist had no "distributed-safe" requirement.
+**Checklist addition**:
+- [ ] If rate limiting is implemented, verify it uses a shared store OR is explicitly documented as dev-only
+- [ ] In-memory rate limiting (`dict`/`defaultdict` with `asyncio.Lock`) flagged as MEDIUM severity issue
+
+### L59: Refresh Token Endpoint Must Verify User Still Exists and Is Active
+**Prevention rule**: `POST /auth/refresh` (or GraphQL `refreshToken`) MUST query the database for the user identified by the refresh token's `sub` claim BEFORE minting new tokens. If the user has been deleted or deactivated (`is_active=False`), the endpoint MUST return 401. Decoding a valid JWT is NOT sufficient — the user record is the source of truth.
+**Affected**: vsm_security, S1-Backend.
+**Source**: Fitness build FB20, Phase 5. Security gate found that `routers/auth.py` refresh endpoint decoded the JWT and immediately minted new tokens without a DB check. Fixed in Phase 7.
+

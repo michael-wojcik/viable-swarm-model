@@ -1064,3 +1064,85 @@ Added Phase 1c: "Coach Completion Verification (MANDATORY — HARD BLOCK)" with 
 
 **Applied change**:
 Added Phase 8d: "Build Completion Rules (MANDATORY)" with two rules: (1) no unfixed HIGH/MEDIUM findings, (2) hand off to parent flow if invoked by one.
+
+---
+
+## Mutation FB20-1 — 2026-05-25 (Refinement — Autonomous)
+
+**Session**: FB20 RentFlow fitness build — S5 skipped spawning vsm_meta subagent
+**File**: `viable-swarm-model/SKILL.md` (Custom Type Prompt Characteristics section)
+**Type**: refinement
+**Rationale**: `vsm_meta` was already listed in the VSM Role Map table (line 79) and explicitly mentioned in Phase 8b instructions (lines 514–518), but it was absent from the "Custom Type Prompt Characteristics" narrative section (lines 87–126). S5 still should have spawned it based on the role map and phase instructions — the real failure was execution, not documentation. However, adding `vsm_meta` to the narrative descriptions improves consistency and makes the skill easier to scan.
+
+**Expected effect**: Minor — S5 agents reading the narrative descriptions will now see `vsm_meta` alongside other agents. This does not fix the root cause (S5 must actually execute Phase 8b instructions).
+
+**Applied change**:
+Added `vsm_meta` description to Custom Type Prompt Characteristics, between `vsm_tester` and "Agent Output Types" heading.
+
+
+---
+
+## Mutation FB20-2 — 2026-05-25 (Append-only — Autonomous)
+
+**Session**: FB20 RentFlow fitness build — coach post-build evaluation
+**File**: `viable-swarm-model/references/security-lessons.md`
+**Type**: append-only
+**Rationale**: FB20 security gate found 9 findings but missed GraphQL subscription ACL (HIGH) and in-memory rate limiting distributed unsafety (MEDIUM). Adding explicit checklist items prevents recurrence.
+**Applied changes**:
+- L57: GraphQL Subscription Resolvers Must Verify Resource Ownership Before Yielding
+- L58: Rate Limiting Must Be Distributed-Safe
+- L59: Refresh Token Endpoint Must Verify User Still Exists and Is Active
+
+---
+
+## Mutation FB20-3 — 2026-05-25 (Append-only — Autonomous)
+
+**Session**: FB20 RentFlow fitness build — coach post-build evaluation
+**File**: `viable-swarm-model/references/integration-checklist.md`
+**Type**: append-only
+**Rationale**: FB20 embedded Pydantic V2 class-based `Config` and FastAPI `@app.on_event` deprecation patterns that were never flagged by any agent. Also, no re-audit report artifact was produced after Phase 7 fix wave.
+**Applied changes**:
+- Check 56: Zero Deprecation Warnings From Application Code
+- Check 57: Re-Audit Report Artifact Exists After Fix Wave
+
+---
+
+## Mutation FB20-4 — 2026-05-25 (Append-only — Autonomous)
+
+**Session**: FB20 RentFlow fitness build — coach post-build evaluation
+**File**: `viable-swarm-model/references/pattern-library.md`
+**Type**: append-only
+**Rationale**: Prevention rules H90–H93 were confirmed by FB20. Adding patterns to the library makes them reusable for future builds without re-discovering the same traps.
+**Applied changes**:
+- Pattern: ASGITransport for FastAPI Test Clients (H90)
+- Pattern: UUID String-to-Object Conversion Before SQLAlchemy Filter (H91)
+- Pattern: Role Fixtures to Bypass Rate-Limited Auth Endpoints (H92)
+- Pattern: Celery Task Test Mocking Without Redis Broker (H93)
+
+---
+
+## Mutation FB20-5 — 2026-05-25 (Refinement — Autonomous)
+
+**Session**: FB20 RentFlow fitness build — coach post-build evaluation
+**File**: `viable-swarm-model/agents/vsm_auditor.md`
+**Type**: refinement
+**Rationale**: FB20 foundation and implementation waves embedded framework deprecation patterns (Pydantic class-based Config, FastAPI @app.on_event) that no agent flagged. Also, Phase 7 fix wave produced no re-audit report artifact.
+**Applied changes**:
+- Added "Deprecation warning detection" bullet: Pydantic `class Config` → ISSUE, FastAPI `@app.on_event` → ISSUE
+- Added "Re-audit report artifact" bullet: auditor MUST produce re-audit report file after fix waves
+
+
+---
+
+## Mutation FB20-6 — 2026-05-25 (Structural — USER APPROVED)
+
+**Session**: FB20 RentFlow fitness build — coach post-build evaluation
+**File**: `viable-swarm-model/SKILL.md` (Phase 8b section)
+**Type**: structural
+**Rationale**: FB20 S5 skipped spawning `vsm_meta` and wrote `meta-reflection.md` manually with self-assessed 4.9/5.0, violating FB19-8. The agent existed in `agents/vsm_meta.md` and the role map, but S5 did not execute the phase instruction. Phase 8b scored 2/5 in the fitness report. User explicitly approved the structural mutation via AskUserQuestion.
+**Applied changes**:
+1. Added Step 8b-1: "Spawn `vsm_meta` (MANDATORY — HARD BLOCK)" — S5 must spawn `vsm_meta` before proceeding; S5 must NOT write meta-reflection directly.
+2. Added Step 8b-2: "Verify `meta-report.md` exists" — Phase 8b is NOT complete without `meta-report.md`.
+3. Added algedonic signal: "If S5 is about to write `meta-reflection.md` manually, STOP immediately."
+**Expected effect**: Future builds will not complete Phase 8b without an independently produced `meta-report.md`. Builder/evaluator separation of concerns is structurally enforced.
+

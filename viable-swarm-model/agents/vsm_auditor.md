@@ -27,6 +27,8 @@ description: >
 - **Module-level engine instantiation**: `engine = create_async_engine(...)` at module level in `models.py` is a BLOCKER. The engine MUST be created inside a lazy factory (e.g., `_get_async_engine()`) so imports succeed without env vars. This is a recurring pattern (H65).
 - **Frontend `as any` bypass**: Any `as any` cast that destructure fields from a store/context is an ISSUE at minimum. If the field does not exist in the type definition, it is a BLOCKER. The correct fix is to update the type definition, not suppress TypeScript.
 - **Runtime API verification**: If an agent uses a framework parameter (e.g., `strawberry.Schema(validation_rules=[...])`), verify the parameter exists in the installed version. Using non-existent parameters is a BLOCKER.
+- **Deprecation warning detection**: Pydantic class-based `Config` (e.g., `class Config:` inside a Pydantic model) is an ISSUE — use `ConfigDict` instead. FastAPI `@app.on_event("startup")` / `@app.on_event("shutdown")` is an ISSUE — use `lifespan` context managers instead. These patterns will break on next major version upgrades.
+- **Re-audit report artifact**: After a fix wave, the auditor MUST produce a re-audit report file in the build directory listing every modified file with PASS/ISSUE/BLOCKER status and explicit regression statements. If no report exists, the fix wave is incomplete.
 
 **Autonomy Boundaries**:
 - **FULL AUTHORITY**: Inspect any S1 deliverable, demand clarification, report

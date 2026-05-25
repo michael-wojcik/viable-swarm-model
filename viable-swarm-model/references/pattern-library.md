@@ -412,3 +412,68 @@ were only caught when the user asked "any other mutations?"
 4. If any row is `overlooked`, STOP — apply the mutation, update the table, re-verify
 5. Process-level gaps (e.g., "mutation tracking missing") must themselves be addressed
 **Source**: FB18 Phase 8b mutation orphan failure — structural and refinement mutations were proposed but not applied systematically (H89)
+
+### Pattern: ASGITransport for FastAPI Test Clients
+**When**: Writing pytest integration tests for FastAPI with `httpx>=0.28.0`.
+**What**: Use `httpx.ASGITransport(app=app)` instead of the deprecated `AsyncClient(app=app)` keyword argument.
+**Why**: `httpx` 0.28+ removed the `app=` parameter from `AsyncClient.__init__`. Tests using the old pattern fail with `TypeError: AsyncClient.__init__() got an unexpected keyword argument 'app'`.
+**How**:
+```python
+from httpx import ASGITransport, AsyncClient
+
+async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    response = await client.get("/health")
+```
+**Source**: FB19 test suite failed with `AsyncClient.__init__() got an unexpected keyword argument 'app'`. FB20 `conftest.py:78` uses `ASGITransport(app=app)`. All 56 backend tests pass. (H90)
+
+### Pattern: UUID String-to-Object Conversion Before SQLAlchemy Filter
+**When**: Using `UUID(as_uuid=True)` primary keys with SQLite test databases.
+**What**: Convert string UUIDs (e.g., from JWT `sub` claim) to `uuid.UUID` objects before using them in SQLAlchemy `where()` clauses.
+**Why**: SQLite with `UUID(as_uuid=True)` expects `uuid.UUID` objects. Passing a string raises `AttributeError: 'str' object has no attribute 'hex'`.
+**How**:
+```python
+import uuid
+from jwt.exceptions import InvalidTokenError
+
+payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+user_id = uuid.UUID(payload["sub"])  # convert BEFORE filter
+result = await db.execute(select(User).where(User.id == user_id))
+```
+**Source**: FB19 `get_current_user` passed string `sub` to `User.id == user_id`, causing SQLite `AttributeError`. FB20 `auth.py:70` converts to `uuid.UUID(sub)`. (H91)
+
+### Pattern: Role Fixtures to Bypass Rate-Limited Auth Endpoints
+**When**: Writing tests for applications with SlowAPI rate limits on `/auth/register`.
+**What**: Seed users directly into the test database via fixtures instead of calling rate-limited registration endpoints repeatedly.
+**Why**: SlowAPI's `5/minute` limit on `/auth/register` causes 429 errors when multiple test files each register users. Direct DB insertion bypasses the endpoint and the rate limit entirely.
+**How**:
+```python
+@pytest.fixture
+async def landlord_user(db):
+    user = User(email="landlord@test.com", password_hash=hash_password("password"), role="landlord")
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return user
+```
+**Source**: FB19 `test_orders.py` + `test_auth.py` combined for 6 `/auth/register` calls, hitting the 5/minute limit. FB20 `conftest.py` provides `landlord_user`, `tenant_user`, `manager_user` fixtures. 56 tests pass with zero 429s. (H92)
+
+### Pattern: Celery Task Test Mocking Without Redis Broker
+**When**: Writing tests for Celery tasks when Redis is not running in the test environment.
+**What**: Mock `.delay()` calls and test the direct task function. Do not let Celery attempt broker connections during test collection or execution.
+**Why**: Module-level `celery_app = Celery("app")` triggers broker connection on import if `broker_url` points to `redis://localhost:6379`. Without a running Redis, tests fail with `ConnectionRefusedError`.
+**How**:
+```python
+from unittest.mock import patch
+from app.tasks import send_notification
+
+def test_send_notification_direct():
+    result = send_notification("user-123", "Hello")
+    assert result["sent"] is True
+
+@patch("app.tasks.send_notification.delay")
+def test_send_notification_delayed(mock_delay):
+    send_notification.delay("user-123", "Hello")
+    mock_delay.assert_called_once_with("user-123", "Hello")
+```
+**Source**: FB19 Celery tests failed with `ConnectionRefusedError` on `redis://localhost:6379`. FB20 `test_tasks.py:28-33` mocks `.delay()` and tests direct calls. 6 task tests pass with no Redis running. (H93)
+
