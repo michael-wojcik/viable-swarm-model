@@ -178,7 +178,8 @@ Apply append-only and refinement mutations autonomously. The gym's controlled
 experiment provides strong, falsifiable evidence for these.
 
 For structural mutations, present to user via `AskUserQuestion` with evidence
-from the experiment. If rejected, log rationale to `references/mutation-log.md`.
+from the experiment. If approved: write the changes, then **immediately `git commit`**.
+If rejected, log rationale to `references/mutation-log.md`.
 
 Write all applied mutations to:
 - Main skill: `references/*.md`, `agents/*.md`, `references/hypotheses.md`, `references/experiments.md`, `references/mutation-log.md`
