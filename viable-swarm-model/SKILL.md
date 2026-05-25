@@ -566,15 +566,16 @@ Before declaring the VSM workflow "complete," S5 MUST verify:
    Documenting them as "known limitations" and declaring completion is a
    process violation. LOW findings may be documented.
 
-2. **Parent flow handoff**: If this VSM workflow was invoked BY A PARENT FLOW
-   (e.g., `/flow:vsm-fitness-coach`), Phase 8 completion does NOT mean the
-   session is over. S5 MUST return control to the parent flow for its post-build
-   phases. Do NOT ask the user "what next?" or declare the overall task complete
-   until the parent flow's phases are finished.
+2. **Parent flow handoff (conditional)**: If this VSM workflow was invoked BY A
+   PARENT FLOW (e.g., `/flow:vsm-fitness-coach`), Phase 8 completion does NOT
+   mean the parent session is over. S5 MUST return control to the parent flow
+   for its post-build phases. When VSM is run standalone (`/flow:viable-swarm-model`),
+   this rule does not apply — Phase 8d is complete once rule 1 is satisfied.
 
 > **Algedonic signal**: If you find yourself about to say "all phases complete"
-> while HIGH/MEDIUM findings remain unfixed, or while a parent flow still has
-> phases to run, STOP immediately. The build is NOT complete.
+> while HIGH/MEDIUM findings remain unfixed, STOP immediately. The build is NOT
+> complete. If a parent flow invoked this build, also verify the parent flow has
+> finished its remaining phases.
 
 After verification, proceed with:
 
