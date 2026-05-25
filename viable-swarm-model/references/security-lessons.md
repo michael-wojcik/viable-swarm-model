@@ -447,3 +447,8 @@ missing until Phase 5.
 **Affected**: vsm_security, S1-Backend.
 **Source**: Fitness build FB20, Phase 5. Security gate found that `routers/auth.py` refresh endpoint decoded the JWT and immediately minted new tokens without a DB check. Fixed in Phase 7.
 
+### L60: Self-Registration Allowlist Must Exclude Superuser Roles
+**Prevention rule**: REST `POST /auth/register` and GraphQL `register` MUST NOT accept `"admin"`, `"superuser"`, or equivalent elevated roles from client input. Admin elevation MUST require a separate privileged operation (admin-only endpoint, invitation, or manual approval). The security gate must verify BOTH that an allowlist exists AND that the allowlist excludes superuser roles. Self-registration must default to the lowest-privilege role.
+**Affected**: vsm_security, vsm_architect, all backend S1 agents.
+**Source**: FB21 security gate Check #13 falsely PASSed `ALLOWED_ROLES = {"student", "instructor", "admin", "teaching_assistant"}`. Any user could register as admin, enabling immediate privilege escalation. This is a direct recurrence of L38/L47 but the existing rules were not specific enough about allowlist composition.
+

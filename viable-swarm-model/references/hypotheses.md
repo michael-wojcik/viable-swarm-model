@@ -1532,3 +1532,147 @@ introspected schema" could prevent H58.
 **Result**: [to be filled]
 **Tested by**: [fitness build or gym experiment]
 
+
+
+---
+
+## H94: Phase 8b MUST spawn vsm_meta; S5 must NOT write meta-reflection.md manually
+
+**Status**: confirmed
+**Proposed**: 2026-05-25
+**Rationale**: S5 writing its own meta-reflection creates a self-evaluation bias. The builder cannot objectively score its own performance.
+**Source**: Fitness build FB20, Phase 8b gap
+**Experiment**: Run FB21 with vsm_meta spawned for Phase 8b. Verify meta-report.md is produced by vsm_meta, not S5.
+**Expected**: meta-report.md exists and contains independent test verification with actual pytest/npm test counts.
+**Result**: CONFIRMED. vsm_meta produced `meta-report.md` with independent verification: 30 backend tests passed, 37 frontend tests passed, TypeScript compilation PASS, frontend build PASS. No manual meta-reflection.md written by S5.
+**Tested by**: FB21-20260525
+
+---
+
+## H95: GraphQL subscriptions MUST verify course access before yielding; course_id=None → 403
+
+**Status**: confirmed
+**Proposed**: 2026-05-25
+**Rationale**: FB20 GraphQL subscriptions yielded events without verifying the requesting user had access to the resource. A tenant could subscribe to `property_id=None` and receive ALL maintenance updates across all properties.
+**Source**: Fitness build FB20, Phase 5/8b
+**Experiment**: Verify FB21 subscriptions reject `course_id=None` with 403 before yielding.
+**Expected**: All 4 subscription resolvers (`lesson_published`, `grade_released`, `enrollment_update`, `course_capacity_alert`) call `_verify_course_access` and reject `None` with HTTPException(403).
+**Result**: CONFIRMED. All 4 subscriptions reject `course_id=None` at `graphql.py:1177-1180`, `:1196-1199`, `:1215-1218`, `:1234-1237`.
+**Tested by**: FB21-20260525
+
+---
+
+## H96: Zero deprecation warnings — ConfigDict (not class Config), lifespan (not @app.on_event)
+
+**Status**: confirmed
+**Proposed**: 2026-05-25
+**Rationale**: FB20 embedded Pydantic V2 class-based `Config` in 4 files and FastAPI `@app.on_event` in main.py. These will break on next major version upgrades.
+**Source**: Fitness build FB20, Phase 2/5
+**Experiment**: grep for `class Config` and `@app.on_event` in FB21 backend. Verify zero matches in application code.
+**Expected**: Zero occurrences of either pattern in app code.
+**Result**: CONFIRMED. `grep -rn "class Config\|@app.on_event" backend/app/` returned empty. Only deprecation warnings were from `slowapi` third-party library (Python 3.14 `asyncio.iscoroutinefunction`), not app code.
+**Tested by**: FB21-20260525
+
+---
+
+## H97: Rate limiting must be distributed-safe or documented as dev-only
+
+**Status**: confirmed
+**Proposed**: 2026-05-25
+**Rationale**: FB20 used in-memory `defaultdict` + `asyncio.Lock` for GraphQL rate limiting. Under multi-process uvicorn, each worker has isolated memory.
+**Source**: Fitness build FB20, Phase 3/6
+**Experiment**: Check FB21 rate limiting implementation. Verify it uses shared store OR is explicitly documented as dev-only.
+**Expected**: Either Redis-backed limiter or explicit TODO/comment documenting dev-only status.
+**Result**: CONFIRMED. FB21 uses `Limiter(key_func=get_remote_address)` with explicit comment: `# TODO(redis): Replace in-memory limiter with Redis-backed storage for production.` Security gate did NOT flag it (coverage gap), but the TODO documents the limitation. H97 confirmed as a real issue needing checklist enforcement.
+**Tested by**: FB21-20260525
+
+---
+
+## H98: Fix wave without re-audit report artifact risks undocumented regressions
+
+**Status**: confirmed
+**Proposed**: 2026-05-25
+**Rationale**: FB20 resolved 9 security findings in Phase 7, but no re-audit report exists in the build directory.
+**Source**: Fitness build FB20, Phase 7
+**Experiment**: Check FB21 build directory for re-audit report after fix wave.
+**Expected**: Either a re-audit report exists, or the fix wave bypassed formal Phase 7 protocol.
+**Result**: CONFIRMED. FB21 fixes were applied inline during Phase 6 (integration verification), bypassing Phase 7 entirely. No re-audit report exists. This confirms the hypothesis: without formal Phase 7 protocol enforcement, re-audit artifacts are missing and regression risk is unquantified.
+**Tested by**: FB21-20260525
+
+---
+
+## H99: Security gate falsely PASSes self-registration with admin role because "allowlist" check validates presence but not composition
+
+**Status**: confirmed
+**Proposed**: 2026-05-25
+**Rationale**: FB21 security report Check #13: "`routers/auth.py` rejects roles not in `ALLOWED_ROLES`" — but `ALLOWED_ROLES` included `"admin"`, enabling privilege escalation. The check validated that an allowlist exists, not that it excludes superuser roles.
+**Source**: Fitness build FB21, Phase 5
+**Experiment**: Add "allowlist must exclude admin/superuser" to vsm_security.md. Run next 5 builds with auth. Count false PASSes on registration role validation.
+**Expected**: 0 false PASSes after checklist addition.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H100: Rate limit exception handler absence survives all gates because checklists focus on middleware presence, not exception handling
+
+**Status**: confirmed
+**Proposed**: 2026-05-25
+**Rationale**: FB21 `main.py:26` installs `SlowAPIMiddleware`; no `@app.exception_handler(RateLimitExceeded)` anywhere. Neither security gate nor coordinator flagged it. L40/L52 exist in security-lessons.md but are not enforced by grep-based verification.
+**Source**: Fitness build FB21, Phase 3d/5
+**Experiment**: Add `exception_handler.*RateLimitExceeded` grep check to security agent and coordinator prompts. Run next 5 builds with rate limiting.
+**Expected**: 0 builds with missing exception handler after checklist addition.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H101: Inline fix waves during integration bypass re-audit requirements, causing missing artifacts and unverified regressions
+
+**Status**: confirmed
+**Proposed**: 2026-05-25
+**Rationale**: FB21 fixes applied "inline during Phase 6." No re-audit report exists. H98 (re-audit artifact) remains unconfirmed because the fix protocol was bypassed.
+**Source**: Fitness build FB21, Phase 6/7
+**Experiment**: Add algedonic signal to SKILL.md Phase 6: "If integration verification finds BLOCKERs, do NOT fix them inline. Route to Phase 7 (Fix Wave)." Run 3 builds and measure re-audit artifact production rate.
+**Expected**: 100% of builds with integration BLOCKERs produce re-audit artifacts after fix wave.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H102: REST register allows arbitrary roles while GraphQL register hardcodes student because parallel auth implementations lack a shared contract enforcement step
+
+**Status**: confirmed
+**Proposed**: 2026-05-25
+**Rationale**: FB21 `auth.py:30` `ALLOWED_ROLES` included admin; `graphql.py:555` hardcoded `UserRole.student.value`. Same feature built twice with different security postures. REST and GraphQL auth were implemented by different parallel agents with no shared contract validation.
+**Source**: Fitness build FB21, Phase 3/5
+**Experiment**: Add "Auth contract must be identical across REST and GraphQL" to integration checklist. Run 5 builds with dual REST+GraphQL auth.
+**Expected**: 0 builds with REST/GraphQL role divergence after checklist addition.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H103: CORS `allow_methods="*"` and `allow_headers="*"` are not flagged when origins are explicit because security checklist only checks `origin`, not method/header wildcards
+
+**Status**: confirmed
+**Proposed**: 2026-05-25
+**Rationale**: FB21 `main.py:37-38` uses `"*"` for methods and headers with `allow_credentials=True`. Security Check #4 PASSed because origins are explicit.
+**Source**: Fitness build FB21, Phase 5
+**Experiment**: Add Check 58 to integration-checklist.md. Run next 5 builds. Count missed method/header wildcard findings.
+**Expected**: 0 missed findings after checklist addition.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H104: ApolloClient `uri` parameter in test environment causes stderr noise that does not fail tests but masks real client misconfiguration
+
+**Status**: untested
+**Proposed**: 2026-05-25
+**Rationale**: FB21 frontend tests pass but emit `ApolloClient uri parameter` errors in stderr. `client.ts` uses `HttpLink({ uri: ... })` correctly, but test mocking may initialize `ApolloClient` differently.
+**Source**: Fitness build FB21, Phase 4
+**Experiment**: Inspect frontend test setup. Verify if ApolloClient is initialized with `uri` directly instead of `link`. Compare test ApolloClient init vs production ApolloClient init.
+**Expected**: If test init uses `uri` parameter → confirmed. If test init uses `link` → rejected.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]

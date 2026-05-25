@@ -35,6 +35,7 @@ description: >
    - Environment variable naming drift
    - Frontend API URL localhost fallback
    - SSE with long-lived JWT in URL
+   - **Registration role allowlist composition**: Verify the allowlist EXISTS and EXCLUDES superuser roles ("admin", "superuser"). Self-registration must default to lowest-privilege role.
 5. Produce: security report with CRITICAL / HIGH / LOW findings.
 
 **Autonomy Boundaries**:

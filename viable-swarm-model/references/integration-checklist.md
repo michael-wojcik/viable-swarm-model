@@ -376,3 +376,11 @@ correction BEFORE quality gates.
 
 **Source**: FB20 resolved 9 security findings in Phase 7, but no re-audit report file exists in the build directory. `meta-report.md` notes: "no re-audit report file exists... implying re-audit occurred, but no re-audit report file exists."
 
+## Check 58: CORS Method and Header Wildcards
+- [ ] Verify `allow_methods` and `allow_headers` in CORS middleware are not `"*"` when `allow_credentials=True`
+- [ ] Explicit methods list (e.g., `["GET", "POST", "PUT", "DELETE", "PATCH"]` ) and explicit headers list required when credentials are enabled
+- [ ] Socket.IO `cors_allowed_origins` must also use the same explicit allowlist, never `"*"`
+- [ ] `Settings.CORS_ORIGINS` has no default wildcard; app refuses to start if CORS_ORIGINS is unset
+
+**Source**: FB21 `main.py:37-38` used `allow_methods=["*"]` and `allow_headers=["*"]` with `allow_credentials=True`. Security gate Check #4 only verified origins, not method/header wildcards. Low severity but systemic coverage gap.
+
