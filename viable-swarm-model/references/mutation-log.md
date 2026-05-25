@@ -1177,3 +1177,17 @@ Spawn `vsm_coordinator` + `vsm_auditor`. Full 20+ point checklist (see
 > artifact, and run Phase 7b post-fix security re-check before returning to
 > the main flow.
 ```
+
+---
+
+## Mutation FB21-8 — 2026-05-25
+
+**Session**: FB21 post-build — user-approved structural reorganization of security-lessons.md
+**File**: `~/vsm/viable-swarm-model/references/security-lessons.md`
+**Type**: structural
+**Rationale**: The file had grown chronologically by build discovery (FB3, FB10, FB14, FB17, etc.), causing severe L-number collisions — four different L38s, three different L39s, three different L40s, and multiple L28/L29/L37 duplicates. Meta-agents could not determine whether a proposed mutation already existed because the same topic was scattered across 400+ lines. FB21 vsm_meta proposed L61 (rate-limit exception handler) which was already covered by L40 and L52, but the duplicates were invisible due to chronological organization.
+**Expected effect**: Future meta-agents can scan a single topic section to find all rules on that concern. Duplicate proposals will be obvious. New rules slot into the correct topic, making overlaps visible immediately. L numbers are now unique and sequential within the reorganized file.
+
+**Before**: Chronological by build discovery — "FB3 Discoveries", "FB10 Discoveries", "FB14 Discoveries", "FB17 Discoveries", "FB18 Discoveries", "FB20 Discoveries", "FB21 Discoveries". Multiple duplicate L numbers.
+
+**After**: Organized by topic — Core Workflow, Auth & Registration, JWT & Token Security, Rate Limiting, GraphQL Security, WebSocket Security, CORS & Infrastructure, Data Exposure & Frontend Security, N+1 & Performance, Integration & Cross-Service, Testing & Verification, Meta-Learning, Security Operations, Severity Calibration. Duplicate rules merged (e.g., L40 + L52 on rate-limit exception handlers; L38-FB10 + L47 + L60 on registration role validation).

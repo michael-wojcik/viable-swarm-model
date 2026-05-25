@@ -4,14 +4,14 @@
 > that are consistently false positives with `~~strikethrough~~` and rationale.
 > If a prevention rule is proven ineffective after 3+ sessions, append a
 > correction rather than deleting. The history of what was tried matters.
-
-All 37 empirical lessons from cybernetic-dev-swarm, organized as prevention
-rules for agent prompts. Each lesson: category, prevention rule, affected
-agents.
+>
+> **Organization**: Rules are grouped by TOPIC, not by build discovery date.
+> Each rule includes ALL builds that discovered or validated it. This prevents
+> duplicate rule proposals — scan the relevant topic before adding a new rule.
 
 ---
 
-## Core Workflow Lessons
+## Core Workflow
 
 ### L1: Agent Prompts Need Read-Before-Write Enforcement
 **Prevention rule**: Add "Read all input files BEFORE writing any code" to
@@ -52,11 +52,6 @@ fix. Mid-build discovery → emergency stop. Never mix the two modes.
 not original audit report. Stale reports mislead.
 **Affected**: S3 (main agent), vsm_auditor.
 
-### L12: Tester Bug-Fix Inline is Highly Valued
-**Prevention rule**: vsm_tester prompt includes: "Fix bugs inline during test
-writing. Document each under 'Bugs Found and Fixed'."
-**Affected**: vsm_tester.
-
 ### L13: Filesystem is the Only Reliable Communication Channel
 **Prevention rule**: Every prompt has explicit Input/Output/CRITICAL sections
 with exact file paths. Agents cannot see each other's task results.
@@ -74,63 +69,258 @@ dispatching next wave.
 
 ---
 
-## Security Lessons (Critical)
+## Auth & Registration
 
-### L5: Security Engineer Non-Negotiable for Production
-**Prevention rule**: Always spawn vsm_security before delivery. Without it,
-CORS reflection attacks, hardcoded secrets, SSRF go undetected.
-**Affected**: S3 (main agent).
+### L38: Self-Registration Must Never Accept User-Supplied Role Elevation
+**Prevention rule**: Registration endpoints (REST and GraphQL) MUST validate the
+`role` field against an explicit allowlist. The allowlist MUST NOT include
+`"admin"`, `"superuser"`, or equivalent elevated roles. Unknown roles MUST
+default to the least-privileged role or be rejected. Admin elevation requires a
+separate privileged operation (admin-only endpoint, invitation, or manual
+approval). The security gate must verify BOTH that an allowlist exists AND that
+the allowlist excludes superuser roles.
+**Affected**: vsm_security, vsm_architect, all backend S1 agents.
+**Source**: FB10 (self-registration role elevation), FB14 (allowlist validation),
+FB21 (allowlist composition Check #13 false negative).
+
+### L48: SECRET_KEY Must Have Minimum Length Validation
+**Prevention rule**: `SECRET_KEY` (or `JWT_SECRET`) MUST have a `min_length`
+validator (e.g., Pydantic `Field(..., min_length=32)`). Empty strings or short
+secrets are CRITICAL vulnerabilities enabling JWT forgery. A default value of
+`""` is NOT sufficient mitigation.
+**Affected**: vsm_security, foundation wave agents.
+**Source**: FB14, Phase 5.
+
+### L59: Refresh Token Endpoint Must Verify User Still Exists and Is Active
+**Prevention rule**: `POST /auth/refresh` (or GraphQL `refreshToken`) MUST query
+the database for the user identified by the refresh token's `sub` claim BEFORE
+minting new tokens. If the user has been deleted or deactivated
+(`is_active=False`), the endpoint MUST return 401. Decoding a valid JWT is NOT
+sufficient — the user record is the source of truth.
+**Affected**: vsm_security, S1-Backend.
+**Source**: FB20, Phase 5.
+
+---
+
+## JWT & Token Security
 
 ### L11: Hardcoded Secrets are the #1 Critical Finding
 **Prevention rule**: JWT_SECRET required (no default), minimum 32 chars, app
 refuses to start without it. Ban default secret values in ALL config.
 **Affected**: All S1 agents, vsm_security.
 
-### L16: WebSocket Auth Must Be In-Band, Never in URL
-**Prevention rule**: Frontend sends auth as first WS message after connection:
-`{"msg_type":"auth","token":"..."}`. NEVER `?token=...` in WebSocket URL.
-**Affected**: S1-Backend, S1-Frontend, vsm_security.
-
 ### L18: Fake JWT Parsers for Development Are Never Removed
 **Prevention rule**: Complete rewrite with proper library (jsonwebtoken::decode,
 HMAC-SHA256). No bypass path. App panics at startup if JWT_SECRET missing.
 **Affected**: S1-Backend, vsm_security.
 
-### L27: || Fallback for Secrets is as Dangerous as Hardcoding
-**Prevention rule**: `if (!process.env.JWT_SECRET) { process.exit(1) }`.
-Never use `||` for SECRET/KEY/PASSWORD/TOKEN vars.
-**Affected**: All S1 agents, vsm_security.
-
-### L28: CORS origin: true is Equivalent to Wildcard
-**Prevention rule**: Explicit allowlist from config. Never `origin: true` or
-`origin: "*"` with `credentials: true`.
+### L28: JWT Signature Verification is Non-Negotiable
+**Prevention rule**: Any code that calls `jwt.decode` with
+`options={"verify_signature": False}` or equivalent is a CRITICAL security
+vulnerability. This includes "convenience" helpers like `decode_token` that
+bypass verification. All JWT decoding MUST use the secret key and verify the
+signature. If the secret is "unavailable" in a context (e.g., Socket.IO), pass
+`settings.secret_key` explicitly.
 **Affected**: S1-Backend, vsm_security.
-
-### L33: SSE JWT in URL is Unavoidable Architectural Vulnerability
-**Prevention rule**: Short-lived SSE token exchange. Client POSTs JWT to
-`/auth/sse-token` → receives 5-minute token → connects with `?sse_token=...`.
-**Affected**: S1-Backend, S1-Frontend, vsm_security.
 
 ### L36: Silent None Returns in Middleware Bypass Security Controls
 **Prevention rule**: Auth middleware raises HTTPException on failure. Never
 return None for auth context.
 **Affected**: S1-Backend, vsm_security.
 
-### L9: Document Ownership Filtering Easy to Miss
-**Prevention rule**: Security + auditor both check ownership filtering on every
-list endpoint. List endpoints must return ONLY records belonging to the
-authenticated user/organization.
-**Affected**: S1-Backend, vsm_security, vsm_auditor.
+### L50: JWT Payload Must Include Role Claim
+**Prevention rule**: `create_access_token` MUST include `"role": user.role` in
+the JWT payload. The `get_current_user` dependency can then enforce RBAC at the
+edge without an extra database lookup. Without the role claim, middleware cannot
+perform role-based access control efficiently.
+**Affected**: vsm_security, backend coder agents, fix agents.
+**Source**: FB16, FB17 (re-validated).
+
+---
+
+## Rate Limiting
+
+### L26: Rate Limiting on Auth Endpoints Is Not Optional
+**Prevention rule**: Auth endpoints (register, login, refresh) without rate
+limiting are brute-force vulnerable. Add rate limiting requirement to foundation
+wave for any build with auth.
+**Affected**: S1 coders in Phase 2, vsm_security.
+**Source**: FB1, FB3, FB10.
+
+### L39: Rate Limiting Must Be in Foundation Wave for Auth Builds
+**Prevention rule**: Any build with authentication MUST include rate limiting
+scaffolding in the foundation wave (Phase 2), not just the security gate (Phase
+5). Auth endpoints (`/register`, `/login`, `/refresh`) are brute-force vectors
+from day one.
+**Affected**: S1 coders in Phase 2, vsm_security.
+**Source**: FB3, FB10.
+
+### L40: Rate Limiting Requires Decorators, Middleware, AND Exception Handler
+**Prevention rule**: Rate limiting is a three-component system:
+1. Endpoint decorators (`@limiter.limit(...)`) on auth routes
+2. Middleware `app.add_middleware(SlowAPIMiddleware)`
+3. `@app.exception_handler(RateLimitExceeded)` returning HTTP 429 with JSON error body
+All three are mandatory. Without the exception handler, rate-limited requests
+crash with HTTP 500 instead of 429.
+**Affected**: S1-Backend, vsm_security, vsm_wiring.
+**Source**: FB3 (middleware missing), FB17 (handler missing), FB21 (handler missed by all gates).
+
+### L58: Rate Limiting Must Be Distributed-Safe
+**Prevention rule**: In-memory rate limiting (`defaultdict` + `asyncio.Lock`) is
+NOT acceptable for production deployments. Under multi-process uvicorn workers,
+each process has isolated memory, allowing `limit × N_workers` requests before
+any 429 is returned. Rate limiting MUST use a shared store (Redis, memcached) or
+be documented as a known limitation with explicit TODO comment.
+**Affected**: vsm_security, S1-Backend.
+**Source**: FB20, Phase 3/6.
+
+---
+
+## GraphQL Security
+
+### L25: GraphQL Depth Limiting + Complexity Analysis Is Mandatory
+**Prevention rule**: GraphQL schemas without depth/complexity limiting are a DoS
+vector. Every GraphQL-enabled build MUST include `QueryDepthLimiter(max_depth=10)`
+(or similar) in the schema. The architect MUST specify this in design docs; the
+security gate MUST verify it is installed. Also add `MaxAliasesLimiter` and
+`MaxTokensLimiter` where available.
+**Affected**: vsm_architect, vsm_auditor, vsm_security, vsm_wiring.
+**Source**: FB1, FB18, FB20.
+
+### L38: GraphQL Context Builders Must Be Fail-Closed
+**Prevention rule**: GraphQL `get_context` or equivalent context builders MUST
+NOT catch all exceptions from authentication and set `user = None`. This creates
+a fail-open auth bypass: if a resolver forgets to check `user is None`,
+unauthenticated requests proceed silently. Let `get_current_user` raise its
+`HTTPException` (or `AuthenticationError`) so Strawberry/FastAPI can translate it
+to a GraphQL error. Auth failures MUST propagate as GraphQL errors or raise
+`AuthenticationError`. Fail-closed, never fail-open.
+**Affected**: vsm_security, backend implementation agents, vsm_auditor.
+**Source**: FB6, FB10, FB12, FB21.
+
+### L42: GraphQL RBAC Must Be Explicitly Verified Against REST
+**Prevention rule**: When a project has BOTH REST and GraphQL endpoints, the
+security gate MUST verify that GraphQL mutations enforce the SAME role-based
+access control as REST endpoints. GraphQL mutations are not exempt from
+authorization. Check every mutation: `create_*`, `update_*`, `delete_*` against
+REST `require_role()` constraints.
+**Affected**: vsm_security, vsm_auditor.
+**Source**: FB5, FB8.
+
+### L44: Strawberry Auto-CamelCase Requires Explicit Verification
+**Prevention rule**: When using Strawberry GraphQL, ALWAYS verify frontend
+queries use camelCase field names matching the auto-generated schema. Run
+`python -c "from app.graphql import schema; print(schema)"` and cross-check
+against frontend `gql` documents. Snake_case in frontend queries is a BLOCKER
+when Strawberry is configured for auto-camelCase.
+**Affected**: vsm_coordinator, vsm_auditor, S1-Frontend.
+**Source**: FB12, Phase 3b/5.
+
+### L51: GraphQL-REST RBAC Parity Requires Explicit Role Arrays in api-spec.md
+**Prevention rule**: Every endpoint in `api-spec.md` MUST include an explicit
+`RBAC: [roles]` array. Ambiguous labels like "(owner-filtered)" or "(public)"
+MUST be forbidden — they cause downstream implementation agents to make
+inconsistent assumptions about which roles can access which endpoints. GraphQL
+resolvers MUST enforce the same RBAC as their REST equivalents.
+**Affected**: vsm_architect, S1-Backend, vsm_security, vsm_coordinator.
+**Source**: FB17, Phase 1/5.
+
+### L57: GraphQL Subscription Resolvers Must Verify Resource Ownership Before Yielding
+**Prevention rule**: Any GraphQL subscription resolver that filters by
+`resource_id` (e.g., `property_id`, `room_id`, `project_id`) MUST verify that
+`current_user` has access to that specific resource BEFORE yielding events.
+Role checks (`_ensure_role`) are NOT sufficient — a tenant with role="tenant"
+could subscribe to `property_id=None` and receive ALL events, or subscribe to
+another tenant's `property_id` and receive cross-tenant data.
+**Checklist addition**:
+- [ ] Every subscription resolver with a `resource_id` parameter queries the database to verify ownership/lease/membership
+- [ ] `property_id=None` subscriptions are REJECTED with 403 unless the user is a super-admin
+- [ ] The verification happens BEFORE entering the `while True` generator loop
+**Affected**: vsm_security, S1-Backend, vsm_backend_tester.
+**Source**: FB20, Phase 5/8b.
+
+---
+
+## WebSocket Security
+
+### L16: WebSocket Auth Must Be In-Band, Never in URL
+**Prevention rule**: Frontend sends auth as first WS message after connection:
+`{"msg_type":"auth","token":"..."}`. NEVER `?token=...` in WebSocket URL.
+**Affected**: S1-Backend, S1-Frontend, vsm_security.
+
+### L43: WebSocket Room Handlers Must Verify Course Enrollment
+**Prevention rule**: WebSocket `join_room` / `subscribe_*` handlers must verify
+BOTH authentication (valid session) AND authorization (user is enrolled in the
+target course / is the instructor). Session-only verification allows any
+authenticated user to access any room.
+**Affected**: vsm_security, S1 backend coders.
+**Source**: FB8. `join_classroom` verified socket session but not course enrollment.
+
+---
+
+## CORS & Infrastructure
+
+### L28: CORS origin: true is Equivalent to Wildcard
+**Prevention rule**: Explicit allowlist from config. Never `origin: true` or
+`origin: "*"` with `credentials: true`. Also verify `allow_methods` and
+`allow_headers` are explicit lists, not `"*"`, when `allow_credentials=True`.
+**Affected**: S1-Backend, vsm_security.
+**Related**: Check 58 (integration-checklist.md).
+
+### L33: SSE JWT in URL is Unavoidable Architectural Vulnerability
+**Prevention rule**: Short-lived SSE token exchange. Client POSTs JWT to
+`/auth/sse-token` → receives 5-minute token → connects with `?sse_token=...`.
+**Affected**: S1-Backend, S1-Frontend, vsm_security.
+
+### L37: Docker-Compose Bash Fallbacks Embed Secrets Silently
+**Prevention rule**: Ban `:-` default-value fallbacks in `docker-compose.yml` for
+ALL variables, especially `DATABASE_URL`, `REDIS_URL`, `POSTGRES_PASSWORD`, and
+`CORS_ORIGINS`. Services must fail to start if required environment variables are
+missing. Fallbacks silently embed credentials and bypass fail-safe configuration.
+Also ban hardcoded literal passwords in docker-compose (e.g.,
+`POSTGRES_PASSWORD: devpassword`).
+**Affected**: S1-DevOps, vsm_security.
+**Source**: FB2, FB18 (rule persisted despite prior mutation).
+
+### L38: Infrastructure Security Is as Critical as Application Security
+**Prevention rule**: Security gate must inspect docker-compose.yml, Dockerfile,
+.env.example, and nginx config with the same rigor as application code. Check for
+hardcoded passwords, `:-` fallbacks, wildcard CORS in compose, and missing
+security headers in nginx.
+**Affected**: vsm_security, S1-DevOps.
+
+---
+
+## Data Exposure & Frontend Security
 
 ### L19: Game API Answer Exposure Enables Cheating
 **Prevention rule**: Public DTOs omit `correct_answer_index` and solution
 fields. Never expose answers in public endpoints.
 **Affected**: S1-Backend, vsm_security.
 
-### L25: GraphQL Depth Limiting is Essential
-**Prevention rule**: Install @graphql-depth-limit (max 10) + complexity analysis.
-Deeply nested queries can cause DoS.
-**Affected**: S1-Backend, vsm_security.
+### L37: Frontend API URL Fallback is Deployment Risk
+**Prevention rule**: Fail-fast throw Error if `VITE_API_URL` missing. `||
+'http://localhost:8000'` silently routes API calls to localhost in production.
+**Affected**: S1-Frontend, vsm_security.
+
+### L41: JWT Storage in localStorage is a MEDIUM Security Risk
+**Prevention rule**: Flag JWT persisted to `localStorage` as MEDIUM severity.
+Prefer httpOnly, `SameSite=strict`, secure cookies. If Bearer tokens are
+required, recommend short-lived access tokens with refresh-token rotation.
+**Affected**: vsm_security.
+**Source**: FB5.
+
+### L49: Frontend Cross-File Contract Mismatches Require Automated Check
+**Prevention rule**: Parallel frontend agents independently produce queries.ts,
+stores, and page components that may have incompatible contracts. A lightweight
+automated check (`tsc --noEmit` or import grep) MUST run before the auditor to
+catch missing exports, missing store fields, and type mismatches.
+**Affected**: vsm_coordinator, S3 (main agent), vsm_auditor.
+**Source**: FB14, Phase 3b.
+
+---
+
+## N+1 & Performance
 
 ### L34: N+1 Queries in Computed Field Loops
 **Prevention rule**: Batched GROUP BY queries for all computed fields (COUNT,
@@ -146,7 +336,7 @@ followed by Python iteration.
 
 ---
 
-## Integration Lessons
+## Integration & Cross-Service
 
 ### L8: Multi-Service Projects Need Explicit Contract Validation
 **Prevention rule**: vsm_coordinator validates Celery task names, signatures,
@@ -185,10 +375,22 @@ across docker-compose/.env/code. `POLL_INTERVAL_MS` vs `POLL_MS` = silent
 configuration failure.
 **Affected**: vsm_coordinator.
 
-### L37: Frontend API URL Fallback is Deployment Risk
-**Prevention rule**: Fail-fast throw Error if `VITE_API_URL` missing. `||
-'http://localhost:8000'` silently routes API calls to localhost in production.
-**Affected**: S1-Frontend, vsm_security.
+### L54: Celery Broker URL Must Use Settings, Never Hardcoded Localhost
+**Prevention rule**: ALL `Celery()` instantiations MUST use
+`broker=get_settings().REDIS_URL` (or equivalent settings reference). Hardcoded
+`redis://localhost:6379/0` breaks containerized deployments and is a HIGH
+severity configuration error.
+**Affected**: S1-Backend, vsm_security, vsm_coordinator.
+**Source**: FB17, Phase 3/6.
+
+---
+
+## Testing & Verification
+
+### L12: Tester Bug-Fix Inline is Highly Valued
+**Prevention rule**: vsm_tester prompt includes: "Fix bugs inline during test
+writing. Document each under 'Bugs Found and Fixed'."
+**Affected**: vsm_tester.
 
 ### L26: Every Service Must Have a Verifiable Entry Point
 **Prevention rule**: After each build wave, verify every Dockerfile's CMD
@@ -198,7 +400,7 @@ Dockerfile referenced it.
 
 ---
 
-## Meta-Learning Lessons
+## Meta-Learning
 
 ### L20: Re-Audit is the Highest-Value Quality Gate
 **Prevention rule**: Security engineer, coordinator, tester, and auditor all
@@ -225,230 +427,31 @@ completeness (emerging, detection-based). 23 security lessons prevented 100%
 of known anti-patterns but revealed new failure modes.
 **Affected**: S3 (main agent), vsm_auditor.
 
-### L25: GraphQL Depth Limiting Must Be in Design Checklist
-**Prevention rule**: GraphQL schemas without depth/complexity limiting are a DoS vector. In FB1,
-`strawberry.Schema` was created with no `max_depth` or `max_complexity`. Security gate caught it
-as HIGH severity. Add "GraphQL depth limit (max 10) + complexity analysis" to architect design
-checklist and integration checklist.
-**Affected**: vsm_architect, vsm_auditor, vsm_security.
-
-### L26: Rate Limiting on Auth Endpoints Is Not Optional
-**Prevention rule**: Auth endpoints (register, login, refresh) without rate limiting are brute-force
-vulnerable. In FB1, 8-character password minimum + no rate limiting = credential stuffing risk.
-Add rate limiting requirement to foundation wave for any build with auth.
-**Affected**: S1 coders in Phase 2, vsm_security.
-
-### L37: Docker-Compose Bash Fallbacks Embed Secrets Silently
-**Prevention rule**: Ban `:-` default-value fallbacks in `docker-compose.yml` for ALL
-variables, especially `DATABASE_URL`, `REDIS_URL`, `POSTGRES_PASSWORD`, and `CORS_ORIGINS`.
-Services must fail to start if required environment variables are missing. Fallbacks
-silently embed credentials and bypass fail-safe configuration.
-**Affected**: S1-DevOps, vsm_security.
-
-### L38: Infrastructure Security Is as Critical as Application Security
-**Prevention rule**: Security gate must inspect docker-compose.yml, Dockerfile, .env.example,
-and nginx config with the same rigor as application code. Check for hardcoded passwords,
-`:-` fallbacks, wildcard CORS in compose, and missing security headers in nginx.
-**Affected**: vsm_security, S1-DevOps.
-
-### L39: Rate Limiting Must Be in Foundation Wave for Auth Builds
-**Prevention rule**: Any build with authentication MUST include rate limiting scaffolding
-in the foundation wave (Phase 2), not just the security gate (Phase 5). Auth endpoints
-(`/register`, `/login`, `/refresh`) are brute-force vectors from day one.
-**Affected**: S1 coders in Phase 2, vsm_security.
-
-### L40: Rate Limiting Requires Both Decorators AND Middleware
-**Prevention rule**: Rate limiting is incomplete without `SlowAPIMiddleware` installed in
-`main.py`. Endpoint decorators (`@limiter.limit(...)`) raise `RateLimitExceeded`, but without
-the middleware the exception propagates to the generic handler and returns HTTP 500 instead
-of 429. Both components are mandatory: (1) endpoint decorators on auth routes, (2) middleware
-`app.add_middleware(SlowAPIMiddleware)`, (3) `@app.exception_handler(RateLimitExceeded)` returning 429.
-**Affected**: S1-Backend, vsm_security.
-**Source**: FB3 security gate MEDIUM-4 — decorators present in foundation wave but middleware
-missing until Phase 5.
-
 ---
 
-### L38: GraphQL RBAC Must Match REST RBAC
-**Prevention rule**: When a project has BOTH REST and GraphQL endpoints, the security gate MUST verify that GraphQL resolvers enforce the SAME role-based access control as REST endpoints. GraphQL mutations are not exempt from authorization.
-**Affected**: vsm_security, vsm_auditor.
-**Source**: Fitness build FB5. GraphQL `createIncident` allowed any authenticated user while REST required `commander`/`dispatcher`.
+## Security Operations
 
-### L39: GraphQL List Endpoints Require Ownership Filtering
-**Prevention rule**: All GraphQL list queries (`incidents`, `resources`, `evidence`, etc.) MUST apply the same ownership/role scoping as their REST equivalents. A `responder` must not be able to enumerate all entities via GraphQL.
-**Affected**: vsm_security, vsm_auditor.
-**Source**: Fitness build FB5. GraphQL list queries returned unscoped data; REST endpoints were correctly scoped.
-
-### L40: Upload Filename Sanitization Prevents Stored XSS
-**Prevention rule**: Any user-provided filename stored in the database and rendered in the UI MUST be sanitized (strip HTML/JS characters) or replaced with a safe generated name before persistence.
-**Affected**: vsm_security, S1 backend coders.
-**Source**: Fitness build FB5. `uploads.py` stored `file.filename` verbatim without sanitization.
-
-### L41: JWT Storage in localStorage is a MEDIUM Security Risk
-**Prevention rule**: Flag JWT persisted to `localStorage` as MEDIUM severity. Prefer httpOnly, `SameSite=strict`, secure cookies. If Bearer tokens are required, recommend short-lived access tokens with refresh-token rotation.
-**Affected**: vsm_security.
-**Source**: Fitness build FB5. `authStore.ts` used Zustand `persist` middleware → token in `localStorage`.
-
----
-
-### L42: GraphQL RBAC Must Be Explicitly Verified Against REST
-**Prevention rule**: When a project has BOTH REST and GraphQL endpoints, the security gate MUST verify that GraphQL mutations enforce the SAME role-based access control as REST endpoints. GraphQL mutations are not exempt from authorization. Check every mutation: `create_*`, `update_*`, `delete_*` against REST `require_role()` constraints.
-**Affected**: vsm_security, vsm_auditor.
-**Source**: Fitness build FB8. GraphQL `update_course`/`delete_course` allowed any authenticated user while REST required `admin`/`instructor`.
-
-### L43: WebSocket Room Handlers Must Verify Course Enrollment
-**Prevention rule**: WebSocket `join_room` / `subscribe_*` handlers must verify BOTH authentication (valid session) AND authorization (user is enrolled in the target course / is the instructor). Session-only verification allows any authenticated user to access any room.
-**Affected**: vsm_security, S1 backend coders.
-**Source**: Fitness build FB8. `join_classroom` verified socket session but not course enrollment.
-
-### L38: GraphQL Context Builders Must Be Fail-Closed
-**Prevention rule**: GraphQL `get_context` or equivalent context builders MUST NOT catch all exceptions from authentication and set `user = None`. This creates a fail-open auth bypass: if a resolver forgets to check `user is None`, unauthenticated requests proceed silently. Let `get_current_user` raise its `HTTPException` (or `AuthenticationError`) so Strawberry/FastAPI can translate it to a GraphQL error.
-**Affected**: vsm_security, backend implementation agents.
-**Evidence**: FB6 security gate found `graphql.py` catching `Exception` and setting `user = None`, rated MEDIUM but is actually HIGH severity.
-
-### L39: httpOnly Cookie Auth Requires Backend Cookie Setting
-**Prevention rule**: If the spec requires "frontend uses httpOnly cookies (not localStorage)", the foundation wave MUST implement backend cookie setting (`response.set_cookie`) in the login endpoint. Returning the JWT in JSON body and storing it in Zustand memory does NOT satisfy the httpOnly requirement — the token is still accessible to JavaScript via the response body.
-**Affected**: vsm_security, foundation wave agents.
-**Evidence**: FB6 frontend stored token in Zustand (not localStorage), but backend still returned it in JSON. Security gate noted as MEDIUM but is actually HIGH.
-
-### L28: JWT Signature Verification is Non-Negotiable
-**Prevention rule**: Any code that calls `jwt.decode` with `options={"verify_signature": False}` or equivalent is a CRITICAL security vulnerability. This includes "convenience" helpers like `decode_token` that bypass verification. All JWT decoding MUST use the secret key and verify the signature. If the secret is "unavailable" in a context (e.g., Socket.IO), pass `settings.secret_key` explicitly.
-**Affected**: S1-Backend, vsm_security.
+### L5: Security Engineer Non-Negotiable for Production
+**Prevention rule**: Always spawn vsm_security before delivery. Without it,
+CORS reflection attacks, hardcoded secrets, SSRF go undetected.
+**Affected**: S3 (main agent).
 
 ### L29: Fix Agents Can Introduce Vulnerabilities
-**Prevention rule**: Fix agents (especially generic coders fixing security-related code) can accidentally introduce vulnerabilities while trying to be helpful. The security gate MUST re-audit ALL files modified during any fix wave, not just the originally flagged files.
+**Prevention rule**: Fix agents (especially generic coders fixing
+security-related code) can accidentally introduce vulnerabilities while trying to
+be helpful. The security gate MUST re-audit ALL files modified during any fix
+wave, not just the originally flagged files.
 **Affected**: S3 (main agent), vsm_security.
 
 ---
 
-## FB10 Discoveries
-
-### L38: Self-Registration Must Never Accept User-Supplied Role Elevation
-**Prevention rule**: Registration endpoints (REST and GraphQL) MUST NOT accept a `role` field from the client. All self-registered users MUST default to the lowest-privilege role (e.g., `customer`). Admin or seller elevation MUST require a separate privileged operation (admin-only endpoint, email verification, or manual approval).
-**Affected**: vsm_architect, vsm_security, all backend S1 agents.
-**Rationale**: FB10 security gate found that both REST `POST /auth/register` and GraphQL `register` mutation accepted a user-supplied `role`, allowing immediate privilege escalation to `admin`.
-
-### L39: GraphQL Context Builders Must Propagate Auth Exceptions
-**Prevention rule**: GraphQL `get_context` or equivalent context builders MUST NOT silently catch auth exceptions (e.g., `jwt.PyJWTError`) and fall back to an anonymous context. Auth failures MUST propagate as GraphQL errors or raise `AuthenticationError`. Fail-closed, not fail-open.
-**Affected**: vsm_security, backend S1 agents.
-**Rationale**: FB10 security gate found that `get_context` caught `jwt.PyJWTError` and set `user = None`, creating a fail-open pattern where malformed tokens were treated as anonymous requests.
-
-### L40: Rate Limiting Must Be Explicit on Auth Endpoints
-**Prevention rule**: Auth endpoints (`/register`, `/login`, password reset) MUST have explicit `@limiter.limit(...)` decorators, even if global `SlowAPIMiddleware` is installed. Global middleware alone is insufficient for per-endpoint control.
-**Affected**: vsm_security, backend S1 agents.
-**Rationale**: FB10 security gate found that `/register` and `/login` had no per-endpoint rate limits despite `SlowAPIMiddleware` being wired globally.
-
----
-
-## FB12 Discoveries
-
-### L44: Strawberry Auto-CamelCase Requires Explicit Verification
-**Prevention rule**: When using Strawberry GraphQL, ALWAYS verify frontend queries use camelCase field names matching the auto-generated schema. Run `python -c "from app.graphql import schema; print(schema)"` and cross-check against frontend `gql` documents. Snake_case in frontend queries is a BLOCKER when Strawberry is configured for auto-camelCase.
-**Affected**: vsm_coordinator, vsm_auditor, S1-Frontend.
-**Source**: Fitness build FB12, Phase 3b/5. Coordinator falsely claimed "no runtime breakage" because both sides used snake_case, but Strawberry auto-camelCased backend fields.
-
-### L45: GraphQL Context Builders Must Propagate Auth Exceptions
-**Prevention rule**: GraphQL `get_context` MUST NOT catch JWT/auth exceptions and fall back to anonymous context. Auth failures MUST propagate as GraphQL errors. Fail-closed, never fail-open.
-**Affected**: vsm_security, S1-Backend, vsm_auditor.
-**Source**: Fitness build FB12, Phase 5. Security gate found `get_context` catching JWT errors and returning `user = None`, creating a fail-open auth bypass.
+## Severity Calibration
 
 ### L46: Connection String Defaults Are Not CRITICAL Secrets
-**Prevention rule**: `DATABASE_URL` and `REDIS_URL` defaults (e.g., `postgresql+asyncpg://user:pass@localhost/db`, `redis://localhost:6379`) are LOW severity unless they contain production credentials. Distinguish between: (1) secret fallbacks (JWT_SECRET, POSTGRES_PASSWORD) = CRITICAL, and (2) connection string defaults = LOW/MEDIUM.
+**Prevention rule**: `DATABASE_URL` and `REDIS_URL` defaults (e.g.,
+`postgresql+asyncpg://user:pass@localhost/db`, `redis://localhost:6379`) are
+LOW severity unless they contain production credentials. Distinguish between:
+(1) secret fallbacks (JWT_SECRET, POSTGRES_PASSWORD) = CRITICAL, and
+(2) connection string defaults = LOW/MEDIUM.
 **Affected**: vsm_security.
-**Source**: Fitness build FB12, Phase 5. Security gate incorrectly rated REDIS_URL default and DATABASE_URL fallback as CRITICAL.
-
----
-
-## FB14 Discoveries
-
-### L47: Registration Endpoints Must Validate Role Against Allowlist
-**Prevention rule**: Registration endpoints (REST `POST /auth/register` and GraphQL `register` mutation) MUST validate the `role` field against an explicit allowlist (e.g., `student|instructor|admin`). Unknown roles MUST default to the least-privileged role (`student`) or be rejected. Never accept arbitrary role strings from the client.
-**Affected**: vsm_security, vsm_architect, all backend S1 agents.
-**Source**: Fitness build FB14, Phase 5. Security gate found CRITICAL privilege escalation: registration accepted any role string, allowing immediate `admin` elevation. Architect, foundation, and implementation agents all missed this.
-
-### L48: SECRET_KEY Must Have Minimum Length Validation
-**Prevention rule**: `SECRET_KEY` (or `JWT_SECRET`) MUST have a `min_length` validator (e.g., Pydantic `Field(..., min_length=32)`). Empty strings or short secrets are CRITICAL vulnerabilities enabling JWT forgery. A default value of `""` is NOT sufficient mitigation.
-**Affected**: vsm_security, foundation wave agents.
-**Source**: Fitness build FB14, Phase 5. Security gate found `SECRET_KEY: str = ""` with no length validation, rated CRITICAL.
-
-### L49: Frontend Cross-File Contract Mismatches Require Automated Check
-**Prevention rule**: Parallel frontend agents independently produce queries.ts, stores, and page components that may have incompatible contracts. A lightweight automated check (`tsc --noEmit` or import grep) MUST run before the auditor to catch missing exports, missing store fields, and type mismatches.
-**Affected**: vsm_coordinator, S3 (main agent), vsm_auditor.
-**Source**: Fitness build FB14, Phase 3b. queries.ts was missing exports that pages imported; courseStore.ts was missing fields pages destructured. Auditor caught them but only after implementation was complete.
-
----
-
-## L50: JWT Payload Must Include Role Claim
-**Prevention rule**: `create_access_token` MUST include `"role": user.role` in the JWT payload. The `get_current_user` dependency can then enforce RBAC at the edge without an extra database lookup. Without the role claim, middleware cannot perform role-based access control efficiently.
-**Affected**: `vsm_security`, backend coder agents, fix agents.
-**Source**: Fitness build FB16, Phase 3b/5 — JWT tokens omitted role claim, allowing GraphQL resolvers to bypass role checks because `info.context["user"]` had no role information.
-
----
-
-## FB17 Discoveries
-
-### L51: GraphQL-REST RBAC Parity Requires Explicit Role Arrays in api-spec.md
-**Prevention rule**: Every endpoint in `api-spec.md` MUST include an explicit `RBAC: [roles]` array. Ambiguous labels like "(owner-filtered)" or "(public)" MUST be forbidden — they cause downstream implementation agents to make inconsistent assumptions about which roles can access which endpoints. GraphQL resolvers MUST enforce the same RBAC as their REST equivalents.
-**Affected**: vsm_architect, S1-Backend, vsm_security, vsm_coordinator.
-**Source**: Fitness build FB17, Phase 1/5. api-spec.md labeled GET `/payments` as "(owner-filtered)" without specifying roles. GraphQL `payments` resolver initially allowed broader access than REST, creating a HIGH severity RBAC parity gap.
-
-### L52: Rate Limit Middleware Requires Exception Handler Registration
-**Prevention rule**: Installing `SlowAPIMiddleware` (or similar rate-limit middleware) is NOT sufficient. The application MUST also register an exception handler for `RateLimitExceeded` that returns HTTP 429 with a JSON error body. Without the handler, rate-limited requests crash with an unhandled exception.
-**Affected**: S1-Backend, vsm_security, vsm_wiring.
-**Source**: Fitness build FB17, Phase 3d/5. Backend installed `SlowAPIMiddleware` but lacked `@app.exception_handler(RateLimitExceeded)`. Security gate did not flag this because the checklist did not include rate-limit handler verification.
-
-### L53: JWT Payload Must Include Role Claim for Edge RBAC
-**Prevention rule**: `create_access_token` MUST include `"role": user.role` in the JWT payload. Frontend `RequireRole` guards and backend middleware can then enforce RBAC at the edge without extra database lookups. This is a re-validation of L50.
-**Affected**: backend coder agents, vsm_security.
-**Source**: Fitness build FB17, Phase 2/6. JWT tokens included role claim; zero routing failures. L50 re-validated successfully.
-
-### L54: Celery Broker URL Must Use Settings, Never Hardcoded Localhost
-**Prevention rule**: ALL `Celery()` instantiations MUST use `broker=get_settings().REDIS_URL` (or equivalent settings reference). Hardcoded `redis://localhost:6379/0` breaks containerized deployments and is a HIGH severity configuration error.
-**Affected**: S1-Backend, vsm_security, vsm_coordinator.
-**Source**: Fitness build FB17, Phase 3/6. Celery broker was initially hardcoded to `redis://localhost:6379/0`. Integration coordinator caught it as BLOCKER.
-
----
-
-## FB18 Discoveries
-
-### L55: GraphQL Depth Limit Must Be in Architect Checklist
-**Prevention rule**: For EVERY build with GraphQL, the architect MUST explicitly specify `QueryDepthLimiter(max_depth=10)` (or similar depth limit) in the schema design. The security gate MUST verify it is installed. "GraphQL depth limiting" is NOT optional — it is a HIGH severity security control for preventing DoS via deeply nested queries.
-**Affected**: vsm_architect, vsm_security, vsm_wiring.
-**Source**: Fitness build FB18, Phase 1/6. Architect did not include depth limiting in design docs. `strawberry.Schema` was created without `QueryDepthLimiter`. Security agent failed with LLM error, so manual scan caught it.
-
-### L56: docker-compose `:-` Fallbacks Persist Despite Prior Mutations
-**Prevention rule**: `docker-compose.yml` MUST NEVER contain `:-` default value syntax (e.g., `${VAR:-default}`). This embeds predictable secrets into container configs. The foundation auditor MUST flag ANY `:-` fallback as ISSUE (or BLOCKER if the default is a password/secret).
-**Affected**: vsm_auditor (foundation), S1-Backend.
-**Source**: Fitness build FB18, Phase 2. `POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-shipflow}` was present despite FB2 mutation adding this rule. The rule exists but was not enforced in this build — suggesting auditor prompt drift or batch-size pressure.
-
----
-
-## FB20 Discoveries
-
-### L57: GraphQL Subscription Resolvers Must Verify Resource Ownership Before Yielding
-**Prevention rule**: Any GraphQL subscription resolver that filters by `resource_id` (e.g., `property_id`, `room_id`, `project_id`) MUST verify that `current_user` has access to that specific resource BEFORE yielding events. Role checks (`_ensure_role`) are NOT sufficient — a tenant with role="tenant" could subscribe to `property_id=None` and receive ALL events, or subscribe to another tenant's `property_id` and receive cross-tenant data.
-**Affected**: vsm_security, S1-Backend, vsm_backend_tester.
-**Source**: Fitness build FB20, Phase 5/8b. `vsm_security` found 9 findings but missed subscription ACL. `vsm_meta` later identified that `maintenance_status_update` and `payment_received` yielded events without ownership verification. Severity: HIGH (information disclosure across tenant boundaries).
-**Checklist addition**:
-- [ ] Every subscription resolver with a `resource_id` parameter queries the database to verify ownership/lease/membership
-- [ ] `property_id=None` subscriptions are REJECTED with 403 unless the user is a super-admin
-- [ ] The verification happens BEFORE entering the `while True` generator loop
-
-### L58: Rate Limiting Must Be Distributed-Safe
-**Prevention rule**: In-memory rate limiting (`defaultdict` + `asyncio.Lock`) is NOT acceptable for production deployments. Under multi-process uvicorn workers, each process has isolated memory, allowing `limit × N_workers` requests before any 429 is returned. Rate limiting MUST use a shared store (Redis, memcached) or be documented as a known limitation.
-**Affected**: vsm_security, S1-Backend.
-**Source**: Fitness build FB20, Phase 3/6. `graphql.py:33` used `_rate_limit_store: defaultdict(list)` for GraphQL auth mutation rate limiting. Security gate did not flag this because the checklist had no "distributed-safe" requirement.
-**Checklist addition**:
-- [ ] If rate limiting is implemented, verify it uses a shared store OR is explicitly documented as dev-only
-- [ ] In-memory rate limiting (`dict`/`defaultdict` with `asyncio.Lock`) flagged as MEDIUM severity issue
-
-### L59: Refresh Token Endpoint Must Verify User Still Exists and Is Active
-**Prevention rule**: `POST /auth/refresh` (or GraphQL `refreshToken`) MUST query the database for the user identified by the refresh token's `sub` claim BEFORE minting new tokens. If the user has been deleted or deactivated (`is_active=False`), the endpoint MUST return 401. Decoding a valid JWT is NOT sufficient — the user record is the source of truth.
-**Affected**: vsm_security, S1-Backend.
-**Source**: Fitness build FB20, Phase 5. Security gate found that `routers/auth.py` refresh endpoint decoded the JWT and immediately minted new tokens without a DB check. Fixed in Phase 7.
-
-### L60: Self-Registration Allowlist Must Exclude Superuser Roles
-**Prevention rule**: REST `POST /auth/register` and GraphQL `register` MUST NOT accept `"admin"`, `"superuser"`, or equivalent elevated roles from client input. Admin elevation MUST require a separate privileged operation (admin-only endpoint, invitation, or manual approval). The security gate must verify BOTH that an allowlist exists AND that the allowlist excludes superuser roles. Self-registration must default to the lowest-privilege role.
-**Affected**: vsm_security, vsm_architect, all backend S1 agents.
-**Source**: FB21 security gate Check #13 falsely PASSed `ALLOWED_ROLES = {"student", "instructor", "admin", "teaching_assistant"}`. Any user could register as admin, enabling immediate privilege escalation. This is a direct recurrence of L38/L47 but the existing rules were not specific enough about allowlist composition.
-
+**Source**: FB12, Phase 5.
