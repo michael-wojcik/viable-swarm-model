@@ -996,3 +996,23 @@ main-skill mutations.
 **Structural mutations approved**: 3/3 applied
 **Structural mutations rejected**: N/A
 **Gate cleared by**: All structural mutations applied to SKILL.md files. No additional structural mutations required.
+
+---
+
+## Mutation FB19-7 — 2026-05-25 (Refinement — APPLIED)
+
+**Session**: FB19 KitchenSync fitness build evaluation — meta-process audit
+**File**: `viable-swarm-model/SKILL.md` (Phase 8b section), `references/pattern-library.md`
+**Type**: refinement
+**Rationale**: Structural mutation FB18-10 mandated a build-level `mutations-applied.md` checkpoint to prevent S5 from overlooking mutations. FB19 revealed that this checkpoint is redundant because:
+1. The skill repos already have canonical mutation logs (`viable-swarm-model/references/mutation-log.md`, `vsm-fitness-coach/references/mutation-log.md`) that support placeholder entries.
+2. The build directory is not a git repository, so `mutations-applied.md` is ephemeral and easily ignored.
+3. The real failure mode in FB18 was S5 not reviewing the skill-level log carefully, not the absence of a second file.
+
+A mandatory review of the committed skill mutation log is more effective than an ephemeral build scratchpad. The skill log is durable, versioned, and already contains the proposed/approved/applied status of every mutation.
+
+**Expected effect**: Future builds will perform a systematic review of the skill-level mutation log (not a new build-level file) before declaring Phase 8 complete. This reduces redundancy and leverages the existing tracking system.
+
+**Applied change to Phase 8b**:
+Replace Step 8c (build-level `mutations-applied.md`) with:
+"**Step 8c: Mutation Verification Checkpoint** — Before declaring Phase 8 complete, S5 MUST open the skill-level mutation logs (`viable-swarm-model/references/mutation-log.md` and `vsm-fitness-coach/references/mutation-log.md`) and verify that every mutation proposed during this build is either (a) applied to the skill files, or (b) explicitly rejected with rationale. If any mutation was overlooked, apply it now. Hard-block completion until the skill logs are consistent."
