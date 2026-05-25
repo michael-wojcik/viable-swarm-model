@@ -509,3 +509,50 @@
 - **Fix iterations**: 1 major fix wave (test suite + security + integration)
 - **Prevention rules validated**: H85, H86, H87, H63
 - **New mutations**: FB19-1..FB19-6, Mutation 44/45/46
+
+---
+
+## FB21: EduFlow — Online Course & Learning Management Platform
+
+**Complexity**: Medium (4 waves, ~3000 lines, 4 services: API + worker + realtime + frontend)
+**Date**: 2026-05-25
+**Score**: 3.7 / 5.0
+**Services**: FastAPI backend, Celery/Redis worker, Socket.io realtime, React frontend
+
+### Coverage Map
+
+| Capability | Tested by |
+|---|---|
+| Foundation wave | Sequenced sub-waves (2a core → 2b dependent infrastructure) |
+| Parallel S1 agents | Backend routers (7) + frontend pages (7) built simultaneously |
+| S2 coordination | WebSocket event contracts, GraphQL SDL, env var parity |
+| S3* audit | Foundation audit caught missing `pydantic-settings` (BLOCKER) |
+| Security gate | 1 CRITICAL (deliberate trap) + 7 HIGH + 2 LOW. CRITICAL false negative: Check #13 PASSed `ALLOWED_ROLES` containing `"admin"` |
+| Integration verification | 10 PASS, 3 BLOCKERs (event casing, App.tsx placeholders, env var mismatch) |
+| Testing wave | 30/30 backend + 37/37 frontend. Independent verification by vsm_meta confirmed accuracy |
+| Meta-reflection | vsm_meta spawned successfully (H94 validated). Generated 6 hypotheses (H99–H104) |
+| Fix wave | Fixes applied inline during Phase 6 (process deviation). No re-audit artifact (H98 FAIL) |
+| Prevention rule validation | L60 (admin exclusion), Check 58 (CORS wildcards), Phase 6/7 boundary algedonic signal |
+
+### Known Stress Points
+- Security gate allowlist composition check must exclude superuser roles (L60)
+- Rate limit exception handler must be paired with SlowAPIMiddleware (L52)
+- Phase 6/7 boundary must prohibit inline fixes (structural mutation applied)
+- CORS method/header wildcards must be explicit when credentials enabled (Check 58)
+- GraphQL subscription ownership verification before yielding (L57)
+- Zero deprecation warnings: ConfigDict, lifespan context manager (Check 56)
+
+### Hypotheses Tested
+| Hypothesis | Result |
+|---|---|
+| H94: Phase 8b MUST spawn vsm_meta | **confirmed** |
+| H95: GraphQL subscriptions verify course access before yielding | **confirmed** |
+| H96: Zero deprecation warnings | **confirmed** |
+| H97: Rate limiting distributed-safe or documented | **confirmed** (TODO present, but security gate did not flag) |
+| H98: Phase 7 fix wave produces re-audit artifact | **confirmed** (no artifact produced — process deviation) |
+
+### Mutations Applied
+- L60: Self-Registration Allowlist Must Exclude Superuser Roles (security-lessons.md)
+- Check 58: CORS Method and Header Wildcards (integration-checklist.md)
+- vsm_security.md: Check #13 refined to verify allowlist composition
+- Structural: SKILL.md Phase 6/7 boundary algedonic signal (user-approved)
