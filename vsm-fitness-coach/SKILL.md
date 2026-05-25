@@ -179,6 +179,10 @@ The athlete builds the project in this directory — never in the user's
 actual project directory. This isolates the fitness build from real work.
 
 **Step 1b: Execute build**
+Once the build directory is created and the prompt draft is copied, BEGIN
+EXECUTION IMMEDIATELY. Do not ask the user for confirmation to start the build.
+The user invoked `/flow:vsm-fitness-coach` explicitly to execute a build.
+
 Instruct the model to run the `viable-swarm-model` workflow using the prompt
 draft as the build specification, building in
 `~/vsm-fitness-builds/coach/[project-id]-[date]/`. The main skill's full
@@ -187,6 +191,15 @@ draft as the build specification, building in
 - Phase 8b meta-reflection (the main skill's own evaluation)
 
 The coach does NOT interfere during the build. It observes and records.
+
+> **Platform Constraint — Subagent Nesting**: The VSM workflow requires spawning
+> multiple custom subagents (`vsm_architect`, `vsm_auditor`, `vsm_security`,
+> `vsm_coordinator`, etc.). Subagents do not have access to the `Agent` tool and
+> cannot spawn further subagents. Therefore, S5 MUST execute the
+> `viable-swarm-model` workflow directly — walking through each phase personally
+> and spawning individual task subagents as needed. Do NOT spawn a single
+> subagent to "run the whole build" — this will fail at Phase 1 when that
+> subagent attempts to spawn `vsm_architect`.
 
 **Critical**: Collect ALL artifacts from the build directory:
 - `plan.md`

@@ -938,3 +938,61 @@ main-skill mutations.
 **Expected effect**: Future builds will produce a `mutations-applied.md` tracking artifact before declaring Phase 8 complete. vsm_meta will explicitly classify every mutation by tier with exact file paths. Process-level gaps (like missing mutation tracking) will be flagged and addressed.
 **Before**: Phase 8b ended with "git commit all changes" but no verification that all proposed mutations were actually applied.
 **After**: Phase 8b has a mandatory Step 8c (Mutation Verification Checkpoint) that hard-blocks completion if any mutation was overlooked.
+
+## Mutation FB19-1 — 2026-05-25 (Refinement — APPLIED)
+
+**Session**: FB19 KitchenSync fitness build — backend test suite fixes
+**File**: `references/pattern-library.md` (test infrastructure section), implied
+**Type**: refinement
+**Rationale**: `httpx` 0.28+ removed the `AsyncClient(app=...)` kwarg in favor of `ASGITransport(app=app)`. Several FB19 test files used the old API, causing 14 ERRORs on first run. Future builds using FastAPI + httpx will hit this immediately unless the pattern is updated.
+**Expected effect**: Future VSM backend testers and S5 will use `from httpx import AsyncClient, ASGITransport` and `AsyncClient(transport=ASGITransport(app=app), ...)` in all pytest fixtures.
+
+---
+
+## Mutation FB19-2 — 2026-05-25 (Refinement — APPLIED)
+
+**Session**: FB19 KitchenSync fitness build — backend test suite fixes
+**File**: `references/pattern-library.md` (SQLAlchemy testing patterns)
+**Type**: refinement
+**Rationale**: When SQLAlchemy models declare `Mapped[uuid.UUID]` with `UUID(as_uuid=True)` and tests run against SQLite, querying with a string UUID (e.g., from a JWT `sub` claim) raises `AttributeError: 'str' object has no attribute 'hex'`. FB19 hit this in `auth.py`, `graphql.py`, and `sio.py`. The fix is explicit `uuid.UUID(user_id)` conversion before passing to SQLAlchemy filters.
+**Expected effect**: Future builds with UUID primary keys will convert string IDs to `uuid.UUID` at the boundary before DB queries.
+
+---
+
+## Mutation FB19-3 — 2026-05-25 (Refinement — APPLIED)
+
+**Session**: FB19 KitchenSync fitness build — backend test suite fixes
+**File**: `references/pattern-library.md` (Celery testing patterns)
+**Type**: refinement
+**Rationale**: FB19's Celery tasks failed tests with `ConnectionRefusedError: localhost:6379` because no Redis was running in the test environment. Mocking `.delay()` calls is the minimal, robust approach when the test environment does not provide a Celery broker/result backend.
+**Expected effect**: Future builds with Celery will mock task `.delay()` or `.apply_async()` in unit tests rather than requiring a live Redis instance.
+
+---
+
+## Mutation FB19-4 — 2026-05-25 (Refinement — APPLIED)
+
+**Session**: FB19 KitchenSync fitness build — backend test suite fixes
+**File**: `references/pattern-library.md` (test database isolation)
+**Type**: refinement
+**Rationale**: FB19 initially used a session-scoped SQLite `:memory:` engine without `StaticPool`. Data leaked across tests, causing `UNIQUE constraint failed: users.email` when function-scoped fixtures inserted the same rows repeatedly. Switching the `engine` fixture to function scope and adding `poolclass=StaticPool` with `connect_args={"check_same_thread": False}` gave each test a fully isolated in-memory database.
+**Expected effect**: Future SQLite-based test suites will use `StaticPool` and function-scoped engines to guarantee isolation.
+
+---
+
+## Mutation FB19-5 — 2026-05-25 (Refinement — APPLIED)
+
+**Session**: FB19 KitchenSync fitness build — backend test suite fixes
+**File**: `references/pattern-library.md` (rate limiting in tests)
+**Type**: refinement
+**Rationale**: FB19's `test_orders.py` repeatedly called `/auth/register`, which has a SlowAPI limit of 5/minute. By the 6th test, rate limiting blocked registration and tests failed with `429`. Refactoring tests to use pre-seeded role fixtures (`owner_user`, `manager_user`, `server_user`) instead of exercising the registration endpoint in every test avoids this entirely.
+**Expected effect**: Future builds will seed test users via fixtures and reuse their tokens across tests rather than repeatedly hitting rate-limited auth endpoints.
+
+---
+
+## Mutation FB19-6 — 2026-05-25 (Structural Mutation Gate: CLEARED)
+
+**Session**: FB19 KitchenSync fitness build evaluation
+**Structural mutations proposed**: Mutation 44 (coach/SKILL.md subagent nesting), Mutation 45 (main/SKILL.md platform constraint), Mutation 46 (coach/SKILL.md begin immediately)
+**Structural mutations approved**: 3/3 applied
+**Structural mutations rejected**: N/A
+**Gate cleared by**: All structural mutations applied to SKILL.md files. No additional structural mutations required.

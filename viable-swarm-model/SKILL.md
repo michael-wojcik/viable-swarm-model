@@ -57,6 +57,8 @@ use symlinks or update paths in mutation commands.
 - **`/skill:viable-swarm-model`** — Load as knowledge reference. Use when you
   need patterns, anti-patterns, or checklists without triggering the full workflow.
 
+> **Platform constraint**: This flow MUST be executed by the root conversation agent (S5). It cannot be delegated to a single subagent because the workflow internally spawns custom subagents (`vsm_architect`, `vsm_auditor`, `vsm_security`, etc.) and subagents do not have access to the `Agent` tool.
+
 ## 3. VSM Role Map with Custom Sub-Agent Types
 
 | VSM System | CLI Implementation | Custom Type | Activation | Produces |

@@ -97,3 +97,43 @@ because of this mutation.]
 - `references/hypotheses.md` — Appended H66, H67, H68, H69
 - `references/fitness-projects.md` — Appended FB14 entry
 - `~/vsm-fitness-builds/coach/FB15-prompt-draft.md` — Created FB15 prompt targeting all four gaps with deliberate traps
+
+---
+
+## Mutation 44 — 2026-05-25 (Structural — APPLIED)
+
+**Session**: FB19 fitness build initiation — agent confusion about execution model
+**File**: `vsm-fitness-coach/SKILL.md` (Phase 1 section)
+**Type**: structural
+**Rationale**: The Phase 1 instruction "Instruct the model to run the `viable-swarm-model` workflow" is ambiguous. S5 (the root agent executing the coach flow) interpreted this as "spawn a single subagent to execute the entire VSM workflow," which failed because subagents cannot spawn subagents. The skill needs an explicit clarification that S5 PERSONALLY executes the VSM workflow phase-by-phase, spawning task-specific subagents for individual tasks only (architect, individual coders, auditor, etc.). A single subagent cannot host the entire VSM workflow.
+**Expected effect**: Future coach invocations will immediately begin executing VSM phases from the root agent, not attempt to delegate the entire build to one subagent.
+
+**Applied change to vsm-fitness-coach/SKILL.md Phase 1**:
+Added after Step 1b: "**Platform Constraint — Subagent Nesting**: The VSM workflow requires spawning multiple custom subagents (`vsm_architect`, `vsm_auditor`, `vsm_security`, `vsm_coordinator`, etc.). Subagents do not have access to the `Agent` tool and cannot spawn further subagents. Therefore, S5 MUST execute the viable-swarm-model workflow directly — walking through each phase personally and spawning individual task subagents as needed. Do NOT spawn a single subagent to 'run the whole build' — this will fail at Phase 1 when that subagent attempts to spawn `vsm_architect`."
+
+---
+
+## Mutation 45 — 2026-05-25 (Structural — APPLIED)
+
+**Session**: FB19 fitness build initiation — platform constraint undocumented
+**File**: `viable-swarm-model/SKILL.md` (Section 2)
+**Type**: structural
+**Rationale**: The viable-swarm-model skill describes a workflow that requires spawning ~10+ subagents across phases, but nowhere does it document the critical platform constraint that subagents cannot spawn subagents. New agents loading this skill for the first time have no way to know they must execute the flow personally rather than delegating it.
+**Expected effect**: First-time users/agents will understand immediately that the VSM flow is root-agent-only.
+
+**Applied change to viable-swarm-model/SKILL.md**:
+Added in Section 2 (How to Invoke): "**Platform constraint**: This flow MUST be executed by the root conversation agent (S5). It cannot be delegated to a single subagent because the workflow internally spawns custom subagents (`vsm_architect`, `vsm_auditor`, `vsm_security`, etc.) and subagents do not have access to the `Agent` tool."
+
+---
+
+## Mutation 46 — 2026-05-25 (Refinement — APPLIED)
+
+**Session**: FB19 fitness build — agent hesitation and permission-seeking
+**File**: `vsm-fitness-coach/SKILL.md` (Phase 1 section)
+**Type**: refinement
+**Rationale**: After reading the prompt draft, S5 asked the user "Do you want me to run the full build now?" instead of executing immediately. The fitness coach skill's Phase 1 has no explicit instruction that execution should begin immediately after Phase 0 synthesis is complete. The default assumption should be "execute now" unless the user explicitly says otherwise.
+**Expected effect**: Future coach sessions will transition from Phase 0 to Phase 1 execution without asking for redundant confirmation.
+
+**Applied change**:
+Added to Phase 1 Step 1b: "Once the build directory is created and the prompt draft is copied, BEGIN EXECUTION IMMEDIATELY. Do not ask the user for confirmation to start the build. The user invoked `/flow:vsm-fitness-coach` explicitly to execute a build."
+
