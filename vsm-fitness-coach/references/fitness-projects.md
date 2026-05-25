@@ -360,3 +360,61 @@
 - **Prevention rules validated**: M39, H60, H61, H63, H64, H69
 - **Prevention rules re-validated (fragile transfer)**: H65, H55
 - **New mutations**: M46-M48
+
+
+---
+
+## FB16: FarmLogix — Agricultural Supply Chain & Farm Management Platform
+
+**Complexity**: High (4-5 waves, ~3500 lines, 4 services: API + worker + realtime + frontend)
+**Expected Tier**: Tier 2 (same tier as FB15; score < 4.0 prevents escalation)
+**Services**: FastAPI backend, Celery/Redis worker, Socket.io real-time service, React frontend
+**Date**: 2026-05-24
+**Build ID**: FB16-20260524
+
+### Coverage Map
+
+| Capability | Tested by |
+|---|---|
+| **Prevention rule validation** | |
+| H70 (Circular import check) | Fix wave added cross-module imports safely; 0 circular imports |
+| H71 (as any anti-pattern) | Frontend agent added `profitMargin` to store; zero `as any` casts |
+| H72 (Runtime API verification) | GraphQL agent verified `validation_rules` doesn't exist; avoided T1 |
+| H65 (Engine config) | Lazy `_get_async_engine()` factory in models.py |
+| H69 (Auth router in foundation) | Auth router created in foundation wave with all endpoints |
+| M39 (Auditor batch ≤10) | 4 batches (10, 8, 6, 10 files); 0 false-positive BLOCKERs from batch size |
+| M46-M48 (Integration checks) | Circular import, anti-as-any, argument parity, runtime API verification checks added |
+| **New hypotheses generated** | |
+| H73 | Security gate HIGH/CRITICAL findings are not automatic fix-wave BLOCKERs |
+| H74 | Architect does not runtime-verify framework parameters before embedding in api-spec.md |
+| H75 | Frontend agents do not introspect GraphQL schema before writing queries |
+| H76 | Foundation auditor scope misses wiring files and requirements.txt |
+| H77 | Integration checklist misses config key name parity |
+| H78 | Implementation agents treat data-model.md as advisory |
+| **Gaps targeted from FB15** | |
+| G1 | Foundation auditor misses module-level side effects in sio.py |
+| G2 | Frontend `as any` bypasses type safety — trap avoided by schema update |
+| G3 | Fix agents introduce circular imports — prevention rule worked |
+| G4 | GraphQL argument type parity not verified — coordinator verified field names but not argument types |
+| G5 | Agents use non-existent framework parameters — runtime verification worked |
+
+### Known Stress Points
+- Architect propagated prompt traps into api-spec.md (validation_rules, String vs DateTime, snake_case GraphQL names)
+- Frontend agents wrote snake_case GraphQL queries despite Strawberry auto-camelCase — required full rewrite
+- Security gate found real vulnerabilities but fix wave deferred HIGHs without escalation
+- Socket.IO CORS wildcard (`*`) instead of explicit allowlist
+- GraphQL RBAC mismatch: suppliers can create orders in GraphQL but REST blocks them
+- Model drift: Delivery model added outside data-model.md spec
+- Config key name drift: CORS_ORIGINS vs CORS_ALLOWED_ORIGINS
+
+### Result
+- **Score**: 3.4/5.0
+- **BLOCKERs**: 4 foundation + 8+ implementation + 1 integration + 1 CRITICAL + 3 HIGH security
+- **Fix iterations**: 1 major fix wave
+- **Traps caught**: T1 (H72), T2 (H71), T5 (H65), T7 (H61), T8 (H60), T9 (route ordering)
+- **Traps missed/partial**: T3 (circular import — prevention worked, no trap triggered), T4 (argument type parity — coordinator verified field names only), T6 (auditor batch — M39 worked)
+- **Prevention rules validated**: H70, H71, H72, H65, H69, M39, M46-M48
+- **New mutations**: M49-M52
+- **Auditor false positive**: camelCase GraphQL queries flagged as BLOCKER (recurring H39/H58 false positive)
+
+---

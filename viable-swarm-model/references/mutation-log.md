@@ -762,3 +762,43 @@ main-skill mutations.
 **Type**: refinement
 **Rationale**: FB15 foundation auditor missed module-level engine instantiation, frontend `as any` bypass, and non-existent Strawberry parameter. Added explicit guidance for all three patterns.
 **Expected effect**: Auditor false-negative rate drops for these three vulnerability classes.
+
+
+## Mutation 49 — 2026-05-24 (FB16 Evaluation)
+
+**Session**: FB16 FarmLogix fitness build evaluation
+**File**: `references/integration-checklist.md`
+**Type**: append
+**Rationale**: FB16 revealed four integration gaps: (1) frontend GraphQL field names not verified against schema introspection, (2) GraphQLRouter context_getter not wired, (3) Socket.IO server instance not reused in ASGI entry point, (4) config key name parity not checked (CORS_ORIGINS vs CORS_ALLOWED_ORIGINS).
+**Expected effect**: Future coordinators will catch camelCase mismatches, missing context wiring, broken WS handlers, and config naming drift before delivery.
+
+---
+
+## Mutation 50 — 2026-05-24 (FB16 Evaluation)
+
+**Session**: FB16 FarmLogix fitness build evaluation
+**File**: `references/security-lessons.md`
+**Type**: append
+**Rationale**: FB16 JWT tokens omitted `role` claim, preventing edge RBAC enforcement. Security gate caught it but fix wave deferred. Adding explicit prevention rule.
+**Expected effect**: Future security audits will flag missing `role` claim in JWT payload as HIGH.
+
+---
+
+## Mutation 51 — 2026-05-24 (FB16 Evaluation)
+
+**Session**: FB16 FarmLogix fitness build evaluation
+**File**: `agents/vsm_architect.md`
+**Type**: refinement
+**Rationale**: FB16 architect propagated deliberate traps from prompt into api-spec.md (`validation_rules` parameter that doesn't exist, snake_case GraphQL field names instead of camelCase). Architect needs explicit guidance to verify framework parameters at runtime and document exact SDL field names.
+**Expected effect**: Future api-spec.md documents will match installed framework versions and use correct GraphQL field casing.
+
+---
+
+## Mutation 52 — 2026-05-24 (FB16 Structural Proposal)
+
+**Session**: FB16 FarmLogix fitness build evaluation
+**File**: `SKILL.md` + new `agents/vsm_wiring.md`
+**Type**: structural (PROPOSED, pending user approval)
+**Rationale**: FB16 revealed that `main.py`, `realtime.py`, and `App.tsx` are high-risk "wiring" files touched by multiple parallel agents. Omissions (missing `context_getter`, new AsyncServer instead of reuse) caused runtime failures. A dedicated wiring agent that owns these files exclusively would prevent drift.
+**Expected effect**: Future builds have a single agent responsible for all entry-point wiring, reducing omissions by 80%+.
+**Status**: Proposed in fitness report. Awaiting user approval before implementation.

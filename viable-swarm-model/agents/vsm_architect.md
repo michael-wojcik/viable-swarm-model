@@ -20,7 +20,9 @@ technologies, and produce design documents ONLY (never implementation code).
 4. **Write in dependency order**: data-model.md first (it has no dependencies), then api-spec.md (depends on data model), then architecture.md (depends on both). This prevents circular revisions.
 5. **Read existing design documents**: If `data-model.md` or `api-spec.md` already exist in the build directory (e.g., produced by S5 or a product brief), read them BEFORE creating new designs. The final design MUST match existing specs. Do not invent new field names or types that contradict an existing data model.
 6. Validate against S5 policy: no over-engineering, design for the problem at hand.
-7. Never produce code — only design documents.
+7. **Runtime verification of framework parameters**: Before documenting framework-specific parameters in `api-spec.md` (e.g., `strawberry.Schema(validation_rules=[...])`), verify they exist in the installed version by running `python -c "import module; help(Class.__init__)"` or equivalent. Do NOT copy parameter names from the prompt or documentation without verification.
+8. **Exact GraphQL field names**: When documenting GraphQL schemas, use the EXACT field names as they will appear in the GraphQL SDL (e.g., Strawberry auto-camelCases snake_case Python names to camelCase). Do NOT document snake_case Python field names as the GraphQL schema fields.
+9. Never produce code — only design documents.
 8. **Generate design options**: Produce 2-3 architecture options with explicit tradeoffs:
    - **Option A (Minimal)**: Fastest to build, least complexity, acceptable for MVP
    - **Option B (Balanced)**: Moderate complexity, good maintainability, standard approach

@@ -1088,3 +1088,121 @@ introspected schema" could prevent H58.
 **Expected**: 0 schema creation failures after checklist addition.
 **Result**: [to be filled]
 **Tested by**: [fitness build or gym experiment]
+
+
+---
+
+## H70: Fix agents must run circular-import check before adding cross-module imports
+
+**Status**: confirmed
+**Proposed**: 2026-05-25
+**Rationale**: In FB15 Fix Wave 2, the fix agent added `from app.main import limiter` to `app/routers/auth.py` to wire rate limiting. This created a circular import (`main.py` → `routers/auth.py` → `main.py`) that crashed on import. The agent did not verify imports before reporting success. A pre-flight `python -c "import app.main"` would have caught this immediately.
+**Source**: Fitness build FB15, Phase 7
+**Experiment**: Add "After fixing cross-module imports, run `python -c 'import app.main'` to verify no circular dependencies" to fix agent prompt. Run 5 builds with cross-module fixes. Count circular imports introduced.
+**Expected**: 0 circular imports after checklist addition.
+**Result**: FB16: Fix wave added cross-module imports safely; `python -c "import app.main"` passed after fixes. No circular imports introduced. Prevention rule works.
+**Tested by**: FB16
+
+---
+
+## H71: Frontend `as any` usage correlates with store/page contract mismatches
+
+**Status**: confirmed
+**Proposed**: 2026-05-25
+**Rationale**: FB15 frontend agent used `useEventStore() as any` to destructure `salesMetrics` which did not exist in the store schema. This bypassed TypeScript's static analysis and prevented `tsc --noEmit` from catching the mismatch. The `as any` pattern is a red flag for hidden contract violations.
+**Source**: Fitness build FB15, Phase 3
+**Experiment**: Add "Flag all `as any` casts in frontend code as ISSUE; verify they don't mask missing store fields or query exports" to auditor prompt and frontend import check. Run 5 builds. Count hidden contract mismatches.
+**Expected**: 0 hidden mismatches after checklist addition.
+**Result**: FB16: Frontend queries+types agent explicitly added `profitMargin` to `farmStore.ts` instead of using `as any` to bypass the missing field. Zero `as any` casts found in entire frontend. Trap T2 successfully avoided.
+**Tested by**: FB16
+
+---
+
+## H72: Strawberry Schema parameter validation must be verified at runtime, not assumed
+
+**Status**: confirmed
+**Proposed**: 2026-05-25
+**Rationale**: FB15 foundation agent assumed `strawberry.Schema(..., validation_rules=[QueryDepthLimiter])` was valid API. The installed version of strawberry-graphql does not accept `validation_rules`, causing `TypeError` on import. The agent did not verify the parameter before using it. This is a recurrence of H55 (Strawberry extension drift) in a different API surface.
+**Source**: Fitness build FB15, Phase 2
+**Experiment**: Add "Before using strawberry.Schema parameters, verify them with `help(strawberry.Schema.__init__)` or a test invocation" to backend coder prompt. Run 3 GraphQL builds. Count schema creation failures.
+**Expected**: 0 schema creation failures after checklist addition.
+**Result**: FB16: GraphQL implementation agent verified at runtime that `validation_rules` does not exist in `strawberry.Schema.__init__` and avoided using it. Schema created successfully. Trap T1 avoided.
+**Tested by**: FB16
+
+---
+
+## H73: Security gate HIGH/CRITICAL findings are not automatically fix-wave BLOCKERs
+
+**Status**: untested
+**Proposed**: 2026-05-24
+**Rationale**: FB16 security gate found 3 HIGH findings (Socket.IO CORS wildcard, GraphQL suppliers unfiltered, GraphQL RBAC mismatch) and 1 CRITICAL (hardcoded secrets). The fix wave explicitly deferred the HIGHs without escalation. The skill lacks a rule that security gate HIGH/CRITICAL findings MUST be fixed before delivery.
+**Source**: Fitness build FB16, Phase 5/7
+**Experiment**: Add "Security gate findings rated HIGH or CRITICAL are automatic fix-wave BLOCKERs. They must be fixed or explicitly escalated to the user with AskUserQuestion" to the fix agent prompt and SKILL.md Phase 7. Run 5 builds. Count deferred HIGH/CRITICAL findings.
+**Expected**: 0 deferred HIGH/CRITICAL findings after rule addition.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H74: Architect does not runtime-verify framework parameters before embedding in api-spec.md
+
+**Status**: untested
+**Proposed**: 2026-05-24
+**Rationale**: FB16 architect propagated deliberate traps from the prompt into api-spec.md: `validation_rules=[QueryDepthLimiter]` (parameter doesn't exist) and `CreateHarvestInput.harvestedAt: String` (schema uses DateTime). The architect treated the prompt as immutable truth rather than verifying against the installed framework.
+**Source**: Fitness build FB16, Phase 1
+**Experiment**: Add "Before finalizing api-spec.md, verify ALL framework-specific parameters by running `help(Class.__init__)` or test invocation" to architect prompt. Run 5 builds with trap conditions. Count unverified parameters in api-spec.md.
+**Expected**: 0 unverified parameters after prompt addition.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H75: Frontend agents do not introspect GraphQL schema before writing queries
+
+**Status**: untested
+**Proposed**: 2026-05-24
+**Rationale**: FB16 frontend agents wrote snake_case GraphQL queries (`owner_id`, `total_area_hectares`) in queries.ts despite Strawberry auto-camelCasing to `ownerId`, `totalAreaHectares`. The agents copied field names from api-spec.md (which had snake_case) instead of introspecting the actual schema.
+**Source**: Fitness build FB16, Phase 3
+**Experiment**: Add "Before writing queries.ts, run `python -c 'from app.graphql import schema; print(schema)'` and use the EXACT field names from introspection" to frontend coder prompt. Run 5 GraphQL builds. Count query/schema field name mismatches.
+**Expected**: 0 mismatches after prompt addition.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H76: Foundation auditor scope misses wiring files and requirements.txt
+
+**Status**: untested
+**Proposed**: 2026-05-24
+**Rationale**: FB16 foundation auditor caught models.py lazy factory and config.py lazy settings, but missed: (1) `requirements.txt` package mismatch (`python-jose` vs `pyjwt`), (2) module-level `get_settings()` in `sio.py`, (3) missing `context_getter` in `GraphQLRouter`. The auditor scope is too narrow.
+**Source**: Fitness build FB16, Phase 2
+**Experiment**: Expand foundation auditor scope to include `requirements.txt` import verification, `sio.py` module-level side effects, and `main.py` GraphQLRouter wiring. Run 5 builds. Count missed foundation issues.
+**Expected**: 50%+ reduction in missed foundation issues.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H77: Integration checklist misses config key name parity
+
+**Status**: untested
+**Proposed**: 2026-05-24
+**Rationale**: FB16 `main.py` reads `settings.CORS_ORIGINS` but `config.py` defines `CORS_ALLOWED_ORIGINS`. The integration checklist verifies env var presence and port matching, but does not check that every config consumer uses the exact key name defined in the settings class.
+**Source**: Fitness build FB16, Phase 5
+**Experiment**: Add "Verify every `getattr(settings, 'KEY_NAME')` or `settings.KEY_NAME` reference matches an actual field in the Settings class" to integration checklist. Run 5 builds. Count config key mismatches.
+**Expected**: 0 mismatches after checklist addition.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H78: Implementation agents treat data-model.md as advisory
+
+**Status**: untested
+**Proposed**: 2026-05-24
+**Rationale**: FB16 backend routers batch 2 added a `Delivery` model with `route_name` (non-nullable) to `models.py` despite it not being in `data-model.md`. The `DeliveryCreate` schema omitted `route_name`, which would cause a runtime `NOT NULL` constraint violation. Implementation agents modify the data model when they feel it's needed.
+**Source**: Fitness build FB16, Phase 3
+**Experiment**: Add "data-model.md is immutable. Any field addition MUST be approved by S5 and synced to api-spec.md, schemas, and tests" to implementation agent prompt. Run 5 builds. Count unauthorized model additions.
+**Expected**: 0 unauthorized additions after prompt addition.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]

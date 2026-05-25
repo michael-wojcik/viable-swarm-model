@@ -33,17 +33,22 @@ correction BEFORE quality gates.
 - [ ] Every backend `emit` has matching frontend listener (and vice versa)
 - [ ] WebSocket message shape: `kind` field values match exactly between backend and frontend
 - [ ] Shared event constants file exists and is imported by both sides
+- [ ] **Socket.IO server instance reuse**: The ASGI entry point (`realtime.py`) imports and reuses the SAME `sio` instance that event handlers are registered on in `sio.py`. Creating a new `AsyncServer` in `realtime.py` breaks all WS handlers.
 
 ## 6. GraphQL Contracts
 - [ ] SDL types match TypeScript payload types
 - [ ] Every subscription has matching resolver with `subscribe` returning AsyncIterable
 - [ ] @graphql-depth-limit installed (max 10) + complexity analysis
+- [ ] **Schema introspection verification**: Run `python -c "from app.graphql import schema; print(schema)"` and verify EVERY frontend query field name matches the introspected schema EXACTLY (Strawberry auto-camelCases snake_case Python fields to camelCase GraphQL fields)
+- [ ] **GraphQLRouter wiring**: Verify `GraphQLRouter` is mounted with `context_getter=get_context` so auth context propagates to resolvers
+- [ ] **GraphQL argument type parity**: Verify every frontend mutation's input argument types match the introspected schema input types (not just field names)
 
 ## 7. Frontend Paths & Config
 - [ ] Frontend relative path to shared types: `../../shared/` not `../shared/` in monorepos
 - [ ] Vite/Webpack proxy config includes `/api`, `/graphql`, `/ws`, `/tiles` paths
 - [ ] GraphQL subscriptions need `ws: true` in proxy config
 - [ ] Vite path alias configured for shared types (e.g., `@flux/shared`)
+- [ ] **Config key name parity**: Every `getattr(settings, "KEY_NAME")` or `settings.KEY_NAME` reference in the codebase must match an actual field defined in the Settings/Pydantic class. Name drift (e.g., `CORS_ORIGINS` vs `CORS_ALLOWED_ORIGINS`) silently breaks functionality.
 
 ## 8. pgvector Pipeline
 - [ ] PostgreSQL vector extension enabled

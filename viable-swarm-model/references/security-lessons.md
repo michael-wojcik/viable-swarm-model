@@ -375,3 +375,10 @@ missing until Phase 5.
 **Prevention rule**: Parallel frontend agents independently produce queries.ts, stores, and page components that may have incompatible contracts. A lightweight automated check (`tsc --noEmit` or import grep) MUST run before the auditor to catch missing exports, missing store fields, and type mismatches.
 **Affected**: vsm_coordinator, S3 (main agent), vsm_auditor.
 **Source**: Fitness build FB14, Phase 3b. queries.ts was missing exports that pages imported; courseStore.ts was missing fields pages destructured. Auditor caught them but only after implementation was complete.
+
+---
+
+## L50: JWT Payload Must Include Role Claim
+**Prevention rule**: `create_access_token` MUST include `"role": user.role` in the JWT payload. The `get_current_user` dependency can then enforce RBAC at the edge without an extra database lookup. Without the role claim, middleware cannot perform role-based access control efficiently.
+**Affected**: `vsm_security`, backend coder agents, fix agents.
+**Source**: Fitness build FB16, Phase 3b/5 — JWT tokens omitted role claim, allowing GraphQL resolvers to bypass role checks because `info.context["user"]` had no role information.
