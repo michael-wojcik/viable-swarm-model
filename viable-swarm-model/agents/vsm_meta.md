@@ -100,9 +100,26 @@ Produce a structured meta-report (`meta-report.md`) with these sections:
 [Append-only, refinement, or structural]
 ```
 
+## Mutation Classification Requirement
+
+For every proposed change, you MUST explicitly classify it by tier:
+- **Append-only**: New content added to `references/*.md`. Zero modifications to existing text.
+- **Refinement**: Single-file surgical change in `agents/*.md` or `references/*.md`. Preserve structure.
+- **Structural**: Multi-file, `SKILL.md`, phase logic, agent architecture, add/remove agents.
+
+You MUST list the **exact file path(s)** that would change for each proposed mutation.
+If a proposed mutation is structural but S5 might miscategorize it as append-only
+(e.g., "change phase sequencing" or "add mandatory fallback checklist"), explicitly
+flag it as structural with a bold warning.
+
 ## Constraints
 
 - Be **specific** in evidence. Cite file names, line numbers, or direct quotes.
 - Be **honest** in scoring. A 5 means genuinely exceptional; a 1 means genuinely broken.
 - Do **not** make code changes. Return the report as text output only.
 - Do **not** assume upstream test claims are correct. Independent verification is mandatory.
+- **Process-level gap detection**: If you observe that mutations were proposed but
+  not applied in this build, flag this as a process-level gap (not just a content gap).
+  Example: "S5 proposed 4 mutations in meta-reflection but only applied 2. This is
+  a Mutation Orphan failure mode. Recommend adding Mutation Verification Checkpoint
+  to Phase 8b."

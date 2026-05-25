@@ -515,6 +515,36 @@ performance. This agent produces a standalone `meta-report.md` with independent
 test verification, agent performance scores, rule effectiveness ratings, and
 process bottleneck analysis.
 
+### Phase 8c: Mutation Verification Checkpoint (MANDATORY)
+Before declaring Phase 8 complete, S5 MUST run the Mutation Verification
+Checkpoint. This prevents the recurring failure mode where mutations are
+proposed in `meta-report.md` but never applied.
+
+**Step 8c-1: Produce `mutations-applied.md`**
+Create a tracking artifact in the build directory (or append to
+`.kimi/meta-reflection.md`) with this table:
+
+```markdown
+| # | Mutation | Tier | Proposed By | Status | Evidence |
+|---|----------|------|-------------|--------|----------|
+```
+
+**Step 8c-2: Cross-check against `meta-report.md`**
+For every mutation proposed by `vsm_meta`, confirm one of:
+- **Applied**: File was modified; git diff shows the change
+- **Deferred**: Intentionally postponed with rationale logged
+- **Rejected**: Intentionally rejected with rationale logged
+- **Overlooked**: Unintentionally missed — STOP, apply now
+
+**Step 8c-3: Process-level gap check**
+If `vsm_meta` identified a process-level gap (e.g., "mutation tracking missing",
+"agent miscategorizes structural as append-only"), verify that the gap itself
+was addressed, not just the symptoms.
+
+**Step 8c-4: Hard block**
+If ANY mutation status is `overlooked`, Phase 8b is NOT complete. Apply the
+missed mutation, update the table, and re-verify. Only then proceed to git commit.
+
 The main agent (S5) reads the `meta-report.md` and uses it to inform hypothesis
 generation and mutation decisions.
 

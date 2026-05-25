@@ -394,3 +394,21 @@ Ownership: owner_id == current_user.id (ignored for admin)
 3. Frontend tester verifies login/register pages use ONLY keys documented in the contract
 4. Backend tester verifies auth router returns EXACTLY the keys documented in the contract
 **Source**: FB18 LoginPage expected `role` in login response (backend returned only `access_token` + `token_type`). RegisterPage sent `name` instead of `company_name`. No auth contract existed (H86)
+
+### Pattern: Mutation Orphan Prevention
+**When**: Any Phase 8b meta-reflection that proposes mutations.
+**What**: Before declaring Phase 8 complete, produce a `mutations-applied.md`
+tracking artifact that lists every proposed mutation with its tier, target file,
+and status (`applied` / `deferred` / `rejected` / `overlooked`).
+**Why**: S5 attention drops off during long sessions. Without a forced checkpoint,
+structural mutations are miscategorized as append-only, refinement mutations are
+forgotten, and typos survive for multiple builds. FB18 revealed this failure mode:
+3 structural mutations were initially declared "none," and 4 refinement mutations
+were only caught when the user asked "any other mutations?"
+**How**:
+1. `vsm_meta` MUST classify every mutation by tier with exact file paths
+2. S5 MUST produce `mutations-applied.md` before git commit
+3. S5 MUST verify every row in the table has status `applied`, `deferred`, or `rejected`
+4. If any row is `overlooked`, STOP — apply the mutation, update the table, re-verify
+5. Process-level gaps (e.g., "mutation tracking missing") must themselves be addressed
+**Source**: FB18 Phase 8b mutation orphan failure — structural and refinement mutations were proposed but not applied systematically (H89)

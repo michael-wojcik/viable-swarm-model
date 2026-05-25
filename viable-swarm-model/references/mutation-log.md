@@ -928,3 +928,13 @@ main-skill mutations.
 **Expected effect**: Phase 8b will systematically spawn `vsm_meta` with a defined prompt, producing consistent meta-evaluation artifacts across builds.
 **Before**: `vsm_meta` referenced in Phase 8b text but absent from agent role map and agents/ directory.
 **After**: `vsm_meta` added to agent role map; `agents/vsm_meta.md` created with explicit evaluation prompt.
+
+## Mutation FB18-10 — 2026-05-25 (Structural — USER APPROVED via implicit request)
+
+**Session**: FB18 ShipFlow fitness build evaluation — post-completion process audit
+**File**: `SKILL.md` (Phase 8b section), `agents/vsm_meta.md`, `references/pattern-library.md`
+**Type**: structural
+**Rationale**: FB18 revealed a process-level gap: 3 structural mutations were initially declared "none" when they were clearly justified, and 4 refinement mutations were only caught when the user explicitly asked "any other mutations?" The root cause is that Phase 8b has no systematic mutation-tracking checkpoint. S5 attention drops off during long sessions, and without a forced review step, mutations are miscategorized or forgotten. This is a recurring meta-failure mode that undermines the skill's learning loop.
+**Expected effect**: Future builds will produce a `mutations-applied.md` tracking artifact before declaring Phase 8 complete. vsm_meta will explicitly classify every mutation by tier with exact file paths. Process-level gaps (like missing mutation tracking) will be flagged and addressed.
+**Before**: Phase 8b ended with "git commit all changes" but no verification that all proposed mutations were actually applied.
+**After**: Phase 8b has a mandatory Step 8c (Mutation Verification Checkpoint) that hard-blocks completion if any mutation was overlooked.

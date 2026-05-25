@@ -1349,3 +1349,16 @@ introspected schema" could prevent H58.
 **Expected**: 0 file overwrites after prompt addition.
 **Result**: [to be filled]
 **Tested by**: [fitness build or gym experiment]
+
+---
+
+## H89: Phase 8b lacks a mutation verification checkpoint, causing structural and refinement mutations to be overlooked
+
+**Status**: confirmed
+**Proposed**: 2026-05-25
+**Rationale**: FB18 meta-reflection proposed 3 structural mutations and 4 refinement mutations. S5 initially declared "no structural mutations," then only applied the refinement mutations after the user explicitly asked "any other mutations?" The root cause is Phase 8b has no systematic step that verifies every proposed mutation was applied before declaring the phase complete. S5 attention drops off during long sessions.
+**Source**: Fitness build FB18, Phase 8b process audit
+**Experiment**: Add Mutation Verification Checkpoint (Step 8c) to SKILL.md requiring `mutations-applied.md` artifact. Run 3 builds. Count overlooked mutations.
+**Expected**: 0 overlooked mutations after checkpoint addition.
+**Result**: CONFIRMED. The Mutation Verification Checkpoint was added as structural mutation FB18-10. Future builds will produce `mutations-applied.md` and hard-block on overlooked mutations.
+**Tested by**: FB18-20260525, Phase 8b process audit
