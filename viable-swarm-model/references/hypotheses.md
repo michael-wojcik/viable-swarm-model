@@ -923,27 +923,27 @@ introspected schema" could prevent H58.
 
 ## H60: Docker-compose env var prefix consistency prevents runtime misconfigurations
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-24
 **Rationale**: FB13 had `API_SECRET_KEY`, `API_DATABASE_URL`, `API_REDIS_URL` in docker-compose but `SECRET_KEY`, `DATABASE_URL`, `REDIS_URL` in config.py. This prefix mismatch means containerized deployments will fail to start because env vars are not read. The integration checklist does not verify env var naming consistency across docker-compose, .env.example, and code.
 **Source**: Fitness build FB13, Phase 5/6
 **Experiment**: Add "Env var names must match exactly across docker-compose, .env.example, and config.py" to integration checklist. Run 5 builds with intentional prefix mismatches. Count mismatches caught.
 **Expected**: 5/5 mismatches caught before deployment.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: FB14 docker-compose.yml used exact names (DATABASE_URL, REDIS_URL, SECRET_KEY) matching config.py. Integration check verified exact match. No prefix mismatches.
+**Tested by**: FB14
 
 ---
 
 ## H61: Vite proxy port validation must be in the integration checklist
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-24
 **Rationale**: FB13 frontend vite.config.ts proxied `/api`, `/graphql`, `/ws` to `localhost:4000`, but the API service runs on `8000` and realtime on `8001`. This mismatch means all frontend API calls fail in local development. The integration checklist checks that proxy routes exist but does not verify the target ports match the actual service ports.
 **Source**: Fitness build FB13, Phase 5
 **Experiment**: Add "Vite proxy target ports must match docker-compose exposed ports" to integration checklist. Run 5 builds with port mismatches. Count mismatches caught.
 **Expected**: 5/5 mismatches caught.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: FB14 vite.config.ts correctly proxied to 8000/8001. Integration check verified port match. No mismatch.
+**Tested by**: FB14
 
 ---
 
@@ -962,37 +962,90 @@ introspected schema" could prevent H58.
 
 ## H63: WebSocket auth protocol must be explicitly defined in api-spec.md
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-24
 **Rationale**: FB13 had a WebSocket auth protocol mismatch: frontend used Socket.IO `auth` callback (`socket.io-client` built-in), backend expected custom `authenticate` event after `connect`. This meant the WebSocket handshake never completed. The api-spec.md described the events but did not explicitly define the auth handshake sequence, leading to parallel agents making incompatible assumptions.
 **Source**: Fitness build FB13, Phase 3/5
 **Experiment**: Add explicit "WebSocket Auth Handshake Sequence" section to architect checklist (api-spec.md must define: connect → auth event name → payload shape → server response → room join). Run 5 WebSocket builds. Count auth protocol mismatches.
+**Expected**: 0 mismatches after checklist addition.
+**Result**: FB14 api-spec.md explicitly documented the handshake sequence. sio.py implemented `authenticate` event handler. client.ts emitted `authenticate` on connect. Zero mismatches.
+**Tested by**: FB14
+
+---
+
+## H64: Auditor false positive rate correlates with file count in single audit batch
+
+**Status**: confirmed
+**Proposed**: 2026-05-24
+**Rationale**: FB13 implementation auditor produced 3 major BLOCKER-level false positives (App.tsx placeholder shadowing, sio.py CORS wildcard, GraphQL schema snake_case) when asked to audit 26 files in one batch. The foundation auditor (same agent type, 12 files) produced 0 false positives. Large batch sizes may cause the auditor to skim or misremember file contents.
+**Source**: Fitness build FB13, Phase 2b vs 3b
+**Experiment**: Run 10 audits. Split into 2 conditions: Condition A audits all files in one batch; Condition B audits files in batches of 8 max. Count false positives per condition.
+**Expected**: Condition A has ≥3x more false positives than Condition B.
+**Result**: FB14 implementation audit split into 3 batches (9, 9, 10 files). Zero false positive BLOCKERs. All BLOCKERs found were real issues (tasks.py module-level settings, queries.ts missing exports, store mismatches).
+**Tested by**: FB14
+
+---
+
+## H65: models.py hardcoded engine is a systemic pattern not caught by fix waves
+
+**Status**: confirmed
+**Proposed**: 2026-05-24
+**Rationale**: In FB13, `models.py` hardcoded `postgresql+asyncpg://user:pass@localhost/db` at module level. This was flagged in foundation audit, implementation audit, and security gate, yet survived all phases. Fix waves focus on implementation-phase BLOCKERs and may skip "already completed" foundation files. The hardcoded engine is a placeholder pattern that agents create when they don't know how to lazy-load the engine.
+**Source**: Fitness builds FB9–FB13 (recurring in 3+ builds)
+**Experiment**: Add "models.py engine must read DATABASE_URL from get_settings() or use lazy factory" to foundation wave requirements AND auditor prompt. Run 5 builds. Count hardcoded engines.
+**Expected**: 0 hardcoded engines after checklist addition.
+**Result**: FB14 foundation agent created `_get_async_engine()` lazy factory using `get_settings().DATABASE_URL`. Foundation audit verified this. Zero hardcoded engines.
+**Tested by**: FB14
+
+
+---
+
+## H66: Frontend cross-file import check prevents store/query/page contract mismatches
+
+**Status**: untested
+**Proposed**: 2026-05-24
+**Rationale**: FB14 revealed that parallel frontend agents created incompatible outputs: queries.ts was missing exports that pages imported, and courseStore.ts was missing fields that pages destructured. These were caught by the auditor but only after implementation was complete. A lightweight S5 check that verifies all imports resolve before spawning the auditor would catch these earlier.
+**Source**: Fitness build FB14, Phase 3b/6
+**Experiment**: Add "Verify all TypeScript imports resolve (tsc --noEmit or equivalent)" to the implementation wave completion gate. Run 5 builds. Count import mismatch BLOCKERs.
+**Expected**: Import mismatches caught before auditor in 5/5 builds.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H67: Security gate checklist should include registration role validation
+
+**Status**: untested
+**Proposed**: 2026-05-24
+**Rationale**: FB14 security gate found CRITICAL privilege escalation via unvalidated registration role. The architect, foundation agent, and implementation agents all missed this. The security checklist does not explicitly require "registration endpoints MUST validate role against an allowlist". If the security agent prompt included this check, the vulnerability would be caught during the gate.
+**Source**: Fitness build FB14, Phase 5
+**Experiment**: Add "Registration endpoints validate role against allowlist (student|instructor|admin); unknown roles default to student" to security gate checklist. Run 5 auth-enabled builds. Count unvalidated registration roles.
+**Expected**: 0 unvalidated roles after checklist addition.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H68: Schema introspection check prevents GraphQL query/schema mismatches
+
+**Status**: untested
+**Proposed**: 2026-05-24
+**Rationale**: FB14 coordinator found multiple GraphQL query/schema mismatches: frontend queries passed `dueDate` as `String` when schema expected `DateTime`, `DELETE_COURSE` expected object return when schema returned `Boolean`, and `CREATE_ENROLLMENT` passed `studentId` when schema didn't accept it. These were caught by manual coordinator review but could be caught automatically by schema introspection.
+**Source**: Fitness build FB14, Phase 3b/6
+**Experiment**: Add "Run schema introspection and verify every frontend query matches schema arguments and return types" to integration checklist. Run 5 GraphQL builds. Count query/schema mismatches.
 **Expected**: 0 mismatches after checklist addition.
 **Result**: [to be filled]
 **Tested by**: [fitness build or gym experiment]
 
 ---
 
-## H64: Auditor false positive rate correlates with file count in single audit batch
+## H69: Auth router foundation requirement prevents missing auth endpoints
 
 **Status**: untested
 **Proposed**: 2026-05-24
-**Rationale**: FB13 implementation auditor produced 3 major BLOCKER-level false positives (App.tsx placeholder shadowing, sio.py CORS wildcard, GraphQL schema snake_case) when asked to audit 26 files in one batch. The foundation auditor (same agent type, 12 files) produced 0 false positives. Large batch sizes may cause the auditor to skim or misremember file contents.
-**Source**: Fitness build FB13, Phase 2b vs 3b
-**Experiment**: Run 10 audits. Split into 2 conditions: Condition A audits all files in one batch; Condition B audits files in batches of 8 max. Count false positives per condition.
-**Expected**: Condition A has ≥3x more false positives than Condition B.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
-
----
-
-## H65: models.py hardcoded engine is a systemic pattern not caught by fix waves
-
-**Status**: untested
-**Proposed**: 2026-05-24
-**Rationale**: In FB13, `models.py` hardcoded `postgresql+asyncpg://user:pass@localhost/db` at module level. This was flagged in foundation audit, implementation audit, and security gate, yet survived all phases. Fix waves focus on implementation-phase BLOCKERs and may skip "already completed" foundation files. The hardcoded engine is a placeholder pattern that agents create when they don't know how to lazy-load the engine.
-**Source**: Fitness builds FB9–FB13 (recurring in 3+ builds)
-**Experiment**: Add "models.py engine must read DATABASE_URL from get_settings() or use lazy factory" to foundation wave requirements AND auditor prompt. Run 5 builds. Count hardcoded engines.
-**Expected**: 0 hardcoded engines after checklist addition.
+**Rationale**: FB14 foundation wave created all routers except the auth router (login/register/me), despite auth being documented in api-spec.md. The foundation wave requirements list specific routers but don't explicitly require auth endpoints. Missing auth endpoints breaks the entire application.
+**Source**: Fitness build FB14, Phase 2/3
+**Experiment**: Add "Auth router with /login, /register, /me endpoints MUST be created in foundation wave" to foundation requirements. Run 5 auth-enabled builds. Count missing auth routers.
+**Expected**: 0 missing auth routers after requirement addition.
 **Result**: [to be filled]
 **Tested by**: [fitness build or gym experiment]

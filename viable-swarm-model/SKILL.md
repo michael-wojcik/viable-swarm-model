@@ -309,6 +309,7 @@ If any check fails → fix BEFORE dispatching Sub-Wave 2b.
 
 **Sub-Wave 2b — Dependent Infrastructure (parallel, then verify)**:
 Spawn parallel `coder` subagents with `run_in_background=true` for:
+- `routers/auth.py` (MUST include `POST /login`, `POST /register`, `GET /me` endpoints)
 - `graphql.py` (imports from models, auth)
 - `sio.py` (imports from models, auth)
 - `main.py` scaffolding (imports from config, registers middleware)
@@ -352,6 +353,23 @@ ANY failure → back to Phase 3 (frontend implementation agent fixes).
 
 This prevents frontend configuration bugs from surviving to the security gate,
 where they are currently discovered too late.
+
+### Phase 3e: Frontend Cross-File Import Check
+After all parallel frontend implementation agents complete and BEFORE spawning
+the auditor, S5 MUST run a lightweight cross-file import verification:
+
+1. Run `npx tsc --noEmit` (or `npm run build`, or grep all imports) to verify
+   every import statement in `src/pages/` and `src/components/` resolves
+2. Verify every export from `src/graphql/queries.ts` is imported by at least
+   one page or component
+3. Verify every field destructured from Zustand stores exists in the store
+4. Verify every type imported from `shared/types.ts` is defined in that file
+
+ANY failure → back to Phase 3 (frontend implementation agent fixes).
+
+This prevents frontend contract mismatches (missing exports, missing store fields)
+from reaching the auditor, where they currently consume auditor capacity on
+trivial integration issues.
 
 ### Phase 4: Testing & Infra Wave
 Spawn `vsm_tester` + `coder` (devops) in parallel. Run tests via Shell.

@@ -256,3 +256,17 @@ correction BEFORE quality gates.
 - [ ] `models.py` does NOT hardcode database connection strings at module level
 - [ ] Engine is created from `get_settings().DATABASE_URL` or uses a lazy factory pattern
 - [ ] Engine creation does not trigger side effects at import time
+
+## 42. GraphQL Schema Introspection Verification
+- [ ] Run `python -c "from app.graphql import schema; print(schema)"` (or equivalent) to introspect the actual GraphQL schema
+- [ ] Verify EVERY frontend query in `queries.ts` matches the schema's argument types exactly (e.g., `DateTime` vs `String`, `Int` vs `Float`)
+- [ ] Verify EVERY frontend mutation's expected return type matches the schema's actual return type (e.g., `Boolean` vs object type)
+- [ ] Verify frontend query field names match schema field names exactly (case-sensitive, including auto-camelCase from Strawberry)
+- [ ] ANY mismatch is a BLOCKER: send to frontend or backend agent for correction
+
+## 43. Frontend Cross-File Import Resolution
+- [ ] After all parallel frontend implementation agents complete, run `npx tsc --noEmit` (or `vite build`, or manual grep of all imports) to verify all cross-file imports resolve
+- [ ] Every export from `queries.ts` MUST be imported by at least one page or component
+- [ ] Every field destructured from Zustand stores MUST exist in the store's type definition
+- [ ] Every type imported from `shared/types.ts` MUST be defined in that file
+- [ ] ANY unresolved import or missing field is a BLOCKER before the auditor runs

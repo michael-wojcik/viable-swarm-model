@@ -709,3 +709,32 @@ main-skill mutations.
 **Type**: structural
 **Rationale**: FB13 Phase 8 scored 2/5 because `.kimi/lessons.md` was missing entirely — reflection was merged into `meta-reflection.md` without structure. Adding a dedicated template and explicit SKILL.md requirement ensures standalone, structured reflection artifacts in all future builds.
 **Expected effect**: Every future build produces `.kimi/lessons.md` with Source/Finding/Fix/Verification/Prevention structure.
+
+
+## Mutation 42 — 2026-05-24 (FB14 Structural)
+**Session**: FB14 EduSphere fitness build evaluation
+**File**: `references/integration-checklist.md`
+**Type**: append
+**Rationale**: FB14 revealed that frontend queries.ts passed wrong argument types (String vs DateTime) and expected wrong return types (object vs Boolean) compared to the GraphQL schema. The coordinator caught these manually but there was no automated checklist item. Check 42 adds mandatory schema introspection and query verification.
+**Expected effect**: GraphQL query/schema mismatches are caught during integration verification, not left as latent bugs.
+
+## Mutation 43 — 2026-05-24 (FB14 Structural)
+**Session**: FB14 EduSphere fitness build evaluation
+**File**: `references/integration-checklist.md`
+**Type**: append
+**Rationale**: FB14 revealed that parallel frontend agents produced incompatible outputs: queries.ts missing exports that pages imported, and courseStore.ts missing fields that pages destructured. These were caught by the auditor but only after implementation was complete. Check 43 adds a mandatory frontend import resolution check before the auditor runs.
+**Expected effect**: Frontend cross-file contract mismatches are caught before the auditor, reducing false-positive BLOCKERs and freeing auditor capacity for real issues.
+
+## Mutation 44 — 2026-05-24 (FB14 Structural)
+**Session**: FB14 EduSphere fitness build evaluation
+**File**: `references/security-lessons.md`
+**Type**: append
+**Rationale**: FB14 security gate found CRITICAL privilege escalation via unvalidated registration role (arbitrary role assignment including admin). The security checklist did not explicitly require registration role validation. Three new lessons added: L47 (role allowlist), L48 (SECRET_KEY min_length), L49 (frontend contract checks).
+**Expected effect**: Security agent and foundation agents will prevent registration role vulnerabilities at design time, not just detect them in Phase 5.
+
+## Mutation 45 — 2026-05-24 (FB14 Structural)
+**Session**: FB14 EduSphere fitness build evaluation
+**File**: `SKILL.md` (Phase 2 Sub-Wave 2b + Phase 3e)
+**Type**: structural
+**Rationale**: FB14 foundation wave omitted the auth router (login/register/me) despite it being documented in api-spec.md. This broke the entire application. Additionally, frontend contract mismatches reached the auditor because no pre-audit import check existed. Two SKILL.md changes: (1) explicitly require `routers/auth.py` in Sub-Wave 2b, (2) add Phase 3e frontend cross-file import check before auditor.
+**Expected effect**: Auth router is never forgotten in foundation wave. Frontend contract mismatches are caught before auditor deployment.

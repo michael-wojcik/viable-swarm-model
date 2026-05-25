@@ -356,3 +356,22 @@ missing until Phase 5.
 **Prevention rule**: `DATABASE_URL` and `REDIS_URL` defaults (e.g., `postgresql+asyncpg://user:pass@localhost/db`, `redis://localhost:6379`) are LOW severity unless they contain production credentials. Distinguish between: (1) secret fallbacks (JWT_SECRET, POSTGRES_PASSWORD) = CRITICAL, and (2) connection string defaults = LOW/MEDIUM.
 **Affected**: vsm_security.
 **Source**: Fitness build FB12, Phase 5. Security gate incorrectly rated REDIS_URL default and DATABASE_URL fallback as CRITICAL.
+
+---
+
+## FB14 Discoveries
+
+### L47: Registration Endpoints Must Validate Role Against Allowlist
+**Prevention rule**: Registration endpoints (REST `POST /auth/register` and GraphQL `register` mutation) MUST validate the `role` field against an explicit allowlist (e.g., `student|instructor|admin`). Unknown roles MUST default to the least-privileged role (`student`) or be rejected. Never accept arbitrary role strings from the client.
+**Affected**: vsm_security, vsm_architect, all backend S1 agents.
+**Source**: Fitness build FB14, Phase 5. Security gate found CRITICAL privilege escalation: registration accepted any role string, allowing immediate `admin` elevation. Architect, foundation, and implementation agents all missed this.
+
+### L48: SECRET_KEY Must Have Minimum Length Validation
+**Prevention rule**: `SECRET_KEY` (or `JWT_SECRET`) MUST have a `min_length` validator (e.g., Pydantic `Field(..., min_length=32)`). Empty strings or short secrets are CRITICAL vulnerabilities enabling JWT forgery. A default value of `""` is NOT sufficient mitigation.
+**Affected**: vsm_security, foundation wave agents.
+**Source**: Fitness build FB14, Phase 5. Security gate found `SECRET_KEY: str = ""` with no length validation, rated CRITICAL.
+
+### L49: Frontend Cross-File Contract Mismatches Require Automated Check
+**Prevention rule**: Parallel frontend agents independently produce queries.ts, stores, and page components that may have incompatible contracts. A lightweight automated check (`tsc --noEmit` or import grep) MUST run before the auditor to catch missing exports, missing store fields, and type mismatches.
+**Affected**: vsm_coordinator, S3 (main agent), vsm_auditor.
+**Source**: Fitness build FB14, Phase 3b. queries.ts was missing exports that pages imported; courseStore.ts was missing fields pages destructured. Auditor caught them but only after implementation was complete.

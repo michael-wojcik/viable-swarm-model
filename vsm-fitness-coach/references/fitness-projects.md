@@ -262,3 +262,52 @@
 - **Prevention rules validated**: H55 (Strawberry extension), H56 (severity calibration), H57 (fail-closed context), H58 (camelCase alignment)
 - **Prevention rules inconclusive**: H59 (domain coders)
 - **New mutations applied**: M38-M41
+
+---
+
+## FB14: EduSphere — Online Learning & Course Management Platform
+
+**Complexity**: High (4-5 waves, 2500-3500 lines, 4 services: API + worker + realtime + frontend)
+**Expected Tier**: Tier 2 (same tier as FB13; score < 4.0 prevents escalation)
+**Services**: FastAPI backend, Celery/Redis worker, Socket.io real-time service, React frontend
+**Date**: 2026-05-24
+**Build ID**: FB14-20260524
+
+### Coverage Map
+
+| Capability | Tested by |
+|---|---|
+| **Prevention rule validation** | |
+| M39 (Auditor batch ≤10) | 3 batches (9, 9, 10 files); 0 false-positive BLOCKERs |
+| M41 (Phase 8 reflection) | Standalone `.kimi/lessons.md` with structured format |
+| H60 (Env var naming) | docker-compose uses exact names matching config.py |
+| H61 (Vite proxy ports) | Proxy targets match docker-compose exposed ports |
+| H63 (WS auth handshake) | In-band auth via authenticate event, not URL params |
+| H65 (Hardcoded engine) | Lazy `_get_async_engine()` factory in models.py |
+| **New hypotheses generated** | |
+| H66 | Frontend cross-file import check (store/query/page contracts) |
+| H67 | Security gate checklist: registration role validation |
+| H68 | Schema introspection check prevents GraphQL query/schema mismatches |
+| H69 | Auth router must be explicitly required in foundation wave |
+| **Gaps targeted from FB13** | |
+| G1 | GraphQL schema/query alignment (type mismatches, return types) |
+| G2 | Frontend store/page contract mismatches |
+| G3 | Security design gaps (SECRET_KEY length, role validation) |
+| G4 | Missing auth router in foundation wave |
+| G5 | GraphQL subscriptions infrastructure without resolvers |
+
+### Known Stress Points
+- Frontend parallel agents create incompatible contracts (queries.ts vs pages vs store)
+- GraphQL schema introspection must be run during integration check
+- Registration role validation must be in BOTH REST and GraphQL
+- Auth router must be explicitly required in foundation wave
+- SECRET_KEY must have min_length=32 validation (not just default value)
+- Module-level `get_settings()` is a recurring trap (tasks.py, sio.py)
+
+### Result
+- **Score**: 3.6/5.0
+- **BLOCKERs**: 8 total (Foundation: 1, Implementation: 5, Integration: 2, Security: 2 CRITICAL)
+- **Fix iterations**: 1
+- **Traps caught**: T1 (H65), T2 (M39), T3 (H63), T4 (H61), T5 (H60), T6 (M41), T7 (G4), T8 (G6), T9 (G8)
+- **Prevention rules validated**: M39, M41, H60, H61, H63, H64, H65
+- **New hypotheses**: H66, H67, H68, H69
