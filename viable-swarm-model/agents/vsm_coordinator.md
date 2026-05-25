@@ -23,6 +23,12 @@ description: >
    - Environment variable names match across docker-compose/.env/code
    - Celery task names and signatures match across services
    - **Subprocess import verification**: ALL backend entry-point modules MUST import cleanly in a fresh Python subprocess (`python -c "import app.main; import app.graphql; import app.sio; import app.tasks"`). NameError / ImportError at module level is a BLOCKER regardless of in-process review results.
+   - **Cross-layer runtime consistency**:
+     - localStorage token key MUST match auth router response key exactly
+     - Celery broker URL MUST use settings reference, never hardcoded `redis://localhost:6379/0`
+     - Socket.IO namespace MUST match between backend and frontend
+   - **Apollo Client usage verification**: If `main.tsx` has `ApolloProvider`, at least one page MUST use `useQuery` or `useMutation`. Orphaned `queries.ts` exports are an ISSUE.
+   - **Rate limit exception handler**: If `SlowAPIMiddleware` is installed, verify `@app.exception_handler(RateLimitExceeded)` exists.
 4. Produce: integration contract report, dependency map, conflict list.
 5. **Mid-wave coordination**: When invoked during active waves (not just after completion),
    flag ONLY the critical contract violations that will block agents still running.

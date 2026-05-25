@@ -1133,76 +1133,167 @@ introspected schema" could prevent H58.
 
 ## H73: Security gate HIGH/CRITICAL findings are not automatically fix-wave BLOCKERs
 
-**Status**: untested
+**Status**: rejected
 **Proposed**: 2026-05-24
 **Rationale**: FB16 security gate found 3 HIGH findings (Socket.IO CORS wildcard, GraphQL suppliers unfiltered, GraphQL RBAC mismatch) and 1 CRITICAL (hardcoded secrets). The fix wave explicitly deferred the HIGHs without escalation. The skill lacks a rule that security gate HIGH/CRITICAL findings MUST be fixed before delivery.
 **Source**: Fitness build FB16, Phase 5/7
 **Experiment**: Add "Security gate findings rated HIGH or CRITICAL are automatic fix-wave BLOCKERs. They must be fixed or explicitly escalated to the user with AskUserQuestion" to the fix agent prompt and SKILL.md Phase 7. Run 5 builds. Count deferred HIGH/CRITICAL findings.
 **Expected**: 0 deferred HIGH/CRITICAL findings after rule addition.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: REJECTED. FB17 security gate found 1 CRITICAL (JWT missing exp claim) and 1 HIGH (GraphQL RBAC parity gap). Both were fixed in the fix wave without deferral or escalation. The prevention rules from FB16 (M49-M52) successfully transferred. Fix agents now treat security findings as BLOCKERs.
+**Tested by**: FB17
 
 ---
 
 ## H74: Architect does not runtime-verify framework parameters before embedding in api-spec.md
 
-**Status**: untested
+**Status**: rejected
 **Proposed**: 2026-05-24
 **Rationale**: FB16 architect propagated deliberate traps from the prompt into api-spec.md: `validation_rules=[QueryDepthLimiter]` (parameter doesn't exist) and `CreateHarvestInput.harvestedAt: String` (schema uses DateTime). The architect treated the prompt as immutable truth rather than verifying against the installed framework.
 **Source**: Fitness build FB16, Phase 1
 **Experiment**: Add "Before finalizing api-spec.md, verify ALL framework-specific parameters by running `help(Class.__init__)` or test invocation" to architect prompt. Run 5 builds with trap conditions. Count unverified parameters in api-spec.md.
 **Expected**: 0 unverified parameters after prompt addition.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: REJECTED. FB17 architect explicitly verified `strawberry.Schema.__init__` signature, `strawberry.fastapi.GraphQLRouter.__init__`, and `socketio.AsyncServer` parameters at runtime. api-spec.md documented verified signatures only. Prevention rule M49 (Runtime API Verification) successfully transferred.
+**Tested by**: FB17
 
 ---
 
 ## H75: Frontend agents do not introspect GraphQL schema before writing queries
 
-**Status**: untested
+**Status**: rejected
 **Proposed**: 2026-05-24
 **Rationale**: FB16 frontend agents wrote snake_case GraphQL queries (`owner_id`, `total_area_hectares`) in queries.ts despite Strawberry auto-camelCasing to `ownerId`, `totalAreaHectares`. The agents copied field names from api-spec.md (which had snake_case) instead of introspecting the actual schema.
 **Source**: Fitness build FB16, Phase 3
 **Experiment**: Add "Before writing queries.ts, run `python -c 'from app.graphql import schema; print(schema)'` and use the EXACT field names from introspection" to frontend coder prompt. Run 5 GraphQL builds. Count query/schema field name mismatches.
 **Expected**: 0 mismatches after prompt addition.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: REJECTED. FB17 frontend agent explicitly ran schema introspection and used exact camelCase field names in queries.ts. Zero field name mismatches. However, a NEW gap was exposed: queries.ts exports are orphaned (no page imports them). Prevention rule M49 works for field names but not for integration.
+**Tested by**: FB17
 
 ---
 
 ## H76: Foundation auditor scope misses wiring files and requirements.txt
 
-**Status**: untested
+**Status**: rejected
 **Proposed**: 2026-05-24
 **Rationale**: FB16 foundation auditor caught models.py lazy factory and config.py lazy settings, but missed: (1) `requirements.txt` package mismatch (`python-jose` vs `pyjwt`), (2) module-level `get_settings()` in `sio.py`, (3) missing `context_getter` in `GraphQLRouter`. The auditor scope is too narrow.
 **Source**: Fitness build FB16, Phase 2
 **Experiment**: Expand foundation auditor scope to include `requirements.txt` import verification, `sio.py` module-level side effects, and `main.py` GraphQLRouter wiring. Run 5 builds. Count missed foundation issues.
 **Expected**: 50%+ reduction in missed foundation issues.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: REJECTED. FB17 foundation auditor explicitly checked requirements.txt (pyjwt present, no python-jose), sio.py module-level side effects, and main.py GraphQLRouter wiring. All checked items passed. The sio.py module-level `get_settings()` issue was caught during S5 mini-audit, not the auditor — but the auditor DID verify the final lazy-proxy pattern. Prevention rule M50 (Foundation Auditor Wiring File Coverage) successfully transferred.
+**Tested by**: FB17
 
 ---
 
 ## H77: Integration checklist misses config key name parity
 
-**Status**: untested
+**Status**: rejected
 **Proposed**: 2026-05-24
 **Rationale**: FB16 `main.py` reads `settings.CORS_ORIGINS` but `config.py` defines `CORS_ALLOWED_ORIGINS`. The integration checklist verifies env var presence and port matching, but does not check that every config consumer uses the exact key name defined in the settings class.
 **Source**: Fitness build FB16, Phase 5
 **Experiment**: Add "Verify every `getattr(settings, 'KEY_NAME')` or `settings.KEY_NAME` reference matches an actual field in the Settings class" to integration checklist. Run 5 builds. Count config key mismatches.
 **Expected**: 0 mismatches after checklist addition.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: REJECTED. FB17 had zero config key name mismatches. The integration coordinator explicitly verified parity across docker-compose.yml, config.py, and main.py. Prevention rule M52 (Config Key Name Parity) successfully transferred.
+**Tested by**: FB17
 
 ---
 
 ## H78: Implementation agents treat data-model.md as advisory
 
-**Status**: untested
+**Status**: rejected
 **Proposed**: 2026-05-24
 **Rationale**: FB16 backend routers batch 2 added a `Delivery` model with `route_name` (non-nullable) to `models.py` despite it not being in `data-model.md`. The `DeliveryCreate` schema omitted `route_name`, which would cause a runtime `NOT NULL` constraint violation. Implementation agents modify the data model when they feel it's needed.
 **Source**: Fitness build FB16, Phase 3
 **Experiment**: Add "data-model.md is immutable. Any field addition MUST be approved by S5 and synced to api-spec.md, schemas, and tests" to implementation agent prompt. Run 5 builds. Count unauthorized model additions.
 **Expected**: 0 unauthorized additions after prompt addition.
+**Result**: REJECTED. FB17 implementation agents respected data-model.md immutability. The implementation auditor verified no extra models or fields were added. All 5 models (User, Policy, Claim, Payment, Investigation) matched the spec exactly. Prevention rule successfully transferred.
+**Tested by**: FB17
+
+---
+
+## L50: JWT access token payload omits "role" claim, breaking role-based frontend routing
+
+**Status**: confirmed
+**Proposed**: 2026-05-24
+**Rationale**: FB16 auth router did not include `role` in JWT payload. The `UserRole` type was inferred from `role` field on the token, but the token didn't have it. This broke `RequireRole` guards silently.
+**Source**: Fitness build FB16, Phase 2/6
+**Experiment**: Add "The JWT payload MUST include `role` (from DB User.role). The frontend `RequireRole` component reads this claim" to auth router prompt and frontend routing prompt. Run 5 builds with role-based routes. Count routing failures.
+**Expected**: 0 routing failures after prompt addition.
+**Result**: CONFIRMED. FB17 auth router includes `role` claim in JWT payload. Frontend `RequireRole` works correctly. Re-validated in FB17 with zero routing failures.
+**Tested by**: FB16, FB17
+
+---
+
+## H79: Single tester agent cannot complete Tier 2+ builds within agent timeout
+
+**Status**: confirmed
+**Proposed**: 2026-05-25
+**Rationale**: FB17 testing wave used a single `vsm_tester` agent for all backend test files (8 files), frontend test files (3 files), pytest execution, Docker compose validation, and integration tests. The agent timed out at 1200s with 14 passed, 5 failed, 21 errors. Tier 2 builds (4+ services) have too much testing surface for one agent.
+**Source**: Fitness build FB17, Phase 4
+**Experiment**: Split `vsm_tester` into `vsm_backend_tester` and `vsm_frontend_tester` agents with separate prompt contexts and parallel execution. Measure completion rate within 1200s timeout.
+**Expected**: Both sub-agents complete within timeout; total tests increase; pass rate improves.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H80: Frontend foundation agents do not verify import path aliasing against tsconfig.json
+
+**Status**: confirmed
+**Proposed**: 2026-05-25
+**Rationale**: FB17 frontend foundation agent wrote `import type { UserRole } from "../shared/types"` but the Vite tsconfig.json alias is `@flux/shared/types`. The agent assumed relative paths work without checking tsconfig.json `paths`. This caused a TypeScript build error that was caught during fix wave.
+**Source**: Fitness build FB17, Phase 2/7
+**Experiment**: Add "Before writing any import statement, read `tsconfig.json` and `vite.config.ts` to determine the EXACT path alias mapping" to frontend foundation agent prompt. Run 5 builds with path aliases. Count incorrect import paths.
+**Expected**: 0 incorrect import paths after prompt addition.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H81: Integration checklist does not verify cross-layer runtime consistency (localStorage keys, Celery broker, Socket.IO namespace)
+
+**Status**: confirmed
+**Proposed**: 2026-05-25
+**Rationale**: FB17 integration found 3 BLOCKERs: (1) queries.ts exports orphaned, (2) localStorage key mismatch (`access_token` vs `token`), (3) Celery broker hardcoded to `redis://localhost:6379/0` instead of `settings.REDIS_URL`. The integration checklist verifies file presence and port mapping but not runtime state consistency across layers.
+**Source**: Fitness build FB17, Phase 5/6
+**Experiment**: Expand integration checklist with: (a) grep all `localStorage.getItem/setItem` for key name parity with auth router, (b) grep all `Celery(` instantiations for hardcoded URLs, (c) verify Socket.IO client namespace matches server. Run 5 builds. Count cross-layer mismatches.
+**Expected**: 0 cross-layer mismatches after checklist expansion.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H82: Phase 8b standalone meta-reflection is never performed because the skill lacks a meta-coordinator agent
+
+**Status**: confirmed
+**Proposed**: 2026-05-25
+**Rationale**: FB17 ended Phase 8 with `.kimi/lessons.md` but no standalone Phase 8b evaluation of agent performance, rule effectiveness, or process bottlenecks. The SKILL.md defines Phase 8b but provides no agent type or prompt for it. In practice, the coordinator writes lessons.md and stops.
+**Source**: Fitness build FB17, Phase 8
+**Experiment**: Add `vsm_meta` agent type with explicit prompt to evaluate: (a) which agent types were most/least effective, (b) which rules were followed/broken, (c) process bottleneck analysis. Compare FB18 meta-reflection depth vs FB17.
+**Expected**: FB18 produces structured meta-reflection artifact (meta-report.md) with agent performance scores and rule effectiveness ratings.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H83: api-spec.md ambiguous RBAC labels propagate to downstream implementation confusion
+
+**Status**: confirmed
+**Proposed**: 2026-05-25
+**Rationale**: FB17 api-spec.md labeled GET `/payments` as "(owner-filtered)" but the RBAC narrative allowed adjuster/auditor access. This ambiguity caused the GraphQL `payments` resolver to initially allow broader access than intended, creating a security gap that the security gate caught as HIGH. Ambiguous natural-language labels in api-spec.md are interpreted differently by different agents.
+**Source**: Fitness build FB17, Phase 1/5
+**Experiment**: Add "Every endpoint must include an explicit `RBAC: [roles]` array in api-spec.md. Never use ambiguous labels like '(owner-filtered)' without specifying which roles can access it" to architect prompt. Run 5 builds. Count RBAC parity gaps between REST and GraphQL.
+**Expected**: 0 RBAC parity gaps after prompt addition.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H84: Apollo Client is initialized in main.tsx but never used by page components (GraphQL/REST dual-stack confusion)
+
+**Status**: confirmed
+**Proposed**: 2026-05-25
+**Rationale**: FB17 frontend initialized ApolloProvider in main.tsx and wrote queries.ts with correct camelCase field names. However, ALL page components used REST `fetch()` instead of Apollo `useQuery/useMutation`. The GraphQL layer was dead code. This suggests frontend agents default to REST when both are available, and the skill lacks a directive to prefer GraphQL for data fetching.
+**Source**: Fitness build FB17, Phase 3/6
+**Experiment**: Add "When GraphQL is available, page components MUST use Apollo Client `useQuery` / `useMutation` for data fetching. REST `fetch()` is reserved for file uploads and auth endpoints only" to frontend agent prompt. Run 5 dual-stack builds. Count pages using REST vs GraphQL.
+**Expected**: 80%+ of data-fetching pages use Apollo Client after prompt addition.
 **Result**: [to be filled]
 **Tested by**: [fitness build or gym experiment]

@@ -329,3 +329,53 @@ Before returning your final output, verify:
 ```
 
 **Effect**: Distributed metasystem function. Not true recursion, but prevents S1 units from emitting unregulated output.
+
+---
+
+## FB17 Patterns
+
+### Pattern: Frontend Import Path Verification Against tsconfig.json
+**When**: Any frontend agent writes an import statement.
+**What**: Before writing imports, read `tsconfig.json` `compilerOptions.paths` and `vite.config.ts` `resolve.alias`. Use the project's configured aliases for cross-package imports, NOT relative paths.
+**Why**: Relative paths (`../shared/types`) fail when tsconfig.json defines a path alias (`@flux/shared/types`). Build errors discovered during fix wave waste iterations.
+**How**:
+1. Read `tsconfig.json` — extract `paths` mapping
+2. Read `vite.config.ts` — extract `resolve.alias`
+3. Use the alias for all imports from shared packages
+4. Only use relative paths for imports within the same directory tree
+**Source**: FB17 frontend agent wrote `../shared/types` but alias was `@flux/shared/types` (H80)
+
+### Pattern: Split Tester Agents for Tier 2+ Builds
+**When**: Project has 4+ services, 8+ test files, or >2000 lines of code.
+**What**: Split `vsm_tester` into `vsm_backend_tester` and `vsm_frontend_tester` running in parallel. Backend tester focuses on pytest, database fixtures, and API integration tests. Frontend tester focuses on vitest, component tests, and build verification.
+**Why**: A single tester agent times out under Tier 2+ load (1200s limit in FB17 with 14 passed, 5 failed, 21 errors). Splitting doubles effective testing capacity and prevents timeout collapse.
+**How**:
+1. Spawn `vsm_backend_tester` with scope: backend tests, pytest, docker-compose validation
+2. Spawn `vsm_frontend_tester` with scope: frontend tests, vitest, npm run build
+3. Both run in parallel with `run_in_background=true`
+4. S5 aggregates results after both complete
+**Expected outcome**: Both sub-agents complete within timeout; higher test pass rate.
+**Source**: FB17 single tester agent collapsed under Tier 2 load (H79)
+
+### Pattern: Explicit RBAC Arrays in api-spec.md
+**When**: Architect writes api-spec.md for any project with authentication.
+**What**: Every endpoint MUST include `RBAC: ["role1", "role2", ...]` array. Ownership filtering is documented separately as `Ownership: owner_id == current_user.id`. Never use ambiguous labels.
+**Why**: Natural-language labels like "(owner-filtered)" are interpreted differently by REST router agents vs GraphQL resolver agents. Explicit arrays eliminate ambiguity.
+**Example**:
+```markdown
+GET /claims
+RBAC: ["admin", "adjuster", "auditor"]
+Ownership: owner_id == current_user.id (ignored for admin)
+```
+**Source**: FB17 ambiguous "(owner-filtered)" label caused GraphQL RBAC parity gap (H83)
+
+### Pattern: Verify Apollo Client Is Actually Used
+**When**: Frontend project includes GraphQL dependencies.
+**What**: After all frontend implementation agents complete, verify at least one page uses `useQuery` or `useMutation`. If zero pages use Apollo Client, either remove the GraphQL layer or migrate REST pages to GraphQL.
+**Why**: Initializing ApolloProvider with unused dead code adds bundle size, build time, and confusion. Pages that should use GraphQL fallback to REST due to agent uncertainty.
+**How**:
+1. grep `src/pages/` for `useQuery\|useMutation\|useSubscription`
+2. If zero matches → ISSUE: either migrate pages or remove ApolloProvider
+3. grep `src/graphql/queries.ts` exports against `src/pages/` imports
+4. If queries are orphaned → ISSUE: queries exist but no consumer
+**Source**: FB17 ApolloProvider initialized but all 10 pages used REST fetch() (H84)

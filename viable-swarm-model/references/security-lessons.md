@@ -382,3 +382,27 @@ missing until Phase 5.
 **Prevention rule**: `create_access_token` MUST include `"role": user.role` in the JWT payload. The `get_current_user` dependency can then enforce RBAC at the edge without an extra database lookup. Without the role claim, middleware cannot perform role-based access control efficiently.
 **Affected**: `vsm_security`, backend coder agents, fix agents.
 **Source**: Fitness build FB16, Phase 3b/5 — JWT tokens omitted role claim, allowing GraphQL resolvers to bypass role checks because `info.context["user"]` had no role information.
+
+---
+
+## FB17 Discoveries
+
+### L51: GraphQL-REST RBAC Parity Requires Explicit Role Arrays in api-spec.md
+**Prevention rule**: Every endpoint in `api-spec.md` MUST include an explicit `RBAC: [roles]` array. Ambiguous labels like "(owner-filtered)" or "(public)" MUST be forbidden — they cause downstream implementation agents to make inconsistent assumptions about which roles can access which endpoints. GraphQL resolvers MUST enforce the same RBAC as their REST equivalents.
+**Affected**: vsm_architect, S1-Backend, vsm_security, vsm_coordinator.
+**Source**: Fitness build FB17, Phase 1/5. api-spec.md labeled GET `/payments` as "(owner-filtered)" without specifying roles. GraphQL `payments` resolver initially allowed broader access than REST, creating a HIGH severity RBAC parity gap.
+
+### L52: Rate Limit Middleware Requires Exception Handler Registration
+**Prevention rule**: Installing `SlowAPIMiddleware` (or similar rate-limit middleware) is NOT sufficient. The application MUST also register an exception handler for `RateLimitExceeded` that returns HTTP 429 with a JSON error body. Without the handler, rate-limited requests crash with an unhandled exception.
+**Affected**: S1-Backend, vsm_security, vsm_wiring.
+**Source**: Fitness build FB17, Phase 3d/5. Backend installed `SlowAPIMiddleware` but lacked `@app.exception_handler(RateLimitExceeded)`. Security gate did not flag this because the checklist did not include rate-limit handler verification.
+
+### L53: JWT Payload Must Include Role Claim for Edge RBAC
+**Prevention rule**: `create_access_token` MUST include `"role": user.role` in the JWT payload. Frontend `RequireRole` guards and backend middleware can then enforce RBAC at the edge without extra database lookups. This is a re-validation of L50.
+**Affected**: backend coder agents, vsm_security.
+**Source**: Fitness build FB17, Phase 2/6. JWT tokens included role claim; zero routing failures. L50 re-validated successfully.
+
+### L54: Celery Broker URL Must Use Settings, Never Hardcoded Localhost
+**Prevention rule**: ALL `Celery()` instantiations MUST use `broker=get_settings().REDIS_URL` (or equivalent settings reference). Hardcoded `redis://localhost:6379/0` breaks containerized deployments and is a HIGH severity configuration error.
+**Affected**: S1-Backend, vsm_security, vsm_coordinator.
+**Source**: Fitness build FB17, Phase 3/6. Celery broker was initially hardcoded to `redis://localhost:6379/0`. Integration coordinator caught it as BLOCKER.

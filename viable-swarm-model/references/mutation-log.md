@@ -806,3 +806,47 @@ main-skill mutations.
 **Files changed**:
 - `agents/vsm_wiring.md` — Created with full wiring checklist and autonomy boundaries
 - `SKILL.md` — Added `vsm_wiring` to VSM Role Map, added Phase 3d (Entry-Point Wiring) to workflow, shifted existing Phase 3d→3e and 3e→3f
+
+---
+
+## Mutation FB17-1 — 2026-05-25
+**Session**: Fitness Build 17 (ClaimFlow) — Tier 2, 4 services
+**File**: `references/integration-checklist.md`
+**Type**: append-only
+**Rationale**: FB17 integration coordinator found 3 BLOCKERs from cross-layer runtime inconsistencies that existing checklist did not cover: localStorage token key mismatch, Celery broker hardcoded URL, and orphaned queries.ts exports.
+**Expected effect**: Future builds catch cross-layer mismatches during integration phase, not during fix wave.
+
+## Mutation FB17-2 — 2026-05-25
+**Session**: Fitness Build 17 (ClaimFlow)
+**File**: `references/anti-patterns.md`
+**Type**: append-only
+**Rationale**: FB17 exposed four new anti-patterns: orphaned GraphQL queries, Apollo Client initialized but unused, ambiguous RBAC labels in api-spec.md, and frontend import path guessing without checking tsconfig.json.
+**Expected effect**: Future builds prevent these patterns by checking against the anti-pattern library.
+
+## Mutation FB17-3 — 2026-05-25
+**Session**: Fitness Build 17 (ClaimFlow)
+**File**: `references/security-lessons.md`
+**Type**: append-only
+**Rationale**: FB17 security gate and integration found new vulnerability classes: RBAC parity gaps from ambiguous api-spec labels, missing rate-limit exception handler, and Celery broker hardcoding.
+**Expected effect**: Security gate checks for rate-limit handlers and explicit RBAC arrays.
+
+## Mutation FB17-4 — 2026-05-25
+**Session**: Fitness Build 17 (ClaimFlow)
+**File**: `references/pattern-library.md`
+**Type**: append-only
+**Rationale**: FB17 produced four reusable patterns: frontend import path verification, split tester agents for Tier 2+, explicit RBAC arrays, and Apollo Client usage verification.
+**Expected effect**: Future builds apply these patterns proactively.
+
+## Mutation FB17-5 — 2026-05-25
+**Session**: Fitness Build 17 (ClaimFlow)
+**File**: `agents/vsm_architect.md`
+**Type**: refinement
+**Rationale**: FB17 api-spec.md ambiguity ("owner-filtered") caused GraphQL RBAC parity gap. Architect must now include explicit `RBAC: [roles]` arrays for every endpoint.
+**Expected effect**: Zero ambiguous RBAC labels in future api-spec.md outputs.
+
+## Mutation FB17-6 — 2026-05-25
+**Session**: Fitness Build 17 (ClaimFlow)
+**File**: `agents/vsm_coordinator.md`
+**Type**: refinement
+**Rationale**: FB17 coordinator caught some cross-layer issues but missed others until fix wave. Expanded coordinator scope to include localStorage key parity, Celery broker verification, Apollo Client usage, and rate-limit handler verification.
+**Expected effect**: Coordinator catches cross-layer mismatches before they become BLOCKERs.

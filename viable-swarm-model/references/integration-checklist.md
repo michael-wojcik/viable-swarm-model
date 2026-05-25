@@ -305,3 +305,34 @@ correction BEFORE quality gates.
 - [ ] This applies to Strawberry, FastAPI, SQLAlchemy, and any library with version drift
 
 **Source**: FB15 agent used `validation_rules` parameter that doesn't exist in installed strawberry-graphql (H72)
+
+## Check 50: Cross-Layer Runtime Consistency
+- [ ] **localStorage key parity**: grep ALL `localStorage.getItem/setItem/removeItem` calls in frontend. The token key name MUST match the auth router's response key exactly (e.g., if auth router returns `{ token: "..." }`, frontend MUST use `localStorage.getItem("token")`, NOT `localStorage.getItem("access_token")`)
+- [ ] **Celery broker URL**: grep ALL `Celery(` instantiations. The `broker=` parameter MUST use `get_settings().REDIS_URL` or equivalent settings reference. Hardcoded `redis://localhost:6379/0` is a BLOCKER
+- [ ] **Socket.IO namespace parity**: Backend `sio.py` namespace MUST match frontend `sio/client.ts` namespace. Default namespace (`/`) on both sides is acceptable, but a mismatch is a BLOCKER
+- [ ] **JWT payload key parity**: If frontend destructures `role` from JWT payload, verify `create_access_token` includes `"role"` claim. If frontend expects `userId`, verify token includes it
+
+**Source**: FB17 integration found 3 BLOCKERs from cross-layer mismatches: localStorage key mismatch (`access_token` vs `token`), Celery broker hardcoded to localhost, orphaned queries.ts exports (H81)
+
+## Check 51: api-spec.md RBAC Explicit Arrays
+- [ ] Every endpoint in `api-spec.md` MUST include an explicit `RBAC: [roles]` array (e.g., `RBAC: ["admin", "adjuster", "auditor"]`)
+- [ ] NEVER use ambiguous natural-language labels like "(owner-filtered)" or "(public)" without specifying which roles can access
+- [ ] GraphQL resolvers MUST have the same RBAC array as their REST equivalent endpoints
+- [ ] If an endpoint has ownership filtering, the RBAC array shows WHO can access it, and a separate `Ownership: owner_id == current_user.id` note shows HOW results are filtered
+
+**Source**: FB17 api-spec.md "(owner-filtered)" label caused GraphQL RBAC parity gap (H83)
+
+## Check 52: Apollo Client Usage Verification
+- [ ] If `main.tsx` wraps the app in `ApolloProvider`, verify at least ONE page component uses `useQuery` or `useMutation` from `@apollo/client`
+- [ ] If ZERO pages use Apollo Client, either: (a) remove ApolloProvider and graphql dependencies, or (b) migrate data-fetching pages from REST `fetch()` to Apollo Client
+- [ ] REST `fetch()` is acceptable for: file uploads (multipart/form-data), auth endpoints (login/register/refresh), and health checks
+- [ ] GraphQL queries in `queries.ts` that are never imported by any page/component are dead code — treat as ISSUE
+
+**Source**: FB17 frontend initialized ApolloProvider but all pages used REST fetch(); queries.ts was completely orphaned (H84)
+
+## Check 53: Rate Limit Exception Handler
+- [ ] If `SlowAPIMiddleware` is installed, verify `app.add_exception_handler(RateLimitExceeded, handler)` or equivalent `@app.exception_handler(RateLimitExceeded)` exists
+- [ ] Without an exception handler, rate-limited requests crash with unhandled exception instead of returning HTTP 429
+- [ ] The handler MUST return JSON with `{"error": "Rate limit exceeded"}` and status 429
+
+**Source**: FB17 backend installed SlowAPIMiddleware but lacked exception handler for RateLimitExceeded (active issue)

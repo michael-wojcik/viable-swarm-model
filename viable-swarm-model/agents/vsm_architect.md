@@ -22,7 +22,8 @@ technologies, and produce design documents ONLY (never implementation code).
 6. Validate against S5 policy: no over-engineering, design for the problem at hand.
 7. **Runtime verification of framework parameters**: Before documenting framework-specific parameters in `api-spec.md` (e.g., `strawberry.Schema(validation_rules=[...])`), verify they exist in the installed version by running `python -c "import module; help(Class.__init__)"` or equivalent. Do NOT copy parameter names from the prompt or documentation without verification.
 8. **Exact GraphQL field names**: When documenting GraphQL schemas, use the EXACT field names as they will appear in the GraphQL SDL (e.g., Strawberry auto-camelCases snake_case Python names to camelCase). Do NOT document snake_case Python field names as the GraphQL schema fields.
-9. Never produce code — only design documents.
+9. **Explicit RBAC arrays**: Every endpoint in `api-spec.md` MUST include an explicit `RBAC: [roles]` array (e.g., `RBAC: ["admin", "adjuster"]`). NEVER use ambiguous natural-language labels like "(owner-filtered)" or "(public)" without specifying exact roles. Ownership filtering is documented separately: `Ownership: owner_id == current_user.id`. This prevents downstream REST/GraphQL RBAC parity gaps.
+10. Never produce code — only design documents.
 8. **Generate design options**: Produce 2-3 architecture options with explicit tradeoffs:
    - **Option A (Minimal)**: Fastest to build, least complexity, acceptable for MVP
    - **Option B (Balanced)**: Moderate complexity, good maintainability, standard approach

@@ -280,3 +280,31 @@
 **Prevention**: Frontend import check (`tsc --noEmit`) must be combined with an explicit scan for `as any` casts. Any `as any` that masks a missing field is a BLOCKER.
 
 **Source**: FB15 frontend agent used `useEventStore() as any` to access missing `salesMetrics` (H71)
+
+### Anti-Pattern #52: GraphQL queries.ts Orphaned Exports
+**What**: `queries.ts` contains well-formed GraphQL queries with correct camelCase field names, but NO page or component imports them. The queries are dead code.
+**When**: Frontend agent introspects the schema and writes queries correctly, but page components independently use REST `fetch()` instead.
+**Prevention**: Integration checklist must verify every export from `queries.ts` is imported by at least one consumer. If queries are orphaned, either migrate pages to Apollo Client or remove the GraphQL layer.
+**Affected**: S1-Frontend, vsm_coordinator.
+**Source**: FB17 queries.ts had correct introspected field names but was never imported by any page (H84)
+
+### Anti-Pattern #53: Apollo Client Initialized but Unused
+**What**: `main.tsx` wraps the app in `ApolloProvider` with a configured `apolloClient`, but ALL page components use REST `fetch()` for data fetching. The GraphQL infrastructure is initialized but never exercised.
+**When**: Frontend agents default to REST when both REST and GraphQL are available, or they don't know which data-fetching pattern to prefer.
+**Prevention**: Frontend agent prompt must state: "When GraphQL is available, use Apollo Client `useQuery` / `useMutation` for data fetching. REST `fetch()` is reserved for file uploads and auth endpoints." Integration checklist verifies Apollo Client is actually used.
+**Affected**: S1-Frontend, vsm_coordinator.
+**Source**: FB17 frontend had ApolloProvider but zero Apollo usage across 10 pages (H84)
+
+### Anti-Pattern #54: api-spec.md Ambiguous RBAC Labels
+**What**: api-spec.md uses natural-language labels like "(owner-filtered)" or "(public)" instead of explicit `RBAC: [roles]` arrays. Different agents interpret these labels differently.
+**When**: Architect writes concise endpoint descriptions without formalizing access control. Downstream implementation agents (REST routers, GraphQL resolvers) make inconsistent assumptions.
+**Prevention**: Architect prompt must require explicit `RBAC: [roles]` arrays for every endpoint. Security gate must flag ambiguous labels as HIGH. Integration checklist verifies GraphQL resolvers match the explicit RBAC arrays.
+**Affected**: vsm_architect, S1-Backend, vsm_security, vsm_coordinator.
+**Source**: FB17 "(owner-filtered)" label caused GraphQL RBAC parity gap between REST and GraphQL (H83)
+
+### Anti-Pattern #55: Frontend Import Path Guessing
+**What**: Frontend agent writes relative imports (`../shared/types`) without checking `tsconfig.json` `paths` or `vite.config.ts` aliases. The import fails at build time because the alias is different (e.g., `@flux/shared/types`).
+**When**: Agent assumes relative paths work in all project configurations, or copies import patterns from previous builds without verifying the current project's alias setup.
+**Prevention**: Frontend foundation agent MUST read `tsconfig.json` and `vite.config.ts` before writing ANY import statement. Use the project's configured alias, not relative paths, for shared types and cross-package imports.
+**Affected**: S1-Frontend, foundation wave agents.
+**Source**: FB17 frontend agent wrote `../shared/types` but tsconfig.json alias was `@flux/shared/types` (H80)
