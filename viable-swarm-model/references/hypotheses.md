@@ -1362,3 +1362,55 @@ introspected schema" could prevent H58.
 **Expected**: 0 overlooked mutations after checkpoint addition.
 **Result**: CONFIRMED. The Mutation Verification Checkpoint was added as structural mutation FB18-10. Future builds will produce `mutations-applied.md` and hard-block on overlooked mutations.
 **Tested by**: FB18-20260525, Phase 8b process audit
+
+---
+
+## H90: httpx version drift breaks ASGI test clients
+
+**Status**: untested
+**Proposed**: 2026-05-25
+**Rationale**: FB19 test suite failed with `AsyncClient.__init__() got an unexpected keyword argument 'app'` because httpx 0.28+ requires `ASGITransport(app=app)`. Future httpx releases may break other patterns. The skill's pattern-library has no test-client example.
+**Source**: Fitness build FB19, Phase 4
+**Experiment**: Add `ASGITransport` pattern to `references/pattern-library.md`. Run 3 FastAPI builds and verify test suites pass on first run.
+**Expected**: 0 ASGI transport errors.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H91: SQLAlchemy UUID columns + SQLite test DB require explicit uuid.UUID() conversion
+
+**Status**: untested
+**Proposed**: 2026-05-25
+**Rationale**: FB19 `get_current_user` passed a string UUID (from JWT `sub`) to `User.id == user_id`, where `User.id` is `UUID(as_uuid=True)`. SQLite raised `AttributeError: 'str' object has no attribute 'hex'`. This pattern recurs whenever UUID PKs are used with SQLite test databases.
+**Source**: Fitness build FB19, Phase 4/5
+**Experiment**: Add "Convert string IDs to uuid.UUID before SQLAlchemy filter" to `references/pattern-library.md`. Run 3 builds with UUID PKs + SQLite tests.
+**Expected**: 0 UUID/string type errors.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H92: Rate-limited auth endpoints exhaust test quotas when tests register users repeatedly
+
+**Status**: untested
+**Proposed**: 2026-05-25
+**Rationale**: FB19 `test_orders.py` called `/auth/register` 3 times, and combined with `test_auth.py`'s 3 calls, hit the SlowAPI 5/minute limit. The 6th registration returned 429. Test fixtures should seed users directly into the DB rather than exercising rate-limited endpoints.
+**Source**: Fitness build FB19, Phase 4
+**Experiment**: Add "Use role fixtures instead of repeated /auth/register calls" to `references/pattern-library.md`. Run 3 builds with rate-limited auth and verify no 429s in tests.
+**Expected**: 0 rate-limit test failures.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H93: Celery task tests require broker mocking when Redis is unavailable
+
+**Status**: untested
+**Proposed**: 2026-05-25
+**Rationale**: FB19 Celery task tests attempted to connect to `redis://localhost:6379` on import (module-level `Celery()` instantiation). No Redis was running in the test environment. Mocking `.delay()` is the minimal fix; configuring `task_always_eager` is an alternative.
+**Source**: Fitness build FB19, Phase 4
+**Experiment**: Add Celery test mocking pattern to `references/pattern-library.md`. Run 3 builds with Celery tasks.
+**Expected**: 0 Redis connection errors in tests.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]

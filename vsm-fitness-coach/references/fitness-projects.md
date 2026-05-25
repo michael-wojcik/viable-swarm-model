@@ -472,3 +472,40 @@
 - **Prevention rules validated**: H79, H80, H81, H82, H83, H84, H65, H69
 - **New mutations**: H85-H88, security-lessons.md L25 reinforcement, integration-checklist.md router registration check
 - **Auditor false positive**: camelCase GraphQL queries flagged as BLOCKER (recurring FB16 issue)
+
+
+---
+
+## FB19 — KitchenSync (Restaurant Order Management)
+
+**Date**: 2026-05-25
+**Tier**: 2
+**Classification**: Substantial project (kitchen display, POS, inventory, reporting)
+**Stack**: FastAPI + SQLAlchemy 2.0 + Strawberry GraphQL + Celery + Redis + Socket.io | React 18 + Vite + Apollo Client v3 + Zustand + Recharts
+**Build directory**: `~/vsm-fitness-builds/coach/FB19-20260525/`
+
+### Coverage Map
+- **Backend**: Auth (JWT/bcrypt), RBAC (4 roles), CRUD routers (7), GraphQL (Strawberry), Socket.IO, Celery tasks, SQLAlchemy 2.0 models, SlowAPI rate limiting
+- **Frontend**: React 18 + Vite, Apollo Client v3, Zustand stores, Recharts reports, Socket.IO client, role-based routing
+- **Infra**: Docker + docker-compose (postgres, redis, api, worker, realtime, frontend)
+
+### Key Findings
+- **Backend tests**: 18/18 passing after fix wave
+- **Frontend build**: Passing
+- **Security**: 1 HIGH (hardcoded postgres password, fixed), 3 LOW documented
+- **Integration**: 1 mismatch (orphaned GraphQL subscription, fixed), duplicate shared types removed
+
+### New Hypotheses
+| ID | Hypothesis |
+|---|---|
+| H90 | httpx version drift breaks ASGI test clients |
+| H91 | SQLAlchemy UUID columns + SQLite test DB require explicit uuid.UUID() conversion |
+| H92 | Rate-limited auth endpoints exhaust test quotas when tests register users repeatedly |
+| H93 | Celery task tests require broker mocking when Redis is unavailable |
+
+### Result
+- **Score**: [pending vsm_trainer evaluation]
+- **BLOCKERs**: 0 after fix wave
+- **Fix iterations**: 1 major fix wave (test suite + security + integration)
+- **Prevention rules validated**: H85, H86, H87, H63
+- **New mutations**: FB19-1..FB19-6, Mutation 44/45/46
