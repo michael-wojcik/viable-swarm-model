@@ -850,8 +850,8 @@ agent prompt are both effective at detecting this pattern.
 **Source**: Fitness build FB12, Phase 2b
 **Experiment**: Check strawberry-graphql version in 3 different environments. Document available extensions. Update agent prompt with version-aware guidance.
 **Expected**: Agent prompt includes "Use QueryDepthLimiter; QueryComplexityExtension may not be available in all versions."
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: FB15 re-validated this hypothesis with a different API surface. The foundation agent assumed `strawberry.Schema(..., validation_rules=[QueryDepthLimiter])` was valid, but the installed version does not accept `validation_rules`. This caused a `TypeError` on import. The agent did not verify the parameter before using it. H55 generalizes beyond extension names to all Strawberry API parameters — agents must verify at runtime.
+**Tested by**: FB15
 
 ---
 
@@ -994,58 +994,97 @@ introspected schema" could prevent H58.
 **Source**: Fitness builds FB9–FB13 (recurring in 3+ builds)
 **Experiment**: Add "models.py engine must read DATABASE_URL from get_settings() or use lazy factory" to foundation wave requirements AND auditor prompt. Run 5 builds. Count hardcoded engines.
 **Expected**: 0 hardcoded engines after checklist addition.
-**Result**: FB14 foundation agent created `_get_async_engine()` lazy factory using `get_settings().DATABASE_URL`. Foundation audit verified this. Zero hardcoded engines.
-**Tested by**: FB14
+**Result**: FB14 foundation agent created `_get_async_engine()` lazy factory using `get_settings().DATABASE_URL`. Foundation audit verified this. Zero hardcoded engines. **FB15 RE-VALIDATION**: FB15 foundation agent reverted to module-level `engine = create_async_engine(get_settings().DATABASE_URL)` at line 247. Foundation auditor MISSED it (only noted as "not prohibited by checklist"). Integration coordinator caught it as BLOCKER. Prevention rule transfer is fragile — agents revert to module-level patterns when not explicitly reminded.
+**Tested by**: FB14, FB15
 
 
 ---
 
 ## H66: Frontend cross-file import check prevents store/query/page contract mismatches
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-24
 **Rationale**: FB14 revealed that parallel frontend agents created incompatible outputs: queries.ts was missing exports that pages imported, and courseStore.ts was missing fields that pages destructured. These were caught by the auditor but only after implementation was complete. A lightweight S5 check that verifies all imports resolve before spawning the auditor would catch these earlier.
 **Source**: Fitness build FB14, Phase 3b/6
 **Experiment**: Add "Verify all TypeScript imports resolve (tsc --noEmit or equivalent)" to the implementation wave completion gate. Run 5 builds. Count import mismatch BLOCKERs.
 **Expected**: Import mismatches caught before auditor in 5/5 builds.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: FB15: OrganizerDashboard.tsx destructured `salesMetrics` from `useEventStore()` but store did not define it. The frontend agent used `as any` to bypass TypeScript checking. `tsc --noEmit` (via `npm run build`) did NOT catch the mismatch because `as any` suppressed the error. The integration coordinator DID catch it as BLOCKER. Prevention rule needs enhancement: the check must also flag `as any` casts that bypass store contracts.
+**Tested by**: FB15
 
 ---
 
 ## H67: Security gate checklist should include registration role validation
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-24
 **Rationale**: FB14 security gate found CRITICAL privilege escalation via unvalidated registration role. The architect, foundation agent, and implementation agents all missed this. The security checklist does not explicitly require "registration endpoints MUST validate role against an allowlist". If the security agent prompt included this check, the vulnerability would be caught during the gate.
 **Source**: Fitness build FB14, Phase 5
 **Experiment**: Add "Registration endpoints validate role against allowlist (student|instructor|admin); unknown roles default to student" to security gate checklist. Run 5 auth-enabled builds. Count unvalidated registration roles.
 **Expected**: 0 unvalidated roles after checklist addition.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: FB15: Security gate flagged `admin` in self-registration allowlist as CRITICAL. The validation existed but included `admin`, allowing privilege escalation. After fix, both REST and GraphQL registration restricted to `attendee|organizer`. Security gate effectively caught registration role design flaw.
+**Tested by**: FB15
 
 ---
 
 ## H68: Schema introspection check prevents GraphQL query/schema mismatches
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-24
 **Rationale**: FB14 coordinator found multiple GraphQL query/schema mismatches: frontend queries passed `dueDate` as `String` when schema expected `DateTime`, `DELETE_COURSE` expected object return when schema returned `Boolean`, and `CREATE_ENROLLMENT` passed `studentId` when schema didn't accept it. These were caught by manual coordinator review but could be caught automatically by schema introspection.
 **Source**: Fitness build FB14, Phase 3b/6
 **Experiment**: Add "Run schema introspection and verify every frontend query matches schema arguments and return types" to integration checklist. Run 5 GraphQL builds. Count query/schema mismatches.
 **Expected**: 0 mismatches after checklist addition.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: FB15: Coordinator ran schema introspection (`python -c "from app.graphql import schema; print(schema)"`) and verified field-name alignment (Strawberry auto-camelCase). However, it did NOT perform a deep argument-type parity check between api-spec.md, SDL, and frontend queries. Trap T1 (String vs DateTime input types) was not flagged because the backend happened to match the api-spec.md. The prevention rule works for field names but needs enhancement for argument types.
+**Tested by**: FB15
 
 ---
 
 ## H69: Auth router foundation requirement prevents missing auth endpoints
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-24
 **Rationale**: FB14 foundation wave created all routers except the auth router (login/register/me), despite auth being documented in api-spec.md. The foundation wave requirements list specific routers but don't explicitly require auth endpoints. Missing auth endpoints breaks the entire application.
 **Source**: Fitness build FB14, Phase 2/3
 **Experiment**: Add "Auth router with /login, /register, /me endpoints MUST be created in foundation wave" to foundation requirements. Run 5 auth-enabled builds. Count missing auth routers.
 **Expected**: 0 missing auth routers after requirement addition.
+**Result**: FB15: Auth router (`app/routers/auth.py`) was created in foundation wave with all three endpoints. Registration validated role against allowlist. Prevention rule successfully transferred.
+**Tested by**: FB15
+
+---
+
+## H70: Fix agents must run circular-import check before adding cross-module imports
+
+**Status**: untested
+**Proposed**: 2026-05-25
+**Rationale**: In FB15 Fix Wave 2, the fix agent added `from app.main import limiter` to `app/routers/auth.py` to wire rate limiting. This created a circular import (`main.py` → `routers/auth.py` → `main.py`) that crashed on import. The agent did not verify imports before reporting success. A pre-flight `python -c "import app.main"` would have caught this immediately.
+**Source**: Fitness build FB15, Phase 7
+**Experiment**: Add "After fixing cross-module imports, run `python -c 'import app.main'` to verify no circular dependencies" to fix agent prompt. Run 5 builds with cross-module fixes. Count circular imports introduced.
+**Expected**: 0 circular imports after checklist addition.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H71: Frontend `as any` usage correlates with store/page contract mismatches
+
+**Status**: untested
+**Proposed**: 2026-05-25
+**Rationale**: FB15 frontend agent used `useEventStore() as any` to destructure `salesMetrics` which did not exist in the store schema. This bypassed TypeScript's static analysis and prevented `tsc --noEmit` from catching the mismatch. The `as any` pattern is a red flag for hidden contract violations.
+**Source**: Fitness build FB15, Phase 3
+**Experiment**: Add "Flag all `as any` casts in frontend code as ISSUE; verify they don't mask missing store fields or query exports" to auditor prompt and frontend import check. Run 5 builds. Count hidden contract mismatches.
+**Expected**: 0 hidden mismatches after checklist addition.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H72: Strawberry Schema parameter validation must be verified at runtime, not assumed
+
+**Status**: untested
+**Proposed**: 2026-05-25
+**Rationale**: FB15 foundation agent assumed `strawberry.Schema(..., validation_rules=[QueryDepthLimiter])` was valid API. The installed version of strawberry-graphql does not accept `validation_rules`, causing `TypeError` on import. The agent did not verify the parameter before using it. This is a recurrence of H55 (Strawberry extension drift) in a different API surface.
+**Source**: Fitness build FB15, Phase 2
+**Experiment**: Add "Before using strawberry.Schema parameters, verify them with `help(strawberry.Schema.__init__)` or a test invocation" to backend coder prompt. Run 3 GraphQL builds. Count schema creation failures.
+**Expected**: 0 schema creation failures after checklist addition.
 **Result**: [to be filled]
 **Tested by**: [fitness build or gym experiment]

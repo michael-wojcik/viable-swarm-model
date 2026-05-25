@@ -311,3 +311,52 @@
 - **Traps caught**: T1 (H65), T2 (M39), T3 (H63), T4 (H61), T5 (H60), T6 (M41), T7 (G4), T8 (G6), T9 (G8)
 - **Prevention rules validated**: M39, M41, H60, H61, H63, H64, H65
 - **New hypotheses**: H66, H67, H68, H69
+
+---
+
+## FB15: EventHorizon — Event Ticketing & Venue Management Platform
+
+**Complexity**: High (4-5 waves, 2500-3500 lines, 4 services: API + worker + realtime + frontend)
+**Expected Tier**: Tier 2 (same tier as FB14; score < 4.0 prevents escalation)
+**Services**: FastAPI backend, Celery/Redis worker, Socket.io real-time service, React frontend
+**Date**: 2026-05-25
+**Build ID**: FB15-20260525
+
+### Coverage Map
+
+| Capability | Tested by |
+|---|---|
+| **Prevention rule validation** | |
+| H66 (Frontend import check) | tsc did NOT catch `as any` bypass; coordinator caught store mismatch |
+| H67 (Registration role validation) | Security gate flagged admin in allowlist as CRITICAL |
+| H68 (Schema introspection) | Coordinator verified field names but NOT argument types |
+| H69 (Auth router in foundation) | Auth router created in foundation wave with all endpoints |
+| H65 (Engine config) | FB15 agent reverted to module-level engine despite FB14 prevention rule |
+| M39 (Auditor batch ≤10) | 2 batches of 10 files; 0 false-positive BLOCKERs |
+| H60 (Env var naming) | docker-compose uses exact names matching config.py |
+| H61 (Vite proxy ports) | Proxy targets match docker-compose exposed ports |
+| H63 (WS auth handshake) | api-spec.md documented handshake; sio.py and client.ts implemented correctly |
+| H64 (Auditor false positive rate) | Foundation audit 2 batches; 0 false positive BLOCKERs |
+| H55 (Strawberry extension drift) | Agent used `validation_rules` parameter that doesn't exist |
+| **New hypotheses generated** | |
+| H70 | Fix agents must run circular-import check before adding cross-module imports |
+| H71 | Frontend `as any` usage correlates with store/page contract mismatches |
+| H72 | Strawberry Schema parameter validation must be verified at runtime |
+
+### Known Stress Points
+- Module-level engine instantiation is a recurring trap (H65)
+- Frontend `as any` bypasses TypeScript contract checks (H71)
+- Strawberry API drift affects Schema parameters, not just extensions (H55/H72)
+- Fix agents can introduce circular imports (H70)
+- GraphQL argument type parity needs deeper verification than field names (H68)
+- Public REST endpoints (events/venues catalog) need explicit documentation if intentionally unguarded
+
+### Result
+- **Score**: 3.7/5.0
+- **BLOCKERs**: 8+ total (Foundation: 1, Integration: 7, Security: 1 CRITICAL + 4 HIGH)
+- **Fix iterations**: 2
+- **Traps caught**: T2 (H66, partially), T3 (H67, security flagged), T5 (H65, coordinator caught), T7 (H61), T8 (H60)
+- **Traps missed/partial**: T1 (H68, coordinator verified field names only), T2 (tsc missed due to `as any`)
+- **Prevention rules validated**: M39, H60, H61, H63, H64, H69
+- **Prevention rules re-validated (fragile transfer)**: H65, H55
+- **New mutations**: M46-M48

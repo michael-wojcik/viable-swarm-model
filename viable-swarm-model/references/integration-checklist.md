@@ -270,3 +270,33 @@ correction BEFORE quality gates.
 - [ ] Every field destructured from Zustand stores MUST exist in the store's type definition
 - [ ] Every type imported from `shared/types.ts` MUST be defined in that file
 - [ ] ANY unresolved import or missing field is a BLOCKER before the auditor runs
+
+## Check 46: Circular Import Prevention (Fix Wave)
+- [ ] After any fix agent adds cross-module imports, run `python -c "import app.main"` to verify no circular dependencies
+- [ ] If fix introduces `from app.main import X` in a router, verify router is not imported by main.py at module level
+- [ ] Extract shared dependencies (limiter, settings, db) to dedicated modules rather than importing from main.py
+
+**Source**: FB15 Fix Wave introduced circular import when wiring rate limiting (H70)
+
+## Check 47: Frontend `as any` Anti-Pattern
+- [ ] Scan all `.tsx` and `.ts` files for `as any` casts
+- [ ] Every `as any` must have a comment explaining why type safety is intentionally bypassed
+- [ ] `as any` used to destructure store fields is a BLOCKER — the store schema must be updated instead
+- [ ] Run `tsc --noEmit` after removing `as any` to verify no hidden contract mismatches
+
+**Source**: FB15 frontend agent used `useEventStore() as any` to hide missing `salesMetrics` field (H71)
+
+## Check 48: GraphQL Argument Type Parity
+- [ ] Run schema introspection (`python -c "from app.graphql import schema; print(schema)"`)
+- [ ] For EVERY frontend mutation, verify input argument types match the introspected schema EXACTLY
+- [ ] Cross-check against api-spec.md: if spec says `String` but schema says `DateTime`, it is a BLOCKER
+- [ ] Field-name alignment is necessary but NOT sufficient — argument types must also match
+
+**Source**: FB15 coordinator verified field names but missed String vs DateTime input type trap (H68)
+
+## Check 49: Runtime API Verification
+- [ ] Before using framework-specific parameters (e.g., `strawberry.Schema(validation_rules=[...])`), verify with `help(Class.__init__)` or test invocation
+- [ ] If parameter is not recognized, do NOT use it — find the correct API for the installed version
+- [ ] This applies to Strawberry, FastAPI, SQLAlchemy, and any library with version drift
+
+**Source**: FB15 agent used `validation_rules` parameter that doesn't exist in installed strawberry-graphql (H72)

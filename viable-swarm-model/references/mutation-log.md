@@ -738,3 +738,27 @@ main-skill mutations.
 **Type**: structural
 **Rationale**: FB14 foundation wave omitted the auth router (login/register/me) despite it being documented in api-spec.md. This broke the entire application. Additionally, frontend contract mismatches reached the auditor because no pre-audit import check existed. Two SKILL.md changes: (1) explicitly require `routers/auth.py` in Sub-Wave 2b, (2) add Phase 3e frontend cross-file import check before auditor.
 **Expected effect**: Auth router is never forgotten in foundation wave. Frontend contract mismatches are caught before auditor deployment.
+
+## Mutation 46 — 2026-05-25 (FB15 Evaluation)
+
+**Session**: FB15 EventHorizon fitness build evaluation
+**File**: `references/integration-checklist.md`
+**Type**: append
+**Rationale**: FB15 revealed four new integration gaps: (1) fix agents introducing circular imports, (2) frontend `as any` bypassing type safety, (3) GraphQL argument type parity not verified beyond field names, (4) agents using non-existent framework parameters.
+**Expected effect**: Future builds catch circular imports, hidden store mismatches, GraphQL argument type drift, and API version mismatches during integration verification.
+
+## Mutation 47 — 2026-05-25 (FB15 Evaluation)
+
+**Session**: FB15 EventHorizon fitness build evaluation
+**File**: `references/anti-patterns.md`
+**Type**: append
+**Rationale**: Two new anti-patterns from FB15: module-level engine instantiation (H65 recurrence) and `as any` type safety bypass (H71).
+**Expected effect**: Future auditor agents flag module-level engine as BLOCKER and frontend import checks flag `as any` masking missing fields.
+
+## Mutation 48 — 2026-05-25 (FB15 Evaluation)
+
+**Session**: FB15 EventHorizon fitness build evaluation
+**File**: `agents/vsm_auditor.md`
+**Type**: refinement
+**Rationale**: FB15 foundation auditor missed module-level engine instantiation, frontend `as any` bypass, and non-existent Strawberry parameter. Added explicit guidance for all three patterns.
+**Expected effect**: Auditor false-negative rate drops for these three vulnerability classes.

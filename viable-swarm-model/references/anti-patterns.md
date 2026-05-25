@@ -264,3 +264,19 @@
 **What**: A `decode_token` helper or similar function uses `jwt.decode(token, options={"verify_signature": False}, ...)` to "conveniently" read the payload without verifying the signature.  
 **When**: Developer thinks they need to decode the token in a context where the secret is "unavailable" (e.g., WebSocket auth, logging, debugging).  
 **Prevention**: NEVER disable JWT signature verification. If the secret is needed, pass it explicitly. Ban any function that sets `verify_signature=False`. The security gate must flag this as CRITICAL.
+
+## Implementation Anti-Patterns
+
+### Anti-Pattern #50: Module-Level Engine Instantiation
+**What**: `engine = create_async_engine(get_settings().DATABASE_URL)` at module level in `models.py`.  
+**When**: Agent doesn't know how to create a lazy factory and defaults to the simplest pattern.  
+**Prevention**: models.py MUST use `_get_async_engine()` lazy factory or similar. Auditor must flag module-level engine as BLOCKER.
+
+**Source**: FB15 foundation agent reverted to module-level engine despite FB14 prevention rule (H65)
+
+### Anti-Pattern #51: `as any` Type Safety Bypass
+**What**: Using `as any` to destructure fields that don't exist in the type definition.  
+**When**: Frontend agent needs a field that wasn't created in the store/schema and uses `as any` to silence TypeScript instead of fixing the source.  
+**Prevention**: Frontend import check (`tsc --noEmit`) must be combined with an explicit scan for `as any` casts. Any `as any` that masks a missing field is a BLOCKER.
+
+**Source**: FB15 frontend agent used `useEventStore() as any` to access missing `salesMetrics` (H71)
