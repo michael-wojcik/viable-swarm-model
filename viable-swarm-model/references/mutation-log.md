@@ -1015,4 +1015,9 @@ A mandatory review of the committed skill mutation log is more effective than an
 
 **Applied change to Phase 8b**:
 Replace Step 8c (build-level `mutations-applied.md`) with:
-"**Step 8c: Mutation Verification Checkpoint** — Before declaring Phase 8 complete, S5 MUST open the skill-level mutation logs (`viable-swarm-model/references/mutation-log.md` and `vsm-fitness-coach/references/mutation-log.md`) and verify that every mutation proposed during this build is either (a) applied to the skill files, or (b) explicitly rejected with rationale. If any mutation was overlooked, apply it now. Hard-block completion until the skill logs are consistent."
+"**Step 8c: Mutation Verification Checkpoint** — Before declaring Phase 8 complete, S5 MUST open ALL skill-level mutation logs and verify that every mutation proposed during this build is either (a) applied to the skill files, or (b) explicitly rejected with rationale. If any mutation was overlooked, apply it now. Hard-block completion until the skill logs are consistent.
+
+Logs to review:
+- `viable-swarm-model/references/mutation-log.md`
+- `vsm-fitness-coach/references/mutation-log.md`
+- `vsm-fitness-gym/references/mutation-log.md`"
