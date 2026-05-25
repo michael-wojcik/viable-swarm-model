@@ -1146,3 +1146,34 @@ Added `vsm_meta` description to Custom Type Prompt Characteristics, between `vsm
 3. Added algedonic signal: "If S5 is about to write `meta-reflection.md` manually, STOP immediately."
 **Expected effect**: Future builds will not complete Phase 8b without an independently produced `meta-report.md`. Builder/evaluator separation of concerns is structurally enforced.
 
+
+---
+
+## Mutation FB21-7 — 2026-05-25
+
+**Session**: FB21 EduFlow fitness build — Phase 5b structural mutation approval
+**File**: `~/vsm/viable-swarm-model/SKILL.md`
+**Type**: structural
+**Rationale**: FB21 fixes were applied inline during Phase 6 (integration verification), bypassing formal Phase 7 → re-audit → post-fix security re-check protocol. No re-audit artifact was produced (H98 FAIL). The Phase 6/7 boundary lacked a strong algedonic signal prohibiting inline fixes.
+**Expected effect**: Future sessions will route integration BLOCKERs through Phase 7 fix wave with mandatory re-audit artifact and Phase 7b post-fix security re-check. Inline fixes during Phase 6 are explicitly prohibited.
+
+**Before**:
+```
+### Phase 6: Integration Verification
+Spawn `vsm_coordinator` + `vsm_auditor`. Full 20+ point checklist (see
+`references/integration-checklist.md`). ANY failure → back to Phase 3.
+```
+
+**After**:
+```
+### Phase 6: Integration Verification
+Spawn `vsm_coordinator` + `vsm_auditor`. Full 20+ point checklist (see
+`references/integration-checklist.md`). ANY failure → back to Phase 3.
+
+> **Algedonic signal — Phase 6/7 Boundary**: If integration verification finds
+> BLOCKERs, do NOT fix them inline. Route to Phase 7 (Fix Wave). Inline fixes
+> bypass re-audit and post-fix security re-check, violating exit criteria. S5
+> MUST spawn `coder` subagents for fixes, produce a `re-audit-report.md`
+> artifact, and run Phase 7b post-fix security re-check before returning to
+> the main flow.
+```

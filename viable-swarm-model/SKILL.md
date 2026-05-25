@@ -482,6 +482,13 @@ This reduces total fix iterations.
 Spawn `vsm_coordinator` + `vsm_auditor`. Full 20+ point checklist (see
 `references/integration-checklist.md`). ANY failure → back to Phase 3.
 
+> **Algedonic signal — Phase 6/7 Boundary**: If integration verification finds
+> BLOCKERs, do NOT fix them inline. Route to Phase 7 (Fix Wave). Inline fixes
+> bypass re-audit and post-fix security re-check, violating exit criteria. S5
+> MUST spawn `coder` subagents for fixes, produce a `re-audit-report.md`
+> artifact, and run Phase 7b post-fix security re-check before returning to
+> the main flow.
+
 ### Phase 7: Fix Wave (conditional)
 Group fixes by file. Parallel across files, sequential within file. Spawn
 `coder` subagents. MANDATORY re-audit after. **MANDATORY full test suite run after**
