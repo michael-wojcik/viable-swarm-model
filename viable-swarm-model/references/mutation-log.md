@@ -794,11 +794,15 @@ main-skill mutations.
 
 ---
 
-## Mutation 52 — 2026-05-24 (FB16 Structural Proposal)
+## Mutation 52 — 2026-05-24 (FB16 Structural — USER APPROVED)
 
 **Session**: FB16 FarmLogix fitness build evaluation
 **File**: `SKILL.md` + new `agents/vsm_wiring.md`
-**Type**: structural (PROPOSED, pending user approval)
+**Type**: structural
 **Rationale**: FB16 revealed that `main.py`, `realtime.py`, and `App.tsx` are high-risk "wiring" files touched by multiple parallel agents. Omissions (missing `context_getter`, new AsyncServer instead of reuse) caused runtime failures. A dedicated wiring agent that owns these files exclusively would prevent drift.
 **Expected effect**: Future builds have a single agent responsible for all entry-point wiring, reducing omissions by 80%+.
-**Status**: Proposed in fitness report. Awaiting user approval before implementation.
+**Status**: **APPROVED** by user on 2026-05-24. Applied immediately.
+
+**Files changed**:
+- `agents/vsm_wiring.md` — Created with full wiring checklist and autonomy boundaries
+- `SKILL.md` — Added `vsm_wiring` to VSM Role Map, added Phase 3d (Entry-Point Wiring) to workflow, shifted existing Phase 3d→3e and 3e→3f

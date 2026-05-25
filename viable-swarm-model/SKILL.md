@@ -67,6 +67,7 @@ use symlinks or update paths in mutation commands.
 | **S3 (Control)** | Main agent via SetTodoList | — | All phases | Progress tracking, mutation decisions |
 | **S3* (Audit)** | `vsm_auditor` subagent | Custom | After waves | PASS/ISSUES/BLOCKER |
 | **S2 (Coordination)** | `vsm_coordinator` subagent | Custom | After Wave 3 | Integration report |
+| **S2 (Wiring)** | `vsm_wiring` subagent | Custom | After Phase 3 | Entry-point wiring verification |
 | **S1-Backend** | `coder` subagent | Built-in | Phases 2,3 | Backend code |
 | **S1-Frontend** | `coder` subagent | Built-in | Phases 2,3 | Frontend code |
 | **S1-Tester** | `vsm_tester` subagent | Custom | Phase 4 | Tests, coverage |
@@ -97,6 +98,11 @@ maintainability. Includes full cross-file checklist. Defined in
 **`vsm_coordinator`** (S2 Coordination): Read-only. Compares S1 outputs.
 Validates imports, interfaces, naming, type alignment. Checks WebSocket contracts,
 GraphQL SDL, Prisma relations, env vars. Defined in `agents/vsm_coordinator.md`.
+
+**`vsm_wiring`** (S2 Wiring): Runs after Phase 3. Exclusively owns `main.py`,
+`realtime.py`, `App.tsx`, and `main.tsx`. Verifies all routers, providers,
+middleware, and server instances are wired correctly. No other agent may modify
+these files. Defined in `agents/vsm_wiring.md`.
 
 **`vsm_security`** (Security Audit): Read-only security specialist. Runs 15+
 point security checklist. Prevents, not detects — knows all anti-patterns.
@@ -339,7 +345,21 @@ on shared contracts after the first agents complete. Flag ONLY critical
 drift that would block incomplete agents. If drift found → emit algedonic,
 halt remaining agents, inject corrections.
 
-### Phase 3d: Frontend Config Validation
+### Phase 3d: Entry-Point Wiring (MANDATORY)
+After all implementation agents complete, spawn `vsm_wiring` subagent.
+This agent exclusively owns `main.py`, `realtime.py`, `App.tsx`, and `main.tsx`.
+It verifies:
+- All routers registered in `main.py`
+- GraphQLRouter mounted with `context_getter=get_context`
+- `realtime.py` reuses `sio` from `app.sio` (never creates new AsyncServer)
+- `main.tsx` wraps app in `ApolloProvider`
+- `App.tsx` includes all routes with role guards
+- No module-level `get_settings()` calls in wiring files
+
+No implementation agent may modify these four files. The wiring agent is the
+sole owner. BLOCKERs here trigger Phase 7.
+
+### Phase 3e: Frontend Config Validation
 After entry point wiring and BEFORE the testing wave, S5 MUST perform a
 lightweight frontend config validation check:
 
@@ -354,7 +374,7 @@ ANY failure → back to Phase 3 (frontend implementation agent fixes).
 This prevents frontend configuration bugs from surviving to the security gate,
 where they are currently discovered too late.
 
-### Phase 3e: Frontend Cross-File Import Check
+### Phase 3f: Frontend Cross-File Import Check
 After all parallel frontend implementation agents complete and BEFORE spawning
 the auditor, S5 MUST run a lightweight cross-file import verification:
 
