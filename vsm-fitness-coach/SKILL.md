@@ -247,19 +247,29 @@ Map confirmed gaps to specific skill file changes:
 
 Classify each mutation:
 - **Append-only**: new rules, patterns, anti-patterns, checklists
-- **Structural**: agent prompt changes, flow diagram changes, phase logic changes
+- **Structural**: agent prompt changes, flow diagram changes, phase logic changes, add/remove agents
 
 Present all proposed mutations to S5 in a structured report:
 - Phase-by-phase scoring
 - Each gap with rationale
 - Proposed changes (append-only vs structural)
 
-**S5 response inference**:
-- "apply all" / "approved" / "go ahead" → apply everything
-- "skip structural" / "only append-only" → apply append-only, log structural
+**CRITICAL**: Structural mutations are NEVER inferred from ambiguous user responses.
+They require EXPLICIT approval via `AskUserQuestion` with:
+- Exact files that would change
+- What the change does
+- Evidence from the fitness build
+
+**S5 response inference** (append-only and refinement ONLY):
+- "apply all" / "approved" / "go ahead" → apply append-only and refinement mutations
+- "only append-only" → apply append-only, log refinement and structural
 - Explicit rejection → log all to mutation-log.md
-- Ambiguous or silent on structural → `AskUserQuestion`:
-  "These structural mutations are proposed: [list]. Approve?"
+
+**S5 response inference** (structural — NEVER autonomous):
+- "apply structural" / "approve structural" → NOT sufficient. Still use `AskUserQuestion`.
+- User explicitly approves EACH structural mutation in `AskUserQuestion` → apply approved, log rejected.
+- User rejects or is silent → log to mutation-log.md, do NOT apply.
+- If ANY structural mutation was proposed: `AskUserQuestion` is MANDATORY.
 
 ### Phase 5: Apply Mutations
 
@@ -287,18 +297,40 @@ Write all applied mutations to:
 - Fitness report using `assets/fitness-report-template.md`
 - `git commit` all changes with descriptive message
 
-**Structural Mutation Gate (MANDATORY)** — Before Phase 6 can begin:
-1. If any structural mutations were proposed in Phase 4, S5 MUST present them to the user via `AskUserQuestion` with:
+### Phase 5b: Structural Mutation Approval Gate (MANDATORY — HARD BLOCK)
+
+**This gate is NOT optional. It is a hard dependency for Phase 6.**
+
+1. **Check**: Were any structural mutations proposed in Phase 4?
+   - If NO: proceed to Phase 6 immediately.
+   - If YES: you CANNOT proceed to Phase 6 until the user explicitly responds.
+
+2. **Present**: Use `AskUserQuestion` with ONE question per structural mutation.
+   Each question MUST include:
    - Exact files that would change
    - What the change does
    - Evidence from the fitness build
-2. If the user approves: apply structural mutations, log them, git commit.
-3. If the user rejects: log rejection rationale to `mutation-log.md`.
-4. If the user defers: log deferral rationale and proceed.
-5. **Phase 6 MUST NOT begin until this gate is explicitly cleared.**
-   If you find yourself about to write `FB[N+1]-prompt-draft.md` without having
-   asked the user about structural mutations, STOP. This is an algedonic signal.
-   Return to the Structural Mutation Gate.
+   - Expected effect on next build
+
+3. **Record**: For EACH mutation:
+   - Approved → apply immediately, log to mutation-log.md, git commit
+   - Rejected → log rejection rationale to mutation-log.md
+   - Deferred → log deferral rationale to mutation-log.md
+
+4. **Verify before Phase 6**: S5 MUST explicitly state:
+   "Structural Mutation Gate: [X approved, Y rejected, Z deferred]. Proceeding to Phase 6."
+   If you cannot say this sentence, the gate is NOT cleared.
+
+5. **Algedonic signal**: If you find yourself about to write
+   `FB[N+1]-prompt-draft.md` without having asked the user about structural
+   mutations, STOP immediately. This is a critical process violation.
+   - Halt all Phase 6 activity
+   - Return to Step 2 of this gate
+   - Present the structural mutations NOW
+
+**Why this matters**: Structural mutations change agent architecture, workflow
+logic, and phase sequencing. They affect every future build. Autonomous
+application without user approval risks breaking the entire skill ecosystem.
 
 ### Phase 6: Prepare Next Build Prompt
 

@@ -70,7 +70,9 @@ use symlinks or update paths in mutation commands.
 | **S2 (Wiring)** | `vsm_wiring` subagent | Custom | After Phase 3 | Entry-point wiring verification |
 | **S1-Backend** | `coder` subagent | Built-in | Phases 2,3 | Backend code |
 | **S1-Frontend** | `coder` subagent | Built-in | Phases 2,3 | Frontend code |
-| **S1-Tester** | `vsm_tester` subagent | Custom | Phase 4 | Tests, coverage |
+| **S1-Backend-Tester** | `vsm_backend_tester` subagent | Custom | Phase 4 | Backend tests (pytest), API tests |
+| **S1-Frontend-Tester** | `vsm_frontend_tester` subagent | Custom | Phase 4 | Frontend tests (vitest), build verification |
+| **S1-Tester** | `vsm_tester` subagent | Custom | Phase 4 (Tier 1 only) | Tests, coverage (legacy single-agent mode) |
 | **S1-Security** | `vsm_security` subagent | Custom | Phase 5 | Security findings |
 | **S1-DevOps** | `coder` subagent | Built-in | Phase 4 | Docker, CI/CD |
 | **Algedonic** | Main agent detects/stops | — | Any phase | TaskStop, AskUserQuestion |
@@ -108,9 +110,17 @@ these files. Defined in `agents/vsm_wiring.md`.
 point security checklist. Prevents, not detects — knows all anti-patterns.
 Defined in `agents/vsm_security.md`.
 
-**`vsm_tester`** (S1 Quality): Reads implementation, writes tests (unit,
-integration, edge cases). Bug-Fix Bonus: fixes bugs inline. Runs tests via
-Shell. Defined in `agents/vsm_tester.md`.
+**`vsm_backend_tester`** (S1 Quality — Backend): Writes and runs backend tests
+(pytest), validates fixtures, verifies API contracts. Does NOT test frontend.
+Defined in `agents/vsm_backend_tester.md`.
+
+**`vsm_frontend_tester`** (S1 Quality — Frontend): Writes and runs frontend tests
+(vitest), validates TypeScript compilation, verifies component rendering. Does NOT
+test backend. Defined in `agents/vsm_frontend_tester.md.md`.
+
+**`vsm_tester`** (S1 Quality — Legacy): Single-agent tester for Tier 1 builds only.
+Tier 2+ builds MUST use split testers to prevent timeout collapse. Defined in
+`agents/vsm_tester.md`.
 
 ### Agent Output Types
 
@@ -392,8 +402,21 @@ from reaching the auditor, where they currently consume auditor capacity on
 trivial integration issues.
 
 ### Phase 4: Testing & Infra Wave
+
+**Tier 1 builds** (< 1000 lines, 1-2 services):
 Spawn `vsm_tester` + `coder` (devops) in parallel. Run tests via Shell.
-Report coverage.
+
+**Tier 2+ builds** (≥ 1000 lines, 2+ services):
+Spawn `vsm_backend_tester` + `vsm_frontend_tester` + `coder` (devops) in parallel
+with `run_in_background=true`. Both testers run simultaneously:
+- `vsm_backend_tester`: pytest, database fixtures, API integration, Celery mocks
+- `vsm_frontend_tester`: vitest, component rendering, TypeScript compilation, build verification
+
+Wait via `TaskOutput(block=true)` for ALL testers to complete, then aggregate
+results. If either tester times out, treat as a BLOCKER: the build surface
+exceeds single-agent capacity and must be further subdivided or scoped down.
+
+Report combined coverage.
 
 ### Phase 5: Security Gate
 Spawn `vsm_security`. CRITICAL/HIGH → stop, fix, re-audit. LOW → document.
@@ -443,7 +466,13 @@ Write a standalone `.kimi/lessons.md` in the build directory.
 See `references/lessons-template.md` for the full template.
 
 ### Phase 8b: Meta-Reflection + Hypothesis Generation
-After project reflection, evaluate the skill's own performance.
+After project reflection, spawn `vsm_meta` subagent to evaluate the skill's own
+performance. This agent produces a standalone `meta-report.md` with independent
+test verification, agent performance scores, rule effectiveness ratings, and
+process bottleneck analysis.
+
+The main agent (S5) reads the `meta-report.md` and uses it to inform hypothesis
+generation and mutation decisions.
 
 **Independent verification requirement**: Before writing `meta-reflection.md`,
 S5 MUST independently run the full test suite (`pytest tests/` and `vitest run` /
