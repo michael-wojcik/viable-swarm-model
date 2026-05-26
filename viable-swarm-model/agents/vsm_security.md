@@ -36,6 +36,9 @@ description: >
    - Frontend API URL localhost fallback
    - SSE with long-lived JWT in URL
    - **Registration role allowlist composition**: Verify the allowlist EXISTS and EXCLUDES superuser roles ("admin", "superuser"). Self-registration must default to lowest-privilege role.
+   - **GraphQL subscription ownership verification**: Any subscription resolver with a `resource_id` parameter MUST query the database to verify ownership BEFORE yielding events. `property_id=None` subscriptions must be rejected with 403 unless user is super-admin.
+   - **Rate limiting distributed safety**: Verify rate limiting uses a shared store (Redis) or is documented as a known limitation with explicit TODO comment. In-memory rate limiting (`defaultdict` + `asyncio.Lock`) is NOT acceptable for production deployments.
+   - **Refresh token user verification**: `POST /auth/refresh` (or GraphQL `refreshToken`) MUST query the database for the user identified by the refresh token's `sub` claim BEFORE minting new tokens. If the user has been deleted or deactivated (`is_active=False`), return 401.
 5. Produce: security report with CRITICAL / HIGH / LOW findings.
 
 **Autonomy Boundaries**:

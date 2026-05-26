@@ -65,14 +65,15 @@ Does the coordinator check .env.example against actual code usage?
 but code reads `DB_URL`, and .env.example documents neither. Run vsm_coordinator.
 Does it detect the triple mismatch?
 **Expected**: If coordinator PASSes → confirmed (gap exists).
-**Result**: CONFIRMED. A minimal experiment with one ambiguous prompt ("Users need a way to share grocery lists...") showed dramatic scope-creep reduction. The control architect (raw prompt) added an entire auth subsystem (JWT/bcrypt/register/login), multiple lists per household, and quantity/unit fields — all explicitly out of scope. The treatment architect (with product brief) produced a design with only 3 core features, 12+ explicit scope boundaries, and no auth. The product brief's 'Out of Scope' list acted as effective guardrails.
-**Tested by**: Gym-2026-05-23, Experiment E4
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
 
 ---
 
 ## H4: A dedicated wiring agent would reduce entry-point conflicts by 80%
 
-**Status**: untested
+**Status**: superseded-by-rule
+**Superseded by**: Mutation 52 created `agents/vsm_wiring.md` and `SKILL.md` Phase 3d. The wiring agent is now standard architecture.
 **Proposed**: 2026-05-22
 **Rationale**: In FB1, the backend implementation agent and worker agent both modified
 `main.py` and `worker.py`. The later agent overwrote the earlier agent's changes,
@@ -89,7 +90,8 @@ and is the ONLY agent allowed to modify main.py/App.tsx. Count entry-point confl
 
 ## H5: Requiring fix agents to run verification commands would reduce false positives by 90%
 
-**Status**: untested
+**Status**: superseded-by-rule
+**Superseded by**: Anti-Pattern #42 (Fix Agent False Positive Claims) in `references/anti-patterns.md`.
 **Proposed**: 2026-05-22
 **Rationale**: In FB1 Fix Wave 2, the fix agent claimed to update `useYjs.ts` to include
 the JWT token in the URL path. In reality, the token was still passed as the `room`
@@ -108,7 +110,8 @@ Count false positive fixes in each group.
 
 ## H6: Pre-installing test dependencies would enable test execution for 70% of Python builds
 
-**Status**: untested
+**Status**: superseded-by-rule
+**Superseded by**: `agents/vsm_tester.md` Additional Guidance (FB2, FB3, FB5, FB6 findings) explicitly requires pre-installing test dependencies.
 **Proposed**: 2026-05-22
 **Rationale**: In FB1 Phase 4, the tester agent could not write or execute tests because
 the environment lacked pytest, pytest-asyncio, httpx, and PostgreSQL/Redis. The agent
@@ -125,7 +128,8 @@ current group produces executable tests in ≤20%.
 
 ## H7: Adding GraphQL depth limit to architect checklist would result in 95% implementation rate
 
-**Status**: untested
+**Status**: superseded-by-rule
+**Superseded by**: `security-lessons.md` L25 and `agents/vsm_architect.md` step 11 both mandate GraphQL depth limiting in design docs.
 **Proposed**: 2026-05-22
 **Rationale**: FB1's GraphQL schema had no depth limiting — a HIGH security finding.
 Neither the architect nor the backend coder included it. If the architect's design
@@ -142,7 +146,8 @@ limiting implemented.
 
 ## H8: Adding rate limiting to foundation requirements would result in 80% implementation rate
 
-**Status**: untested
+**Status**: superseded-by-rule
+**Superseded by**: `security-lessons.md` L39 (rate limiting in foundation wave) and L40 (decorators + middleware + exception handler).
 **Proposed**: 2026-05-22
 **Rationale**: FB1 had no rate limiting on auth endpoints — a HIGH security finding.
 The foundation wave created auth scaffolding but did not include rate limiting. If the
@@ -175,7 +180,8 @@ agent prompt are both effective at detecting this pattern.
 
 ## H10: SQLAlchemy column-name import shadowing is a repeatable bug pattern
 
-**Status**: untested
+**Status**: superseded-by-rule
+**Superseded by**: Pattern #39 (Alias SQLAlchemy Imports) and Anti-Pattern #45 (SQLAlchemy Column Names Shadowing Imported Functions).
 **Proposed**: 2026-05-22
 **Rationale**: `Question.text` shadowed `sqlalchemy.text` in FB2, causing a runtime crash. Any model with columns named `text`, `select`, `join`, etc. could shadow SQLAlchemy imports.
 **Experiment**: Build a minimal FastAPI project with models containing columns named `text`, `select`, `join`. Run pytest. Does it crash?
@@ -187,7 +193,8 @@ agent prompt are both effective at detecting this pattern.
 
 ## H11: Pre-installing test dependencies reduces test wave time by 50%
 
-**Status**: untested
+**Status**: superseded-by-rule
+**Superseded by**: Same rule as H6. `agents/vsm_tester.md` Additional Guidance covers pre-installation.
 **Proposed**: 2026-05-22
 **Rationale**: FB2 tester spent ~15 minutes installing jsdom, pytest-asyncio, etc. FB1 tester could not run tests at all due to missing deps.
 **Experiment**: Compare test wave duration across 5 builds with vs. without pre-installed deps.
@@ -199,7 +206,8 @@ agent prompt are both effective at detecting this pattern.
 
 ## H12: Adding spatial query parameter bounds to security checklist prevents DoS
 
-**Status**: untested
+**Status**: superseded-by-rule
+**Superseded by**: Pattern #40 (Validate Spatial Query Parameters with Upper Bounds).
 **Proposed**: 2026-05-22
 **Rationale**: Unbounded `radius_meters` is a DoS vector. Geo endpoints are common in fitness builds.
 **Experiment**: Run 3 geo-enabled builds with current checklist. Run 3 with "spatial params must have upper bounds" rule. Count unbounded params.
@@ -223,7 +231,8 @@ agent prompt are both effective at detecting this pattern.
 
 ## H14: Rate limiting in foundation wave requirements results in 80% implementation
 
-**Status**: untested
+**Status**: superseded-by-rule
+**Superseded by**: Same rule as H8. `security-lessons.md` L39 covers foundation wave rate limiting.
 **Proposed**: 2026-05-22
 **Rationale**: Both FB1 and FB2 lacked rate limiting until security gate. FB1 mutation added it to security lessons but not foundation wave requirements.
 **Experiment**: Run 5 auth-enabled builds with current foundation requirements. Run 5 with "rate limiting on auth endpoints" in foundation wave prompt. Count builds with rate limiting after implementation wave.
@@ -235,7 +244,8 @@ agent prompt are both effective at detecting this pattern.
 
 ## H15: Moving Pydantic Settings out of module level enables test execution
 
-**Status**: untested
+**Status**: superseded-by-rule
+**Superseded by**: Pattern #41 (Lazy Pydantic Settings Factory) and Anti-Pattern #46 (Module-Level Pydantic Settings Instantiation). H65 later confirmed this empirically.
 **Proposed**: 2026-05-22
 **Rationale**: FB3 tester agent timed out after 1800s because `config.py` instantiated `Settings()` at module level, causing import crash without env vars. This blocked all test execution except pure unit tests.
 **Experiment**: Build a minimal FastAPI project with Pydantic Settings. Variant A: module-level `settings = Settings()`. Variant B: lazy factory `get_settings()`. Have a tester agent write and run pytest for both. Measure time to first passing test.
@@ -247,7 +257,8 @@ agent prompt are both effective at detecting this pattern.
 
 ## H16: Adding case-sensitivity check to integration checklist catches enum mismatches
 
-**Status**: untested
+**Status**: superseded-by-rule
+**Superseded by**: `integration-checklist.md` Check 24 (Case-Sensitive Enum Alignment).
 **Proposed**: 2026-05-22
 **Rationale**: FB3 coordinator caught many contract mismatches but missed that GraphQL `LogStatus` enum used `SUCCESS`/`FAILURE` (uppercase) while frontend `NodeExecutionStatus` type used `"success" \| "failure"` (lowercase).
 **Experiment**: Run 5 builds with complex GraphQL enums. Use current checklist for 5 builds, modified checklist with case-sensitivity check for 5 builds. Count case mismatches caught before security gate.
@@ -259,7 +270,8 @@ agent prompt are both effective at detecting this pattern.
 
 ## H17: Requiring SlowAPIMiddleware in foundation wave results in 90% installation rate
 
-**Status**: untested
+**Status**: superseded-by-rule
+**Superseded by**: `security-lessons.md` L40 (Rate Limiting Requires Decorators, Middleware, AND Exception Handler).
 **Proposed**: 2026-05-22
 **Rationale**: FB3 had rate limiting decorators in foundation wave but `SlowAPIMiddleware` was missing until security gate found it. If the foundation wave prompt explicitly requires middleware installation, it would likely be included.
 **Experiment**: Run 5 auth-enabled builds with current foundation requirements. Run 5 with "install SlowAPIMiddleware in main.py" added to requirements. Count builds with middleware after implementation wave.
@@ -271,7 +283,8 @@ agent prompt are both effective at detecting this pattern.
 
 ## H18: Build-arg validation in frontend Dockerfile prevents undefined API URLs
 
-**Status**: untested
+**Status**: superseded-by-rule
+**Superseded by**: `integration-checklist.md` Check 25 (Frontend Dockerfile Build Args).
 **Proposed**: 2026-05-22
 **Rationale**: FB3 frontend Dockerfile built the app without `VITE_API_URL`, baking `undefined` into the static bundle. Docker-compose passes them as runtime env vars, but nginx serves pre-built static files.
 **Experiment**: Build 5 frontend Docker images without build args. Build 5 with `ARG VITE_API_URL`. Inspect the generated JS bundle for `undefined` in API URL strings.
