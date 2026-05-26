@@ -91,6 +91,15 @@ def main():
         with open(md_path) as f:
             md_content = f.read()
 
+        FORBIDDEN_KEYWORDS = [
+            "FastAPI", "Pydantic", "SQLAlchemy", "Strawberry",
+            "React", "Vite", "Apollo", "Zustand",
+            "pytest", "vitest"
+        ]
+        for keyword in FORBIDDEN_KEYWORDS:
+            if keyword in md_content:
+                errors.append(f"{yaml_name}: forbidden keyword '{keyword}' in {md_path}")
+
         vars_in_md = extract_vars(md_content)
         defined_args = collect_system_prompt_args(yaml_path)
         undefined = vars_in_md - set(defined_args.keys()) - BUILT_IN_VARS

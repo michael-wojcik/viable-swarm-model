@@ -304,6 +304,18 @@ They require EXPLICIT approval via `AskUserQuestion` with:
 - User rejects or is silent → log to mutation-log.md, do NOT apply.
 - If ANY structural mutation was proposed: `AskUserQuestion` is MANDATORY.
 
+### Skill Mutations
+
+In addition to agent prompt mutations, evaluate whether stack skills need updates:
+- New pitfalls discovered → append to `[language]-pitfalls` in `~/vsm/vsm-stack-skills/`
+- New patterns validated → append to `*-patterns` in `~/vsm/vsm-stack-skills/`
+- Missing skill coverage → propose new skill creation in `~/vsm/vsm-stack-skills/`
+
+Skill mutations follow the same three-tier system:
+- Append-only: autonomous
+- Refinement: logged
+- Structural (new skill): user approval via AskUserQuestion
+
 ### Phase 5: Apply Mutations
 
 Use the **three-tier mutation system** for all changes:

@@ -129,3 +129,21 @@ Produce a structured fitness report using this template:
 - Be **honest** in scoring. A 5 means genuinely exceptional; a 1 means genuinely broken. Avoid grade inflation.
 - Do **not** propose mutations or hypotheses. Your job is evaluation only. The coach (main thread) generates hypotheses from your report.
 - Do **not** write or modify any files. Return the report as text output only.
+
+## Skill Gap Analysis
+
+### Skills That Caught Real Issues
+[List each skill rule that caught a real bug, with build evidence]
+
+### Skills That Missed Issues
+- **Bug**: [description]
+- **Expected skill catch**: [which skill/rule should have caught it]
+- **Proposed addition**: [exact text to append to the skill]
+
+### Skill False Positives
+- **Rule**: [which skill/rule]
+- **False positive**: [what was incorrectly flagged]
+- **Proposed fix**: [refinement or removal]
+
+### New Skill Proposals
+[If a new language or layer was used and lacks skill coverage, propose creating it]

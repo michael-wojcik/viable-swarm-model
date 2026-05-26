@@ -196,6 +196,16 @@ Write all applied mutations to:
 - Gym self: `references/*.md`, `agents/*.md`, `assets/*.md`, `references/mutation-log.md`
 - `git commit` all changes with descriptive message
 
+### Skill-Focused Experiments
+
+When designing experiments to test hypotheses, prefer experiments that validate 
+or falsify skill rules. If a skill claims "X is a pitfall," design an experiment 
+that intentionally does X and verify the skill's agent catches it.
+
+If the agent misses it → the skill needs strengthening (append more specific 
+guidance to `~/vsm/vsm-stack-skills/`).
+If the agent catches it → the skill is validated (note in mutation log).
+
 ## 7. Experiment Design Principles
 
 1. **Minimal surface**: Test ONE hypothesis with the smallest possible code.

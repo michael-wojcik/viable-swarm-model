@@ -34,7 +34,7 @@ S5 MUST include the target stack in every task description:
 `Backend: [language], Frontend: [language], DevOps: [platform]`.
 If the language is unclear, read the codebase to infer it:
 - `requirements.txt` / `pyproject.toml` → Python
-- `package.json` with `dependencies.react` → TypeScript/React
+- `package.json` with frontend dependencies → TypeScript/[frontend framework]
 - `go.mod` → Go
 - `Cargo.toml` → Rust
 - `pom.xml` / `build.gradle` → Java

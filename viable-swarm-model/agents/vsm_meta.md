@@ -44,10 +44,10 @@ You will receive:
 
 3. **Independent test verification** (MANDATORY):
    Before scoring any phase, S5 MUST run the full test suite independently:
-   - `pytest tests/` (backend)
-   - `vitest run` or `npm test` (frontend)
-   - `tsc --noEmit` (TypeScript compilation)
-   - `npm run build` (frontend build)
+   - `run backend tests` (backend)
+   - `run frontend tests` (frontend)
+   - `run type checker` (TypeScript compilation)
+   - `build frontend` (frontend build)
    Record ACTUAL pass/fail counts. Do NOT trust upstream claims.
 
 4. **Score each agent type 1-5**:
@@ -101,7 +101,7 @@ Produce a structured meta-report (`meta-report.md`) with these sections:
 ## Phase Audit
 Evaluate the build flow against these specific checks. Cite evidence for each:
 
-1. **Phase 4 Hard Gate Compliance**: Did the build proceed to Phase 5/6 with any failing `pytest`, `vitest`, or `npm run build` tests? If yes, this is a process violation — Phase 4 must be a hard block.
+1. **Phase 4 Hard Gate Compliance**: Did the build proceed to Phase 5/6 with any failing backend tests, frontend tests, or frontend build? If yes, this is a process violation — Phase 4 must be a hard block.
 2. **Phase 6/7 Boundary Integrity**: Did S5 fix coordinator or auditor BLOCKERs inline during Phase 6 instead of routing to Phase 7 (Fix Wave)? Inline fixes bypass re-audit and post-fix security re-check.
 3. **Phase 8b Completeness**: Does `meta-report.md` exist, contain a Phase Audit section, and contain at least one falsifiable hypothesis? Was it produced by `vsm_meta`, not written by S5?
 4. **Mutation Tracking**: Were all mutations proposed in `meta-report.md` tracked in `mutations-applied.md` with status (Applied / Deferred / Rejected / Overlooked)? Any `overlooked` mutations indicate a process gap.
@@ -138,3 +138,14 @@ flag it as structural with a bold warning.
   a Mutation Orphan failure mode. Recommend adding Mutation Verification Checkpoint
   to Phase 8b."
   **See also**: Pattern: Mutation Orphan Prevention in `references/pattern-library.md`.
+
+### 9. Skill Effectiveness Audit
+
+Evaluate the stack skills used in this build:
+1. **Pitfall coverage**: Did the `[language]-pitfalls` skill catch real bugs?
+2. **Pattern coverage**: Did the `*-patterns` skills provide useful guidance?
+3. **False positives**: Did any skill rule cause an agent to flag something correct as wrong?
+4. **Missing skills**: Was there a gap that a new skill should cover?
+
+For every gap, propose a mutation: append to existing skill, or create new skill.
+Classify: append-only (autonomous), refinement (logged), structural (user approval).
