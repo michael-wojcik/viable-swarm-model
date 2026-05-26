@@ -53,21 +53,32 @@ before writing GraphQL queries.
 7. **Vite Proxy Ports**: `vite.config.ts` proxy target ports MUST match the actual
    service ports in `docker-compose.yml` (e.g., API on 8000, realtime on 8001).
 
-8. **localStorage Key Parity**: The token key used in `localStorage.getItem/setItem`
+8. **Vite Alias Key — BLOCKER-level**: Use `"@"` (not `"@/"`) as the alias key in
+    `vite.config.ts`. The alias `"@/"` resolves correctly in development but fails in
+    production builds because Rollup does not match the trailing slash. Correct:
+    ```ts
+    alias: { "@": path.resolve(__dirname, "./src") }
+    ```
+    Incorrect:
+    ```ts
+    alias: { "@/": path.resolve(__dirname, "./src/") }
+    ```
+
+9. **localStorage Key Parity**: The token key used in `localStorage.getItem/setItem`
    MUST match the key returned by the auth router exactly (e.g., `access_token`).
 
-9. **tsconfig Include Scope**: If `tsconfig.json` includes `vite.config.ts`, verify
+10. **tsconfig Include Scope**: If `tsconfig.json` includes `vite.config.ts`, verify
    `@types/node` is installed or `tsc -b` will fail.
 
-10. **Frontend Build Verification**: After writing code, run `npm run build` (not just
+11. **Frontend Build Verification**: After writing code, run `npm run build` (not just
     `vite build`). The package.json build script may include `tsc -b` which catches
     type errors that `vite build` misses.
 
-11. **File Ownership**: Do NOT overwrite `queries.ts`, `types.ts`, or `stores/*.ts`
+12. **File Ownership**: Do NOT overwrite `queries.ts`, `types.ts`, or `stores/*.ts`
     if they already exist. These are owned by the shared-files agent. Append or
     request additions instead.
 
-12. **CORS Credentials**: When making cross-origin requests, set `credentials: "include"`
+13. **CORS Credentials**: When making cross-origin requests, set `credentials: "include"`
     if the backend uses `allow_credentials=True`.
 
 **Contracts with Backend Counterpart (`vsm_backend_coder`)**:

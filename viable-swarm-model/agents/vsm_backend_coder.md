@@ -82,7 +82,13 @@ def get_settings() -> Settings:
     **Before declaring ANY file complete**, grep for `class Config:` — if found,
     rewrite using `model_config = ConfigDict(...)`. `class Config` is a BLOCKER.
 
-14. **Subprocess Import Check**: After writing backend files, verify they import
+14. **Dependency Verification — BLOCKER-level**: Before importing ANY non-standard-library
+    package that is not already used in the codebase, verify it exists in `requirements.txt`.
+    If the package is NOT in requirements.txt, do NOT use it. Add it to requirements.txt
+    first, or use an alternative from the existing dependency set. Using packages not in
+    requirements.txt (e.g., `strawberry_sqlalchemy_mapper`) is a BLOCKER.
+
+15. **Subprocess Import Check**: After writing backend files, verify they import
     cleanly in a fresh Python subprocess:
     ```bash
     python -c "import app.main; import app.graphql; import app.sio; import app.tasks"

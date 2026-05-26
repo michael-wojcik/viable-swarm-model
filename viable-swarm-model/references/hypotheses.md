@@ -1763,3 +1763,51 @@ Domain-specific prompts measurably improved security posture (explicit CORS orig
 **Expected**: Variant B has ≥50% fewer coordinator BLOCKERs related to env vars.
 **Result**: The auditor correctly identified the 3-way split as a BLOCKER in ALL three files (docker-compose.yml, .env.example, config.py). The coordinator also found the same mismatch as 1 BLOCKER. If the auditor catches this in Phase 2b/3b, the fix agent resolves it before Phase 6. Coordinator env var BLOCKERs after early fix: **0** vs **1** without early detection. **100% reduction**. Hypothesis confirmed.
 **Tested by**: Gym E19
+
+---
+
+## H150: Requiring agents to verify dependencies against requirements.txt before importing would prevent 100% of non-existent library usage
+
+**Status**: untested
+**Proposed**: 2026-05-25
+**Rationale**: FB22 graphql.py agent used `strawberry_sqlalchemy_mapper` — a third-party library not in requirements.txt. The agent spent 15+ minutes trying to verify imports before failing. No existing rule forces agents to check requirements.txt before adding new imports.
+**Source**: Fitness build FB22
+**Experiment**: Add "Before importing any non-stdlib library, verify it exists in requirements.txt or package.json" to vsm_backend_coder and vsm_frontend_coder gotchas. Run next fitness build and count instances of agents using libraries not in dependency manifests.
+**Expected**: Zero instances of non-existent library usage in next build.
+**Tested by**: —
+
+---
+
+## H151: Elevating Pydantic `class Config` deprecation from ISSUE to BLOCKER would eliminate the pattern from all new code
+
+**Status**: untested
+**Proposed**: 2026-05-25
+**Rationale**: FB22 produced 9 router files using `class Config:` inside Pydantic BaseModel subclasses, generating 201 pytest warnings. The current vsm_backend_coder prompt mentions this as a deprecation avoidance gotcha but does not elevate it to BLOCKER.
+**Source**: Fitness build FB22
+**Experiment**: Update vsm_backend_coder.md to state: "`class Config:` inside Pydantic models is a BLOCKER. Use `model_config = ConfigDict(...)` instead." Run next fitness build and grep for `class Config:` in new Python files.
+**Expected**: Zero occurrences of `class Config:` in new code.
+**Tested by**: —
+
+---
+
+## H152: Pre-build environment smoke tests would catch package incompatibilities before code writing begins
+
+**Status**: untested
+**Proposed**: 2026-05-25
+**Rationale**: FB22 discovered `strawberry-graphql==0.256.0` is incompatible with the installed pydantic version only after the build started and graphql.py was written. This wasted agent time and required S5 intervention.
+**Source**: Fitness build FB22
+**Experiment**: At Phase 0 self-test, add a step: "Run `python -c 'import strawberry; import pydantic'` and verify it succeeds." Run next build on the same environment.
+**Expected**: Environment incompatibility detected at Phase 0, build halted or environment fixed before Phase 1.
+**Tested by**: —
+
+---
+
+## H153: Standardizing Vite alias key as `"@"` (not `"@/"`) would prevent production build failures
+
+**Status**: untested
+**Proposed**: 2026-05-25
+**Rationale**: FB22 frontend scaffold agent created `vite.config.ts` with alias `"@/": path.resolve(__dirname, "./src/")`. TypeScript compilation passed, but Vite's Rollup failed to resolve `@/graphql/queries` in production build. Changing to `"@": path.resolve(__dirname, "./src")` fixed it.
+**Source**: Fitness build FB22
+**Experiment**: Update vsm_frontend_coder.md scaffold template to use `"@"` alias key. Run next frontend build and verify `npm run build` succeeds without alias resolution errors.
+**Expected**: Zero alias resolution failures in production builds.
+**Tested by**: —
