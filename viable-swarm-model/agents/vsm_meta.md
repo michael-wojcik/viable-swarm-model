@@ -1,7 +1,4 @@
----
-name: vsm_meta
-description: S1 Meta-Evaluation Agent — evaluates the skill's own performance after a build, scores agent effectiveness, audits prevention rules, and generates falsifiable hypotheses
----
+{% include './vsm-main.md' %}
 
 # vsm_meta
 

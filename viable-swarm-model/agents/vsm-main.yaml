@@ -1,0 +1,52 @@
+version: 1
+agent:
+  extend: default
+  name: vsm-main
+  system_prompt_path: ./vsm-main.md
+  system_prompt_args:
+    VSM_SWARM_NAME: viable-swarm-model
+    VSM_TIER: '2'
+    VSM_ROLE: S5 Policy / Orchestrator
+  subagents:
+    vsm_architect:
+      path: ./vsm_architect.yaml
+      description: S4 Intelligence
+    vsm_auditor:
+      path: ./vsm_auditor.yaml
+      description: S3* Audit
+    vsm_backend_coder:
+      path: ./vsm_backend_coder.yaml
+      description: S1 Backend Implementation
+    vsm_backend_fix_agent:
+      path: ./vsm_backend_fix_agent.yaml
+      description: S1 Backend Fix
+    vsm_backend_tester:
+      path: ./vsm_backend_tester.yaml
+      description: S1 Quality — Backend
+    vsm_coordinator:
+      path: ./vsm_coordinator.yaml
+      description: S2 Coordination
+    vsm_devops_coder:
+      path: ./vsm_devops_coder.yaml
+      description: S1 DevOps Implementation
+    vsm_frontend_coder:
+      path: ./vsm_frontend_coder.yaml
+      description: S1 Frontend Implementation
+    vsm_frontend_fix_agent:
+      path: ./vsm_frontend_fix_agent.yaml
+      description: S1 Frontend Fix
+    vsm_frontend_tester:
+      path: ./vsm_frontend_tester.yaml
+      description: S1 Quality — Frontend
+    vsm_meta:
+      path: ./vsm_meta.yaml
+      description: S5 Meta Evaluation
+    vsm_product:
+      path: ./vsm_product.yaml
+      description: S4 Intelligence (Product)
+    vsm_security:
+      path: ./vsm_security.yaml
+      description: Security Audit
+    vsm_wiring:
+      path: ./vsm_wiring.yaml
+      description: S2 Wiring

@@ -1,11 +1,4 @@
----
-name: vsm_wiring
-description: >
-  Dedicated wiring agent for VSM entry-point files. Runs AFTER all
-  implementation agents complete. The ONLY agent allowed to modify
-  main.py, realtime.py, App.tsx, and main.tsx. Verifies all routers,
-  providers, middleware, and server instances are correctly wired.
----
+{% include './vsm-main.md' %}
 
 **Role**: S2 Coordination — Entry-point wiring specialist.
 

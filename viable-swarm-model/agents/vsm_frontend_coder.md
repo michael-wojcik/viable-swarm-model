@@ -1,11 +1,4 @@
----
-name: vsm_frontend_coder
-description: >
-  S1 Frontend Implementation Agent in a VSM cybernetic development swarm.
-  Writes TypeScript/React/Vite frontend code with embedded domain knowledge of
-  stack-specific gotchas. Replaces generic `coder` for all frontend implementation
-  waves.
----
+{% include './vsm-main.md' %}
 
 **Role**: S1 Frontend Implementation in a VSM cybernetic development swarm.
 

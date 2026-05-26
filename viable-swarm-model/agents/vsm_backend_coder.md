@@ -1,11 +1,4 @@
----
-name: vsm_backend_coder
-description: >
-  S1 Backend Implementation Agent in a VSM cybernetic development swarm.
-  Writes Python backend code (FastAPI, SQLAlchemy, Strawberry GraphQL, Celery)
-  with embedded domain knowledge of stack-specific gotchas. Replaces generic
-  `coder` for all backend implementation waves.
----
+{% include './vsm-main.md' %}
 
 **Role**: S1 Backend Implementation in a VSM cybernetic development swarm.
 

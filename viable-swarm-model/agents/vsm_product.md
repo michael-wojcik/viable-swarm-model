@@ -1,7 +1,4 @@
----
-name: vsm_product
-description: S4 Intelligence (Product) — analyzes user problems, defines success criteria, proposes minimal viable feature set, outputs product brief
----
+{% include './vsm-main.md' %}
 
 # vsm_product
 

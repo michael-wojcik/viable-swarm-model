@@ -50,6 +50,11 @@ use symlinks or update paths in mutation commands.
 
 ## 2. How to Invoke This Skill
 
+**Prerequisite**: The swarm requires custom agent files. Launch Kimi CLI with the base agent:
+```bash
+kimi --agent-file ~/vsm/viable-swarm-model/agents/vsm-main.yaml
+```
+Then in the session:
 - **`/flow:viable-swarm-model <task>`** — Execute the full VSM workflow. The model
   follows the Mermaid flow diagram step-by-step, outputting `<choice>branch</choice>`
   at decision nodes to select paths. Must include some natural language text
@@ -59,7 +64,9 @@ use symlinks or update paths in mutation commands.
 
 > **Platform constraint**: This flow MUST be executed by the root conversation agent (S5). It cannot be delegated to a single subagent because the workflow internally spawns custom subagents (`vsm_architect`, `vsm_auditor`, `vsm_security`, etc.) and subagents do not have access to the `Agent` tool.
 
-## 3. VSM Role Map with Custom Sub-Agent Types
+## 3. VSM Role Map with Custom Agent Files
+
+All swarm agents are defined as **custom Kimi CLI agent files** (`agents/*.yaml`) that extend a shared base (`agents/vsm-main.yaml`). Each YAML points to a system prompt markdown file (`agents/*.md`) via `system_prompt_path`. To spawn an agent, use `Agent(subagent_type="<name>", ...)` — the system prompt and tool list are loaded automatically; you do NOT need to read or embed the agent definition file into the prompt.
 
 | VSM System | CLI Implementation | Custom Type | Activation | Produces |
 |---|---|---|---|---|
@@ -90,72 +97,70 @@ user via `AskUserQuestion` or `EnterPlanMode` when human policy input is require
 **`vsm_product`** (S4 Intelligence — Product): Analyzes problem-oriented prompts,
 defines success criteria, proposes minimal viable feature set, outputs structured
 product brief with user stories and acceptance criteria. Does NOT design systems
-or write code. Defined in `agents/vsm_product.md`.
+or write code. Launched via `Agent(subagent_type="vsm_product")`.
 
 **`vsm_architect`** (S4 Intelligence — Technical): Reads codebase, researches tech, produces
  design documents ONLY (never code). Validates against S5 policy. Uses product
-brief (if present) as input. Defined in `agents/vsm_architect.md`.
+brief (if present) as input. Launched via `Agent(subagent_type="vsm_architect")`.
 
 **`vsm_auditor`** (S3* Audit): Read-only. Reads EVERY source file. Produces
 PASS/ISSUES/BLOCKER per file. Checks correctness, security, performance,
-maintainability. Includes full cross-file checklist. Defined in
-`agents/vsm_auditor.md`.
+maintainability. Includes full cross-file checklist. Launched via `Agent(subagent_type="vsm_auditor")`.
 
 **`vsm_coordinator`** (S2 Coordination): Read-only. Compares S1 outputs.
 Validates imports, interfaces, naming, type alignment. Checks WebSocket contracts,
-GraphQL SDL, Prisma relations, env vars. Defined in `agents/vsm_coordinator.md`.
+GraphQL SDL, Prisma relations, env vars. Launched via `Agent(subagent_type="vsm_coordinator")`.
 
 **`vsm_wiring`** (S2 Wiring): Runs after Phase 3. Exclusively owns `main.py`,
 `realtime.py`, `App.tsx`, and `main.tsx`. Verifies all routers, providers,
 middleware, and server instances are wired correctly. No other agent may modify
-these files. Defined in `agents/vsm_wiring.md`.
+these files. Launched via `Agent(subagent_type="vsm_wiring")`.
 
 **`vsm_backend_coder`** (S1 Backend Implementation): Writes Python backend code
 with embedded domain knowledge of FastAPI, SQLAlchemy, Strawberry GraphQL, Celery,
 and security gotchas. Replaces generic `coder` for all backend waves. Performs
 runtime framework API verification, subprocess import checks, and pytest validation.
-Defined in `agents/vsm_backend_coder.md`.
+Launched via `Agent(subagent_type="vsm_backend_coder")`.
 
 **`vsm_frontend_coder`** (S1 Frontend Implementation): Writes TypeScript/React
 frontend code with embedded domain knowledge of Vite, Apollo Client, Zustand,
 Strawberry auto-camelCase, and path aliases. Replaces generic `coder` for all
 frontend waves. Verifies schema introspection before writing GraphQL queries and
-runs `npm run build` before completion. Defined in `agents/vsm_frontend_coder.md`.
+runs `npm run build` before completion. Launched via `Agent(subagent_type="vsm_frontend_coder")`.
 
 **`vsm_backend_fix_agent`** (S1 Backend Fix): Surgical fixes to backend BLOCKERs.
 Inherits all backend gotchas. Adds fix-specific rules: full test suite after every
 fix, subprocess import check after cross-module changes, auth-weakening guard,
 rate-limit/CORS/security freeze, GraphQL auth parity, and mandatory `re-audit-report.md`.
-Defined in `agents/vsm_backend_fix_agent.md`.
+Launched via `Agent(subagent_type="vsm_backend_fix_agent")`.
 
 **`vsm_frontend_fix_agent`** (S1 Frontend Fix): Surgical fixes to frontend BLOCKERs.
 Inherits all frontend gotchas. Adds fix-specific rules: `npm run build` after every
 fix, `tsc --noEmit` check, no `as any` bypasses, export verification, Apollo Client
-consistency, and mandatory `re-audit-report.md`. Defined in `agents/vsm_frontend_fix_agent.md`.
+consistency, and mandatory `re-audit-report.md`. Launched via `Agent(subagent_type="vsm_frontend_fix_agent")`.
 
 **`vsm_devops_coder`** (S1 DevOps Implementation): Writes Docker, docker-compose,
 CI/CD, and infrastructure configs with embedded domain knowledge of containerization
 gotchas. Replaces generic `coder` for all infrastructure waves. Verifies Dockerfile
 CMD files exist, docker-compose has no `:-` fallbacks, ports match across configs,
-and `.dockerignore` excludes secrets. Defined in `agents/vsm_devops_coder.md`.
+and `.dockerignore` excludes secrets. Launched via `Agent(subagent_type="vsm_devops_coder")`.
 
 **`vsm_security`** (Security Audit): Read-only security specialist. Runs 15+
 point security checklist. Prevents, not detects — knows all anti-patterns.
-Defined in `agents/vsm_security.md`.
+Launched via `Agent(subagent_type="vsm_security")`.
 
 **`vsm_backend_tester`** (S1 Quality — Backend): Writes and runs backend tests
 (pytest), validates fixtures, verifies API contracts. Does NOT test frontend.
-Defined in `agents/vsm_backend_tester.md`.
+Launched via `Agent(subagent_type="vsm_backend_tester")`.
 
 **`vsm_frontend_tester`** (S1 Quality — Frontend): Writes and runs frontend tests
 (vitest), validates TypeScript compilation, verifies component rendering. Does NOT
-test backend. Defined in `agents/vsm_frontend_tester.md`.
+test backend. Launched via `Agent(subagent_type="vsm_frontend_tester")`.
 
 **`vsm_meta`** (S1 Meta — Evaluation): Evaluates the skill's own performance after a
 build. Reads build artifacts, runs independent test verification, scores agent
 effectiveness, audits prevention rules, and generates falsifiable hypotheses.
-Does NOT write code or design systems. Produces `meta-report.md`. Defined in
-`agents/vsm_meta.md`.
+Does NOT write code or design systems. Produces `meta-report.md`. Launched via `Agent(subagent_type="vsm_meta")`.
 
 ### Agent Output Types
 
@@ -320,12 +325,12 @@ Main agent (S5) performs:
    if exists. Note any untested hypotheses that are relevant to this project.
 6. **Self-test**: Verify all referenced files exist and are readable. Verify
 the flow diagram parses. Verify the skill can describe its own phase sequence
-without contradiction. Specifically verify these agent definition files exist:
-`vsm_architect.md`, `vsm_product.md`, `vsm_auditor.md`, `vsm_coordinator.md`,
-`vsm_wiring.md`, `vsm_backend_coder.md`, `vsm_frontend_coder.md`,
-`vsm_backend_fix_agent.md`, `vsm_frontend_fix_agent.md`, `vsm_devops_coder.md`,
-`vsm_security.md`, `vsm_backend_tester.md`, `vsm_frontend_tester.md`,
-`vsm_meta.md`.
+without contradiction. Specifically verify these custom agent definition files exist:
+`vsm-main.yaml`, `vsm_architect.yaml`, `vsm_product.yaml`, `vsm_auditor.yaml`,
+`vsm_coordinator.yaml`, `vsm_wiring.yaml`, `vsm_backend_coder.yaml`,
+`vsm_frontend_coder.yaml`, `vsm_backend_fix_agent.yaml`, `vsm_frontend_fix_agent.yaml`,
+`vsm_devops_coder.yaml`, `vsm_security.yaml`, `vsm_backend_tester.yaml`,
+`vsm_frontend_tester.yaml`, `vsm_meta.yaml`.
 If any check fails → emit algedonic, write diagnosis
 to `~/vsm/viable-swarm-model/references/mutation-log.md`, ask user to review.
 6a. **Environment Compatibility Smoke Test** (conditional): If the build declares

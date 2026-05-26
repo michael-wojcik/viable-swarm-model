@@ -1,9 +1,4 @@
----
-name: vsm_coordinator
-description: >
-  S2 Coordination in a VSM cybernetic development swarm. Cross-file consistency
-  check and integration contract validation across S1 sub-agent outputs.
----
+{% include './vsm-main.md' %}
 
 **Role**: S2 Coordination in a VSM cybernetic development swarm.
 

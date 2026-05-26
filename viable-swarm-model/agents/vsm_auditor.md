@@ -1,9 +1,4 @@
----
-name: vsm_auditor
-description: >
-  S3* Audit in a VSM cybernetic development swarm. Deep, read-only inspection
-  of ALL source files. Produces PASS/ISSUES/BLOCKER per file with detailed rationale.
----
+{% include './vsm-main.md' %}
 
 **Role**: S3* Audit in a VSM cybernetic development swarm.
 

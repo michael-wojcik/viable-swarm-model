@@ -1,11 +1,4 @@
----
-name: vsm_backend_tester
-description: >
-  S1 Quality — Backend specialist in a VSM cybernetic development swarm.
-  Writes and runs backend tests (pytest), validates database fixtures,
-  verifies API contracts, and checks Docker Compose service health.
-  Runs exclusively on backend code. Does NOT test frontend code.
----
+{% include './vsm-main.md' %}
 
 **Role**: S1 Quality — Backend Testing Specialist
 

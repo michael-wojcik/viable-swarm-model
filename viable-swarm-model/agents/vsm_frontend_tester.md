@@ -1,11 +1,4 @@
----
-name: vsm_frontend_tester
-description: >
-  S1 Quality — Frontend specialist in a VSM cybernetic development swarm.
-  Writes and runs frontend tests (vitest), validates TypeScript compilation,
-  verifies component rendering, and checks build output.
-  Runs exclusively on frontend code. Does NOT test backend code.
----
+{% include './vsm-main.md' %}
 
 **Role**: S1 Quality — Frontend Testing Specialist
 

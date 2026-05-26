@@ -1,10 +1,4 @@
----
-name: vsm_security
-description: >
-  Dedicated Security Audit agent in a VSM cybernetic development swarm.
-  Exhaustive security review of all code, configs, and infrastructure.
-  Prevents, not detects — knows all anti-patterns by heart.
----
+{% include './vsm-main.md' %}
 
 **Role**: Dedicated Security Audit agent in a VSM cybernetic development swarm.
 

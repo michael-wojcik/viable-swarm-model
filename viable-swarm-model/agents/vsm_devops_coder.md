@@ -1,11 +1,4 @@
----
-name: vsm_devops_coder
-description: >
-  S1 DevOps Implementation Agent in a VSM cybernetic development swarm.
-  Writes Docker, docker-compose, CI/CD, and infrastructure configs with
-  embedded domain knowledge of containerization gotchas. Replaces generic
-  `coder` for all infrastructure waves.
----
+{% include './vsm-main.md' %}
 
 **Role**: S1 DevOps Implementation in a VSM cybernetic development swarm.
 

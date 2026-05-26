@@ -1,0 +1,16 @@
+version: 1
+agent:
+  extend: ./vsm-main.yaml
+  name: vsm_devops_coder
+  system_prompt_path: ./vsm_devops_coder.md
+  system_prompt_args:
+    VSM_ROLE: S1 DevOps Implementation
+  tools:
+  - kimi_cli.tools.shell:Shell
+  - kimi_cli.tools.file:ReadFile
+  - kimi_cli.tools.file:Glob
+  - kimi_cli.tools.file:Grep
+  - kimi_cli.tools.file:WriteFile
+  - kimi_cli.tools.file:StrReplaceFile
+  - kimi_cli.tools.web:SearchWeb
+  - kimi_cli.tools.web:FetchURL

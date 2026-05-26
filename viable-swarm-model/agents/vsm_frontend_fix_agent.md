@@ -1,10 +1,4 @@
----
-name: vsm_frontend_fix_agent
-description: >
-  S1 Frontend Fix Agent in a VSM cybernetic development swarm. Surgical fixes to
-  TypeScript/React frontend code ONLY. Inherits all frontend gotchas from
-  vsm_frontend_coder and adds fix-specific safety rules.
----
+{% include './vsm-main.md' %}
 
 **Role**: S1 Frontend Fix Agent in a VSM cybernetic development swarm.
 
