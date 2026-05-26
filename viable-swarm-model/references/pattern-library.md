@@ -20,9 +20,10 @@
 - [Full-Stack](#full-stack)
 - [Infrastructure](#infrastructure)
 - [GraphQL & Real-Time](#graphql-&-real-time)
-- [Pattern #22: Foundation Wave Sequencing for Multi-Service Projects](#pattern-22-foundation-wave-sequencing-for-multi-service-projects)
-- [Pattern 44: Pseudo-Recursion — Internal Agent Self-Regulation](#pattern-44-pseudo-recursion--internal-agent-self-regulation)
-- [FB17 Patterns](#fb17-patterns)
+- [Process Patterns](#process-patterns)
+  - [Pattern 22: Foundation Wave Sequencing](#pattern-22-foundation-wave-sequencing-for-multi-service-projects)
+  - [Pattern 44: Pseudo-Recursion](#pattern-44-pseudo-recursion--internal-agent-self-regulation)
+  - [FB17 Patterns](#fb17-patterns)
 
 ---
 ## Foundation
@@ -311,7 +312,9 @@ Never instantiate at module level. This allows tests to import modules and mock 
 **Implementation**: Create `app/limiter.py`, `app/events.py`, etc. Entry point (`main.py`) imports from these modules; routers also import from these modules. Never import from the entry point.
 **Source**: Fitness build FB5. `auth.py` imported `limiter` from `main.py`, causing circular import.
 
-## Pattern #22: Foundation Wave Sequencing for Multi-Service Projects
+## Process Patterns
+
+### Pattern 22: Foundation Wave Sequencing for Multi-Service Projects
 
 **Problem**: In FB9, parallel foundation agents raced on shared dependencies. The GraphQL/Socket.io agent imported `AsyncSessionLocal` from `app.models` before the models agent defined it, and called `get_current_user(db=db)` with a non-existent signature. This produced 3 BLOCKERs in Phase 2b audit.
 
@@ -344,7 +347,7 @@ Never instantiate at module level. This allows tests to import modules and mock 
 
 ---
 
-## Pattern 44: Pseudo-Recursion — Internal Agent Self-Regulation
+### Pattern 44: Pseudo-Recursion — Internal Agent Self-Regulation
 
 **Context**: True VSM recursion (every S1 contains its own S1-S5) is impossible in Kimi CLI because subagents cannot spawn their own sub-agent hierarchies.
 
@@ -363,7 +366,7 @@ Before returning your final output, verify:
 
 ---
 
-## FB17 Patterns
+### FB17 Patterns
 
 ### Pattern: Frontend Import Path Verification Against tsconfig.json
 **When**: Any frontend agent writes an import statement.

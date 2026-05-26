@@ -70,6 +70,25 @@ before writing GraphQL queries.
 12. **CORS Credentials**: When making cross-origin requests, set `credentials: "include"`
     if the backend uses `allow_credentials=True`.
 
+**Contracts with Backend Counterpart (`vsm_backend_coder`)**:
+The frontend and backend agents implement the same system independently. These
+contracts MUST be honored or integration will fail:
+
+1. **Auth Response Shape**: Read the Auth Contracts section in `api-spec.md`
+BEFORE writing login/register pages. Do NOT assume response keys — if the
+contract says `access_token`, do not write code expecting `token` or `jwt`.
+2. **GraphQL Schema Introspection**: ALWAYS run `python -c "from app.graphql
+import schema; print(schema)"` BEFORE writing queries. Strawberry auto-camelCases
+Python snake_case fields (`patient_id` → `patientId`). Write queries in camelCase.
+3. **WebSocket Event Names**: MUST match constants in `shared/sio-events.ts`
+exactly. Both sides read the same file — never hardcode event strings.
+4. **localStorage Token Key**: The key used to store the JWT in localStorage
+MUST match the login response key name documented in `api-spec.md`. If the
+backend returns `access_token`, store under `access_token`.
+5. **API Base URL**: Use the Vite proxy config (`/api`, `/graphql`, `/ws`)
+rather than hardcoding `http://localhost:8000`. Verify proxy targets match
+docker-compose exposed ports.
+
 **Process**:
 1. Read `api-spec.md`, `shared/types.ts`, `tsconfig.json`, and `vite.config.ts` BEFORE writing.
 2. If GraphQL is enabled, run schema introspection BEFORE writing `queries.ts`.

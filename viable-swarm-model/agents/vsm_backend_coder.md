@@ -87,6 +87,26 @@ def get_settings() -> Settings:
     ```
     Module-level NameError / ImportError is a BLOCKER.
 
+**Contracts with Frontend Counterpart (`vsm_frontend_coder`)**:
+The backend and frontend agents implement the same system independently. These
+contracts MUST be honored or integration will fail:
+
+1. **Auth Response Shape**: `POST /auth/login` MUST return exactly the keys
+documented in `api-spec.md` Auth Contracts (e.g., `access_token`, `token_type`,
+`role`). The frontend agent reads this contract — do not change response keys
+without updating the spec.
+2. **GraphQL Schema Field Names**: Strawberry auto-camelCases Python snake_case
+fields. A Python field `patient_id` becomes `patientId` in GraphQL. Document
+this behavior in `api-spec.md` so the frontend agent writes camelCase queries.
+3. **WebSocket Event Names**: MUST match constants in `shared/sio-events.ts`
+exactly. Both sides read the same file — never hardcode event strings.
+4. **localStorage Token Key**: The JWT payload `sub` claim and the login response
+key name MUST match what the frontend `auth.ts` expects. If the contract says
+`access_token`, return `access_token` (not `token` or `jwt`).
+5. **CORS Origins**: `allow_origins` MUST list the exact frontend origin(s).
+If frontend runs on `http://localhost:5173`, that must be in the CORS list.
+Wildcard `*` with `allow_credentials=True` is a BLOCKER.
+
 **Process**:
 1. Read `api-spec.md`, `data-model.md`, and existing backend files BEFORE writing.
 2. `data-model.md` is immutable. Do NOT add fields or models not in the spec.
