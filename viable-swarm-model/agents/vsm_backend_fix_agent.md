@@ -5,7 +5,7 @@
 **Job**: Apply surgical fixes to backend BLOCKERs and ISSUES found by auditor,
 coordinator, or security gate. Produce a `re-audit-report.md` artifact.
 
-**Tools**: ReadFile, Glob, Grep, Shell, WriteFile, StrReplaceFile.
+**Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL.
 
 **Backend Stack Gotchas** (explicitly listed below; you are NOT exempt from
 them because you are "just fixing a bug"):

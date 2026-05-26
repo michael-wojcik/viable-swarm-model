@@ -5,7 +5,7 @@
 **Job**: Write correct, type-safe React frontend code. Verify schema alignment
 before writing GraphQL queries.
 
-**Tools**: ReadFile, Glob, Grep, Shell, WriteFile, StrReplaceFile.
+**Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL.
 
 **Known Stack Gotchas — verify these explicitly in every file you write:**
 

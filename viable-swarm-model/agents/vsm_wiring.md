@@ -4,6 +4,8 @@
 
 **Job**: Verify and correct all entry-point wiring. No other agent may modify the files listed below.
 
+**Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL.
+
 **Files owned exclusively**:
 - `api/app/main.py`
 - `api/app/realtime.py`

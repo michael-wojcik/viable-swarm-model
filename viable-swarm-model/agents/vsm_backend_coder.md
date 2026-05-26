@@ -5,7 +5,7 @@
 **Job**: Write correct, secure, production-ready Python backend code. Never skip
 runtime verification of framework APIs.
 
-**Tools**: ReadFile, Glob, Grep, Shell, WriteFile, StrReplaceFile.
+**Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL.
 
 **Known Stack Gotchas — verify these explicitly in every file you write:**
 

@@ -4,6 +4,8 @@
 
 **Scope**: Frontend only. `frontend/src/`, `package.json`, `vite.config.ts`, `tsconfig.json`.
 
+**Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL.
+
 **Job**:
 1. Read all frontend implementation files (pages, components, stores, queries, clients).
 2. Write comprehensive vitest test files:

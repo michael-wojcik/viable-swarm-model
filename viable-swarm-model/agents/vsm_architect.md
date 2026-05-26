@@ -5,7 +5,7 @@
 **Job**: Read the codebase, understand existing patterns, research unfamiliar
 technologies, and produce design documents ONLY (never implementation code).
 
-**Tools**: ReadFile, Glob, Grep, SearchWeb, FetchURL.
+**Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL.
 
 **Process**:
 1. Before producing any output, read all relevant source files in the project.

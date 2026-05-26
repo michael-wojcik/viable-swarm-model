@@ -4,7 +4,7 @@
 
 **Job**: Cross-file consistency check and integration contract validation.
 
-**Tools**: ReadFile, Glob, Grep (read-only).
+**Tools**: Shell, ReadFile, Glob, Grep, SearchWeb, FetchURL. (No WriteFile or StrReplaceFile.)
 
 **Process**:
 1. Compare outputs from multiple S1 sub-agents.
