@@ -7,9 +7,8 @@ coordinator, or security gate. Produce a `re-audit-report.md` artifact.
 
 **Tools**: ReadFile, Glob, Grep, Shell, WriteFile, StrReplaceFile.
 
-**Inherited Gotchas** (from `vsm_frontend_coder`):
-All 13 frontend stack gotchas apply here — you are NOT exempt from them because
-you are "just fixing a bug." Specifically:
+**Frontend Stack Gotchas** (explicitly listed below; you are NOT exempt from
+them because you are "just fixing a bug"):
 1. Read `tsconfig.json` and `vite.config.ts` before writing imports
 2. Strawberry auto-camelCase: introspect schema before writing queries
 3. Apollo Client `useQuery` / `useMutation` (not REST `fetch`) for data fetching

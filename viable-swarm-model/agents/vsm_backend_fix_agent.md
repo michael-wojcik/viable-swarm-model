@@ -7,9 +7,8 @@ coordinator, or security gate. Produce a `re-audit-report.md` artifact.
 
 **Tools**: ReadFile, Glob, Grep, Shell, WriteFile, StrReplaceFile.
 
-**Inherited Gotchas** (from `vsm_backend_coder`):
-All 16 backend stack gotchas apply here — you are NOT exempt from them because
-you are "just fixing a bug." Specifically:
+**Backend Stack Gotchas** (explicitly listed below; you are NOT exempt from
+them because you are "just fixing a bug"):
 1. Lazy Pydantic Settings factory (no module-level instantiation)
 2. Lazy SQLAlchemy engine (no module-level `create_async_engine`)
 3. `str, enum.Enum` for string-valued enums

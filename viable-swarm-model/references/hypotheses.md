@@ -1811,3 +1811,39 @@ Domain-specific prompts measurably improved security posture (explicit CORS orig
 **Experiment**: Update vsm_frontend_coder.md scaffold template to use `"@"` alias key. Run next frontend build and verify `npm run build` succeeds without alias resolution errors.
 **Expected**: Zero alias resolution failures in production builds.
 **Tested by**: —
+
+---
+
+## H201: Custom agent files reduce per-subagent context usage by >30% vs prompt injection
+
+**Status**: untested
+**Proposed**: 2026-05-26
+**Rationale**: In the old architecture, the entire agent definition (role, job, 16 gotchas, tool list) was embedded as a user prompt into `subagent_type="coder"`. With custom agent files, this content becomes a system prompt loaded once at agent initialization. The task prompt only needs the specific task context. This should significantly reduce input tokens per subagent turn.
+**Source**: Custom agent file migration
+**Experiment**: Compare subagent turn token usage in FB23 (custom agent files) vs FB22 (prompt injection). Measure input tokens for comparable backend coder tasks.
+**Expected**: >30% reduction in per-subagent input tokens.
+**Tested by**: —
+
+---
+
+## H202: Tool-enforced read-only boundaries prevent auditor "helpfulness" override better than prompt-only instructions
+
+**Status**: untested
+**Proposed**: 2026-05-26
+**Rationale**: In the old architecture, auditor read-only status was declared in the user prompt. In a real build, an auditor might be socially engineered or "helpfully" attempt to fix a BLOCKER it finds. With custom agent files, the auditor's YAML explicitly excludes `WriteFile`, `StrReplaceFile`, and `Shell` from its tool list. Even if the model wants to help, it cannot call write tools.
+**Source**: Custom agent file migration
+**Experiment**: Deliberately ask the auditor subagent to write a file or fix a BLOCKER in FB23. Measure refusal rate and whether the refusal cites tool absence vs role policy.
+**Expected**: 100% refusal rate with explicit tool-absence citation.
+**Tested by**: —
+
+---
+
+## H203: System prompt authority improves gotcha adherence vs user prompt injection
+
+**Status**: untested
+**Proposed**: 2026-05-26
+**Rationale**: In the old architecture, stack gotchas were injected as part of the user prompt. With custom agent files, gotchas are in the system prompt. System prompts typically have stronger adherence because the model treats them as invariant instructions rather than task context. This should reduce violations of BLOCKER-level rules like ConfigDict usage and dependency verification.
+**Source**: Custom agent file migration
+**Experiment**: Count Pydantic `class Config:` violations, dependency verification failures, and Vite alias misconfigurations in FB23 vs FB22.
+**Expected**: Fewer gotcha violations in FB23 compared to FB22 baseline.
+**Tested by**: —

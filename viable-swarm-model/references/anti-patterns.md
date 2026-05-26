@@ -330,3 +330,11 @@
 **Prevention**: Vite Alias Key BLOCKER (vsm_frontend_coder gotcha #8). The alias key MUST be `"@"` mapping to `path.resolve(__dirname, "./src")`. The alias `"@/"` mapping to `./src/` is a BLOCKER.
 **Affected**: `vsm_frontend_coder`, S1 frontend agents.
 **Source**: FB22 `vite.config.ts` used `"@/"` → `./src/`; `npm run build` failed with Rollup resolution error (H153).
+
+### Anti-Pattern #59: Invoking `/flow:viable-swarm-model` Without `--agent-file`
+
+**What**: The user launches Kimi CLI with the default agent and types `/flow:viable-swarm-model`. The skill loads, S5 begins Phase 0, and eventually calls `Agent(subagent_type="vsm_architect")`. The call fails because custom subagent types are only available when `--agent-file agents/vsm-main.yaml` was used at launch.
+**When**: User forgets the `--agent-file` flag, or launches a new session without it, or resumes a session that was started with the default agent.
+**Prevention**: Phase 0 step 6b smoke test. Before dispatching any implementation agents, spawn a trivial `vsm_meta` subagent. If it fails with unknown subagent type, STOP and emit algedonic with the correct launch command.
+**Affected**: S5 (main agent), all builds.
+**Source**: Custom agent file migration (2026-05-26).

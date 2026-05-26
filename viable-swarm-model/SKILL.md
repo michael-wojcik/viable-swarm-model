@@ -333,6 +333,10 @@ without contradiction. Specifically verify these custom agent definition files e
 `vsm_frontend_tester.yaml`, `vsm_meta.yaml`.
 If any check fails → emit algedonic, write diagnosis
 to `~/vsm/viable-swarm-model/references/mutation-log.md`, ask user to review.
+6b. **Agent-File Verification**: Spawn a trivial `vsm_meta` subagent with the task
+`"Reply 'ok'"`. If this fails with an unknown subagent type error, **STOP immediately**.
+Emit algedonic: `--agent-file not loaded. Launch with: kimi --agent-file ~/vsm/viable-swarm-model/agents/vsm-main.yaml`.
+Do not proceed with the build.
 6a. **Environment Compatibility Smoke Test** (conditional): If the build declares
 framework dependencies (e.g., `strawberry-graphql`, `pydantic`, `sqlalchemy`, `fastapi`,
 `celery`), run a quick import verification in a fresh subprocess BEFORE dispatching
@@ -614,10 +618,17 @@ within file. Spawn `vsm_backend_fix_agent` for backend BLOCKERs and
 `vsm_frontend_fix_agent` for frontend BLOCKERs. If fixes span both domains,
 spawn both agents in parallel with `run_in_background=true`.
 
-MANDATORY re-audit after. **MANDATORY full test suite run after**
-(`pytest tests/` and `vitest run` / `npm test`). Re-auditing changed files alone
-misses regressions in unrelated tests. Max 3 iterations. Still blocked?
-Escalate to user.
+**Phase 7a — Fix Execution**: Fix agents apply surgical changes and produce
+`re-audit-report.md` (advisory only).
+
+**Phase 7b — Binding Re-Audit (MANDATORY)**: S5 MUST spawn `vsm_auditor` to
+independently verify ALL modified files. Fix agent self-reports are **not**
+sufficient — the auditor's PASS/ISSUES/BLOCKER verdict is binding. Any remaining
+BLOCKERs route back to Phase 7a.
+
+**Phase 7c — Full Test Suite (MANDATORY)**: Run `pytest tests/` and
+`vitest run` / `npm test`. Re-auditing changed files alone misses regressions
+in unrelated tests. Max 3 iterations across 7a→7b→7c. Still blocked? Escalate to user.
 
 **Return paths differ by BLOCKER source**:
 - **Foundation BLOCKERs** (Phase 2b/2c audit): After fix clears, return to

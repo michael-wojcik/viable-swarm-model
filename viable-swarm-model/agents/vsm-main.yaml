@@ -5,7 +5,6 @@ agent:
   system_prompt_path: ./vsm-main.md
   system_prompt_args:
     VSM_SWARM_NAME: viable-swarm-model
-    VSM_TIER: '2'
     VSM_ROLE: S5 Policy / Orchestrator
   subagents:
     vsm_architect:
