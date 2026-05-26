@@ -1227,3 +1227,28 @@ Spawn `vsm_coordinator` + `vsm_auditor`. Full 20+ point checklist (see
 **Type**: refinement
 **Rationale**: H46 confirmed that re-auditing changed files only misses regressions. A minimal FastAPI experiment: fixing `get_user` (which fixed `test_get_user`) introduced a regression in `get_post` (breaking `test_get_post`). A changed-files-only re-audit would have missed this. The auditor prompt previously instructed "re-audit changed files only." Updated to require full test suite re-run and `re-audit-report.md` artifact.
 **Expected effect**: Fix waves run full test suites. Regressions are caught before delivery. Re-audit artifacts are mandatory.
+
+
+## Mutation FB21-11 — 2026-05-25
+
+**Session**: Post-gym structural mutations — H46, H48, H59
+**File**: `~/vsm/viable-swarm-model/SKILL.md`
+**Type**: structural + refinement
+**Rationale**:
+1. **H46**: Flow diagram P7R_F/P7R_I still said "Re-audit changed files" while phase text already required "MANDATORY full test suite run after". Synced diagram to match text.
+2. **H48**: Phase 3f listed `npm run build` as an alternative to `tsc --noEmit`. Upgraded to explicit standalone check: "Run `npm run build` (not just `vite build`)".
+3. **H59**: Created `vsm_backend_coder.md` and `vsm_frontend_coder.md` as custom agent types. Updated SKILL.md role map to replace generic `coder` (Built-in) with domain-specific coders (Custom) for S1-Backend and S1-Frontend. Added agent descriptions to Custom Type Prompt Characteristics section. Updated Phase 2/3 spawn instructions to reference the new agent types.
+**Expected effect**:
+- Fix waves run full test suites (diagram matches text)
+- Frontend build verification catches `tsc -b` failures
+- Backend/frontend implementation agents embed known stack gotchas, reducing systematic false negatives by 30-50%
+
+---
+
+## Mutation FB21-12 — 2026-05-25
+
+**Session**: Post-gym agent creation — H59
+**File**: `~/vsm/viable-swarm-model/agents/vsm_backend_coder.md`, `~/vsm/viable-swarm-model/agents/vsm_frontend_coder.md`
+**Type**: structural
+**Rationale**: H59 confirmed that generic `coder` subagents miss security posture issues (CORS wildcard with credentials) and skip runtime API verification (e.g., `strawberry.Schema.__init__` signature). Domain-specific prompts with explicit "Known Stack Gotchas" measurably improved both. Created dedicated agent prompt files with 14 backend and 12 frontend gotchas respectively, replacing generic `coder` for all implementation waves.
+**Expected effect**: Backend agents verify framework parameters at runtime, avoid module-level side effects, and enforce security defaults. Frontend agents introspect GraphQL schemas before writing queries and verify `npm run build`.

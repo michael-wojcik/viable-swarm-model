@@ -70,8 +70,8 @@ use symlinks or update paths in mutation commands.
 | **S3* (Audit)** | `vsm_auditor` subagent | Custom | After waves | PASS/ISSUES/BLOCKER |
 | **S2 (Coordination)** | `vsm_coordinator` subagent | Custom | After Wave 3 | Integration report |
 | **S2 (Wiring)** | `vsm_wiring` subagent | Custom | After Phase 3 | Entry-point wiring verification |
-| **S1-Backend** | `coder` subagent | Built-in | Phases 2,3 | Backend code |
-| **S1-Frontend** | `coder` subagent | Built-in | Phases 2,3 | Frontend code |
+| **S1-Backend** | `vsm_backend_coder` subagent | Custom | Phases 2,3 | Backend code |
+| **S1-Frontend** | `vsm_frontend_coder` subagent | Custom | Phases 2,3 | Frontend code |
 | **S1-Backend-Tester** | `vsm_backend_tester` subagent | Custom | Phase 4 | Backend tests (pytest), API tests |
 | **S1-Frontend-Tester** | `vsm_frontend_tester` subagent | Custom | Phase 4 | Frontend tests (vitest), build verification |
 | **S1-Tester** | `vsm_tester` subagent | Custom | Phase 4 (Tier 1 only) | Tests, coverage (legacy single-agent mode) |
@@ -108,6 +108,18 @@ GraphQL SDL, Prisma relations, env vars. Defined in `agents/vsm_coordinator.md`.
 `realtime.py`, `App.tsx`, and `main.tsx`. Verifies all routers, providers,
 middleware, and server instances are wired correctly. No other agent may modify
 these files. Defined in `agents/vsm_wiring.md`.
+
+**`vsm_backend_coder`** (S1 Backend Implementation): Writes Python backend code
+with embedded domain knowledge of FastAPI, SQLAlchemy, Strawberry GraphQL, Celery,
+and security gotchas. Replaces generic `coder` for all backend waves. Performs
+runtime framework API verification, subprocess import checks, and pytest validation.
+Defined in `agents/vsm_backend_coder.md`.
+
+**`vsm_frontend_coder`** (S1 Frontend Implementation): Writes TypeScript/React
+frontend code with embedded domain knowledge of Vite, Apollo Client, Zustand,
+Strawberry auto-camelCase, and path aliases. Replaces generic `coder` for all
+frontend waves. Verifies schema introspection before writing GraphQL queries and
+runs `npm run build` before completion. Defined in `agents/vsm_frontend_coder.md`.
 
 **`vsm_security`** (Security Audit): Read-only security specialist. Runs 15+
 point security checklist. Prevents, not detects — knows all anti-patterns.
@@ -243,13 +255,13 @@ flowchart TD
     P6D -->|<choice>yes</choice>| P7_IMPL
     P6D -->|<choice>no</choice>| P8
     P7_FOUNDATION[Phase 7: Fix Wave<br/>Foundation BLOCKERs]
-    P7_FOUNDATION --> P7R_F[Re-audit changed files]
+    P7_FOUNDATION --> P7R_F[Full test suite re-run + re-audit ALL files]
     P7R_F --> P7D_F{BLOCKERs remain<br/>iterations < 3?}
     P7D_F -->|<choice>yes</choice>| P7_FOUNDATION
     P7D_F -->|<choice>no, max reached</choice>| P7E
     P7D_F -->|<choice>no, all clear</choice>| P2
     P7_IMPL[Phase 7: Fix Wave<br/>Implementation BLOCKERs]
-    P7_IMPL --> P7R_I[Re-audit changed files]
+    P7_IMPL --> P7R_I[Full test suite re-run + re-audit ALL files]
     P7R_I --> P7D_I{BLOCKERs remain<br/>iterations < 3?}
     P7D_I -->|<choice>yes</choice>| P7_IMPL
     P7D_I -->|<choice>no, max reached</choice>| P7E
@@ -316,7 +328,7 @@ EnterPlanMode for user approval. Rejected plans loop back.
 sequential sub-waves to eliminate dependency race conditions.**
 
 **Sub-Wave 2a — Core Contracts (parallel, then verify)**:
-Spawn parallel `coder` subagents with `run_in_background=true` for:
+Spawn parallel `vsm_backend_coder` and `vsm_frontend_coder` subagents with `run_in_background=true` for:
 - `models.py` (including engine + session factory like `AsyncSessionLocal`)
 - `auth.py` + `roles.py` (stable signatures: `get_current_user`, `require_role`)
 - `config.py` (lazy factory, NO default secrets)
@@ -333,7 +345,7 @@ Wait via `TaskOutput(block=true)`. Then S5 runs a **mini-audit**:
 If any check fails → fix BEFORE dispatching Sub-Wave 2b.
 
 **Sub-Wave 2b — Dependent Infrastructure (parallel, then verify)**:
-Spawn parallel `coder` subagents with `run_in_background=true` for:
+Spawn parallel `vsm_backend_coder` and `vsm_frontend_coder` subagents with `run_in_background=true` for:
 - `routers/auth.py` (MUST include `POST /login`, `POST /register`, `GET /me` endpoints)
 - `graphql.py` (imports from models, auth)
 - `sio.py` (imports from models, auth)
@@ -354,7 +366,7 @@ back to foundation agents for correction. This prevents cascade failures in
 GraphQL, frontend queries, and shared types.
 
 ### Phase 3: Implementation Wave
-Pass Wave 1 outputs as input references. Spawn parallel `coder` subagents.
+Pass Wave 1 outputs as input references. Spawn parallel `vsm_backend_coder` and `vsm_frontend_coder` subagents.
 Entry point wiring MANDATORY after this wave. Audit + coordination check.
 BLOCKERs trigger Phase 7.
 
@@ -420,7 +432,8 @@ where they are currently discovered too late.
 After all parallel frontend implementation agents complete and BEFORE spawning
 the auditor, S5 MUST run a lightweight cross-file import verification:
 
-1. Run `npx tsc --noEmit` (or `npm run build`, or grep all imports) to verify
+1. Run `npm run build` (not just `vite build`) to verify the full frontend build
+   pipeline including TypeScript compilation. Then run `npx tsc --noEmit` to verify
    every import statement in `src/pages/` and `src/components/` resolves
 2. Verify every export from `src/graphql/queries.ts` is imported by at least
    one page or component
