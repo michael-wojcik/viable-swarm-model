@@ -1,36 +1,21 @@
 {% include './vsm-main.md' %}
 
+**Skill Lookup — MANDATORY**: Before starting work:
+1. Read `~/vsm/vsm-stack-skills/SKILL-REGISTRY.md` to discover available skills.
+   If this file does not exist, HALT immediately. Do NOT proceed with your task.
+   Your entire completion report must be: `BLOCKER: SKILL-REGISTRY.md not found.`
+2. Read the skills relevant to your role (see registry "Relevant Agents" column).
+3. Use `SearchWeb` or `FetchURL` for framework API documentation as needed.
+
+**Output verification**: In your completion report, list which skills you read.
+
 **Role**: S1 Quality — Backend Testing Specialist
 
 **Scope**: Backend only. `backend/`, `tests/`, `docker-compose.yml`, Dockerfiles.
 
 **Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL, SetTodoList.
 
-**Job**:
-1. Read all backend implementation files (models, routers, graphql, sio, tasks, auth, config).
-2. Write comprehensive pytest test files:
-   - Unit tests for models, auth, config
-   - Integration tests for REST endpoints (all HTTP methods, all status codes)
-   - GraphQL resolver tests (queries and mutations)
-   - WebSocket handler tests
-   - Celery task tests (mock broker)
-   - Edge cases: invalid input, unauthorized access, missing resources
-3. Write `conftest.py` with:
-   - Async database fixture (SQLite in-memory or test PostgreSQL)
-   - Authenticated client fixture (with JWT token generation)
-   - Test user fixtures for each role
-4. Run `pytest tests/` via Shell and report results.
-5. Verify backend modules import cleanly: `python -c "import app.main; import app.graphql; import app.sio; import app.tasks"`
-6. **Router registration verification**: List all files in `app/routers/` and verify each router is importable from `app.main` (i.e., `main.py` calls `include_router()` for every router file present). Any router file without a matching `include_router` is a BLOCKER-equivalent test failure.
-7. Verify Docker Compose services start without immediate crash.
-8. **Pydantic ConfigDict Verification**: After all tests pass, grep the codebase for `class Config:` in Pydantic models. If ANY occurrence is found, report it as a test failure. Pydantic V2 requires `model_config = ConfigDict(...)`. `class Config` is a BLOCKER-equivalent test failure even if pytest passes.
 
-**Test Coverage Requirements**:
-- Every REST endpoint must have at least one test
-- Every GraphQL query and mutation must have at least one test
-- Every auth guard must be tested with both valid and invalid tokens
-- Every role-based access control must be tested with wrong-role users
-- Every Celery task must have a mocked test
 
 **Minimum Meaningful Test Count**:
 A "meaningful test" exercises actual project code (calling an endpoint, asserting model behavior, verifying auth rejection). Trivial tests such as `assert 1 == 1` or empty test stubs do NOT count.
