@@ -51,3 +51,32 @@ for user intervention.
 **Verification**: Tested once in isolation with a single vulnerable FastAPI app
 **Sessions**: 1
 **Status**: active
+
+
+---
+
+## Entry 4 — 2026-05-25
+
+**Context**: vsm-fitness-gym batch experiments E6–E14 — testing 8 untested + 2 inconclusive hypotheses
+**Lesson**:
+1. **Domain-specific coder prompts measurably improve outcomes**. A generic `coder`
+   produced `allow_origins=["*"]` with credentials and skipped runtime API verification.
+   A domain-specific `coder` with embedded "Known Stack Gotchas" used explicit CORS
+   origins and dynamically verified `strawberry.Schema.__init__` with `inspect.signature`.
+   The effect size is moderate — some gaps (e.g., `class Config` deprecation) persisted
+   in both agents until explicitly elevated to BLOCKER-level.
+2. **`npm run build` catches errors `vite build` misses**. When `tsconfig.json`
+   includes `vite.config.ts` but `@types/node` is omitted, `tsc -b` fails while
+   `vite build` passes. Frontend infra verification must always run the package.json
+   build script, not just the underlying bundler.
+3. **Explicit auth contracts prevent frontend/backend mismatches**. An ambiguous
+   api-spec.md ("login returns token") caused a 3-field mismatch between backend
+   implementation and frontend expectations. An explicit spec with exact JSON shapes
+   produced perfect alignment.
+4. **Fix waves are the most regression-prone phase**. Multiple builds (FB16–FB21)
+   found fix agents introducing circular imports, weakening auth, bypassing re-audit,
+   and creating REST/GraphQL auth divergence. Fix agents need the same domain-specific
+   treatment as implementation agents.
+**Verification**: Tested once in controlled gym experiments with minimal reproducible code
+**Sessions**: 1
+**Status**: active

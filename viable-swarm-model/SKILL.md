@@ -72,6 +72,8 @@ use symlinks or update paths in mutation commands.
 | **S2 (Wiring)** | `vsm_wiring` subagent | Custom | After Phase 3 | Entry-point wiring verification |
 | **S1-Backend** | `vsm_backend_coder` subagent | Custom | Phases 2,3 | Backend code |
 | **S1-Frontend** | `vsm_frontend_coder` subagent | Custom | Phases 2,3 | Frontend code |
+| **S1-Backend-Fix** | `vsm_backend_fix_agent` subagent | Custom | Phase 7 | Backend surgical fixes, re-audit report |
+| **S1-Frontend-Fix** | `vsm_frontend_fix_agent` subagent | Custom | Phase 7 | Frontend surgical fixes, re-audit report |
 | **S1-Backend-Tester** | `vsm_backend_tester` subagent | Custom | Phase 4 | Backend tests (pytest), API tests |
 | **S1-Frontend-Tester** | `vsm_frontend_tester` subagent | Custom | Phase 4 | Frontend tests (vitest), build verification |
 | **S1-Tester** | `vsm_tester` subagent | Custom | Phase 4 (Tier 1 only) | Tests, coverage (legacy single-agent mode) |
@@ -120,6 +122,17 @@ frontend code with embedded domain knowledge of Vite, Apollo Client, Zustand,
 Strawberry auto-camelCase, and path aliases. Replaces generic `coder` for all
 frontend waves. Verifies schema introspection before writing GraphQL queries and
 runs `npm run build` before completion. Defined in `agents/vsm_frontend_coder.md`.
+
+**`vsm_backend_fix_agent`** (S1 Backend Fix): Surgical fixes to backend BLOCKERs.
+Inherits all backend gotchas. Adds fix-specific rules: full test suite after every
+fix, subprocess import check after cross-module changes, auth-weakening guard,
+rate-limit/CORS/security freeze, GraphQL auth parity, and mandatory `re-audit-report.md`.
+Defined in `agents/vsm_backend_fix_agent.md`.
+
+**`vsm_frontend_fix_agent`** (S1 Frontend Fix): Surgical fixes to frontend BLOCKERs.
+Inherits all frontend gotchas. Adds fix-specific rules: `npm run build` after every
+fix, `tsc --noEmit` check, no `as any` bypasses, export verification, Apollo Client
+consistency, and mandatory `re-audit-report.md`. Defined in `agents/vsm_frontend_fix_agent.md`.
 
 **`vsm_security`** (Security Audit): Read-only security specialist. Runs 15+
 point security checklist. Prevents, not detects — knows all anti-patterns.
@@ -201,7 +214,7 @@ flowchart TD
     P5L[Document LOW as<br/>known limitation]
     P6[Phase 6: Integration Verification<br/>vsm_coordinator + vsm_auditor]
     P6D{<choice>ANY failure</choice>?}
-    P7[Phase 7: Fix Wave<br/>coder agents]
+    P7[Phase 7: Fix Wave<br/>vsm_backend_fix_agent + vsm_frontend_fix_agent]
     P7R[Re-audit changed files]
     P7D{<choice>BLOCKERs remain<br/>iterations < 3</choice>?}
     P7E[Escalate to User<br/>AskUserQuestion]
@@ -503,8 +516,12 @@ Spawn `vsm_coordinator` + `vsm_auditor`. Full 20+ point checklist (see
 > the main flow.
 
 ### Phase 7: Fix Wave (conditional)
-Group fixes by file. Parallel across files, sequential within file. Spawn
-`coder` subagents. MANDATORY re-audit after. **MANDATORY full test suite run after**
+Group fixes by domain (backend vs frontend). Parallel across files, sequential
+within file. Spawn `vsm_backend_fix_agent` for backend BLOCKERs and
+`vsm_frontend_fix_agent` for frontend BLOCKERs. If fixes span both domains,
+spawn both agents in parallel with `run_in_background=true`.
+
+MANDATORY re-audit after. **MANDATORY full test suite run after**
 (`pytest tests/` and `vitest run` / `npm test`). Re-auditing changed files alone
 misses regressions in unrelated tests. Max 3 iterations. Still blocked?
 Escalate to user.

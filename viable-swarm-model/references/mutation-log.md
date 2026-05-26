@@ -1252,3 +1252,35 @@ Spawn `vsm_coordinator` + `vsm_auditor`. Full 20+ point checklist (see
 **Type**: structural
 **Rationale**: H59 confirmed that generic `coder` subagents miss security posture issues (CORS wildcard with credentials) and skip runtime API verification (e.g., `strawberry.Schema.__init__` signature). Domain-specific prompts with explicit "Known Stack Gotchas" measurably improved both. Created dedicated agent prompt files with 14 backend and 12 frontend gotchas respectively, replacing generic `coder` for all implementation waves.
 **Expected effect**: Backend agents verify framework parameters at runtime, avoid module-level side effects, and enforce security defaults. Frontend agents introspect GraphQL schemas before writing queries and verify `npm run build`.
+
+
+## Mutation FB21-13 — 2026-05-25
+
+**Session**: Post-gym structural mutations — H46, H48, H59, H70, H101, H102
+**File**: `~/vsm/viable-swarm-model/agents/vsm_backend_fix_agent.md`, `~/vsm/viable-swarm-model/agents/vsm_frontend_fix_agent.md`
+**Type**: structural
+**Rationale**: Five fitness builds (FB16–FB21) found fix-agent regressions: circular imports (H70), missing re-audit artifacts (H98), inline fixes bypassing Phase 7 (H101), REST/GraphQL auth divergence (H102), auth weakening (H34). Since implementation agents were just split into domain-specific `vsm_backend_coder` and `vsm_frontend_coder`, fix agents must mirror that split. A generic fix agent would re-introduce the exact generic-coder problems H59 proved domain-specific prompts solve.
+**Expected effect**: Backend fix agents verify subprocess imports and auth parity after every fix. Frontend fix agents verify `npm run build` and `tsc --noEmit`. Both produce `re-audit-report.md`. Fix-wave regression rate drops by 50%+.
+
+---
+
+## Mutation FB21-14 — 2026-05-25
+
+**Session**: Post-gym refinement mutations — H59 follow-up, H27 meta-report
+**File**: `~/vsm/viable-swarm-model/agents/vsm_backend_coder.md`, `~/vsm/viable-swarm-model/references/hypotheses.md`, `~/vsm/viable-swarm-model/references/acquired-wisdom.md`
+**Type**: refinement + append-only
+**Rationale**:
+1. H59 showed BOTH generic and domain-specific coders used `class Config` (Pydantic V2 deprecation). Elevated the rule from a numbered gotcha to a BLOCKER-level check in `vsm_backend_coder.md`.
+2. vsm_meta (Experiment E10) generated 2 new falsifiable hypotheses: H105 (inline fix waves bypass re-audit) and H106 (skipping Phase 8b correlates with process violations). Added both to hypothesis backlog.
+3. Gym session E6–E14 distilled into `acquired-wisdom.md` Entry 4: domain-specific prompts, `npm run build` > `vite build`, explicit auth contracts, fix-wave domain split.
+**Expected effect**: Backend coders treat Pydantic V2 deprecation as BLOCKER. Future builds track H105/H106. Cross-session learning accumulates in acquired wisdom.
+
+---
+
+## Mutation FB21-15 — 2026-05-25
+
+**Session**: Post-gym SKILL.md structural update — Phase 7 fix agents
+**File**: `~/vsm/viable-swarm-model/SKILL.md`
+**Type**: structural
+**Rationale**: Replaced generic `coder` in Phase 7 with `vsm_backend_fix_agent` + `vsm_frontend_fix_agent`. Updated role map (S1-Backend-Fix, S1-Frontend-Fix rows), flow diagram (`P7` node), Phase 7 text, and Custom Type Prompt Characteristics section. This maintains consistency with the domain-specific implementation agent architecture established in FB21-11.
+**Expected effect**: Phase 7 spawn instructions reference domain-specific fix agents. No generic coders remain in any production phase (implementation or fix).

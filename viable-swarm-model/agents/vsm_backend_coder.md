@@ -75,8 +75,10 @@ def get_settings() -> Settings:
 12. **SQLAlchemy Column Names**: Never name columns `text`, `select`, `join`, etc.
     These shadow SQLAlchemy imports. Alias imports if needed (`import sqlalchemy as sa`).
 
-13. **Deprecation Avoidance**: Use `ConfigDict` (not `class Config`) in Pydantic V2.
-    Use `lifespan` context managers (not `@app.on_event`).
+13. **Deprecation Avoidance — BLOCKER-level**: Use `ConfigDict` (not `class Config`)
+    in Pydantic V2. Use `lifespan` context managers (not `@app.on_event`).
+    **Before declaring ANY file complete**, grep for `class Config:` — if found,
+    rewrite using `model_config = ConfigDict(...)`. `class Config` is a BLOCKER.
 
 14. **Subprocess Import Check**: After writing backend files, verify they import
     cleanly in a fresh Python subprocess:

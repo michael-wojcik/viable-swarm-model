@@ -114,6 +114,8 @@
 | H102 | confirmed |
 | H103 | confirmed |
 | H104 | confirmed |
+| H105 | untested |
+| H106 | untested |
 
 ---
 
@@ -1665,5 +1667,30 @@ Domain-specific prompts measurably improved security posture (explicit CORS orig
 **Source**: Fitness build FB21, Phase 4
 **Experiment**: Inspect frontend test setup. Verify if ApolloClient is initialized with `uri` directly instead of `link`. Compare test ApolloClient init vs production ApolloClient init.
 **Expected**: If test init uses `uri` parameter → confirmed. If test init uses `link` → rejected.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+
+## H105: Inline fix waves during integration verification bypass re-audit and post-fix security re-check requirements
+
+**Status**: untested
+**Proposed**: 2026-05-25
+**Rationale**: FB-TEST (meta-reflection experiment) and FB20/FB21 fitness builds both exhibited inline fixes during Phase 6 (Integration Verification). When the coordinator found BLOCKERs, S5 fixed them directly instead of routing to Phase 7 (Fix Wave). This bypassed: (1) full test suite re-run, (2) `re-audit-report.md` artifact production, (3) Phase 7b post-fix security re-check. The SKILL.md algedonic signal at the Phase 6/7 boundary is advisory, not enforced.
+**Source**: Fitness builds FB20, FB21; Gym Experiment E10 (H27)
+**Experiment**: Add explicit "If integration verification finds BLOCKERs, do NOT fix them inline. Route to Phase 7 (Fix Wave)" to `agents/vsm_coordinator.md` output template AND `SKILL.md` Phase 6. Run 5 builds with intentional integration BLOCKERs. Count inline fixes vs proper Phase 7 routing.
+**Expected**: 0 inline fixes after prompt addition. 100% of integration BLOCKERs route to Phase 7 with produced `re-audit-report.md`.
+**Result**: [to be filled]
+**Tested by**: [fitness build or gym experiment]
+
+---
+
+## H106: Skipping Phase 8b meta-reflection correlates with repeated process violations in the next build
+
+**Status**: untested
+**Proposed**: 2026-05-25
+**Rationale**: FB-TEST (meta-reflection experiment) skipped Phase 8b entirely — no `meta-report.md`, no `vsm_meta` spawned. Consequently, S5 never evaluated: (1) that it violated the Phase 6/7 boundary, (2) that security re-check was missed, (3) that re-audit artifacts were absent. Without this feedback loop, the same S5 instance is likely to repeat the same violations in the next session. Meta-reflection is not just documentation — it is the skill's learning mechanism.
+**Source**: Fitness builds FB17, FB18, FB20, FB21; Gym Experiment E10 (H27)
+**Experiment**: Compare 5 builds where Phase 8b is skipped with 5 builds where `vsm_meta` runs and produces `meta-report.md` with process gap analysis. Measure process violation recurrence rate (inline fixes, missing re-audit, skipped security re-check) in the *next* build for each group.
+**Expected**: Skipped Phase 8b group: ≥60% recurrence of ≥1 process violation in the next build. Phase 8b group: ≤20% recurrence.
 **Result**: [to be filled]
 **Tested by**: [fitness build or gym experiment]
