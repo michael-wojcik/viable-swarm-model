@@ -86,7 +86,7 @@ value is in **selection, evaluation, and synthesis**.
 flowchart TD
     BEGIN([BEGIN])
     P0[Phase 0: Synthesize Next Build<br/>Read coverage ledger + skill state]
-    P0E{<choice>FB[N+1]-prompt-draft.md<br/>exists from Phase 6?</choice>}
+    P0E{"<choice>FB[N+1]-prompt-draft.md<br/>exists from Phase 6?</choice>"}
     P0S[Phase 0b: Synthesize Build Design<br/>Analyze gaps → select domain →<br/>draft build parameters]
     P1[Phase 1: Execute Build<br/>Run viable-swarm-model workflow<br/>Build from prompt draft]
     P1A[Collect all artifacts:<br/>plan.md, audit reports, security reports,<br/>integration report, test results, fix logs]
@@ -102,12 +102,12 @@ flowchart TD
     P5G[git commit all changes]
     P5X{<choice>Structural Mutation Gate<br/>user asked about<br/>structural mutations?</choice>?}
     P6[Phase 6: Prepare Next Build Prompt<br/>Synthesize prompt from empirical results<br/>Write using assets/prompt-template.md]
-    P6W[Write FB[N+1]-prompt-draft.md<br/>to ~/vsm-fitness-builds/coach/]
+    P6W["Write FB[N+1]-prompt-draft.md<br/>to ~/vsm-fitness-builds/coach/"]
     END([END])
 
     BEGIN --> P0
     P0 --> P0E
-    P0E -->|<choice>yes</choice>| P0D[Create build directory<br/>~/vsm-fitness-builds/coach/[id]-[date]/]
+    P0E -->|<choice>yes</choice>| P0D["Create build directory<br/>~/vsm-fitness-builds/coach/[id]-[date]/"]
     P0E -->|<choice>no</choice>| P0S
     P0S --> P0D
     P0D --> P1
