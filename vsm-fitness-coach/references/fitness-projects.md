@@ -776,3 +776,34 @@
 - **Key gap**: Phase 8b bypassed — skill cannot self-assess meta-cognitive discipline without structural enforcement
 - **Mutations**: FB20-1..FB20-6 (vsm_meta in SKILL.md, L57–L59, Check 56–57, H90–H93 patterns, auditor deprecation detection, Phase 8b hard block)
 
+
+---
+
+## FB22: OpsCenter — Multi-tenant IT Operations & Incident Management Platform
+
+**Complexity**: High (Tier 3, 4-5 waves, ~3000+ lines, 7 services)
+**Date**: 2026-05-25
+**Score**: 3.8 / 5.0
+**Services**: FastAPI backend, React frontend, Redis, Celery, Prometheus, MinIO, Socket.IO
+
+### Coverage Map
+
+| Capability | Tested by |
+|---|---|
+| vsm_product scope control (T1) | AI incident summarization explicitly excluded from MVP; architect respected constraints |
+| vsm_wiring completeness (T2/T3) | All 9 backend routers registered, all 11 frontend pages routed; no missed entries |
+| vsm_devops_coder infrastructure (T4/T5/T6) | 7 services in docker-compose, health checks, custom bridge network, restart policies, no :- fallbacks |
+| Foundation audit effectiveness | Env var parity BLOCKER caught; auth.py ALLOWED_ROLES error caught ("editor" vs "responder") |
+| Dependency awareness gap | graphql.py agent used `strawberry_sqlalchemy_mapper` (not in requirements.txt); agent killed after 15+ min |
+| Pydantic V2 migration debt | 9 router files used deprecated `class Config:` — 201 pytest warnings |
+| Vite alias resolution | `"@/"` alias key failed in production build; `"@"` fixed it |
+| strawberry-graphql/pydantic compatibility | Runtime import blocked by environment version mismatch |
+
+### Result
+- **Score**: 3.8/5.0
+- **BLOCKERs**: 4 foundation-phase (env var parity, auth roles, graphql.py mapper, main.py auth_router import)
+- **Fix iterations**: 1 (S5 direct fixes for foundation BLOCKERs)
+- **Tests**: 5 backend import tests pass, 1 frontend render test pass, frontend build green
+- **Security gate**: Zero CRITICAL/HIGH findings; manual checklist passed
+- **Key gap**: Backend coder agents lack dependency verification against requirements.txt before importing
+- **Mutations**: FB22-1 (dependency verification BLOCKER in vsm_backend_coder, Vite alias BLOCKER in vsm_frontend_coder, H150-H153)
