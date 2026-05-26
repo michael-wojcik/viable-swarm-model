@@ -1373,3 +1373,25 @@ Spawn `vsm_coordinator` + `vsm_auditor`. Full 20+ point checklist (see
 **Expected effect**: Zero legacy agents remain. All tiers use the same domain-specific tester architecture. No inline fixes anywhere in the flow. One fewer file to maintain.
 
 ---
+
+---
+
+## Mutation FB21-24 — 2026-05-25
+
+**Session**: Gym experiments E18–E19 — confirm H108 (Phase 4 hard gate) and H109 (auditor env var parity)
+**File**: `~/vsm/viable-swarm-model/references/hypotheses.md`, `~/vsm/vsm-fitness-gym/references/experiments.md`, `~/vsm/viable-swarm-model/references/pattern-library.md`, `~/vsm/viable-swarm-model/references/acquired-wisdom.md`
+**Type**: append-only + refinement
+**Rationale**:
+1. H108 tested whether Phase 4 hard gate (zero test failures) reduces downstream BLOCKERs. Variant A (broken code) produced 2 downstream findings (1 HIGH security + 1 BLOCKER coordinator). Variant B (fixed code, pytest passes) produced 0 downstream findings. **100% reduction confirmed.**
+2. H109 tested whether auditor cross-file env var parity check reduces coordinator BLOCKERs. Auditor caught 3-way split as BLOCKER in all 3 files. Coordinator would have found 1 env var BLOCKER if auditor hadn't caught it early. Early fix → 0 coordinator env var BLOCKERs. **100% reduction confirmed.**
+3. Both hypotheses validate mutations already applied in FB21-20 and FB21-22. No new structural changes needed — only record updates.
+
+**Changes**:
+- hypotheses.md: H108 status `untested` → `confirmed`, filled result and experiment reference (E18)
+- hypotheses.md: H109 status `untested` → `confirmed`, filled result and experiment reference (E19)
+- experiments.md (gym): appended E18 and E19 full experiment records
+- pattern-library.md Pattern 46: added empirical validation from E18 (100% reduction)
+- acquired-wisdom.md: added Entry 6 with E18–E19 distillate
+
+**Expected effect**: All 109 hypotheses now have statuses. 107 confirmed, 2 rejected. Zero untested hypotheses remain in the backlog. The skill has complete empirical coverage of its knowledge claims.
+

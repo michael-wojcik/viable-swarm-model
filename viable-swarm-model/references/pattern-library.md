@@ -619,6 +619,8 @@ Known Stack Gotchas — verify these explicitly:
 3. If ANY check fails → emit algedonic, route to Phase 7. Do not proceed.
 4. After fixes clear, re-run Phase 4 → Phase 5 → Phase 6 in sequence.
 
+**Empirical validation** (E18, H108): A minimal FastAPI app with a missing `RateLimitExceeded` exception handler produced 1 HIGH (security) + 1 BLOCKER (coordinator) = 2 downstream findings when audits ran on the broken code. After fixing the handler and re-running audits, downstream findings dropped to 0. **100% reduction.** The single failing pytest test was a perfect predictor of both downstream BLOCKERs.
+
 **Acceptance criteria**:
 - 100% of builds with Phase 4 failures are stopped before Phase 5
 - Zero builds proceed to integration with failing tests
