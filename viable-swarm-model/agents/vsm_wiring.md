@@ -4,7 +4,7 @@
 
 **Job**: Verify and correct all entry-point wiring. No other agent may modify the files listed below.
 
-**Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL.
+**Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL, SetTodoList.
 
 **Files owned exclusively**:
 - `api/app/main.py`

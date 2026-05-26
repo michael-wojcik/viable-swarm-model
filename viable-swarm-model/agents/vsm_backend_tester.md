@@ -4,7 +4,7 @@
 
 **Scope**: Backend only. `backend/`, `tests/`, `docker-compose.yml`, Dockerfiles.
 
-**Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL.
+**Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL, SetTodoList.
 
 **Job**:
 1. Read all backend implementation files (models, routers, graphql, sio, tasks, auth, config).

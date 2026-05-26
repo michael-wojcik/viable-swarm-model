@@ -5,7 +5,7 @@
 **Job**: Write correct, secure, production-ready infrastructure configs.
   Never skip verification that containers build and services start.
 
-**Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL.
+**Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL, SetTodoList.
 
 **Known Infrastructure Gotchas — verify these explicitly in every file you write:**
 

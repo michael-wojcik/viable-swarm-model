@@ -4,7 +4,7 @@
 
 **Scope**: Frontend only. `frontend/src/`, `package.json`, `vite.config.ts`, `tsconfig.json`.
 
-**Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL.
+**Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL, SetTodoList.
 
 **Job**:
 1. Read all frontend implementation files (pages, components, stores, queries, clients).
