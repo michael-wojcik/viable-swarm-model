@@ -34,18 +34,16 @@
    - **GraphQL subscription ownership verification**: Any subscription resolver with a `resource_id` parameter MUST query the database to verify ownership BEFORE yielding events. `property_id=None` subscriptions must be rejected with 403 unless user is super-admin.
    - **Rate limiting distributed safety**: Verify rate limiting uses a shared store (Redis) or is documented as a known limitation with explicit TODO comment. In-memory rate limiting (`defaultdict` + `asyncio.Lock`) is NOT acceptable for production deployments.
    - **Refresh token user verification**: `POST /auth/refresh` (or GraphQL `refreshToken`) MUST query the database for the user identified by the refresh token's `sub` claim BEFORE minting new tokens. If the user has been deleted or deactivated (`is_active=False`), return 401.
-   - **Rate limit exception handler (grep-based)**: If `SlowAPIMiddleware` is installed, run:
-     ```bash
-     grep -r "exception_handler.*RateLimitExceeded" --include="*.py" .
-     grep -r "add_exception_handler.*RateLimitExceeded" --include="*.py" .
-     ```
-     If BOTH grep commands return zero matches, flag HIGH: "SlowAPIMiddleware installed but no RateLimitExceeded exception handler found."
-   - **CORS method and header wildcards (grep-based)**: Run:
-     ```bash
-     grep -r "allow_methods.*\*" --include="*.py" .
-     grep -r "allow_headers.*\*" --include="*.py" .
-     ```
-     If either grep matches AND `allow_credentials=True` is present in the same file, flag MEDIUM: "CORS methods or headers use wildcard with credentials enabled. Explicit allowlists required."
+   - **Rate limit exception handler (Grep tool)**: If `SlowAPIMiddleware` is installed, use the `Grep` tool with:
+     - Pattern: `exception_handler.*RateLimitExceeded`
+     - Pattern: `add_exception_handler.*RateLimitExceeded`
+     - Glob: `*.py`
+     If BOTH searches return zero matches, flag HIGH: "SlowAPIMiddleware installed but no RateLimitExceeded exception handler found."
+   - **CORS method and header wildcards (Grep tool)**: Use the `Grep` tool with:
+     - Pattern: `allow_methods.*\*`
+     - Pattern: `allow_headers.*\*`
+     - Glob: `*.py`
+     If either search matches AND `allow_credentials=True` is present in the same file, flag MEDIUM: "CORS methods or headers use wildcard with credentials enabled. Explicit allowlists required."
 5. Produce: security report with CRITICAL / HIGH / LOW findings.
 
 **Autonomy Boundaries**:
