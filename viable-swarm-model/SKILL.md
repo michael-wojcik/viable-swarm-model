@@ -216,6 +216,7 @@ flowchart TD
     P4[Phase 4: Testing + Infra Wave<br/>vsm_tester + vsm_devops_coder]
     P4S[TaskOutput block=true]
     P4R[Shell: run tests]
+    P4G{zero test<br/>failures?}
     P5[Phase 5: Security Gate<br/>vsm_security]
     P5D{<choice>CRITICAL/HIGH</choice>?}
     P5L[Document LOW as<br/>known limitation]
@@ -229,6 +230,7 @@ flowchart TD
     P7F{<choice>regressions found</choice>?}
     P8[Phase 8: Reflection<br/>Append to .kimi/lessons.md]
     P8M[Phase 8b: Meta-Reflection + Hypothesis Generation<br/>Evaluate performance<br/>Write new hypotheses to hypotheses.md<br/>Bucket mutations: append-only vs refinement vs structural]
+    P8V{meta-report<br/>valid?}
     P8W[Write append-only mutations<br/>security-lessons.md, pattern-library.md,<br/>anti-patterns.md, integration-checklist.md,<br/>experiments.md, hypotheses.md,<br/>mutation-log.md]
     P8R[Apply refinement mutations<br/>Single file, preserve structure<br/>agents/*.md, references/*.md]
     P8A{<choice>structural mutations<br/>approved by user</choice>?}
@@ -265,7 +267,9 @@ flowchart TD
     P3D2 --> P4
     P4 --> P4S
     P4S --> P4R
-    P4R --> P5
+    P4R --> P4G
+    P4G -->|<choice>yes</choice>| P5
+    P4G -->|<choice>no</choice>| P7_IMPL
     P5 --> P5D
     P5D -->|<choice>yes</choice>| P7_IMPL
     P5D -->|<choice>LOW only</choice>| P5L
@@ -291,7 +295,9 @@ flowchart TD
     P7F -->|<choice>no</choice>| P4
     P7E --> END
     P8 --> P8M
-    P8M --> P8W
+    P8M --> P8V
+    P8V -->|<choice>yes</choice>| P8W
+    P8V -->|<choice>no</choice>| P8M
     P8W --> P8R
     P8R --> P8A
     P8A -->|<choice>yes</choice>| P8WS

@@ -594,4 +594,9 @@ Known Stack Gotchas — verify these explicitly:
 - Full test suite passes after fix
 
 **Source**: Structural mutations FB21-9/10 created `vsm_backend_fix_agent` and `vsm_frontend_fix_agent` without empirical validation. H107 formalizes the gap.
+**Empirical validation**: Gym E17 (2026-05-25) confirmed both agents meet all acceptance criteria.
+- Fix correctness: 100% (5/5 BLOCKERs fixed)
+- Re-audit report production: 100% (3/3) vs generic coder 0% (0/3)
+- Security invariant enforcement: Domain agents excluded `admin` from registration allowlist; generic coder kept `admin` (regression)
+- Full test suite passes: 100% after fix
 **See also**: `references/hypotheses.md` H107.

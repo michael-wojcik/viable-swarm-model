@@ -388,3 +388,16 @@ correction BEFORE quality gates.
 
 **Source**: FB21 `main.py:37-38` used `allow_methods=["*"]` and `allow_headers=["*"]` with `allow_credentials=True`. Security gate Check #4 only verified origins, not method/header wildcards. Low severity but systemic coverage gap.
 
+
+---
+
+## Check 57: Phase 4 Exit Gate — Zero Test Failures Before Security/Integration
+**Rationale**: Gym E16 (H106) found builds proceeding to Phase 5/6 with failing pytest tests. This wastes security and integration effort on broken code. The Phase 4 exit gate is now a HARD BLOCK in SKILL.md.
+
+- [ ] Run `pytest tests/` — verify **zero failures**
+- [ ] Run `vitest run` or `npm test` — verify **zero failures**
+- [ ] Run `npm run build` — verify **zero errors**
+- [ ] If ANY of the above report failures, **STOP**. Route to Phase 7 (Fix Wave). Do not proceed to Phase 5 (Security Gate) or Phase 6 (Integration Verification).
+
+**Affected**: S5 (main agent), vsm_backend_tester, vsm_frontend_tester.
+**Source**: Gym E16 (H106), FB20/FB21 fitness builds.

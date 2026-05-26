@@ -80,3 +80,17 @@ for user intervention.
 **Verification**: Tested once in controlled gym experiments with minimal reproducible code
 **Sessions**: 1
 **Status**: active
+
+---
+
+## Entry 5 — 2026-05-25
+
+**Context**: vsm-fitness-gym experiments E15–E17 — confirming H105, H106, H107
+**Lesson**:
+1. **Inline fixes during integration bypass re-audit**. When a generic coder simulates an S5 inline fix (fixing coordinator BLOCKERs directly in Phase 6), it skips `re-audit-report.md` production, skips the full test suite, and skips the subprocess import check. Domain-specific fix agents (`vsm_backend_fix_agent`, `vsm_frontend_fix_agent`) enforce the full protocol: 100% re-audit report production vs 0% for generic coder.
+2. **Phase 8b is a critical feedback loop, not optional documentation**. Running `vsm_meta` on fictional build artifacts with known process violations caught ALL of them: inline fixes, missing re-audit reports, skipped security re-check, skipped Phase 8b itself. Skipping Phase 8b means these violations go undetected and uncorrected.
+3. **Domain-specific fix agents measurably outperform generic coders on security invariants**. Both agents fixed surface issues correctly, but the generic coder introduced a security regression (kept `admin` in registration allowlist) while the domain agent's embedded "registration role allowlist excludes admin/superuser" gotcha prevented it.
+4. **Phase 4 must be a hard gate**. Builds that proceed past Phase 4 with failing tests waste security and integration effort. The exit gate should verify zero failures across pytest, vitest, and npm run build before allowing Phase 5/6.
+**Verification**: Tested in controlled gym experiments with minimal reproducible code (E15: 3 integration BLOCKERs; E16: fictional build artifacts; E17: 5 BLOCKERs with treatment/control)
+**Sessions**: 3 (E15, E16, E17)
+**Status**: active

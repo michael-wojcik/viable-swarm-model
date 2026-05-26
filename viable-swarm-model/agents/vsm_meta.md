@@ -91,7 +91,13 @@ Produce a structured meta-report (`meta-report.md`) with these sections:
 [Missed vulnerability classes, checklist gaps]
 
 ## Phase Audit
-[Redundant phases, misleading decision points]
+Evaluate the build flow against these specific checks. Cite evidence for each:
+
+1. **Phase 4 Hard Gate Compliance**: Did the build proceed to Phase 5/6 with any failing `pytest`, `vitest`, or `npm run build` tests? If yes, this is a process violation — Phase 4 must be a hard block.
+2. **Phase 6/7 Boundary Integrity**: Did S5 fix coordinator or auditor BLOCKERs inline during Phase 6 instead of routing to Phase 7 (Fix Wave)? Inline fixes bypass re-audit and post-fix security re-check.
+3. **Phase 8b Completeness**: Does `meta-report.md` exist, contain a Phase Audit section, and contain at least one falsifiable hypothesis? Was it produced by `vsm_meta`, not written by S5?
+4. **Mutation Tracking**: Were all mutations proposed in `meta-report.md` tracked in `mutations-applied.md` with status (Applied / Deferred / Rejected / Overlooked)? Any `overlooked` mutations indicate a process gap.
+5. **Redundant or Misleading Phases**: Did any phase consume time without adding value? Did the flow diagram match reality?
 
 ## Hypotheses Generated
 | ID | Hypothesis | Status |
