@@ -10,6 +10,113 @@
 
 ---
 
+## Index
+
+| Hypothesis | Status |
+|------------|--------|
+| H1 | rejected |
+| H2 | rejected |
+| H3 | untested |
+| H4 | superseded-by-rule |
+| H5 | superseded-by-rule |
+| H6 | superseded-by-rule |
+| H7 | superseded-by-rule |
+| H8 | superseded-by-rule |
+| H9 | rejected |
+| H10 | superseded-by-rule |
+| H11 | superseded-by-rule |
+| H12 | superseded-by-rule |
+| H13 | confirmed |
+| H14 | superseded-by-rule |
+| H15 | superseded-by-rule |
+| H16 | superseded-by-rule |
+| H17 | superseded-by-rule |
+| H18 | superseded-by-rule |
+| H19 | untested |
+| H20 | untested |
+| H21 | confirmed |
+| H22 | untested |
+| H23 | confirmed |
+| H24 | confirmed |
+| H25 | confirmed |
+| H26 | confirmed |
+| H27 | untested |
+| H28 | untested |
+| H29 | confirmed |
+| H30 | confirmed |
+| H31 | confirmed |
+| H32 | confirmed |
+| H33 | confirmed |
+| H34 | confirmed |
+| H35 | confirmed |
+| H36 | confirmed |
+| H37 | confirmed |
+| H38 | confirmed |
+| H39 | confirmed |
+| H40 | confirmed |
+| H41 | confirmed |
+| H45 | confirmed |
+| H46 | untested |
+| H47 | confirmed |
+| H48 | inconclusive |
+| H49 | confirmed |
+| H50 | confirmed |
+| H51 | confirmed |
+| H52 | confirmed |
+| H53 | untested |
+| H55 | confirmed |
+| H56 | confirmed |
+| H57 | confirmed |
+| H58 | confirmed |
+| H59 | inconclusive |
+| H60 | confirmed |
+| H61 | confirmed |
+| H62 | rejected |
+| H63 | confirmed |
+| H64 | confirmed |
+| H65 | confirmed |
+| H66 | confirmed |
+| H67 | confirmed |
+| H68 | confirmed |
+| H69 | confirmed |
+| H70 | confirmed |
+| H71 | confirmed |
+| H72 | confirmed |
+| H73 | confirmed |
+| H74 | confirmed |
+| H75 | confirmed |
+| H76 | confirmed |
+| H77 | confirmed |
+| H78 | confirmed |
+| H79 | confirmed |
+| H80 | confirmed |
+| H81 | confirmed |
+| H82 | confirmed |
+| H83 | confirmed |
+| H84 | confirmed |
+| H85 | confirmed |
+| H86 | confirmed |
+| H87 | confirmed |
+| H88 | confirmed |
+| H89 | confirmed |
+| H90 | confirmed |
+| H91 | confirmed |
+| H92 | confirmed |
+| H93 | confirmed |
+| H94 | confirmed |
+| H95 | confirmed |
+| H96 | confirmed |
+| H97 | confirmed |
+| H98 | confirmed |
+| H99 | confirmed |
+| H100 | confirmed |
+| H101 | confirmed |
+| H102 | confirmed |
+| H103 | confirmed |
+| H104 | confirmed |
+
+---
+
 ## H1: The security agent misses JWT in dynamically-constructed WebSocket URLs
 
 **Status**: rejected

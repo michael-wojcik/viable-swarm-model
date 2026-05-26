@@ -6,6 +6,15 @@
 >
 > **Mutation rules**: Append only. Each entry includes: session context,
 > file changed, type of change, rationale, expected effect.
+>
+> **Navigation**: Search for `## Mutation` to find all entries. Entries are
+> chronological by build date (2026-05-22 through present). Key structural
+> mutations: 16 (Phase 2c/7b), 19 (VSM fidelity), 20 (Phase 3c), 22 (ecosystem
+> mutation logs), 28-30 (FB10 structural), 34 (Phase 3d/3e), 39 (auditor batch
+> size), 41 (reflection template), 45 (platform constraint), 52 (vsm_wiring),
+> FB18-7 (frontend sub-waves), FB18-8 (security fallback), FB18-9 (vsm_meta),
+> FB18-10 (mutation verification), FB19-8 (coach completion), FB19-9 (structural
+> gate), FB20-6 (vsm_meta hard block), FB21-7 (Phase 6/7 boundary).
 
 ---
 
