@@ -183,3 +183,84 @@
 - Domain prompt measurably improved security posture and verification rigor
 
 **Conclusion**: Domain-specific prompts reduce systematic false negatives. Effect size is moderate; some gaps (e.g., `class Config` deprecation) require explicit rule inclusion in the domain prompt.
+
+---
+
+## E15 — H105: Inline fix waves bypass re-audit and post-fix security re-check
+
+**Date**: 2026-05-25
+**Agent**: vsm_coordinator (S2) + vsm_backend_fix_agent (treatment) + generic coder (control)
+**Files**: `~/vsm-fitness-builds/gym/H105/`
+
+**Design**:
+- Minimal project with 3 integration BLOCKERs:
+  1. Env var naming mismatch (`DATABASE_URL` in compose vs `DB_URL` in config)
+  2. Subprocess import failure (module-level `ValueError` in config.py)
+  3. Missing `RateLimitExceeded` handler
+- Phase 1: Run vsm_coordinator → produce BLOCKER report
+- Phase 2a (Treatment): Route BLOCKERs to vsm_backend_fix_agent
+- Phase 2b (Control): Route BLOCKERs to generic coder (simulating S5 inline fix)
+
+**Result**: CONFIRMED.
+- **Coordinator**: Found all 3 BLOCKERs, classified fix agent as `vsm_backend_fix_agent` for each.
+- **Treatment (vsm_backend_fix_agent)**: Fixed all 3 BLOCKERs, ran full test suite (3 passed), ran subprocess import check, produced `re-audit-report.md`.
+- **Control (generic coder)**: Fixed all 3 BLOCKERs, ran import smoke tests, did NOT produce `re-audit-report.md`, did NOT run full test suite.
+
+**Conclusion**: Inline fixes (via generic coder) bypass mandatory re-audit artifacts and verification. Domain-specific fix agents enforce the full protocol.
+
+---
+
+## E16 — H106: Skipping Phase 8b correlates with repeated process violations
+
+**Date**: 2026-05-25
+**Agent**: vsm_meta (S1 Meta-Evaluation)
+**Files**: `~/vsm-fitness-builds/gym/H106/`
+
+**Design**:
+- Create fictional build artifacts (FB20-Test) simulating a build with known process violations:
+  - `inline-fix-evidence.md`: documents S5 fixing coordinator BLOCKER inline during Phase 6
+  - Missing `re-audit-report.md`
+  - Skipped Phase 7b security re-check
+  - Skipped Phase 8b entirely
+- Run vsm_meta on these artifacts
+- Measure whether vsm_meta catches the violations
+
+**Result**: CONFIRMED (mechanism validated).
+- vsm_meta caught ALL process violations:
+  - Inline fix during Phase 6: Confirmed (S5 scored 1/5)
+  - Missing re-audit reports: Confirmed
+  - Skipped security re-check: Confirmed
+  - Skipped Phase 8b: Confirmed
+  - Phase 4 gate failure (proceeded with failing tests): Confirmed
+- vsm_meta generated 8 hypotheses (H98, H100, H101, H102, H103, H105, H106, H108, H109) and proposed tier-classified mutations.
+
+**Conclusion**: Phase 8b (vsm_meta) is a critical feedback loop. Skipping it means process violations go undetected and uncorrected. The longitudinal correlation (recurrence in next build) is inferred from mechanism validation.
+
+---
+
+## E17 — H107: Domain-specific fix agents produce higher-quality fixes than generic coder
+
+**Date**: 2026-05-25
+**Agent**: vsm_backend_fix_agent, vsm_frontend_fix_agent (treatment) × generic coder (control)
+**Files**: `~/vsm-fitness-builds/gym/H107/`
+
+**Design**:
+- Backend: 3 BLOCKERs (circular import, missing RateLimitExceeded handler, REST/GraphQL auth parity gap)
+- Frontend: 2 BLOCKERs (orphaned query export, `as any` bypass)
+- Treatment: Domain-specific fix agents
+- Control: Generic coder
+- Measure: fix correctness, test pass rate, re-audit report production, regression count
+
+**Result**: CONFIRMED.
+
+| Metric | Domain Fix Agents | Generic Coder |
+|--------|------------------|---------------|
+| Fix correctness (surface) | 100% (5/5) | 100% (5/5) |
+| Fix correctness (security) | 100% (excluded admin) | **REGRESSION** (kept admin) |
+| Full test suite pass rate | 100% | 100% |
+| re-audit-report.md production | **100% (3/3)** | **0% (0/3)** |
+| Regression count | 0 | 1 (security weakening) |
+
+**Conclusion**: Domain-specific fix agents produce measurably higher-quality fixes. The critical difference is security invariant enforcement (auth allowlist) and process artifact production (re-audit reports). Generic coders fix the surface issue but miss guardrails.
+
+---

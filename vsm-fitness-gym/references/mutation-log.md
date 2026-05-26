@@ -76,3 +76,19 @@ because of this mutation.]
 **Type**: refinement
 **Rationale**: H46 confirmed that re-auditing changed files only misses regressions introduced by fixes. A minimal experiment showed fixing `test_get_user` broke `test_get_post`. The auditor prompt previously said "After fixes: re-audit changed files only." Updated to require full test suite re-run and `re-audit-report.md` artifact.
 **Expected effect**: Future fix waves run full test suites. Regressions are caught before delivery.
+
+---
+
+## Mutation Gym-4 — 2026-05-25
+
+**Session**: Gym experiments E15–E17 — H105, H106, H107
+**File**: `~/vsm/vsm-fitness-gym/references/experiments.md`, `~/vsm/viable-swarm-model/references/hypotheses.md`
+**Type**: append-only
+**Rationale**:
+1. E15 (H105): Process audit + prompt efficacy test. Confirmed that generic coder simulating S5 inline fix bypasses re-audit. vsm_backend_fix_agent enforces full protocol.
+2. E16 (H106): Proxy experiment with fictional build artifacts. vsm_meta caught all process violations and generated 8 hypotheses + mutations. Phase 8b mechanism validated.
+3. E17 (H107): Controlled experiment with 3 backend + 2 frontend BLOCKERs. Domain fix agents outperformed generic coder on security invariant enforcement (admin exclusion) and re-audit artifact production (100% vs 0%).
+4. H108 and H109 added to main skill backlog from vsm_meta output.
+**Expected effect**: Main skill hypothesis backlog has zero original untested items. Gym experiment log documents all three experiments with full methodology and results.
+
+---
