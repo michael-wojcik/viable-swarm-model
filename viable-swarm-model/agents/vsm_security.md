@@ -39,6 +39,8 @@ description: >
    - **GraphQL subscription ownership verification**: Any subscription resolver with a `resource_id` parameter MUST query the database to verify ownership BEFORE yielding events. `property_id=None` subscriptions must be rejected with 403 unless user is super-admin.
    - **Rate limiting distributed safety**: Verify rate limiting uses a shared store (Redis) or is documented as a known limitation with explicit TODO comment. In-memory rate limiting (`defaultdict` + `asyncio.Lock`) is NOT acceptable for production deployments.
    - **Refresh token user verification**: `POST /auth/refresh` (or GraphQL `refreshToken`) MUST query the database for the user identified by the refresh token's `sub` claim BEFORE minting new tokens. If the user has been deleted or deactivated (`is_active=False`), return 401.
+   - **Rate limit exception handler**: If `SlowAPIMiddleware` is installed, verify `app.add_exception_handler(RateLimitExceeded, handler)` or `@app.exception_handler(RateLimitExceeded)` exists. Without it, rate-limited requests crash instead of returning HTTP 429.
+   - **CORS method and header wildcards**: Verify `allow_methods` and `allow_headers` in CORS middleware are not `"*"` when `allow_credentials=True`. Explicit allowlists are required for methods and headers, not just origins.
 5. Produce: security report with CRITICAL / HIGH / LOW findings.
 
 **Autonomy Boundaries**:

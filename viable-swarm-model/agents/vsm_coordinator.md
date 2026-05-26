@@ -29,6 +29,7 @@ description: >
      - Socket.IO namespace MUST match between backend and frontend
    - **Apollo Client usage verification**: If `main.tsx` has `ApolloProvider`, at least one page MUST use `useQuery` or `useMutation`. Orphaned `queries.ts` exports are an ISSUE.
    - **Rate limit exception handler**: If `SlowAPIMiddleware` is installed, verify `@app.exception_handler(RateLimitExceeded)` exists.
+   - **REST/GraphQL auth role parity**: If both REST and GraphQL auth exist, verify `ALLOWED_ROLES` / registration allowlists are IDENTICAL. REST must not allow `admin` self-registration while GraphQL hardcodes `student`. Cross-check `auth.py` and `graphql.py` role validation logic.
 4. Produce: integration contract report, dependency map, conflict list.
 5. **Mid-wave coordination**: When invoked during active waves (not just after completion),
    flag ONLY the critical contract violations that will block agents still running.
