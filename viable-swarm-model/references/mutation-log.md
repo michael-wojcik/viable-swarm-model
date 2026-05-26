@@ -1445,3 +1445,28 @@ Spawn `vsm_coordinator` + `vsm_auditor`. Full 20+ point checklist (see
 
 **Expected effect**: README.md now accurately reflects the skill's current architecture. New users will see the correct phase order and agent roster.
 
+
+---
+
+## Mutation FB21-27 — 2026-05-25
+
+**Session**: Housekeeping — backfill missing fitness builds in coverage ledger; normalize FB21 artifact locations
+**File**: `~/vsm/vsm-fitness-coach/references/fitness-projects.md`, `~/vsm-fitness-builds/coach/FB21-20260525/`
+**Type**: refinement
+**Rationale**:
+1. The fitness-projects.md coverage ledger was missing 8 builds that exist on disk: FB5, FB6, FB7, FB8, FB9, FB11, FB17, FB20. Only FB1–FB4, FB10, FB12–FB16, FB18–FB19, FB21 were documented. This created a false impression of build history and made gap analysis unreliable.
+2. FB21's coach artifacts (fitness-report.md, meta-report.md, mutations-applied.md) were stored in `.kimi/` alongside project-local lessons.md. This mixed coach artifacts with project artifacts. All other completed builds (FB5–FB20) store coach artifacts in the build root and only lessons.md in `.kimi/`.
+3. FB19 was present in the ledger body but missing from the Table of Contents.
+
+**Changes**:
+- `fitness-projects.md`:
+  - Updated Table of Contents to include all 21 builds plus FB11 placeholder
+  - Appended ledger entries for FB5 (ContractStress, 3.7), FB6 (DeepContract, 3.6), FB7 (JurisFlow, 3.5), FB8 (EduFlow, 3.9), FB9 (HealthBridge, 4.0), FB11 (never executed), FB17 (ClaimFlow, no formal report), FB20 (RentFlow, 3.4)
+- `FB21-20260525/`:
+  - Moved `.kimi/fitness-report.md` → `fitness-report.md`
+  - Moved `.kimi/meta-report.md` → `meta-report.md`
+  - Moved `.kimi/mutations-applied.md` → `mutations-applied.md`
+  - Left `.kimi/lessons.md` in place (correct location for project-local lessons)
+
+**Expected effect**: Coverage ledger now accurately reflects all executed builds. Artifact locations are consistent across all fitness builds. Gap analysis and trend detection are now reliable.
+

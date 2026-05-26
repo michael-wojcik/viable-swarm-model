@@ -18,13 +18,22 @@
 - [FB2](#fb2)
 - [FB3](#fb3)
 - [FB4](#fb4)
+- [FB5](#fb5)
+- [FB6](#fb6)
+- [FB7](#fb7)
+- [FB8](#fb8)
+- [FB9](#fb9)
 - [FB10](#fb10)
+- [FB11](#fb11)
 - [FB12](#fb12)
 - [FB13](#fb13)
 - [FB14](#fb14)
 - [FB15](#fb15)
 - [FB16](#fb16)
+- [FB17](#fb17)
 - [FB18](#fb18)
+- [FB19](#fb19)
+- [FB20](#fb20)
 - [FB21](#fb21)
 
 ---
@@ -573,3 +582,197 @@
 - Check 58: CORS Method and Header Wildcards (integration-checklist.md)
 - vsm_security.md: Check #13 refined to verify allowlist composition
 - Structural: SKILL.md Phase 6/7 boundary algedonic signal (user-approved)
+
+---
+
+## FB5: ContractStress — Contract Lifecycle Management Platform
+
+**Complexity**: High (4-5 waves, 3000+ lines, 4 services)
+**Date**: 2026-05-23
+**Score**: 3.7 / 5.0
+**Services**: FastAPI backend, React frontend, Redis, Celery
+**Note**: Pre-ledger entry — executed before structured result format. First build to identify Phase 8b meta-reflection as a critical gap.
+
+### Coverage Map
+
+| Capability | Tested by |
+|---|---|
+| Parallel S1 agents | 14 agents spawned — scalability stress test |
+| GraphQL RBAC drift | REST vs GraphQL role validation mismatch |
+| Security gate | Ownership filtering gaps, JWT in localStorage |
+| Testing wave | 86 backend tests pass; zero frontend tests (major gap) |
+| Meta-reflection | Absent as formal artifact — identified as critical gap |
+
+### Result
+- **Score**: 3.7/5.0
+- **BLOCKERs**: 5
+- **Fix iterations**: 3 (at max limit)
+- **Key gap**: Phase 8b meta-reflection absent — no effectiveness audit, coverage audit, or hypothesis generation
+- **Mutations**: H30–H33 generated (architect chunking, split tester, WebSocket auth check, security sequencing)
+
+---
+
+## FB6: DeepContract — DeepContract (Contract + eSignature Platform)
+
+**Complexity**: High (4-5 waves, 3500+ lines, 4 services)
+**Date**: 2026-05-23
+**Score**: 3.6 / 5.0
+**Services**: FastAPI backend, React frontend, Redis, Celery
+
+### Coverage Map
+
+| Capability | Tested by |
+|---|---|
+| GraphQL RBAC parity | REST and GraphQL role validation alignment |
+| Upload filename sanitization | File upload security |
+| Enum runtime safety | `str, enum.Enum` for GraphQL compatibility |
+| Circular import prevention | Router → main.py import traps |
+| Agent timeouts | Architect timed out at 600s; tester timed out at 900s |
+| Security gate | Fail-open GraphQL context, missing httpOnly cookies |
+
+### Result
+- **Score**: 3.6/5.0
+- **BLOCKERs**: 0 after fix waves
+- **Fix iterations**: 3 (foundation + post-implementation + security)
+- **Key gap**: Agent timeouts on large builds; security downgraded HIGH findings
+- **Mutations**: H30–H36 confirmed/generated; vsm_architect chunking, vsm_tester split, WebSocket auth check, Phase 8b template
+
+---
+
+## FB7: JurisFlow — Legal Document & Contract Lifecycle Management
+
+**Complexity**: High (4-5 waves, 2500+ lines, 4 services)
+**Date**: 2026-05-23
+**Score**: 3.5 / 5.0
+**Services**: FastAPI backend, React frontend, Redis, Celery
+
+### Coverage Map
+
+| Capability | Tested by |
+|---|---|
+| Foundation model-spec alignment | `models.py` must match `data-model.md` exactly |
+| GraphQL RBAC parity | REST vs GraphQL role validation |
+| WebSocket auth verification | Socket.io room join auth |
+| Security gate | CORS wildcard, GraphQL auth bypass |
+| Tester security regression | Tester reverted security fix (L38) |
+| Meta-reflection | Full structured artifact with 3 hypotheses (H34–H36) |
+
+### Result
+- **Score**: 3.5/5.0
+- **BLOCKERs**: 4 (initial audit) + 2 HIGH (security)
+- **Fix iterations**: 2
+- **Key gap**: Foundation model drift caused cascade failures; tester actively weakened auth protections
+- **Mutations**: Integration Check 31–32, vsm_tester security-aware testing, vsm_architect "read existing docs" instruction
+
+---
+
+## FB8: EduFlow — Online Course & Learning Management Platform
+
+**Complexity**: High (4-5 waves, 3500+ lines, 4 services)
+**Date**: 2026-05-23
+**Score**: 3.9 / 5.0
+**Services**: FastAPI backend, React frontend, Redis, Celery
+
+### Coverage Map
+
+| Capability | Tested by |
+|---|---|
+| Prevention rule transfer (H34–H36) | Model-spec alignment, tester auth integrity, post-fix re-check |
+| GraphQL RBAC parity | Security gate escalation to CRITICAL |
+| WebSocket enrollment auth | Room join verification |
+| Auditor false positives | FastAPI router imports, Strawberry auto-camelCase |
+| Foundation wave | Exact model-spec alignment (5/5 score) |
+
+### Result
+- **Score**: 3.9/5.0
+- **BLOCKERs**: 6 (2 false positives, 4 real)
+- **Fix iterations**: 1
+- **Key success**: All prevention rules from FB7 passed; model-spec alignment exact; security gate correctly escalated CRITICAL
+- **Mutations**: H37–H40, L42–L43, Check 30, vsm_auditor false-positive prevention
+
+---
+
+## FB9: HealthBridge — Telehealth & Patient Health Records Platform
+
+**Complexity**: High (4-5 waves, 3000+ lines, 4-5 services)
+**Date**: 2026-05-23
+**Score**: 4.0 / 5.0
+**Services**: FastAPI backend, React frontend, Redis, Celery
+
+### Coverage Map
+
+| Capability | Tested by |
+|---|---|
+| Foundation wave sequencing | Dependency race conditions between parallel foundation agents |
+| JWT signature verification | `verify_signature=False` bypass caught by security gate |
+| GraphQL RBAC parity | All list queries scoped to authenticated user |
+| WebSocket auth | In-band auth via authenticate event |
+| File upload sanitization | MIME validation, size limits, filename sanitization |
+| Security gate | 20 deliberate stress points; caught CRITICAL JWT bypass introduced during fix wave |
+| Tester | 54 backend + 20 frontend tests; tester fixed 5 bugs inline |
+
+### Result
+- **Score**: 4.0/5.0 (highest score to date)
+- **BLOCKERs**: 5
+- **Fix iterations**: 2
+- **Key success**: Security gate caught a subtle JWT signature bypass introduced DURING the fix wave — exceeding expectations
+- **Mutations**: Anti-Pattern #19, L28–L29, Pattern #22, H41 (sequenced foundation sub-waves)
+
+---
+
+## FB11
+
+**Status**: Never executed. Only a prompt draft (`FB11-prompt-draft.md`) exists in `~/vsm-fitness-builds/coach/`. No build directory was created.
+
+---
+
+## FB17: ClaimFlow — Insurance Claims Processing & Fraud Detection Platform
+
+**Complexity**: High (4-5 waves, 2500–3500 lines, 4 services)
+**Date**: 2026-05-25
+**Services**: FastAPI backend, React frontend, Redis, Celery
+**Note**: Build executed and artifacts produced, but no formal fitness report was generated by the coach. Evaluated via wiring report and lessons only.
+
+### Coverage Map
+
+| Capability | Tested by |
+|---|---|
+| Foundation wave module-level side effects | `sio.py` module-level `get_settings()` caused import failures |
+| Config typo resilience | `ndef get_settings()` SyntaxError caught |
+| vsm_wiring agent | Wiring report produced for main.py, realtime.py, App.tsx, main.tsx |
+| Security gate | CORS wildcard, GraphQL RBAC mismatch, unfiltered list queries |
+| Architect prompt trap propagation | Unverified framework parameters, wrong GraphQL field casing |
+
+### Result
+- **Score**: [no formal fitness report]
+- **BLOCKERs**: [unknown — no fitness report]
+- **Fix iterations**: [unknown — no fitness report]
+- **Key artifact**: `wiring-report.md` validates vsm_wiring agent checklist completeness
+- **Lessons**: 2 entries documented (module-level side effects, config typo)
+
+---
+
+## FB20: RentFlow — Residential Property Management Platform
+
+**Complexity**: Medium-High (4 waves, ~3200 lines, 4 services)
+**Date**: 2026-05-25
+**Score**: 3.4 / 5.0
+**Services**: FastAPI backend, React frontend, Redis, Celery
+
+### Coverage Map
+
+| Capability | Tested by |
+|---|---|
+| Prevention rule transfer (H90–H93) | httpx version drift, SQLite UUID conversion, rate-limited auth tests, Celery broker mocking |
+| Foundation deprecation debt | Pydantic `class Config`, FastAPI `@app.on_event` embedded despite prevention rules |
+| Security gate | 5 CRITICAL + 3 HIGH + 1 MEDIUM; missed GraphQL subscription ACL gap |
+| Phase 8b discipline | vsm_meta bypassed until external intervention forced retroactive spawn |
+| Testing wave | 56 backend + 31 frontend tests passing; all 6 deliberate traps caught |
+
+### Result
+- **Score**: 3.4/5.0
+- **BLOCKERs**: 9 total security findings (5 CRITICAL + 3 HIGH + 1 MEDIUM)
+- **Fix iterations**: 1 main Phase 7 wave + retroactive corrections
+- **Key gap**: Phase 8b bypassed — skill cannot self-assess meta-cognitive discipline without structural enforcement
+- **Mutations**: FB20-1..FB20-6 (vsm_meta in SKILL.md, L57–L59, Check 56–57, H90–H93 patterns, auditor deprecation detection, Phase 8b hard block)
+
