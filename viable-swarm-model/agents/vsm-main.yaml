@@ -28,6 +28,9 @@ agent:
     vsm_devops_coder:
       path: ./vsm_devops_coder.yaml
       description: S1 DevOps Implementation
+    vsm_explore:
+      path: ./vsm_explore.yaml
+      description: S4 Exploration
     vsm_frontend_coder:
       path: ./vsm_frontend_coder.yaml
       description: S1 Frontend Implementation

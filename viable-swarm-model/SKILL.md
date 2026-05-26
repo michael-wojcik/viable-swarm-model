@@ -68,11 +68,14 @@ Then in the session:
 
 All swarm agents are defined as **custom Kimi CLI agent files** (`agents/*.yaml`) that extend a shared base (`agents/vsm-main.yaml`). Each YAML points to a system prompt markdown file (`agents/*.md`) via `system_prompt_path`. To spawn an agent, use `Agent(subagent_type="<name>", ...)` — the system prompt and tool list are loaded automatically; you do NOT need to read or embed the agent definition file into the prompt.
 
+> **Important**: When using `--agent-file`, built-in subagent types (`coder`, `explore`, `plan`) are **unavailable**. S5 and all spawned agents must use the custom types defined in `agents/vsm-main.yaml`. S5 itself retains full tool access.
+
 | VSM System | CLI Implementation | Custom Type | Activation | Produces |
 |---|---|---|---|---|
 | **S5 (Policy)** | Main conversation agent (you) | — | Always | Decisions, escalation, mutations |
 | **S4 (Intelligence)** | `vsm_architect` subagent | Custom | Phase 1 | Architecture doc, API spec |
 | **S4 (Intelligence)** | `vsm_product` subagent | Custom | Phase 0 (conditional) | Product brief, user stories, acceptance criteria |
+| **S4 (Exploration)** | `vsm_explore` subagent | Custom | Any phase | Read-only file mapping, pattern search |
 | **S3 (Control)** | Main agent via SetTodoList | — | All phases | Progress tracking, mutation decisions |
 | **S3* (Audit)** | `vsm_auditor` subagent | Custom | After waves | PASS/ISSUES/BLOCKER |
 | **S2 (Coordination)** | `vsm_coordinator` subagent | Custom | After Wave 3 | Integration report |
@@ -107,9 +110,10 @@ brief (if present) as input. Launched via `Agent(subagent_type="vsm_architect")`
 PASS/ISSUES/BLOCKER per file. Checks correctness, security, performance,
 maintainability. Includes full cross-file checklist. Launched via `Agent(subagent_type="vsm_auditor")`.
 
-**`vsm_coordinator`** (S2 Coordination): Read-only. Compares S1 outputs.
+**`vsm_coordinator`** (S2 Coordination): No write tools. Compares S1 outputs.
 Validates imports, interfaces, naming, type alignment. Checks WebSocket contracts,
-GraphQL SDL, Prisma relations, env vars. Launched via `Agent(subagent_type="vsm_coordinator")`.
+GraphQL SDL, Prisma relations, env vars. May run shell commands for import
+verification. Launched via `Agent(subagent_type="vsm_coordinator")`.
 
 **`vsm_wiring`** (S2 Wiring): Runs after Phase 3. Exclusively owns `main.py`,
 `realtime.py`, `App.tsx`, and `main.tsx`. Verifies all routers, providers,
@@ -157,6 +161,11 @@ Launched via `Agent(subagent_type="vsm_backend_tester")`.
 (vitest), validates TypeScript compilation, verifies component rendering. Does NOT
 test backend. Launched via `Agent(subagent_type="vsm_frontend_tester")`.
 
+**`vsm_explore`** (S4 Exploration): Fast read-only codebase exploration.
+Maps directory structure, searches patterns, reads files, summarizes findings.
+Never writes files. Replaces the built-in `explore` subagent type. Launched via
+`Agent(subagent_type="vsm_explore")`.
+
 **`vsm_meta`** (S1 Meta — Evaluation): Evaluates the skill's own performance after a
 build. Reads build artifacts, runs independent test verification, scores agent
 effectiveness, audits prevention rules, and generates falsifiable hypotheses.
@@ -166,7 +175,7 @@ Does NOT write code or design systems. Produces `meta-report.md`. Launched via `
 
 **Writes implementation code:**
 - `vsm_devops_coder` (custom) — Docker, docker-compose, CI/CD, infrastructure
-- `coder` (built-in) — **Legacy fallback only.** Superseded by domain-specific coders.
+- `vsm_explore` (custom) — Read-only parallel codebase exploration (replaces built-in `explore`)
 **Writes design/requirements documents:**
 - `vsm_product` (custom) — product briefs, user stories, acceptance criteria
 - `vsm_architect` (custom) — architecture docs, API specs
@@ -226,7 +235,7 @@ flowchart TD
     P7R[Re-audit changed files]
     P7D{<choice>BLOCKERs remain<br/>iterations < 3</choice>?}
     P7E[Escalate to User<br/>AskUserQuestion]
-    P7S[Phase 7b: Post-Fix Security Re-Check<br/>vsm_security on modified auth/GraphQL/WebSocket]
+    P7S[Phase 7c Post-Fix Security Re-Check<br/>vsm_security on modified auth/GraphQL/WebSocket]
     P7F{<choice>regressions found</choice>?}
     P8[Phase 8: Reflection<br/>Append to .kimi/lessons.md]
     P8M[Phase 8b: Meta-Reflection + Hypothesis Generation<br/>Evaluate performance<br/>Write new hypotheses to hypotheses.md<br/>Bucket mutations: append-only vs refinement vs structural]
@@ -330,7 +339,7 @@ without contradiction. Specifically verify these custom agent definition files e
 `vsm_coordinator.yaml`, `vsm_wiring.yaml`, `vsm_backend_coder.yaml`,
 `vsm_frontend_coder.yaml`, `vsm_backend_fix_agent.yaml`, `vsm_frontend_fix_agent.yaml`,
 `vsm_devops_coder.yaml`, `vsm_security.yaml`, `vsm_backend_tester.yaml`,
-`vsm_frontend_tester.yaml`, `vsm_meta.yaml`.
+`vsm_frontend_tester.yaml`, `vsm_meta.yaml`, `vsm_explore.yaml`.
 If any check fails → emit algedonic, write diagnosis
 to `~/vsm/viable-swarm-model/references/mutation-log.md`, ask user to review.
 6b. **Agent-File Verification**: Spawn a trivial `vsm_meta` subagent with the task
@@ -609,7 +618,7 @@ ANY failure → back to Phase 3.
 > bypass re-audit and post-fix security re-check, violating exit criteria. S5
 > MUST spawn domain-specific fix agents (`vsm_backend_fix_agent`,
 `vsm_frontend_fix_agent`, `vsm_devops_coder` for infra) for fixes, produce a `re-audit-report.md`
-> artifact, and run Phase 7b post-fix security re-check before returning to
+> artifact, and run Phase 7c post-fix security re-check before returning to
 > the main flow.
 
 ### Phase 7: Fix Wave (conditional)
@@ -621,14 +630,20 @@ spawn both agents in parallel with `run_in_background=true`.
 **Phase 7a — Fix Execution**: Fix agents apply surgical changes and produce
 `re-audit-report.md` (advisory only).
 
-**Phase 7b — Binding Re-Audit (MANDATORY)**: S5 MUST spawn `vsm_auditor` to
-independently verify ALL modified files. Fix agent self-reports are **not**
-sufficient — the auditor's PASS/ISSUES/BLOCKER verdict is binding. Any remaining
-BLOCKERs route back to Phase 7a.
+**Phase 7b — Binding Re-Audit + Full Test Suite (MANDATORY)**: S5 MUST spawn
+`vsm_auditor` to independently verify ALL modified files. Fix agent self-reports
+are **not** sufficient — the auditor's PASS/ISSUES/BLOCKER verdict is binding.
+Then run `pytest tests/` and `vitest run` / `npm test`. Re-auditing changed
+files alone misses regressions in unrelated tests. Any remaining BLOCKERs route
+back to Phase 7a. Max 3 iterations across 7a→7b. Still blocked? Escalate to user.
 
-**Phase 7c — Full Test Suite (MANDATORY)**: Run `pytest tests/` and
-`vitest run` / `npm test`. Re-auditing changed files alone misses regressions
-in unrelated tests. Max 3 iterations across 7a→7b→7c. Still blocked? Escalate to user.
+**Phase 7c — Post-Fix Security Re-Check (MANDATORY)**: After fix wave clears
+all BLOCKERs and BEFORE returning to the main flow, S5 MUST spawn `vsm_security`
+with a focused scope (modified files only) to run a lightweight security re-check
+on any file that touches auth, GraphQL, or WebSocket code. If the re-check finds
+CRITICAL/HIGH regressions (e.g., a fix agent weakened auth), loop back to Phase 7a.
+This prevents fix/test agents from introducing vulnerabilities after the main
+security gate.
 
 **Return paths differ by BLOCKER source**:
 - **Foundation BLOCKERs** (Phase 2b/2c audit): After fix clears, return to
