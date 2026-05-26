@@ -1424,3 +1424,24 @@ Spawn `vsm_coordinator` + `vsm_auditor`. Full 20+ point checklist (see
 
 **Expected effect**: Phase 4 testers are now fully aligned with the no-inline-fix protocol. Test failures will correctly stop the pipeline and route to Phase 7 (Fix Wave) via domain-specific fix agents. Zero agents in any phase now have inline-fix authority.
 
+
+---
+
+## Mutation FB21-26 — 2026-05-25
+
+**Session**: Refinement — update README.md to match current skill architecture
+**File**: `~/vsm/README.md`
+**Type**: refinement
+**Rationale**:
+1. README.md is the human-facing entry point to the project. Stale information in it misleads new users and contradicts the actual skill files.
+2. The phase order was wrong: README listed Phase 5 = Integration, Phase 6 = Security. The actual SKILL.md order is Phase 5 = Security Gate, Phase 6 = Integration Verification. This swap would confuse anyone reading the README to understand the workflow.
+3. The repo structure diagram listed `vsm_tester.md` and `flow-diagram.mermaid` as existing files, but both were deleted in FB21-23.
+4. The custom sub-agent types table said "6 custom sub-agent types" and listed `vsm_tester`. The skill currently has 14 custom types. The table was updated to show all 14 with their VSM roles.
+
+**Changes**:
+- Fixed phase order: Phase 5 = Security gate, Phase 6 = Integration verification
+- Updated repo structure diagram: removed `vsm_tester.md` and `flow-diagram.mermaid`; added all 14 current agent files
+- Updated custom sub-agent types table: 6 types → 14 types; replaced `vsm_tester` with full roster including backend/frontend coders, fix agents, testers, devops, wiring, meta, product
+
+**Expected effect**: README.md now accurately reflects the skill's current architecture. New users will see the correct phase order and agent roster.
+

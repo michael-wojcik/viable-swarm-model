@@ -47,14 +47,22 @@ viable-swarm-model/                    ← the repo
 │   ├── agents/
 │   │   ├── vsm_architect.md
 │   │   ├── vsm_auditor.md
+│   │   ├── vsm_backend_coder.md
+│   │   ├── vsm_backend_fix_agent.md
+│   │   ├── vsm_backend_tester.md
 │   │   ├── vsm_coordinator.md
+│   │   ├── vsm_devops_coder.md
+│   │   ├── vsm_frontend_coder.md
+│   │   ├── vsm_frontend_fix_agent.md
+│   │   ├── vsm_frontend_tester.md
+│   │   ├── vsm_meta.md
+│   │   ├── vsm_product.md
 │   │   ├── vsm_security.md
-│   │   └── vsm_tester.md
+│   │   └── vsm_wiring.md
 │   ├── references/
 │   │   ├── acquired-wisdom.md
 │   │   ├── anti-patterns.md
 │   │   ├── experiments.md             ← experiment log
-│   │   ├── flow-diagram.mermaid
 │   │   ├── hypotheses.md              ← hypothesis backlog
 │   │   ├── integration-checklist.md
 │   │   ├── mutation-log.md
@@ -117,8 +125,8 @@ This executes the complete VSM phase workflow:
 3. **Phase 2**: Foundation wave (types, config, scaffolding)
 4. **Phase 3**: Implementation wave (features, wiring)
 5. **Phase 4**: Testing + infrastructure wave
-6. **Phase 5**: Integration verification
-7. **Phase 6**: Security gate
+6. **Phase 5**: Security gate
+7. **Phase 6**: Integration verification
 8. **Phase 7**: Fix wave (if needed)
 9. **Phase 8**: Reflection (project lessons)
 10. **Phase 8b**: Meta-reflection + hypothesis generation (skill mutates itself)
@@ -171,16 +179,24 @@ This loads the skill's patterns, anti-patterns, and checklists without triggerin
 
 ### Custom sub-agent types
 
-The main skill defines **6 custom sub-agent types** that map to VSM roles:
+The main skill defines **14 custom sub-agent types** that map to VSM roles:
 
-| Role | Type | Job |
+| VSM Role | Type | Job |
 |---|---|---|
-| Architect | `vsm_architect` | Reads codebase, researches tech, produces design docs |
-| Product | `vsm_product` | Analyzes user problems, defines success criteria, proposes MVP feature set |
-| Auditor | `vsm_auditor` | Read-only deep inspection. PASS / ISSUES / BLOCKER |
-| Coordinator | `vsm_coordinator` | Cross-file contract validation |
-| Security | `vsm_security` | Exhaustive security audit |
-| Tester | `vsm_tester` | Writes and runs tests, fixes bugs inline |
+| S4 Intelligence | `vsm_architect` | Reads codebase, researches tech, produces design docs |
+| S4 Intelligence | `vsm_product` | Analyzes user problems, defines success criteria, proposes MVP feature set |
+| S3* Audit | `vsm_auditor` | Read-only deep inspection. PASS / ISSUES / BLOCKER |
+| S2 Coordination | `vsm_coordinator` | Cross-file contract validation |
+| S5 Policy | `vsm_security` | Exhaustive security audit |
+| S1 Operations | `vsm_backend_coder` | Backend implementation (FastAPI, SQLAlchemy, GraphQL) |
+| S1 Operations | `vsm_frontend_coder` | Frontend implementation (React, TypeScript, Vite) |
+| S1 Operations | `vsm_devops_coder` | Docker, CI/CD, infrastructure |
+| S1 Quality | `vsm_backend_tester` | Backend tests (pytest), API contract validation |
+| S1 Quality | `vsm_frontend_tester` | Frontend tests (vitest), build verification |
+| S1 Fix | `vsm_backend_fix_agent` | Surgical backend fixes with re-audit protocol |
+| S1 Fix | `vsm_frontend_fix_agent` | Surgical frontend fixes with re-audit protocol |
+| S2 Coordination | `vsm_wiring` | Entry-point wiring (main.py, App.tsx, main.tsx) |
+| S1 Meta | `vsm_meta` | Performance evaluation, hypothesis generation |
 
 The gym adds:
 
