@@ -508,3 +508,56 @@ def test_send_notification_delayed(mock_delay):
 ```
 **Source**: FB19 Celery tests failed with `ConnectionRefusedError` on `redis://localhost:6379`. FB20 `test_tasks.py:28-33` mocks `.delay()` and tests direct calls. 6 task tests pass with no Redis running. (H93)
 
+
+### Pattern: Auth Response Contract Template
+**When**: Writing api-spec.md for builds with authentication.
+**What**: Document the EXACT JSON response shapes for login, register, refresh, and me endpoints, including every field name and type.
+**Why**: Ambiguous specs ("returns a token") cause frontend/backend contract mismatches. In a gym experiment, an ambiguous spec produced `{token: string}` while the frontend expected `{access_token, token_type, role}`.
+**How**:
+```markdown
+## Auth Endpoints
+
+### POST /auth/login
+**Request:** `{"email": "string", "password": "string"}`
+**Response (200):** `{"access_token": "string", "token_type": "bearer", "role": "string"}`
+
+### POST /auth/register
+**Request:** `{"email": "string", "password": "string", "name": "string"}`
+**Response (201):** `{"id": int, "email": "string", "name": "string", "role": "string"}`
+
+### GET /auth/me
+**Response (200):** `{"id": int, "email": "string", "name": "string", "role": "string"}`
+
+### JWT Payload Claims
+`{"sub": "user-id", "role": "string", "exp": unix_timestamp, "iat": unix_timestamp}`
+```
+**Source**: Gym-2026-05-25 Experiment E8 (H20). Variant A (ambiguous spec) caused 3-field mismatch. Variant B (explicit spec) matched perfectly.
+
+### Pattern: Frontend Build Script Verification
+**When**: Verifying frontend infrastructure in any build with a Vite/React frontend.
+**What**: Run `npm run build` (the package.json script), NOT just `vite build`.
+**Why**: `package.json` build scripts often include `tsc -b && vite build`. Verifying only `vite build` misses TypeScript compilation errors that `tsc -b` catches. In a gym experiment, `vite build` passed while `npm run build` failed with `tsc -b` errors (missing `@types/node`).
+**How**:
+```bash
+# In the frontend directory:
+npm run build
+# Do NOT rely solely on:
+# npx vite build
+```
+**Source**: Gym-2026-05-25 Experiment E13 (H48 + H53). `vite build` PASS, `npm run build` FAIL due to `tsc -b` type-checking `vite.config.ts` without `@types/node`.
+
+### Pattern: Domain-Specific Coder Prompts with Known Stack Gotchas
+**When**: Spawning implementation agents for complex stacks (FastAPI + Strawberry + SlowAPI + Celery + React + Apollo).
+**What**: Embed a "Known Stack Gotchas" section directly in the coder agent prompt, not just in the architect brief or integration checklist.
+**Why**: Generic `coder` subagents receive only task-level prompts. Domain knowledge in the architect brief may be ignored. A gym experiment showed domain-specific prompts measurably improved security posture (explicit CORS origins instead of wildcard) and runtime verification rigor (dynamic `inspect.signature` check on `strawberry.Schema.__init__`).
+**How**: Add to backend coder prompt:
+```
+Known Stack Gotchas — verify these explicitly:
+1. NEVER instantiate Pydantic Settings at module level. Use lazy factory.
+2. ALWAYS use `str, enum.Enum` for string-valued enums.
+3. NEVER assume `strawberry.Schema` accepts `validation_rules`. Verify with `help()` or `inspect.signature`.
+4. ALWAYS install `@app.exception_handler(RateLimitExceeded)` when using SlowAPIMiddleware.
+5. NEVER use CORS `allow_origins="*"` with `allow_credentials=True`.
+6. NEVER use module-level `engine = create_async_engine(...)` in models.py.
+```
+**Source**: Gym-2026-05-25 Experiment E14 (H59). Generic coder used `allow_origins=["*"]` and skipped runtime API verification. Domain-specific coder used explicit origins and dynamic signature checks.

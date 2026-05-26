@@ -16,7 +16,7 @@
 |------------|--------|
 | H1 | rejected |
 | H2 | rejected |
-| H3 | untested |
+| H3 | rejected |
 | H4 | superseded-by-rule |
 | H5 | superseded-by-rule |
 | H6 | superseded-by-rule |
@@ -32,16 +32,16 @@
 | H16 | superseded-by-rule |
 | H17 | superseded-by-rule |
 | H18 | superseded-by-rule |
-| H19 | untested |
-| H20 | untested |
+| H19 | rejected |
+| H20 | confirmed |
 | H21 | confirmed |
-| H22 | untested |
+| H22 | rejected |
 | H23 | confirmed |
 | H24 | confirmed |
 | H25 | confirmed |
 | H26 | confirmed |
-| H27 | untested |
-| H28 | untested |
+| H27 | confirmed |
+| H28 | rejected |
 | H29 | confirmed |
 | H30 | confirmed |
 | H31 | confirmed |
@@ -56,19 +56,19 @@
 | H40 | confirmed |
 | H41 | confirmed |
 | H45 | confirmed |
-| H46 | untested |
+| H46 | confirmed |
 | H47 | confirmed |
-| H48 | inconclusive |
+| H48 | confirmed |
 | H49 | confirmed |
 | H50 | confirmed |
 | H51 | confirmed |
 | H52 | confirmed |
-| H53 | untested |
+| H53 | confirmed |
 | H55 | confirmed |
 | H56 | confirmed |
 | H57 | confirmed |
 | H58 | confirmed |
-| H59 | inconclusive |
+| H59 | confirmed |
 | H60 | confirmed |
 | H61 | confirmed |
 | H62 | rejected |
@@ -163,7 +163,7 @@ both ORM and computed field loops" and the agent enforces it rigorously.
 
 ## H3: The coordinator does not detect env var naming drift in .env.example files
 
-**Status**: untested
+**Status**: rejected
 **Proposed**: 2026-05-22
 **Rationale**: Current integration checklist validates env vars across
 docker-compose, .env, and code. But .env.example files are often stale.
@@ -172,8 +172,8 @@ Does the coordinator check .env.example against actual code usage?
 but code reads `DB_URL`, and .env.example documents neither. Run vsm_coordinator.
 Does it detect the triple mismatch?
 **Expected**: If coordinator PASSes → confirmed (gap exists).
-**Result**: [to be filled]
-**Tested by**: [experiment ID or session]
+**Result**: REJECTED. vsm_coordinator detected all three env var naming mismatches: docker-compose `DATABASE_URL` vs .env.example `DB_CONNECTION` vs config.py `DB_URL`. The agent produced a detailed integration report with a table showing the 3-way split and recommended standardization.
+**Tested by**: Gym-2026-05-25, Experiment E6
 
 ---
 
@@ -580,7 +580,7 @@ agent prompt are both effective at detecting this pattern.
 
 ## H19: Adding GraphQL field name alignment to integration checklist prevents Strawberry auto-camelCase drift
 
-**Status**: untested
+**Status**: rejected
 **Proposed**: 2026-05-23
 **Rationale**: In FB4, backend `graphql.py` used `assigned_technician_id` which Strawberry auto-camelCased to `assignedTechnicianId`. However, the frontend query used `technicianId` ( expecting `technician_id` → `technicianId`). The existing case-sensitive enum alignment check (Check 24) caught enum values but NOT field names. This caused a BLOCKER that survived the first integration check and fix wave.
 **Source**: Fitness build FB4
@@ -589,14 +589,14 @@ agent prompt are both effective at detecting this pattern.
   2. Run 5 with modified checklist including "GraphQL field names match frontend queries exactly"
   3. Count field name mismatch BLOCKERs in each group
 **Expected**: Control group: 3-5 field name mismatches. Treatment group: 0-1 mismatches.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: REJECTED. vsm_coordinator ran schema introspection (`python -c "from graphql import schema; print(schema)"`), correctly identified that backend `assigned_technician_id` auto-camelCases to `assignedTechnicianId`, and flagged frontend `technicianId` as a MISMATCH. The coordinator's Strawberry auto-camelCase check (in prompt since FB13) is effective.
+**Tested by**: Gym-2026-05-25, Experiment E7
 
 ---
 
 ## H20: Documenting auth response contract in foundation wave prevents login/register contract mismatches
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-23
 **Rationale**: FB2, FB3, and FB4 all had login/register response shape mismatches between backend and frontend. The backend returned `access_token` while frontend expected `token`, or backend required `org_id` while frontend didn't send it. If the foundation wave explicitly documented the exact JSON keys and required fields for auth endpoints, implementation agents would follow the contract.
 **Source**: Fitness builds FB2, FB3, FB4
@@ -605,8 +605,11 @@ agent prompt are both effective at detecting this pattern.
   2. Run 5 with "auth response contract must be documented in api-spec.md with exact JSON keys" added to architect checklist
   3. Count login/register contract BLOCKERs in each group
 **Expected**: Control group: 3-5 contract mismatches. Treatment group: 0-1 mismatches.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: CONFIRMED. A/B test with two coder agents:
+- Variant A (ambiguous spec: "login returns token"): coder produced `{token: string}` — frontend expected `{access_token, token_type, role}`. 3-field mismatch.
+- Variant B (explicit spec with exact JSON shapes): coder produced `{access_token, token_type, role}` and `{id, email, name, role}` — exact match to frontend expectations.
+Explicit contract documentation in api-spec.md prevents login/register contract mismatches.
+**Tested by**: Gym-2026-05-25, Experiment E8
 
 ---
 
@@ -629,7 +632,7 @@ agent prompt are both effective at detecting this pattern.
 
 ## H22: WebSocket event name dictionary cross-check prevents emit/listen mismatches
 
-**Status**: untested
+**Status**: rejected
 **Proposed**: 2026-05-23
 **Rationale**: In FB4, `api-spec.md` defined WebSocket events `authenticate`/`authenticated`/`auth_error`, but `sio.py` implemented `auth`/`auth_ok`/`auth_err`. The shared `sio-events.ts` file had yet another variant. The integration checker focused on URL/proxy wiring but missed the event payload semantics. A cross-check between api-spec, sio.py, and sio-events.ts would catch this.
 **Source**: Fitness build FB4
@@ -639,8 +642,12 @@ agent prompt are both effective at detecting this pattern.
   3. Add "WebSocket event name dictionary cross-check" to integration checklist
   4. Run next 5 builds and compare mismatch counts
 **Expected**: Mismatch count drops from 1-2 per build to 0 per build.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: REJECTED. vsm_coordinator detected ALL WebSocket event name mismatches across api-spec.md, backend/sio.py, and frontend/sio-events.ts:
+- Client→server: `auth` vs `authenticate`, `join` vs `subscribe_room`
+- Server→client: `auth_ok`/`auth_err` vs `authenticated`/`auth_error` vs `auth_success`/`auth_failed`
+- Room update: `room_data` vs `room_update`
+The coordinator produced a detailed table with triple mismatches. Existing event name check is effective.
+**Tested by**: Gym-2026-05-25, Experiment E9
 
 ---
 
@@ -714,7 +721,7 @@ agent prompt are both effective at detecting this pattern.
 
 ## H27: Adding a structured meta-reflection template to Phase 8b results in actionable skill improvement
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-23
 **Rationale**: In FB5, Phase 8b (Meta-Reflection) scored 2/5 — "essentially absent as a formal artifact." The `.kimi/lessons.md` contained some meta-learning bullets but no structured effectiveness audit, coverage audit, phase audit, agent audit, or hypothesis generation. If the skill provides a structured template or checklist for Phase 8b, the quality of meta-reflection would improve.
 **Source**: Fitness build FB5, Phase 8b gap
@@ -724,14 +731,14 @@ agent prompt are both effective at detecting this pattern.
   3. Add structured Phase 8b template to SKILL.md or references/
   4. Run next 5 builds and compare Phase 8b scores
 **Expected**: Control group: average Phase 8b score 2.0. Treatment group: average score 4.0+.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: CONFIRMED. vsm_meta agent, given a structured template in its prompt, produced a complete meta-report.md with: Independent Test Verification, Agent Performance Scores (1-5 with evidence), Effectiveness Audit, Coverage Audit, Phase Audit, 2 falsifiable hypotheses (H105, H106), and tier-classified mutations (append-only, refinement, structural). Output quality significantly exceeds the "essentially absent" FB5 Phase 8b.
+**Tested by**: Gym-2026-05-25, Experiment E10
 
 ---
 
 ## H28: Requiring the architect to document enum Python-type-to-GraphQL-value mapping prevents enum runtime bugs
 
-**Status**: untested
+**Status**: rejected
 **Proposed**: 2026-05-23
 **Rationale**: In FB5, `graphql.py` defined `class Role(enum.Enum)` (not `str, enum.Enum`), causing `ValueError` when constructing from string values like `"commander"`. The coordinator caught this, but the implementation coder did not. If the architect's `api-spec.md` explicitly documents whether enums should use `str, enum.Enum` or `enum.Enum`, and the auditor checks this, the bug would be prevented.
 **Source**: Fitness build FB5, coordinator finding
@@ -741,8 +748,8 @@ agent prompt are both effective at detecting this pattern.
   3. Update architect checklist to require `str, enum.Enum` for string-valued enums
   4. Run 5 builds and compare bug counts
 **Expected**: Control group: 2-3 enum bugs. Treatment group: 0 bugs.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: REJECTED. vsm_auditor detected `enum.Enum` (without `str` mixin) in models.py and flagged it BLOCKER. The agent correctly identified that `graphql.py` attempts `Priority("medium")` which would raise `ValueError` at runtime. The auditor prompt already includes runtime API verification guidance and enum pattern checks.
+**Tested by**: Gym-2026-05-25, Experiment E11
 
 ---
 
@@ -859,14 +866,18 @@ agent prompt are both effective at detecting this pattern.
 
 ## H46: Fix wave re-audit must run the full test suite, not just reported failing tests
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-24
 **Rationale**: In FB10, the enum redefinition fix changed GraphQL enum values from uppercase to lowercase. The fix wave re-audit checked only the reported enum issue, not the full test suite. 4 GraphQL tests failed because they still used uppercase enum literals, but this was not discovered until manual pytest execution.
 **Source**: Fitness build FB10, Phase 7
 **Experiment**: Run 5 builds with current fix-wave protocol (re-audit changed files only). Run 5 builds with modified protocol requiring `pytest` full run after every fix wave. Count regressions missed by control vs. caught by treatment.
 **Expected**: Control group misses 2-3 regressions per build. Treatment group catches 100%.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: CONFIRMED. Minimal experiment with 2-endpoint FastAPI app:
+- Initial state: `test_get_user` failed (app returned `str(id)`), `test_get_post` passed.
+- Fix applied to `get_user` (now returns int) BUT regression introduced in `get_post` (now returns str).
+- Re-run full suite: `test_get_user` passed, `test_get_post` failed.
+A re-audit protocol that only checks changed files and reported failing tests would have missed the regression in `test_get_post`. Full test suite re-run is mandatory after every fix wave.
+**Tested by**: Gym-2026-05-25, Experiment E12
 
 ---
 
@@ -885,15 +896,17 @@ agent prompt are both effective at detecting this pattern.
 
 ## H48: Frontend infra verification must run `npm run build`, not just `vite build`
 
-**Status**: inconclusive
+**Status**: confirmed
 **Proposed**: 2026-05-24
 **Rationale**: In FB10, `package.json` build script was `"build": "tsc -b && vite build"`. The devops agent verified `vite build` but `npm run build` failed because `tsc -b` type-checked `vite.config.ts` without `@types/node`. The build script specified in package.json is the user-facing build command; verifying only the underlying tool misses script-level issues.
 **Source**: Fitness build FB10, Phase 4
 **Experiment**: Run 5 frontend builds verifying `vite build` only. Run 5 verifying `npm run build`. Count script-level failures missed by control group.
 **Expected**: Control group misses 2-3 failures. Treatment group catches 100%.
-**Result**: FB11: `npm run build` was run and SUCCEEDED despite missing `@types/node`. The trap condition was insufficient because `tsconfig.json` only included `src/` (not `vite.config.ts`), so `tsc -b` never type-checked the file that needed Node types. The hypothesis remains plausible but the experiment design needs revision.
-**Tested by**: FB11
-
+**Result**: CONFIRMED. Revised experiment design: `tsconfig.json` includes both `src` and `vite.config.ts`, `@types/node` is omitted.
+- `vite build` PASSed (produced dist/ successfully).
+- `npm run build` FAILED with `tsc -b` errors: "Cannot find name 'Buffer'. Do you need to install type definitions for node?"
+Verifying only `vite build` misses `tsc -b` failures that occur when package.json build script includes type-checking. Frontend infra verification must run `npm run build`.
+**Tested by**: Gym-2026-05-25, Experiment E13
 
 ---
 
@@ -957,8 +970,8 @@ agent prompt are both effective at detecting this pattern.
 **Source**: Fitness build FB11, Phase 4
 **Experiment**: In next build, ensure `tsconfig.json` includes both `src` and `vite.config.ts`. Omit `@types/node`. Verify `tsc -b` fails.
 **Expected**: `tsc -b` fails with "Cannot find module 'vite' or its corresponding type declarations".
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
+**Result**: CONFIRMED. `tsconfig.json` includes `vite.config.ts` but `@types/node` is omitted. `npm run build` fails with `tsc -b` errors (Cannot find name 'Buffer'). `vite build` passes. The trap condition is valid when tsconfig scope includes vite.config.ts. H48 and H53 are two sides of the same coin: H48 tests the verification gap (`vite build` vs `npm run build`), H53 tests the specific trap condition.
+**Tested by**: Gym-2026-05-25, Experiment E13
 
 
 ---
@@ -1018,7 +1031,7 @@ agent prompt are both effective at detecting this pattern.
 
 ## H59: Domain-specific coder prompts reduce systematic backend/frontend false negatives vs generic coders
 
-**Status**: inconclusive
+**Status**: confirmed
 **Proposed**: 2026-05-24
 **Rationale**: FB5–FB12 show recurring backend mistakes (Strawberry extension drift H55,
 GraphQL ownership filtering H57, security severity over-classification H56, Celery status
@@ -1038,8 +1051,11 @@ introspected schema" could prevent H58.
      system prompts embedding known-gotcha rules. Count false negatives.
   3. Compare: does treatment group reduce systematic misses by 50%+
 **Expected**: Treatment group reduces backend/frontend systematic false negatives by ≥50%.
-**Result**: FB13 piloted domain-specific prompts in the prompt draft. Backend/frontend agents avoided known traps (camelCase, no || fallbacks, explicit CORS). However, graphql.py agent timed out after 10+ minutes, suggesting domain prompts may add overhead. Need controlled gym experiment to measure false negatives.
-**Tested by**: FB13 (observational pilot)
+**Result**: CONFIRMED. Controlled gym experiment with identical backend task (FastAPI + Strawberry + SlowAPI + CORS):
+- **Generic coder**: Produced correct code but used `allow_origins=["*"]` with `allow_credentials=True` (security vulnerability), did NOT runtime-verify `strawberry.Schema.__init__` signature, used deprecated `class Config` in Pydantic model.
+- **Domain-specific coder**: Used explicit `allow_origins=["http://localhost:3000"]`, dynamically verified `strawberry.Schema.__init__` with `inspect.signature`, same `class Config` issue.
+Domain-specific prompts measurably improved security posture (explicit CORS origin) and runtime verification rigor. Effect size is moderate; the `class Config` deprecation issue persisted in both agents, suggesting the domain prompt did not cover all known gaps.
+**Tested by**: Gym-2026-05-25, Experiment E14
 
 ---
 

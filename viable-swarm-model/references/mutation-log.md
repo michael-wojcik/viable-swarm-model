@@ -1205,3 +1205,25 @@ Spawn `vsm_coordinator` + `vsm_auditor`. Full 20+ point checklist (see
 **Before**: Chronological by build discovery — "FB3 Discoveries", "FB10 Discoveries", "FB14 Discoveries", "FB17 Discoveries", "FB18 Discoveries", "FB20 Discoveries", "FB21 Discoveries". Multiple duplicate L numbers.
 
 **After**: Organized by topic — Core Workflow, Auth & Registration, JWT & Token Security, Rate Limiting, GraphQL Security, WebSocket Security, CORS & Infrastructure, Data Exposure & Frontend Security, N+1 & Performance, Integration & Cross-Service, Testing & Verification, Meta-Learning, Security Operations, Severity Calibration. Duplicate rules merged (e.g., L40 + L52 on rate-limit exception handlers; L38-FB10 + L47 + L60 on registration role validation).
+
+
+## Mutation FB21-9 — 2026-05-25
+
+**Session**: vsm-fitness-gym batch experiment run (E6–E14) — H20, H48, H59
+**File**: `~/vsm/viable-swarm-model/references/pattern-library.md`
+**Type**: append-only
+**Rationale**: Three gym experiments produced reproducible evidence for new patterns:
+1. **Auth Response Contract Template** (E8/H20): A/B test showed ambiguous auth specs cause 3-field mismatches; explicit specs prevent them.
+2. **Frontend Build Script Verification** (E13/H48): `vite build` passed while `npm run build` failed due to `tsc -b` type-checking `vite.config.ts` without `@types/node`.
+3. **Domain-Specific Coder Prompts** (E14/H59): Generic coder used CORS wildcard and skipped runtime API verification; domain-specific coder used explicit origins and `inspect.signature` checks.
+**Expected effect**: Architects include auth contract template in api-spec.md. DevOps agents verify `npm run build`. S5 embeds stack gotchas in coder prompts for complex builds.
+
+---
+
+## Mutation FB21-10 — 2026-05-25
+
+**Session**: vsm-fitness-gym batch experiment run (E6–E14) — H46
+**File**: `~/vsm/viable-swarm-model/agents/vsm_auditor.md`
+**Type**: refinement
+**Rationale**: H46 confirmed that re-auditing changed files only misses regressions. A minimal FastAPI experiment: fixing `get_user` (which fixed `test_get_user`) introduced a regression in `get_post` (breaking `test_get_post`). A changed-files-only re-audit would have missed this. The auditor prompt previously instructed "re-audit changed files only." Updated to require full test suite re-run and `re-audit-report.md` artifact.
+**Expected effect**: Fix waves run full test suites. Regressions are caught before delivery. Re-audit artifacts are mandatory.

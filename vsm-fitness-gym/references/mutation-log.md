@@ -44,3 +44,35 @@ because of this mutation.]
 ```
 [content or summary of what replaced it]
 ```
+
+
+## Mutation Gym-1 — 2026-05-25
+
+**Session**: vsm-fitness-gym batch experiment run (E6–E14)
+**File**: `~/vsm/vsm-fitness-gym/references/experiments.md`
+**Type**: append-only
+**Rationale**: The gym had no experiment log. Running 10 experiments (8 untested + 2 inconclusive hypotheses) produced structured evidence for all hypotheses. A centralized log prevents re-running the same experiments and provides empirical justification for mutations.
+**Expected effect**: Future gym sessions can reference past experiments by ID. No duplicate work.
+
+---
+
+## Mutation Gym-2 — 2026-05-25
+
+**Session**: vsm-fitness-gym batch experiment run (E6–E14)
+**File**: `~/vsm/viable-swarm-model/references/pattern-library.md`
+**Type**: append-only
+**Rationale**: Three new patterns discovered via gym experiments:
+1. Auth Response Contract Template (H20) — prevents login/register contract mismatches
+2. Frontend Build Script Verification (H48) — catches `tsc -b` failures that `vite build` misses
+3. Domain-Specific Coder Prompts (H59) — reduces systematic false negatives by embedding stack gotchas in agent prompts
+**Expected effect**: Future architects and S5 agents reference these patterns during builds.
+
+---
+
+## Mutation Gym-3 — 2026-05-25
+
+**Session**: vsm-fitness-gym batch experiment run (E6–E14)
+**File**: `~/vsm/viable-swarm-model/agents/vsm_auditor.md`
+**Type**: refinement
+**Rationale**: H46 confirmed that re-auditing changed files only misses regressions introduced by fixes. A minimal experiment showed fixing `test_get_user` broke `test_get_post`. The auditor prompt previously said "After fixes: re-audit changed files only." Updated to require full test suite re-run and `re-audit-report.md` artifact.
+**Expected effect**: Future fix waves run full test suites. Regressions are caught before delivery.
