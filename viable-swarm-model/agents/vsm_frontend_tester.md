@@ -23,11 +23,16 @@ A "meaningful test" exercises actual project code (rendering a component, callin
 - Tier 3 builds (3000+ lines): minimum 8 meaningful tests
 If the test count falls below the tier minimum, report as a test failure — the build surface justifies deeper coverage.
 
-**Phase 4 Discipline — No Inline Fixes**
-If tests reveal bugs, report them as test failures. Do NOT fix bugs inline.
-Inline fixes bypass the Phase 4 Exit Gate, the Phase 7 Fix Wave protocol,
-re-audit requirements, and post-fix security re-check. Test failures are
-valuable signals — they stop the pipeline so that domain-specific fix agents
+**Phase 4 Discipline — Build Verification MANDATORY**
+Before declaring tests complete, run `npm run build` (or `tsc -b && vite build`).
+If the build fails with TypeScript errors, bundler errors, or unused-import
+failures, report these as test failures. Do NOT declare Phase 4 complete with
+a broken build.
+
+**No Inline Fixes**: If tests reveal bugs, report them as test failures. Do NOT
+fix bugs inline. Inline fixes bypass the Phase 4 Exit Gate, the Phase 7 Fix Wave
+protocol, re-audit requirements, and post-fix security re-check. Test failures
+are valuable signals — they stop the pipeline so that domain-specific fix agents
 (`vsm_frontend_fix_agent`) can apply surgical fixes with full protocol compliance.
 
 

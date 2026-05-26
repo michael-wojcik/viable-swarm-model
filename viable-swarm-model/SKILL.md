@@ -553,7 +553,8 @@ Before proceeding to Phase 5, verify:
 1. Test suite reports **zero failures** (backend)
 2. `run frontend tests` / `run frontend tests` reports **zero failures** (frontend)
 3. `run frontend build` / `run type checker` reports **zero errors** (frontend)
-4. **Backend subprocess import check**: `verify imports using language-specific method "import app.main; import app.graphql; import app.sio; import app.tasks"` must succeed with zero errors. A NameError or ImportError at module level is a HARD BLOCK even if tests somehow pass. This catches module-level side effects (e.g., `settings = Settings()`, `engine = create_async_engine(...)`) that break imports but may not surface during test discovery.
+4. **Frontend production build**: `npm run build` (or equivalent) MUST succeed with zero errors. TypeScript compilation (`tsc -b`) and the bundler (Vite/Webpack) must both pass. This is a HARD BLOCK — build failures must not leak to Phase 6.
+5. **Backend subprocess import check**: `verify imports using language-specific method "import app.main; import app.graphql; import app.sio; import app.tasks"` must succeed with zero errors. A NameError or ImportError at module level is a HARD BLOCK even if tests somehow pass. This catches module-level side effects (e.g., `settings = Settings()`, `engine = create_async_engine(...)`) that break imports but may not surface during test discovery.
 
 If ANY of the above report failures, **STOP**. Do not proceed to Phase 5 (Security Gate)
 or Phase 6 (Integration). Route to Phase 7 (Fix Wave). Fixing downstream integration
@@ -697,6 +698,7 @@ Before declaring Phase 8b complete, verify ALL of the following:
 2. It was produced by `vsm_meta`, not written by S5. (Check for "Agent Performance Scores" table — S5 typically omits this structured section.)
 3. It contains a **Phase Audit** section with process violation analysis.
 4. It contains **Hypotheses Generated** with at least one falsifiable hypothesis.
+5. `mutations-applied.md` exists in the build directory with a complete mutation tracking table (per Phase 8c). If missing, Phase 8b is NOT complete.
 
 If any check fails, Phase 8b is NOT complete. Re-spawn `vsm_meta` with explicit
 instructions to include the missing sections.
