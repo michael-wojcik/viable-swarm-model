@@ -40,7 +40,7 @@ targeted workouts).
    hypotheses, and appends new knowledge to its own files.
 
 **Primary invocation**: `/flow:viable-swarm-model` executes the full workflow.
-Must be embedded in a message (e.g., `Let's build something. /flow:viable-swarm-model Build a React app`).
+Must be embedded in a message (e.g., `Let's build something. /flow:viable-swarm-model Build a [frontend framework] app`).
 **Reference loading**: `/skill:viable-swarm-model` loads knowledge without execution.
 
 **Path convention**: This skill assumes installation at
@@ -112,25 +112,25 @@ maintainability. Includes full cross-file checklist. Launched via `Agent(subagen
 
 **`vsm_coordinator`** (S2 Coordination): No write tools. Compares S1 outputs.
 Validates imports, interfaces, naming, type alignment. Checks WebSocket contracts,
-GraphQL SDL, Prisma relations, env vars. May run shell commands for import
+GraphQL SDL, [ORM/Query builder] relations, env vars. May run shell commands for import
 verification. Launched via `Agent(subagent_type="vsm_coordinator")`.
 
-**`vsm_wiring`** (S2 Wiring): Runs after Phase 3. Exclusively owns `main.py`,
-`realtime.py`, `App.tsx`, and `main.tsx`. Verifies all routers, providers,
+**`vsm_wiring`** (S2 Wiring): Runs after Phase 3. Exclusively owns `entry point file`,
+`realtime.py`, `root component file`, and `main.tsx`. Verifies all routers, providers,
 middleware, and server instances are wired correctly. No other agent may modify
 these files. Launched via `Agent(subagent_type="vsm_wiring")`.
 
 **`vsm_backend_coder`** (S1 Backend Implementation): Writes Python backend code
-with embedded domain knowledge of FastAPI, SQLAlchemy, Strawberry GraphQL, Celery,
+with embedded domain knowledge of [backend framework], [ORM], [GraphQL library], [task queue],
 and security gotchas. Replaces generic `coder` for all backend waves. Performs
 runtime framework API verification, subprocess import checks, and pytest validation.
 Launched via `Agent(subagent_type="vsm_backend_coder")`.
 
-**`vsm_frontend_coder`** (S1 Frontend Implementation): Writes TypeScript/React
-frontend code with embedded domain knowledge of Vite, Apollo Client, Zustand,
-Strawberry auto-camelCase, and path aliases. Replaces generic `coder` for all
+**`vsm_frontend_coder`** (S1 Frontend Implementation): Writes [frontend framework]
+frontend code with embedded domain knowledge of [build tool], [API client], [state library],
+[GraphQL library] auto-camelCase, and path aliases. Replaces generic `coder` for all
 frontend waves. Verifies schema introspection before writing GraphQL queries and
-runs `npm run build` before completion. Launched via `Agent(subagent_type="vsm_frontend_coder")`.
+runs `run frontend build` before completion. Launched via `Agent(subagent_type="vsm_frontend_coder")`.
 
 **`vsm_backend_fix_agent`** (S1 Backend Fix): Surgical fixes to backend BLOCKERs.
 Inherits all backend gotchas. Adds fix-specific rules: full test suite after every
@@ -139,8 +139,8 @@ rate-limit/CORS/security freeze, GraphQL auth parity, and mandatory `re-audit-re
 Launched via `Agent(subagent_type="vsm_backend_fix_agent")`.
 
 **`vsm_frontend_fix_agent`** (S1 Frontend Fix): Surgical fixes to frontend BLOCKERs.
-Inherits all frontend gotchas. Adds fix-specific rules: `npm run build` after every
-fix, `tsc --noEmit` check, no `as any` bypasses, export verification, Apollo Client
+Inherits all frontend gotchas. Adds fix-specific rules: `run frontend build` after every
+fix, `run type checker` check, no `as any` bypasses, export verification, [API client]
 consistency, and mandatory `re-audit-report.md`. Launched via `Agent(subagent_type="vsm_frontend_fix_agent")`.
 
 **`vsm_devops_coder`** (S1 DevOps Implementation): Writes Docker, docker-compose,
@@ -213,7 +213,7 @@ flowchart TD
     P2[Phase 2: Foundation Wave<br/>parallel coder agents<br/>run_in_background=true]
     P2S[TaskOutput block=true]
     P2A[Phase 2b: Audit<br/>vsm_auditor]
-    P2M[Phase 2c: Model + Auth Validation<br/>S5 checks models.py + auth.py vs data-model.md]
+    P2M[Phase 2c: Model + Auth Validation<br/>S5 checks data models file + auth layer file vs data-model.md]
     P2D{<choice>BLOCKERs</choice>?}
     P3[Phase 3: Implementation Wave<br/>Backend: parallel routers<br/>Frontend: sequential shared→pages]
     P3S[TaskOutput block=true]
@@ -351,14 +351,14 @@ framework dependencies (e.g., `strawberry-graphql`, `pydantic`, `sqlalchemy`, `f
 `celery`), run a quick import verification in a fresh subprocess BEFORE dispatching
 implementation agents:
 ```bash
-python -c "import strawberry; import pydantic; import sqlalchemy; import fastapi"
+verify imports using language-specific method "import strawberry; import pydantic; import sqlalchemy; import fastapi"
 ```
 If ANY import fails, STOP the build immediately. Report the environment
 incompatibility, do NOT dispatch agents that cannot runtime-verify their code,
 and ask the user to resolve the dependency conflict. Writing code that cannot be
 imported wastes agent capacity and produces unverifiable artifacts.
 **Source**: FB22 `strawberry-graphql==0.256.0` failed to import with installed
-pydantic; the graphql.py agent consumed ~15 minutes before S5 intervened (H152).
+pydantic; the API layer file agent consumed ~15 minutes before S5 intervened (H152).
 7. **Read runtime capacity**: Read `~/.kimi/config.toml` and extract
    `background.max_running_tasks` (default 4 if absent). Log this value in
    `plan.md` as the parallel agent ceiling. NEVER exceed this limit when
@@ -371,6 +371,14 @@ pydantic; the graphql.py agent consumed ~15 minutes before S5 intervened (H152).
    - **Tier 3** (3000+ lines, 3+ services): Split into sub-builds OR accept that single-session coverage will be partial. Do not pretend the metasystem has requisite variety it lacks.
    Log the tier and the agent ceiling in `plan.md`. Adjust timeout expectations accordingly.
 9. Write `plan.md`.
+
+### Phase 0: Stack Detection & Skill Verification
+
+Before starting any build:
+1. Detect the stack (user-specified, auto-detected from manifest files, or asked)
+2. Verify `~/vsm/vsm-stack-skills/SKILL-REGISTRY.md` exists
+3. Verify relevant `[language]-pitfalls` and `*-patterns` skills exist
+4. Run `python ~/vsm/vsm-stack-skills/validate-skills.py`
 
 ### Phase 1: Intelligence (S4)
 Spawn `vsm_architect` subagent. Review output. S3/S4 homeostat: max 3
@@ -390,16 +398,16 @@ sequential sub-waves to eliminate dependency race conditions.**
 
 **Sub-Wave 2a — Core Contracts (parallel, then verify)**:
 Spawn parallel `vsm_backend_coder` and `vsm_frontend_coder` subagents with `run_in_background=true` for:
-- `models.py` (including engine + session factory like `AsyncSessionLocal`)
-- `auth.py` + `roles.py` (stable signatures: `get_current_user`, `require_role`)
+- `data models file` (including engine + session factory like `AsyncSessionLocal`)
+- `auth layer file` + `roles.py` (stable signatures: `get_current_user`, `require_role`)
 - `config.py` (lazy factory, NO default secrets)
 - `shared/types.ts` + `shared/sio-events.ts`
 - `requirements.txt`, `package.json`
 - `.env.example` (env var naming contract established HERE)
 
 Wait via `TaskOutput(block=true)`. Then S5 runs a **mini-audit**:
-- Does `models.py` define `AsyncSessionLocal`?
-- Does `auth.py` have stable `get_current_user` / `require_role` signatures?
+- Does `data models file` define `AsyncSessionLocal`?
+- Does `auth layer file` have stable `get_current_user` / `require_role` signatures?
 - Are `.env.example` names finalized and consistent?
 - Do all 2a files compile/import cleanly?
 
@@ -407,11 +415,11 @@ If any check fails → fix BEFORE dispatching Sub-Wave 2b.
 
 **Sub-Wave 2b — Dependent Infrastructure (parallel, then verify)**:
 Spawn parallel `vsm_backend_coder` and `vsm_frontend_coder` subagents with `run_in_background=true` for:
-- `routers/auth.py` (MUST include `POST /login`, `POST /register`, `GET /me` endpoints)
-- `graphql.py` (imports from models, auth)
+- `routers/auth layer file` (MUST include `POST /login`, `POST /register`, `GET /me` endpoints)
+- `API layer file` (imports from models, auth)
 - `sio.py` (imports from models, auth)
-- `main.py` scaffolding (imports from config, registers middleware)
-- Frontend scaffolding (Vite config, App.tsx skeleton, path aliases)
+- `entry point file` scaffolding (imports from config, registers middleware)
+- Frontend scaffolding ([build tool] config, root component file skeleton, path aliases)
 - `docker-compose.yml`
 
 Wait via `TaskOutput(block=true)`.
@@ -421,9 +429,9 @@ BLOCKERs trigger Phase 7.
 
 **Phase 2c: Model + Auth Validation (S5)** — After foundation audit passes and BEFORE
 spawning implementation agents, S5 MUST verify:
-1. **`models.py` field parity**: `models.py` (or equivalent) matches `data-model.md`
+1. **`data models file` field parity**: `data models file` (or equivalent) matches `data-model.md`
    field names and types exactly.
-2. **Auth role parity**: `auth.py` `ALLOWED_ROLES` (or equivalent role-based access
+2. **Auth role parity**: `auth layer file` `ALLOWED_ROLES` (or equivalent role-based access
    control list) matches the `Role` / `UserRole` enum in `data-model.md` exactly.
    Every role in the allowlist must exist in the enum; every user-facing enum value
    should be representable in the allowlist.
@@ -442,10 +450,10 @@ BLOCKERs trigger Phase 7.
 For frontend builds, a **single shared-files agent** runs FIRST and exclusively
 owns these files:
 - `src/graphql/queries.ts` — all queries, mutations, subscriptions
-- `src/graphql/client.ts` — Apollo split link configuration
+- `src/graphql/client.ts` — [API client] split link configuration
 - `src/shared/types.ts` — domain types and enums
 - `src/shared/sio-events.ts` — WebSocket event constants
-- `src/stores/*.ts` — all Zustand stores
+- `src/stores/*.ts` — all [state library] stores
 
 No other frontend agent may modify these files. The shared-files agent reads
 `data-model.md` and `api-spec.md` to produce complete, correct exports.
@@ -467,7 +475,7 @@ adds it.
 
 **Backend Implementation (parallel routers)**:
 Backend routers (`app/routers/*.py`) can run in parallel safely because each
-router is a separate file. The wiring agent (`vsm_wiring`) handles `main.py`
+router is a separate file. The wiring agent (`vsm_wiring`) handles `entry point file`
 registration exclusively.
 
 **Phase 3c: Mid-Wave S2 Check (conditional)** — If project is Tier 2+ and 2+
@@ -478,13 +486,13 @@ halt remaining agents, inject corrections.
 
 ### Phase 3d: Entry-Point Wiring (MANDATORY)
 After all implementation agents complete, spawn `vsm_wiring` subagent.
-This agent exclusively owns `main.py`, `realtime.py`, `App.tsx`, and `main.tsx`.
+This agent exclusively owns `entry point file`, `realtime.py`, `root component file`, and `main.tsx`.
 It verifies:
-- All routers registered in `main.py`
+- All routers registered in `entry point file`
 - GraphQLRouter mounted with `context_getter=get_context`
 - `realtime.py` reuses `sio` from `app.sio` (never creates new AsyncServer)
-- `main.tsx` wraps app in `ApolloProvider`
-- `App.tsx` includes all routes with role guards
+- `main.tsx` wraps app in `[API client]Provider`
+- `root component file` includes all routes with role guards
 - No module-level `get_settings()` calls in wiring files
 
 No implementation agent may modify these four files. The wiring agent is the
@@ -497,8 +505,8 @@ lightweight frontend config validation check:
 1. Read `src/graphql/client.ts` and `src/sio/client.ts`
 2. Verify NO `||` fallbacks for API/WS/GraphQL URLs
 3. Verify NO `localhost` hardcoded as fallback in frontend config
-4. Verify `vite.config.ts` proxy includes `/api`, `/graphql`, `/ws`
-5. Verify `tsconfig.json` includes all files that `tsc -b` will type-check
+4. Verify `build config file` proxy includes `/api`, `/graphql`, `/ws`
+5. Verify `tsconfig.json` includes all files that `run type checker` will type-check
 
 ANY failure → back to Phase 3 (frontend implementation agent fixes).
 
@@ -509,12 +517,12 @@ where they are currently discovered too late.
 After all parallel frontend implementation agents complete and BEFORE spawning
 the auditor, S5 MUST run a lightweight cross-file import verification:
 
-1. Run `npm run build` (not just `vite build`) to verify the full frontend build
-   pipeline including TypeScript compilation. Then run `npx tsc --noEmit` to verify
+1. Run `run frontend build` (not just `vite build`) to verify the full frontend build
+   pipeline including TypeScript compilation. Then run `npx run type checker` to verify
    every import statement in `src/pages/` and `src/components/` resolves
 2. Verify every export from `src/graphql/queries.ts` is imported by at least
    one page or component
-3. Verify every field destructured from Zustand stores exists in the store
+3. Verify every field destructured from [state library] stores exists in the store
 4. Verify every type imported from `shared/types.ts` is defined in that file
 
 ANY failure → back to Phase 3 (frontend implementation agent fixes).
@@ -533,7 +541,7 @@ spawn both testers + devops_coder. Run tests via Shell.
 **Tier 2+ builds** (≥ 1000 lines, 2+ services):
 Spawn `vsm_backend_tester` + `vsm_frontend_tester` + `vsm_devops_coder` in parallel
 with `run_in_background=true`. Both testers run simultaneously:
-- `vsm_backend_tester`: pytest, database fixtures, API integration, Celery mocks
+- `vsm_backend_tester`: pytest, database fixtures, API integration, [task queue] mocks
 - `vsm_frontend_tester`: vitest, component rendering, TypeScript compilation, build verification
 
 Wait via `TaskOutput(block=true)` for ALL testers to complete, then aggregate
@@ -543,9 +551,9 @@ exceeds single-agent capacity and must be further subdivided or scoped down.
 **Phase 4 Exit Gate (HARD BLOCK)**
 Before proceeding to Phase 5, verify:
 1. `pytest` reports **zero failures** (backend)
-2. `vitest run` / `npm test` reports **zero failures** (frontend)
-3. `npm run build` / `tsc --noEmit` reports **zero errors** (frontend)
-4. **Backend subprocess import check**: `python -c "import app.main; import app.graphql; import app.sio; import app.tasks"` must succeed with zero errors. A NameError or ImportError at module level is a HARD BLOCK even if pytest somehow passes. This catches module-level side effects (e.g., `settings = Settings()`, `engine = create_async_engine(...)`) that break imports but may not surface during pytest discovery.
+2. `run frontend tests` / `run frontend tests` reports **zero failures** (frontend)
+3. `run frontend build` / `run type checker` reports **zero errors** (frontend)
+4. **Backend subprocess import check**: `verify imports using language-specific method "import app.main; import app.graphql; import app.sio; import app.tasks"` must succeed with zero errors. A NameError or ImportError at module level is a HARD BLOCK even if pytest somehow passes. This catches module-level side effects (e.g., `settings = Settings()`, `engine = create_async_engine(...)`) that break imports but may not surface during pytest discovery.
 
 If ANY of the above report failures, **STOP**. Do not proceed to Phase 5 (Security Gate)
 or Phase 6 (Integration). Route to Phase 7 (Fix Wave). Fixing downstream integration
@@ -608,7 +616,7 @@ with manual integration checks as a replacement. Cross-file contract validation
 at Tier 2+ complexity exceeds manual S5 capacity — the coordinator's automated
 20+ point checklist catches env-var drift, orphaned exports, type mismatches,
 and relation name mismatches that manual checks miss (evidence: FB17 orphaned
-exports, FB19 env-var 3-way split, FB20 Prisma relation drift).
+exports, FB19 env-var 3-way split, FB20 [ORM/Query builder] relation drift).
 
 Full 20+ point checklist (see `references/integration-checklist.md`).
 ANY failure → back to Phase 3.
@@ -633,7 +641,7 @@ spawn both agents in parallel with `run_in_background=true`.
 **Phase 7b — Binding Re-Audit + Full Test Suite (MANDATORY)**: S5 MUST spawn
 `vsm_auditor` to independently verify ALL modified files. Fix agent self-reports
 are **not** sufficient — the auditor's PASS/ISSUES/BLOCKER verdict is binding.
-Then run `pytest tests/` and `vitest run` / `npm test`. Re-auditing changed
+Then run `run backend tests` and `run frontend tests` / `run frontend tests`. Re-auditing changed
 files alone misses regressions in unrelated tests. Any remaining BLOCKERs route
 back to Phase 7a. Max 3 iterations across 7a→7b. Still blocked? Escalate to user.
 
@@ -697,6 +705,14 @@ instructions to include the missing sections.
 > STOP immediately. This is a process violation. The builder cannot evaluate
 > itself. Spawn `vsm_meta`.
 
+### Phase 8c: Skill Improvement (Conditional)
+
+If this build discovered new empirical pitfalls or validated new patterns:
+1. Append the finding to the relevant skill in `~/vsm/vsm-stack-skills/`
+2. Include build ID attribution
+3. If new skill needed, create it and update registry
+4. `git commit` skill changes
+
 ### Phase 8c: Mutation Verification Checkpoint (MANDATORY)
 Before declaring Phase 8 complete, S5 MUST run the Mutation Verification
 Checkpoint. This prevents the recurring failure mode where mutations are
@@ -731,8 +747,8 @@ The main agent (S5) reads the `meta-report.md` and uses it to inform hypothesis
 generation and mutation decisions.
 
 **Independent verification requirement**: Before accepting `meta-report.md`,
-S5 MUST independently run the full test suite (`pytest tests/` and `vitest run` /
-`npm test`) and record the ACTUAL pass/fail counts. Do NOT repeat claims from
+S5 MUST independently run the full test suite (`run backend tests` and `run frontend tests` /
+`run frontend tests`) and record the ACTUAL pass/fail counts. Do NOT repeat claims from
 upstream phases without verification. If tests fail, the meta-reflection must
 acknowledge the failure and propose a root-cause hypothesis.
 
@@ -829,13 +845,13 @@ Run ALL checks from `references/integration-checklist.md`. Summary:
 4. Codebase compiles/builds
 5. WebSocket: every backend emit has matching frontend listener
 6. GraphQL SDL matches TypeScript; subscriptions have resolvers
-7. Frontend paths correct; Vite proxy includes `/api`, `/graphql`, `/ws`
-8. pgvector: extension enabled, dimensions match, ivfflat index exists
-9. SSE: `media_type="text/event-stream"`, yields `data: {json}\n\n`
+7. Frontend paths correct; [build tool] proxy includes `/api`, `/graphql`, `/ws`
+8. [vector database]: extension enabled, dimensions match, ivfflat index exists
+9. [server-sent events]: `media_type="text/event-stream"`, yields `data: {json}\n\n`
 10. CRDT: PersistenceAdapter connected, BYTEA column, chronological load
 11. DAG: `validate()` on mutate, 3-color DFS, topological sort
-12. Redis: queue names consistent, dependent enqueue, pub/sub match
-13. Frontend scaffolding: package.json, vite.config.ts, tsconfig.json, index.html, main.tsx, App.tsx
+12. [cache/store]: queue names consistent, dependent enqueue, pub/sub match
+13. Frontend scaffolding: package.json, build config file, tsconfig.json, index.html, main.tsx, root component file
 14. Rust: workspace includes all crates, no duplicate imports
 15. Go: camelCase JSON tags, no snake_case leakage
 16. Docker Compose: all CMD/ENTRYPOINT files exist
@@ -862,7 +878,7 @@ Run ALL checks from `references/security-lessons.md`. Summary:
 14. Frontend API URL has no localhost fallback
 15. `||` fallback banned for ALL config URLs
 16. JWT_SECRET required, min 32 chars, app refuses start without it
-17. SSE: short-lived token exchange, never long-lived JWT in URL
+17. [server-sent events]: short-lived token exchange, never long-lived JWT in URL
 
 ## 9. Exit Criteria
 
@@ -910,6 +926,7 @@ git revert [commit]
 | `references/hypotheses.md` | Append new hypotheses; update status | Low: empirical finding |
 | `references/experiments.md` | Append experiment records | Low: empirical finding |
 | `agents/*.md` | Refine agent prompts | Medium: repeated pattern |
+| `vsm-stack-skills/**/*.md` | Append-only: new pitfalls/patterns; Refinement: update skill text; Structural: new skill creation | Medium-High |
 | `SKILL.md` flow diagram (inline) | Refine decision logic | High: phase audit shows mismatch |
 | `SKILL.md` | Amend phase details, mutation rules | High: structural issue proven |
 
