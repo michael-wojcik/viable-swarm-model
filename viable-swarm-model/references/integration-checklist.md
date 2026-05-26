@@ -401,3 +401,19 @@ correction BEFORE quality gates.
 
 **Affected**: S5 (main agent), vsm_backend_tester, vsm_frontend_tester.
 **Source**: Gym E16 (H106), FB20/FB21 fitness builds.
+
+---
+
+## Check 58: Phase 8b Verification — Meta-Report Completeness
+**Rationale**: Gym E16 (H106) confirmed that skipping Phase 8b means process violations go undetected. But even when Phase 8b runs, S5 might accept an incomplete meta-report or write one manually. This check ensures the meta-reflection is genuine and actionable.
+
+- [ ] `meta-report.md` exists in the build directory
+- [ ] It was produced by `vsm_meta`, not written by S5 (verify "Agent Performance Scores" table exists)
+- [ ] It contains a **Phase Audit** section with process violation analysis
+- [ ] It contains **Hypotheses Generated** with at least one new falsifiable hypothesis
+- [ ] It contains **Mutations Proposed** with tier classification (append-only / refinement / structural)
+- [ ] All proposed mutations are tracked in `mutations-applied.md` with status (Applied / Deferred / Rejected / Overlooked)
+- [ ] If any mutation status is `Overlooked`, STOP — apply the missed mutation before declaring build complete
+
+**Affected**: S5 (main agent), vsm_meta.
+**Source**: Gym E16 (H106), SKILL.md Phase 8b hard block.

@@ -101,3 +101,39 @@
 - Compare output to expected/
 - If output matches → prompt works (reject hypothesis about prompt gap)
 - If output deviates → prompt needs refinement (confirm hypothesis)
+
+---
+
+## Template: Process Audit + Meta-Evaluation Test
+
+**Purpose**: Test whether `vsm_meta` catches process violations, or whether a
+hypothesis about process behavior (e.g., "skipping Phase X correlates with Y")
+holds up when evaluated against documented build artifacts.
+
+**Structure**:
+```
+~/vsm-fitness-builds/gym/{hypothesis-id}/
+├── plan.md                    # Build plan and tier classification
+├── .kimi/lessons.md           # Project-specific lessons (optional)
+├── audits/
+│   ├── auditor-report.md      # Phase 3b audit findings
+│   ├── coordinator-report.md  # Phase 6 integration report
+│   ├── security-report.md     # Phase 5 security gate findings
+│   └── test-results.md        # Phase 4 test outcomes
+├── inline-fix-evidence.md     # Documented process violations (optional)
+└── [any other build artifacts]
+```
+
+**Design rules**:
+- Create fictional but realistic build artifacts that simulate a real build
+- Include explicit evidence of the process violation being tested
+- Do NOT run actual code — this is a document-reading experiment
+- The experiment tests the META agent's ability to read artifacts and detect gaps
+
+**Evaluation**:
+- Spawn `vsm_meta` with the build directory and skill references
+- Compare its output against the known process violations
+- If vsm_meta catches all violations → mechanism validated (hypothesis supported)
+- If vsm_meta misses violations → prompt needs refinement (hypothesis gap confirmed)
+
+**Source**: Gym E16 (H106) — fictional FB20-Test artifacts with documented inline fixes, missing re-audit reports, and skipped Phase 8b.

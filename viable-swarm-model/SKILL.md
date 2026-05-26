@@ -320,7 +320,7 @@ Main agent (S5) performs:
    if exists.
 5. **Read hypotheses**: `~/vsm/viable-swarm-model/references/hypotheses.md`
    if exists. Note any untested hypotheses that are relevant to this project.
-5. **Self-test**: Verify all referenced files exist and are readable. Verify
+6. **Self-test**: Verify all referenced files exist and are readable. Verify
 the flow diagram parses. Verify the skill can describe its own phase sequence
 without contradiction. Specifically verify these agent definition files exist:
 `vsm_architect.md`, `vsm_product.md`, `vsm_auditor.md`, `vsm_coordinator.md`,
@@ -330,18 +330,18 @@ without contradiction. Specifically verify these agent definition files exist:
 `vsm_tester.md`, `vsm_meta.md`.
 If any check fails → emit algedonic, write diagnosis
 to `~/vsm/viable-swarm-model/references/mutation-log.md`, ask user to review.
-6. **Read runtime capacity**: Read `~/.kimi/config.toml` and extract
+7. **Read runtime capacity**: Read `~/.kimi/config.toml` and extract
    `background.max_running_tasks` (default 4 if absent). Log this value in
    `plan.md` as the parallel agent ceiling. NEVER exceed this limit when
    spawning background subagents.
-7. **Variety Assessment** (Ashby's Law): Estimate project complexity and classify tier.
-   Use the `max_running_tasks` value read in step 6 as the agent ceiling.
+8. **Variety Assessment** (Ashby's Law): Estimate project complexity and classify tier.
+   Use the `max_running_tasks` value read in step 7 as the agent ceiling.
    Do not invent artificial sub-limits — if the host allows 8, use up to 8.
    - **Tier 1** (<1000 lines, 1-2 services): Standard flow, no mid-wave gates needed
    - **Tier 2** (1000-3000 lines, 2-3 services): Add Phase 3c mid-wave S2 check, extend timeouts
    - **Tier 3** (3000+ lines, 3+ services): Split into sub-builds OR accept that single-session coverage will be partial. Do not pretend the metasystem has requisite variety it lacks.
    Log the tier and the agent ceiling in `plan.md`. Adjust timeout expectations accordingly.
-7. Write `plan.md`.
+9. Write `plan.md`.
 
 ### Phase 1: Intelligence (S4)
 Spawn `vsm_architect` subagent. Review output. S3/S4 homeostat: max 3

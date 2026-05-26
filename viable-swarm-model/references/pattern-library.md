@@ -600,3 +600,29 @@ Known Stack Gotchas — verify these explicitly:
 - Security invariant enforcement: Domain agents excluded `admin` from registration allowlist; generic coder kept `admin` (regression)
 - Full test suite passes: 100% after fix
 **See also**: `references/hypotheses.md` H107.
+
+### Pattern 46: Test-First Exit Gate
+
+**When**: Any build where Phase 4 (Testing) produces test failures, deprecation warnings, or build errors.
+
+**What**: Before proceeding to Phase 5 (Security Gate) or Phase 6 (Integration Verification), verify **zero failures** across all test suites and build scripts. If any failure exists, STOP and route to Phase 7 (Fix Wave).
+
+**Why**: Gym E16 (H106) and fitness builds FB20/FB21 both found builds proceeding past Phase 4 with failing pytest tests. This wastes security and integration effort on broken code. Security agents scan code that doesn't even pass basic tests. Integration coordinators validate contracts on top of failing foundations.
+
+**How**:
+1. After Phase 4 testers complete, S5 MUST read test output directly (not trust upstream claims).
+2. Verify:
+   - `pytest tests/` — zero failures
+   - `vitest run` / `npm test` — zero failures
+   - `npm run build` — zero errors
+   - `tsc --noEmit` — zero type errors (TypeScript projects)
+3. If ANY check fails → emit algedonic, route to Phase 7. Do not proceed.
+4. After fixes clear, re-run Phase 4 → Phase 5 → Phase 6 in sequence.
+
+**Acceptance criteria**:
+- 100% of builds with Phase 4 failures are stopped before Phase 5
+- Zero builds proceed to integration with failing tests
+- Fix waves triggered by Phase 4 failures produce `re-audit-report.md`
+
+**Source**: Gym E16 (H106), FB20/FB21 fitness builds.
+**See also**: `references/integration-checklist.md` Check 57, `references/hypotheses.md` H108.
