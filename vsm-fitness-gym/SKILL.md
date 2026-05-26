@@ -62,7 +62,7 @@ symlinks or update absolute paths.
 |---|---|---|---|---|
 | **S5 (Policy)** | Main conversation agent (you) | — | Always | Hypothesis selection, mutation approval |
 | **S4 (Designer)** | `vsm_experiment_designer` | Custom (registered in `vsm-main.yaml`) | Phase 1 | Experiment spec, minimal code plan |
-| **S1 (Builder)** | `vsm_coder` subagent | Custom (registered in `vsm-main.yaml`) | Phase 2 | Minimal experiment code |
+| **S1 (Builder)** | S5 (main agent) or `vsm_backend_coder` | — | Phase 2 | Minimal experiment code |
 | **S3* (Tester)** | `vsm_auditor` or `vsm_security` | Custom (registered in `vsm-main.yaml`) | Phase 3 | PASS/ISSUES/BLOCKER on experiment |
 | **S2 (Analyzer)** | Main agent | — | Phase 4 | Result analysis, mutation proposal |
 
@@ -142,9 +142,11 @@ The designer produces a minimal experiment spec:
 - **Success criteria**: how we know the hypothesis is confirmed or rejected
 
 ### Phase 2: Build Experiments
-Spawn parallel `vsm_coder` subagents. Each builds its experiment in a temporary
-directory (e.g., `~/vsm-fitness-builds/gym/H7/`). No scaffolding beyond what's needed
-to run the relevant audit.
+S5 writes the experiment code directly. For 50-line throwaway experiments,
+spawning a subagent is unnecessary overhead. If the experiment tests a backend
+pattern, write Python. If it tests a frontend pattern, write TypeScript/React.
+Each experiment lives in a temporary directory (e.g., `~/vsm-fitness-builds/gym/H7/`).
+No scaffolding beyond what's needed to run the relevant audit.
 
 ### Phase 3: Run Relevant Audits
 Spawn the main skill's custom agents against the experiment code:
