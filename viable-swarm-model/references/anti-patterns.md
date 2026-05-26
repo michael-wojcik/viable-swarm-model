@@ -309,3 +309,10 @@
 **Prevention**: Frontend foundation agent MUST read `tsconfig.json` and `vite.config.ts` before writing ANY import statement. Use the project's configured alias, not relative paths, for shared types and cross-package imports.
 **Affected**: S1-Frontend, foundation wave agents.
 **Source**: FB17 frontend agent wrote `../shared/types` but tsconfig.json alias was `@flux/shared/types` (H80)
+
+### Anti-Pattern #56: S5 Inline Fix During Integration Verification
+**What**: S5 fixes coordinator BLOCKERs directly during Phase 6 (Integration Verification) instead of routing to Phase 7 (Fix Wave). This bypasses: (1) full test suite re-run, (2) `re-audit-report.md` artifact production, (3) Phase 7b post-fix security re-check.
+**When**: Coordinator finds BLOCKERs; S5 interprets them as "quick fixes" and applies them immediately to keep the build moving. The algedonic signal at the Phase 6/7 boundary is advisory, not enforced.
+**Prevention**: Coordinator output template MUST include a mandatory footer: "If BLOCKERs exist, route to Phase 7. Do NOT fix inline." SKILL.md Phase 4 must be a hard gate (zero test failures before Phase 5/6). S5 must treat integration BLOCKERs as Phase 7 spawn triggers, not inline to-do items.
+**Affected**: S5 (main agent), vsm_coordinator.
+**Source**: Gym E15 (H105), FB20/FB21 fitness builds.

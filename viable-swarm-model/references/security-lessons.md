@@ -462,3 +462,9 @@ LOW severity unless they contain production credentials. Distinguish between:
 (2) connection string defaults = LOW/MEDIUM.
 **Affected**: vsm_security.
 **Source**: FB12, Phase 5.
+
+### L47: CORS Method and Header Wildcards with Credentials
+**Prevention rule**: When `allow_credentials=True`, `allow_methods` and `allow_headers` MUST use explicit allowlists, not `"*"` wildcards. Most security checklists only verify `allow_origins`, but method/header wildcards are equally dangerous: they allow arbitrary cross-origin requests with authenticated cookies.
+**Verification**: `grep -r 'allow_methods.*\*' --include='*.py' .` and `grep -r 'allow_headers.*\*' --include='*.py' .`
+**Affected**: vsm_security, vsm_backend_coder.
+**Source**: Gym E16 (H106), FB20-Test security report.

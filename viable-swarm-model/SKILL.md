@@ -487,6 +487,17 @@ Wait via `TaskOutput(block=true)` for ALL testers to complete, then aggregate
 results. If either tester times out, treat as a BLOCKER: the build surface
 exceeds single-agent capacity and must be further subdivided or scoped down.
 
+**Phase 4 Exit Gate (HARD BLOCK)**
+Before proceeding to Phase 5, verify:
+1. `pytest` reports **zero failures** (backend)
+2. `vitest run` / `npm test` reports **zero failures** (frontend)
+3. `npm run build` / `tsc --noEmit` reports **zero errors** (frontend)
+
+If ANY of the above report failures, **STOP**. Do not proceed to Phase 5 (Security Gate)
+or Phase 6 (Integration). Route to Phase 7 (Fix Wave). Fixing downstream integration
+BLOCKERs on top of failing tests is waste. The Phase 4 exit gate is mandatory —
+never treat test failures as "acceptable for now."
+
 Report combined coverage.
 
 ### Phase 5: Security Gate
@@ -578,10 +589,15 @@ process bottleneck analysis.
 S5 MUST spawn `vsm_meta` before proceeding. S5 MUST NOT write meta-reflection
 content directly.
 
-**Step 8b-2: Verify `meta-report.md` exists**
-Before declaring Phase 8b complete, verify `meta-report.md` exists in the build
-directory. If it does not exist, Phase 8b is NOT complete. Re-spawn `vsm_meta`
-or fix whatever prevented it from writing the file.
+**Step 8b-2: Verify `meta-report.md` exists and is valid**
+Before declaring Phase 8b complete, verify ALL of the following:
+1. `meta-report.md` exists in the build directory.
+2. It was produced by `vsm_meta`, not written by S5. (Check for "Agent Performance Scores" table — S5 typically omits this structured section.)
+3. It contains a **Phase Audit** section with process violation analysis.
+4. It contains **Hypotheses Generated** with at least one falsifiable hypothesis.
+
+If any check fails, Phase 8b is NOT complete. Re-spawn `vsm_meta` with explicit
+instructions to include the missing sections.
 
 > **Algedonic signal**: If S5 is about to write `meta-reflection.md` manually,
 > STOP immediately. This is a process violation. The builder cannot evaluate

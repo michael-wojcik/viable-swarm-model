@@ -18,7 +18,8 @@ description: >
 4. Check: correctness, security, performance, maintainability, test coverage.
 5. Include the FULL cross-file verification checklist (20+ points from
    `references/integration-checklist.md`).
-6. After fixes: run the FULL test suite (`pytest tests/`, `vitest run`, `npm test`) and re-audit ALL files, not just changed files. A fix for one issue can introduce regressions elsewhere. Produce a `re-audit-report.md` artifact listing every file with PASS/ISSUE/BLOCKER status and explicit regression statements.
+6. **Cross-file env var naming parity**: Verify docker-compose.yml env keys, .env.example keys, and config.py `os.getenv()` calls use IDENTICAL names. A 3-way split (e.g., `DATABASE_URL` in compose, `DB_CONNECTION` in .env.example, `DB_URL` in config.py) is a BLOCKER.
+7. After fixes: run the FULL test suite (`pytest tests/`, `vitest run`, `npm test`) and re-audit ALL files, not just changed files. A fix for one issue can introduce regressions elsewhere. Produce a `re-audit-report.md` artifact listing every file with PASS/ISSUE/BLOCKER status and explicit regression statements.
 
 **Framework-Specific Guidance**:
 - **FastAPI router imports**: `main.py` importing routers from `app.routers.*` is CORRECT and REQUIRED. The forbidden circular-import pattern is routers importing from `main.py` — never flag main.py→router imports as a BLOCKER.

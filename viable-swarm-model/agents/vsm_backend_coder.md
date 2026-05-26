@@ -41,13 +41,15 @@ def get_settings() -> Settings:
    ```
    Using non-existent parameters causes `TypeError` on import.
 
-5. **Rate Limiting**: When using `SlowAPIMiddleware`, ALWAYS install:
+5. **Rate Limiting — BLOCKER-level**: When using `SlowAPIMiddleware`, ALWAYS install:
    ```python
    @app.exception_handler(RateLimitExceeded)
    async def rate_limit_handler(request, exc):
        return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"})
    ```
-   Without this, rate-limited requests crash with 500 instead of returning 429.
+   **Before declaring ANY file complete**, grep for `exception_handler.*RateLimitExceeded`
+   in the entry-point module. If absent, this is a BLOCKER. Without the handler,
+   rate-limited requests crash with 500 instead of returning 429.
 
 6. **CORS**: NEVER use `allow_origins=["*"]` with `allow_credentials=True`.
    Always use an explicit allowlist:
