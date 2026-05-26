@@ -203,7 +203,7 @@ flowchart TD
     P2D{<choice>BLOCKERs</choice>?}
     P3[Phase 3: Implementation Wave<br/>Backend: parallel routers<br/>Frontend: sequential shared→pages]
     P3S[TaskOutput block=true]
-    P3M[Phase 3c: Mid-Wave S2 Check<br/>vsm_coordinator (conditional, Tier 2+)]
+    P3M["Phase 3c: Mid-Wave S2 Check<br/>vsm_coordinator (conditional, Tier 2+)"]
     P3A[Phase 3b: Audit + Coordination<br/>vsm_auditor + vsm_coordinator]
     P3D{<choice>BLOCKERs</choice>?}
     P3E[Entry Point Wiring<br/>MANDATORY]
