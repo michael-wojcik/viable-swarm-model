@@ -71,3 +71,12 @@ agent:
     vsm_wiring:
       path: ./vsm_wiring.yaml
       description: S2 Wiring
+    vsm_trainer:
+      path: ../../vsm-fitness-coach/agents/vsm_trainer.yaml
+      description: S3* Evaluator — Fitness Trainer
+    vsm_experiment_designer:
+      path: ../../vsm-fitness-gym/agents/vsm_experiment_designer.yaml
+      description: S4 Designer — Experiment Designer
+    vsm_coder:
+      path: ../../vsm-fitness-gym/agents/vsm_coder.yaml
+      description: S1 Builder — Minimal Experiment Coder

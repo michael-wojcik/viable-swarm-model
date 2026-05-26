@@ -38,6 +38,12 @@ designed to test one specific muscle (one falsifiable claim) at a time.
 Must be embedded in a message (e.g., `Let's test a hypothesis. /flow:vsm-fitness-gym Test H2`).
 **Example**: `/flow:vsm-fitness-gym Test hypotheses H2, H7, H12`
 
+**Prerequisite**: Launch Kimi CLI with the base agent file:
+```bash
+kimi --agent-file ~/vsm/viable-swarm-model/agents/vsm-main.yaml
+```
+All subagents (including `vsm_experiment_designer` and `vsm_coder`) are registered in the main skill's base agent file.
+
 **Path convention**: This skill assumes the main skill is installed at
 `~/vsm/viable-swarm-model/`. If installed elsewhere,
 adjust paths in Shell commands. If installed via `extra_skill_dirs`, use
@@ -55,9 +61,9 @@ symlinks or update absolute paths.
 | Role | CLI Implementation | Custom Type | Activation | Produces |
 |---|---|---|---|---|
 | **S5 (Policy)** | Main conversation agent (you) | — | Always | Hypothesis selection, mutation approval |
-| **S4 (Designer)** | `vsm_experiment_designer` | Custom | Phase 1 | Experiment spec, minimal code plan |
-| **S1 (Builder)** | `coder` subagent | Built-in | Phase 2 | Minimal experiment code |
-| **S3* (Tester)** | `vsm_auditor` or `vsm_security` | Custom | Phase 3 | PASS/ISSUES/BLOCKER on experiment |
+| **S4 (Designer)** | `vsm_experiment_designer` | Custom (registered in `vsm-main.yaml`) | Phase 1 | Experiment spec, minimal code plan |
+| **S1 (Builder)** | `vsm_coder` subagent | Custom (registered in `vsm-main.yaml`) | Phase 2 | Minimal experiment code |
+| **S3* (Tester)** | `vsm_auditor` or `vsm_security` | Custom (registered in `vsm-main.yaml`) | Phase 3 | PASS/ISSUES/BLOCKER on experiment |
 | **S2 (Analyzer)** | Main agent | — | Phase 4 | Result analysis, mutation proposal |
 
 **Terminology**: `S5` refers to the main conversation agent (you, the LLM executing
@@ -69,7 +75,8 @@ user via `AskUserQuestion` or `EnterPlanMode` when human policy input is require
 **`vsm_experiment_designer`** (S4 Designer): Reads a hypothesis from the main
 skill's backlog, designs the SMALLEST possible experiment that can falsify it.
 Isolates variables — only the specific code pattern being tested. Defined in
-`agents/vsm_experiment_designer.md`.
+`~/vsm/vsm-fitness-gym/agents/vsm_experiment_designer.yaml` and registered in
+`~/vsm/viable-swarm-model/agents/vsm-main.yaml`.
 
 ## 4. The Golden Rule of Parallelism
 
@@ -135,7 +142,7 @@ The designer produces a minimal experiment spec:
 - **Success criteria**: how we know the hypothesis is confirmed or rejected
 
 ### Phase 2: Build Experiments
-Spawn parallel `coder` subagents. Each builds its experiment in a temporary
+Spawn parallel `vsm_coder` subagents. Each builds its experiment in a temporary
 directory (e.g., `~/vsm-fitness-builds/gym/H7/`). No scaffolding beyond what's needed
 to run the relevant audit.
 

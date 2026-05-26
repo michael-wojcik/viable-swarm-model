@@ -37,6 +37,12 @@ systemic gaps, generates falsifiable hypotheses, and proposes mutations.
 Must be embedded in a message (e.g., `Let's do a fitness build. /flow:vsm-fitness-coach Run FB2`).
 **Example**: `/flow:vsm-fitness-coach Run fitness build #1 (DocuFlow)`
 
+**Prerequisite**: Launch Kimi CLI with the base agent file:
+```bash
+kimi --agent-file ~/vsm/viable-swarm-model/agents/vsm-main.yaml
+```
+All subagents (including `vsm_trainer`) are registered in the main skill's base agent file.
+
 **Path convention**:
 - Main skill: `~/vsm/viable-swarm-model/`
 - Fitness builds: `~/vsm-fitness-builds/coach/[project-id]-[date]/`
@@ -71,7 +77,7 @@ user via `AskUserQuestion` or `EnterPlanMode` when human policy input is require
 | **S5 (Policy)** | Main conversation agent (you) | — | Phase 0, Phase 4 | Build synthesis, mutation approval |
 | **S4 (Selector)** | Main agent synthesizes build | — | Phase 0 | Build design, prompt draft |
 | **S1 (Builder)** | `viable-swarm-model` workflow | Flow skill | Phase 1 | Substantial project |
-| **S3* (Evaluator)** | `vsm_trainer` subagent | Custom | Phase 2 | Reads artifacts + rubric, scores phases, identifies gaps |
+| **S3* (Evaluator)** | `vsm_trainer` subagent | Custom (registered in `vsm-main.yaml`) | Phase 2 | Reads artifacts + rubric, scores phases, identifies gaps |
 | **S2 (Synthesizer)** | Main agent | — | Phase 4 | Hypotheses, mutations |
 
 ## 4. The Golden Rule
