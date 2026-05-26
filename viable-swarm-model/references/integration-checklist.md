@@ -144,10 +144,13 @@ correction BEFORE quality gates.
 - [ ] Runtime env vars are not silently baked as `undefined` into static bundles
 
 ## 26. GraphQL Field Name Alignment
+- [ ] Run `python -c "from app.graphql import schema; print(schema)"` to inspect the actual GraphQL schema
 - [ ] GraphQL schema field names (after auto-camelCase) match frontend query field names exactly
 - [ ] For Strawberry: verify that `snake_case` backend fields produce the expected `camelCase` frontend fields
+- [ ] Frontend queries MUST use camelCase, not snake_case, when the backend uses Strawberry
 - [ ] Every field queried by frontend exists in the backend schema
 - [ ] No frontend queries reference fields that were renamed or removed in backend
+- [ ] See also: `security-lessons.md` L63 (GraphQL context fail-closed)
 
 ## 27. Auth Response Contract Documentation
 - [ ] Auth endpoints (`/register`, `/login`, `/refresh`) have documented exact response JSON keys in api-spec.md
@@ -184,6 +187,7 @@ correction BEFORE quality gates.
 - [ ] Socket.io `cors_allowed_origins` uses the same explicit allowlist as HTTP CORS middleware, never `"*"`
 - [ ] Backend `authenticate` event stores user session; all subsequent room operations read and validate that session
 - [ ] WebSocket room handlers verify the user is ENROLLED in the target course (or is the instructor/admin) before allowing room access. Session auth alone is insufficient.
+- [ ] See also: `security-lessons.md` L57 (GraphQL subscription resolvers must verify resource ownership before yielding) for the same underlying principle applied to GraphQL.
 
 ## 31. Model-Spec Alignment Check
 - [ ] SQLAlchemy/model field names match `data-model.md` exactly
@@ -218,33 +222,31 @@ correction BEFORE quality gates.
 - [ ] No `||` fallbacks in frontend API/WS/GraphQL config files (`src/graphql/client.ts`, `src/sio/client.ts`, etc.)
 - [ ] All API URLs are required build-time env vars with no localhost fallback
 - [ ] Missing env vars cause build-time failure, not silent fallback to localhost
+- [ ] See also: `security-lessons.md` L62 (frontend API URL fallback ban).
 
 ## 37. CORS Configuration Validation
 - [ ] CORS origin is explicit allowlist, never `*` or `true` when `allow_credentials=True`
 - [ ] `Settings.CORS_ORIGINS` has no default wildcard; app refuses to start if CORS_ORIGINS is unset
 - [ ] FastAPI CORS middleware and Socket.io `cors_allowed_origins` use the same explicit allowlist
+- [ ] See also: `security-lessons.md` L61 (CORS wildcard equivalence).
 
 ## 38. REST Endpoint Auth Guard Check
 - [ ] All REST list endpoints (`GET /`) have explicit auth guards or public documentation
 - [ ] All REST detail endpoints (`GET /{id}`) have explicit auth guards or public documentation
 - [ ] Unauthenticated REST endpoints do not expose draft/private data
 - [ ] GraphQL RBAC parity: every GraphQL mutation enforces the same role requirements as its REST equivalent
+- [ ] See also: `security-lessons.md` L38 (registration role elevation prevention).
 
 
 ---
 
-## 44. Strawberry GraphQL Field Name Alignment
-- [ ] Run `python -c "from app.graphql import schema; print(schema)"` to inspect the actual GraphQL schema
-- [ ] Verify that Strawberry auto-camelCased field names (`patientId`, `scheduledAt`) match frontend query field names exactly
-- [ ] Frontend queries MUST use camelCase, not snake_case, when the backend uses Strawberry
-- [ ] Every field queried by frontend exists in the backend schema with matching case
 
----
 
 ## 45. GraphQL Context Fail-Closed
 - [ ] GraphQL `get_context` or equivalent context builders MUST propagate auth exceptions (JWT errors, missing tokens)
 - [ ] Never silently catch auth exceptions and return an anonymous/unauthenticated context
 - [ ] Auth failures MUST result in GraphQL errors or `AuthenticationError`, not `user = None`
+- [ ] See also: `security-lessons.md` L63 (GraphQL context builders must be fail-closed).
 
 ## 39. Vite Proxy Port Verification
 - [ ] Vite proxy target ports must match the actual exposed ports in docker-compose.yml
@@ -321,6 +323,7 @@ correction BEFORE quality gates.
 - [ ] If an endpoint has ownership filtering, the RBAC array shows WHO can access it, and a separate `Ownership: owner_id == current_user.id` note shows HOW results are filtered
 
 **Source**: FB17 api-spec.md "(owner-filtered)" label caused GraphQL RBAC parity gap (H83)
+- [ ] See also: `security-lessons.md` L38 (registration role allowlist composition).
 
 ## Check 52: Apollo Client Usage Verification
 - [ ] If `main.tsx` wraps the app in `ApolloProvider`, verify at least ONE page component uses `useQuery` or `useMutation` from `@apollo/client`
@@ -336,6 +339,7 @@ correction BEFORE quality gates.
 - [ ] The handler MUST return JSON with `{"error": "Rate limit exceeded"}` and status 429
 
 **Source**: FB17 backend installed SlowAPIMiddleware but lacked exception handler for RateLimitExceeded (active issue)
+- [ ] See also: `security-lessons.md` L40 (rate limiting requires decorators, middleware, AND exception handler).
 
 ## Check 54: Router Registration Completeness
 - [ ] List ALL Python files in `app/routers/` that define a `APIRouter` instance

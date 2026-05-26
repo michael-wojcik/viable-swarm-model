@@ -1,5 +1,9 @@
 # Project Lessons Learned
 
+> **Note**: This template is superseded by `references/lessons-template.md` in the
+> viable-swarm-model skill. `SKILL.md` Phase 8 references `references/lessons-template.md`
+> as the canonical template. Use this file only if the references version is unavailable.
+>
 > **Mutation rules**: This is a PROJECT-LOCAL file, not a skill file.
 > It is created/modified in the project root at `.kimi/lessons.md`.
 > The skill reads it at Phase 0 and appends to it at Phase 8.

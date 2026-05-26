@@ -309,7 +309,8 @@ Never instantiate at module level. This allows tests to import modules and mock 
 - `.env.example` names are finalized
 
 **Trade-off**: Adds ~5-10 minutes to foundation phase. Eliminates dependency race BLOCKERs.
-**Tested by**: FB9 meta-reflection hypothesis H41 (to be validated in FB10).
+**Tested by**: FB9 meta-reflection hypothesis H41 (validated in FB10). See also `references/hypotheses.md` H41.
+**See also**: Anti-Pattern #43 (Parallel Agents Overwriting Shared Entry Points) for the related entry-point conflict problem.
 
 ---
 

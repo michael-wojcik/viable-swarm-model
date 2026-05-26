@@ -99,6 +99,7 @@ minting new tokens. If the user has been deleted or deactivated
 sufficient — the user record is the source of truth.
 **Affected**: vsm_security, S1-Backend.
 **Source**: FB20, Phase 5.
+**See also**: `integration-checklist.md` Check 32 (post-fix security re-check).
 
 ---
 
@@ -164,6 +165,7 @@ All three are mandatory. Without the exception handler, rate-limited requests
 crash with HTTP 500 instead of 429.
 **Affected**: S1-Backend, vsm_security, vsm_wiring.
 **Source**: FB3 (middleware missing), FB17 (handler missing), FB21 (handler missed by all gates).
+**See also**: `integration-checklist.md` Check 53 (rate-limit exception handler verification).
 
 ### L58: Rate Limiting Must Be Distributed-Safe
 **Prevention rule**: In-memory rate limiting (`defaultdict` + `asyncio.Lock`) is
@@ -255,6 +257,7 @@ target course / is the instructor). Session-only verification allows any
 authenticated user to access any room.
 **Affected**: vsm_security, S1 backend coders.
 **Source**: FB8. `join_classroom` verified socket session but not course enrollment.
+**See also**: `integration-checklist.md` Check 30 (WebSocket room handlers verify enrollment before allowing room access).
 
 ---
 
@@ -281,6 +284,7 @@ Also ban hardcoded literal passwords in docker-compose (e.g.,
 `POSTGRES_PASSWORD: devpassword`).
 **Affected**: S1-DevOps, vsm_security.
 **Source**: FB2, FB18 (rule persisted despite prior mutation).
+**See also**: `integration-checklist.md` Check 37 (CORS configuration validation).
 
 ### L38: Infrastructure Security Is as Critical as Application Security
 **Prevention rule**: Security gate must inspect docker-compose.yml, Dockerfile,
@@ -302,6 +306,7 @@ fields. Never expose answers in public endpoints.
 **Prevention rule**: Fail-fast throw Error if `VITE_API_URL` missing. `||
 'http://localhost:8000'` silently routes API calls to localhost in production.
 **Affected**: S1-Frontend, vsm_security.
+**See also**: `integration-checklist.md` Check 36 (frontend config fallback check).
 
 ### L41: JWT Storage in localStorage is a MEDIUM Security Risk
 **Prevention rule**: Flag JWT persisted to `localStorage` as MEDIUM severity.

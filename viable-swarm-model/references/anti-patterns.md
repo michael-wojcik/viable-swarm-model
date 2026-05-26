@@ -240,6 +240,7 @@
 **When**: Backend and worker agents both wire routers into `main.py`.  
 **Prevention**: Either (a) serialize entry-point wiring to a single agent, or (b) have a dedicated "wiring" agent run after all implementation agents.  
 **Affected**: S1 coders in Phase 3.
+**See also**: Pattern #22 (Foundation Wave Sequencing) for the broader parallel-agent coordination strategy; Mutation 52 (`agents/vsm_wiring.md`) for the dedicated wiring agent solution.
 
 ### 44. Docker-Compose Default-Value Fallbacks Embedding Secrets
 **What**: `docker-compose.yml` uses `${DATABASE_URL:-postgresql://user:pass@db/db}` or `POSTGRES_PASSWORD: geoquiz` as defaults.  
