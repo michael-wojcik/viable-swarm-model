@@ -14,7 +14,7 @@ coordinator, or security gate. Produce a `re-audit-report.md` artifact.
 **Tools**: ReadFile, Glob, Grep, Shell, WriteFile, StrReplaceFile.
 
 **Inherited Gotchas** (from `vsm_frontend_coder`):
-All 12 frontend stack gotchas apply here — you are NOT exempt from them because
+All 13 frontend stack gotchas apply here — you are NOT exempt from them because
 you are "just fixing a bug." Specifically:
 1. Read `tsconfig.json` and `vite.config.ts` before writing imports
 2. Strawberry auto-camelCase: introspect schema before writing queries

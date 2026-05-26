@@ -417,3 +417,33 @@ correction BEFORE quality gates.
 
 **Affected**: S5 (main agent), vsm_meta.
 **Source**: Gym E16 (H106), SKILL.md Phase 8b hard block.
+
+
+## Check 59: Auth Role Parity Between data-model.md and auth.py
+- [ ] Read `data-model.md` and identify the `Role` / `UserRole` enum values
+- [ ] Read `auth.py` and identify `ALLOWED_ROLES` (or equivalent role-based access control list)
+- [ ] Verify EVERY role in `ALLOWED_ROLES` exists in the `data-model.md` enum
+- [ ] Verify no enum values are missing from `ALLOWED_ROLES` if they represent valid user roles
+- [ ] Mismatched roles (e.g., `"editor"` in allowlist but `"responder"` in enum) are a BLOCKER
+
+**Affected**: S5 (main agent), vsm_auditor, vsm_coordinator.
+**Source**: FB22 `auth.py` had `ALLOWED_ROLES = ["viewer", "editor", "admin"]` but data model defined `"viewer"`, `"responder"`, `"admin"`. `"editor"` did not exist; `"responder"` was missing (H151).
+
+## Check 60: Vite Alias Key Verification
+- [ ] Read `vite.config.ts` and inspect `resolve.alias`
+- [ ] The alias key MUST be `"@"` mapping to `path.resolve(__dirname, "./src")`
+- [ ] The alias key `"@/"` mapping to `./src/` is a BLOCKER — it works in dev but fails in production builds because Rollup does not match the trailing slash
+- [ ] Verify `tsconfig.json` `paths` aligns with the Vite alias (e.g., `"@/*": ["src/*"]`)
+
+**Affected**: vsm_frontend_coder, vsm_auditor, vsm_coordinator.
+**Source**: FB22 `vite.config.ts` used `"@/"` → `./src/`; `npm run build` failed with Rollup resolution error (H153).
+
+## Check 61: Dependency Verification Against requirements.txt
+- [ ] Grep ALL backend Python files for `import` and `from ... import` statements
+- [ ] For every third-party import (not `typing`, `datetime`, `os`, `json`, etc.), verify the package name appears in `requirements.txt`
+- [ ] If a package is imported but NOT in `requirements.txt`, this is a BLOCKER
+- [ ] Common trap packages to watch for: `strawberry_sqlalchemy_mapper`, `sqlalchemy_strawberry`, `fastapi_graphql_auto`
+- [ ] If GraphQL is used, verify `strawberry-graphql` is in `requirements.txt` and imports cleanly in the current environment
+
+**Affected**: vsm_backend_coder, vsm_auditor, vsm_security.
+**Source**: FB22 `graphql.py` agent imported `strawberry_sqlalchemy_mapper` (not in requirements.txt), causing ~15 min agent timeout before S5 intervention (H150).

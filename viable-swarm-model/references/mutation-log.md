@@ -1563,3 +1563,52 @@ Changed Phase 6 from unconditional "Spawn `vsm_coordinator` + `vsm_auditor`" to 
 - FB23 auth roles are validated against data-model.md before implementation proceeds.
 - FB23 cannot pass Phase 4 with module-level import errors.
 - FB23 Tier 2+ builds get automated cross-file contract validation, not manual spot-checks.
+
+
+---
+
+## Mutation FB22-5 — 2026-05-25
+
+**Session**: vsm-fitness-coach fitness build #22 (OpsCenter) — third post-build mutation batch
+**Files**:
+- `viable-swarm-model/agents/vsm_devops_coder.md` (R8)
+- `viable-swarm-model/agents/vsm_backend_fix_agent.md` (R11)
+- `viable-swarm-model/agents/vsm_frontend_fix_agent.md` (R12)
+- `viable-swarm-model/references/integration-checklist.md` (A3)
+- `viable-swarm-model/SKILL.md` (S6, S7)
+**Type**: mixed — 1 append-only, 3 refinement, 2 structural
+**Rationale**:
+After two mutation batches, most FB22 failure modes have prevention rules. This batch closes remaining gaps in the canonical checklist, fix agent prompts, and flow diagram.
+
+**R8 — Refinement: vsm_devops_coder.md env-var triple parity**
+Extended gotcha #12 from 2-way (docker-compose ↔ .env.example) to 3-way (add config.py `os.getenv()` calls). The devops coder writes docker-compose and .env.example; it should read config.py (if it exists) to verify naming alignment. Evidence: FB22 had `POSTGRES_PASSWORD` in docker-compose but not in .env.example or config.py, caught only by auditor in Phase 2b.
+
+**R11 — Refinement: vsm_backend_fix_agent.md gotcha count 14→16**
+The fix agent inherited 14 gotchas from vsm_backend_coder, but two new gotchas were added in FB22-3/FB22-4: #15 dependency verification and #16 auth role validation. Updated count and appended both to the inherited list. A fix agent that doesn't know about dependency verification or auth role validation can reintroduce the very bugs it was spawned to fix.
+
+**R12 — Refinement: vsm_frontend_fix_agent.md gotcha count 12→13**
+The fix agent inherited 12 gotchas from vsm_frontend_coder, but the coder now has 13 (CORS credentials was #13). Updated count. The fix agent must also respect the strengthened file ownership BLOCKER.
+
+**A3 — Append-only: integration-checklist.md Checks 59–61**
+Added three FB22-specific checks to the canonical 58-check integration checklist:
+- Check 59: Auth Role Parity (data-model.md Role enum vs auth.py ALLOWED_ROLES)
+- Check 60: Vite Alias Key Verification (`"@"` not `"@/"`)
+- Check 61: Dependency Verification Against requirements.txt
+These checks are now referenced by vsm_auditor, vsm_coordinator, and vsm_security.
+
+**S6 — Structural: SKILL.md Mermaid flow diagram update**
+Updated the canonical flow diagram to reflect mutations from FB22-3:
+- P3 label: "Parallel coder agents" → "Backend: parallel routers<br/>Frontend: sequential shared→pages" (reflects S3 sequential frontend sub-waves)
+- P2M label: "Model Validation" → "Model + Auth Validation" (reflects S7)
+- Added P0E decision node: env compatibility smoke test between self-test (P0R) and product spawn (P0P), with fail path to END (reflects S2)
+The diagram is the first visual reference S5 consults; contradictions between diagram and text are process hazards.
+
+**S7 — Structural: SKILL.md Phase 2c expansion**
+Expanded Phase 2c from "Model Validation" to "Model + Auth Validation." Added explicit auth role parity check: `auth.py` `ALLOWED_ROLES` must match `data-model.md` Role enum. Evidence: FB22 `"editor"` vs `"responder"` mismatch survived Phase 2c because only models.py was checked. Catching this before Phase 3 prevents cascade failures in registration, JWT claims, and frontend role guards.
+
+**Expected effect**:
+- FB23 devops coder verifies 3-way env var parity, not just 2-way.
+- FB23 fix agents inherit all 16 backend and 13 frontend gotchas.
+- FB23 integration checklist has 61 checks covering all known FB22 failure modes.
+- FB23 flow diagram accurately reflects sequential frontend sub-waves, env smoke test, and auth validation.
+- FB23 auth role mismatches are caught in Phase 2c, not Phase 2b audit.

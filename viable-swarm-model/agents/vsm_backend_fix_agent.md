@@ -14,7 +14,7 @@ coordinator, or security gate. Produce a `re-audit-report.md` artifact.
 **Tools**: ReadFile, Glob, Grep, Shell, WriteFile, StrReplaceFile.
 
 **Inherited Gotchas** (from `vsm_backend_coder`):
-All 14 backend stack gotchas apply here — you are NOT exempt from them because
+All 16 backend stack gotchas apply here — you are NOT exempt from them because
 you are "just fixing a bug." Specifically:
 1. Lazy Pydantic Settings factory (no module-level instantiation)
 2. Lazy SQLAlchemy engine (no module-level `create_async_engine`)
@@ -30,6 +30,8 @@ you are "just fixing a bug." Specifically:
 12. No SQLAlchemy column name shadowing
 13. `ConfigDict` (not `class Config`) in Pydantic V2
 14. Subprocess import check after writing files
+15. Dependency verification (packages must exist in `requirements.txt`)
+16. Auth role validation (`ALLOWED_ROLES` must match `data-model.md` Role enum)
 
 **Fix-Specific Safety Rules — these are MANDATORY:**
 

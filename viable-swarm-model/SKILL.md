@@ -189,6 +189,8 @@ flowchart TD
     P0[Phase 0: Viability Check + Self-Test<br/>S5 Main Agent]
     P0D{<choice>trivial</choice>?}
     P0R[Read .kimi/lessons.md<br/>Read references/acquired-wisdom.md<br/>Read references/hypotheses.md<br/>Self-test skill files<br/>Classify prompt<br/>Write plan.md]
+    P0E{<choice>env ok</choice>?}
+    P0E_F[Report env incompatibility<br/>Stop build]
     P0P[Conditional: Spawn vsm_product<br/>If problem-oriented prompt]
     P1[Phase 1: Intelligence<br/>vsm_architect subagent<br/>Uses product brief if present]
     P1H{<choice>S3/S4 deadlock</choice>?}
@@ -197,9 +199,9 @@ flowchart TD
     P2[Phase 2: Foundation Wave<br/>parallel coder agents<br/>run_in_background=true]
     P2S[TaskOutput block=true]
     P2A[Phase 2b: Audit<br/>vsm_auditor]
-    P2M[Phase 2c: Model Validation<br/>S5 checks models.py vs data-model.md]
+    P2M[Phase 2c: Model + Auth Validation<br/>S5 checks models.py + auth.py vs data-model.md]
     P2D{<choice>BLOCKERs</choice>?}
-    P3[Phase 3: Implementation Wave<br/>Parallel coder agents]
+    P3[Phase 3: Implementation Wave<br/>Backend: parallel routers<br/>Frontend: sequential shared→pages]
     P3S[TaskOutput block=true]
     P3M[Phase 3c: Mid-Wave S2 Check<br/>vsm_coordinator (conditional, Tier 2+)]
     P3A[Phase 3b: Audit + Coordination<br/>vsm_auditor + vsm_coordinator]
@@ -236,7 +238,10 @@ flowchart TD
     P0 --> P0D
     P0D -->|<choice>yes</choice>| END
     P0D -->|<choice>no</choice>| P0R
-    P0R --> P0P
+    P0R --> P0E
+    P0E -->|<choice>pass</choice>| P0P
+    P0E -->|<choice>fail</choice>| P0E_F
+    P0E_F --> END
     P0P --> P1
     P1 --> P1H
     P1H -->|<choice>yes</choice>| P1
@@ -396,12 +401,19 @@ Wait via `TaskOutput(block=true)`.
 **Phase 2b: Audit** — Spawn `vsm_auditor` on ALL foundation outputs (2a + 2b).
 BLOCKERs trigger Phase 7.
 
-**Phase 2c: Model Validation (S5)** — After foundation audit passes and BEFORE
-spawning implementation agents, S5 MUST verify that `models.py` (or equivalent)
-matches `data-model.md` field names and types exactly. If `data-model.md` exists
-in the build directory and the models do not match, treat as a BLOCKER: send
-back to foundation agents for correction. This prevents cascade failures in
-GraphQL, frontend queries, and shared types.
+**Phase 2c: Model + Auth Validation (S5)** — After foundation audit passes and BEFORE
+spawning implementation agents, S5 MUST verify:
+1. **`models.py` field parity**: `models.py` (or equivalent) matches `data-model.md`
+   field names and types exactly.
+2. **Auth role parity**: `auth.py` `ALLOWED_ROLES` (or equivalent role-based access
+   control list) matches the `Role` / `UserRole` enum in `data-model.md` exactly.
+   Every role in the allowlist must exist in the enum; every user-facing enum value
+   should be representable in the allowlist.
+
+If EITHER check fails, treat as a BLOCKER: send back to foundation agents for
+correction. Model mismatches cascade to GraphQL, frontend queries, and shared types.
+Auth role mismatches cascade to registration, JWT claims, and frontend role guards.
+Both must be correct before Phase 3 begins.
 
 ### Phase 3: Implementation Wave
 Pass Wave 1 outputs as input references. Spawn parallel `vsm_backend_coder` and `vsm_frontend_coder` subagents.

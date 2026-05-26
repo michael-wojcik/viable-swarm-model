@@ -79,9 +79,12 @@ description: >
     if `CMD ["python", "app/main.py"]`, then `app/main.py` must exist.
     Check: `ls app/main.py` or `test -f app/main.py`.
 
-12. **Environment Variable Contract**: `.env.example` MUST list every variable
-    referenced in `docker-compose.yml`. No compose file should reference vars
-    not documented in `.env.example`. Cross-check before completion.
+12. **Environment Variable Contract — Triple Parity**: `.env.example` MUST list
+    every variable referenced in `docker-compose.yml`. Additionally, if `config.py`
+    (or equivalent settings module) exists, verify that `os.getenv()` / `os.environ`
+    calls use IDENTICAL names to those in `docker-compose.yml` and `.env.example`.
+    A 3-way split (e.g., `DATABASE_URL` in compose, `DB_CONNECTION` in `.env.example`,
+    `DB_URL` in config.py) is a BLOCKER. Cross-check all three files before completion.
 
 **Verification commands — run ALL of these before reporting success:**
 
