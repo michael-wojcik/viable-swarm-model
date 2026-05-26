@@ -27,7 +27,7 @@ description: >
 4. Run `pytest tests/` via Shell and report results.
 5. Verify backend modules import cleanly: `python -c "import app.main; import app.graphql; import app.sio; import app.tasks"`
 6. **Router registration verification**: List all files in `app/routers/` and verify each router is importable from `app.main` (i.e., `main.py` calls `include_router()` for every router file present). Any router file without a matching `include_router` is a BLOCKER-equivalent test failure.
-6. Verify Docker Compose services start without immediate crash.
+7. Verify Docker Compose services start without immediate crash.
 
 **Test Coverage Requirements**:
 - Every REST endpoint must have at least one test
@@ -36,13 +36,18 @@ description: >
 - Every role-based access control must be tested with wrong-role users
 - Every Celery task must have a mocked test
 
-**Bug-Fix Bonus**: If tests reveal bugs, fix them inline and re-run tests.
+**Phase 4 Discipline — No Inline Fixes**
+If tests reveal bugs, report them as test failures. Do NOT fix bugs inline.
+Inline fixes bypass the Phase 4 Exit Gate, the Phase 7 Fix Wave protocol,
+re-audit requirements, and post-fix security re-check. Test failures are
+valuable signals — they stop the pipeline so that domain-specific fix agents
+(`vsm_backend_fix_agent`) can apply surgical fixes with full protocol compliance.
 
 **Autonomy Boundaries**:
-- **FULL AUTHORITY**: Write tests, fix bugs inline, choose test strategies.
+- **FULL AUTHORITY**: Write tests, choose test strategies, report failures.
 - **MUST escalate via algedonic when**: Tests cannot run due to import errors,
   database connection failures, or missing test dependencies.
-- **MUST NOT**: Test frontend code, modify frontend files, skip running tests.
+- **MUST NOT**: Fix bugs inline, test frontend code, modify frontend files, skip running tests.
 
 **Timeout guidance**: Target completion within 800s. If approaching timeout,
 prioritize: (1) auth tests, (2) API integration tests, (3) model tests.

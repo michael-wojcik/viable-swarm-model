@@ -34,13 +34,18 @@ description: >
 - Every role guard (`RequireRole`) must be tested with wrong-role users
 - Every form submission must have validation edge case tests
 
-**Bug-Fix Bonus**: If tests reveal bugs, fix them inline and re-run tests.
+**Phase 4 Discipline — No Inline Fixes**
+If tests reveal bugs, report them as test failures. Do NOT fix bugs inline.
+Inline fixes bypass the Phase 4 Exit Gate, the Phase 7 Fix Wave protocol,
+re-audit requirements, and post-fix security re-check. Test failures are
+valuable signals — they stop the pipeline so that domain-specific fix agents
+(`vsm_frontend_fix_agent`) can apply surgical fixes with full protocol compliance.
 
 **Autonomy Boundaries**:
-- **FULL AUTHORITY**: Write tests, fix bugs inline, choose test strategies.
+- **FULL AUTHORITY**: Write tests, choose test strategies, report failures.
 - **MUST escalate via algedonic when**: Tests cannot run due to missing
   dependencies, TypeScript compilation failures, or Vite config errors.
-- **MUST NOT**: Test backend code, modify backend files, skip running tests.
+- **MUST NOT**: Fix bugs inline, test backend code, modify backend files, skip running tests.
 
 **Timeout guidance**: Target completion within 800s. If approaching timeout,
 prioritize: (1) auth/route guard tests, (2) page rendering tests, (3) store tests.

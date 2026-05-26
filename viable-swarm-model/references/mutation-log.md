@@ -1395,3 +1395,32 @@ Spawn `vsm_coordinator` + `vsm_auditor`. Full 20+ point checklist (see
 
 **Expected effect**: All 109 hypotheses now have statuses. 107 confirmed, 2 rejected. Zero untested hypotheses remain in the backlog. The skill has complete empirical coverage of its knowledge claims.
 
+
+---
+
+## Mutation FB21-25 — 2026-05-25
+
+**Session**: Structural — remove inline-fix authority from domain-specific testers; align Phase 4 agents with Phase 4 Exit Gate and Phase 7 Fix Wave protocol
+**File**: `~/vsm/viable-swarm-model/agents/vsm_backend_tester.md`, `~/vsm/viable-swarm-model/agents/vsm_frontend_tester.md`
+**Type**: structural
+**Rationale**:
+1. Both `vsm_backend_tester.md` and `vsm_frontend_tester.md` contained `**Bug-Fix Bonus**: If tests reveal bugs, fix them inline and re-run tests.` and `FULL AUTHORITY: Write tests, fix bugs inline, choose test strategies.` This directly contradicted Anti-Pattern #56, Security Lesson L48, the Phase 4 Exit Gate (HARD BLOCK), the Phase 6/7 Boundary rule, and the explicit "No Inline Fixes During Integration" instructions in both fix agents.
+2. If a Phase 4 tester fixes a bug inline, the test passes, the exit gate sees "zero failures," and the build proceeds to Security/Integration with a fix that was never re-audited, never security-checked, and never documented in a `re-audit-report.md`. This is the exact failure mode H105, H106, and E15–E18 proved is destructive.
+3. The `vsm_tester` legacy agent was removed in FB21-23 precisely because its "Bug-Fix Bonus" contradicted the no-inline-fixes rule. But the same text survived in the domain-specific testers that replaced it.
+4. `vsm_backend_tester.md` also had a duplicate step numbering bug: two `6.` items (Router registration verification and Docker Compose verification).
+
+**Changes**:
+- `vsm_backend_tester.md`:
+  - Removed "Bug-Fix Bonus" section entirely
+  - Changed `FULL AUTHORITY` from "Write tests, fix bugs inline, choose test strategies" to "Write tests, choose test strategies, report failures"
+  - Added `MUST NOT: Fix bugs inline` to autonomy boundaries
+  - Added **Phase 4 Discipline — No Inline Fixes** section explaining why testers must not self-heal
+  - Fixed duplicate `6.` numbering → `6.` (Router registration) and `7.` (Docker Compose)
+- `vsm_frontend_tester.md`:
+  - Removed "Bug-Fix Bonus" section entirely
+  - Changed `FULL AUTHORITY` from "Write tests, fix bugs inline, choose test strategies" to "Write tests, choose test strategies, report failures"
+  - Added `MUST NOT: Fix bugs inline` to autonomy boundaries
+  - Added **Phase 4 Discipline — No Inline Fixes** section
+
+**Expected effect**: Phase 4 testers are now fully aligned with the no-inline-fix protocol. Test failures will correctly stop the pipeline and route to Phase 7 (Fix Wave) via domain-specific fix agents. Zero agents in any phase now have inline-fix authority.
+
