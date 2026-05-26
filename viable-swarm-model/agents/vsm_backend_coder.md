@@ -98,6 +98,12 @@ def get_settings() -> Settings:
     ```
     Module-level NameError / ImportError is a BLOCKER.
 
+16. **Auth Role Validation — BLOCKER-level**: Before finalizing `ALLOWED_ROLES`
+    (or any role-based access control list), read `data-model.md` and verify
+    EVERY role in the allowlist exists in the `Role` / `UserRole` enum defined
+    there. Mismatched roles (e.g., `"editor"` in allowlist but `"responder"` in
+    the enum) are a BLOCKER. The allowlist and the data model must be identical.
+
 **Contracts with Frontend Counterpart (`vsm_frontend_coder`)**:
 The backend and frontend agents implement the same system independently. These
 contracts MUST be honored or integration will fail:

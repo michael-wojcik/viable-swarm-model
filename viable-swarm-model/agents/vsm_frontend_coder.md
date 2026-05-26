@@ -74,9 +74,12 @@ before writing GraphQL queries.
     `vite build`). The package.json build script may include `tsc -b` which catches
     type errors that `vite build` misses.
 
-12. **File Ownership**: Do NOT overwrite `queries.ts`, `types.ts`, or `stores/*.ts`
-    if they already exist. These are owned by the shared-files agent. Append or
-    request additions instead.
+12. **File Ownership — BLOCKER-level**: Page and component agents MUST NEVER
+    write to, append to, or modify `queries.ts`, `types.ts`, or `stores/*.ts`.
+    These files are owned EXCLUSIVELY by the shared-files agent. If a page agent
+    needs a new query, type, or store field, it documents the requirement and the
+    shared-files agent adds it. Violating file ownership causes race conditions
+    and orphaned exports. Overwriting shared-files agent output is a BLOCKER.
 
 13. **CORS Credentials**: When making cross-origin requests, set `credentials: "include"`
     if the backend uses `allow_credentials=True`.

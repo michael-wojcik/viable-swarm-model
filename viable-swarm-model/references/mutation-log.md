@@ -1521,3 +1521,45 @@ Added explicit "Sub-Wave Sequencing Enforcement (MANDATORY)" paragraph requiring
 - FB23 frontend test count should meet Tier 3 minimum (8 meaningful tests).
 - FB23 should have vsm_security actively auditing (not just manual fallback).
 - Any environment incompatibilities should be caught in Phase 0, not Phase 3.
+
+
+---
+
+## Mutation FB22-4 — 2026-05-25
+
+**Session**: vsm-fitness-coach fitness build #22 (OpsCenter) — second post-build mutation batch
+**Files**:
+- `viable-swarm-model/agents/vsm_backend_tester.md` (R4)
+- `viable-swarm-model/agents/vsm_auditor.md` (R5)
+- `viable-swarm-model/agents/vsm_frontend_coder.md` (R6)
+- `viable-swarm-model/agents/vsm_backend_coder.md` (R7)
+- `viable-swarm-model/SKILL.md` (S4, S5)
+**Type**: mixed — 4 refinement, 2 structural
+**Rationale**:
+FB22 scored 3.8/5.0 with root causes in foundation wave robustness (2/5), test coverage (3/5), and integration depth (4/5). The first mutation batch (FB22-3) addressed dependency traps, Vite aliases, and agent sequencing. This batch closes the remaining verification gaps.
+
+**R4 — Refinement: vsm_backend_tester.md minimum meaningful test count**
+FB22 had 5 backend import tests for a Tier 3 build — insufficient coverage for the build surface. Added tier-based minimums (Tier 1: 3, Tier 2: 6, Tier 3: 10) with explicit ban on trivial tests. Parity with frontend R2.
+
+**R5 — Refinement: vsm_auditor.md Pydantic ConfigDict upgraded to BLOCKER**
+The auditor previously flagged `class Config:` as ISSUE. In FB22, 9 router files used it and the auditor did not stop the build. Upgraded to BLOCKER-level with explicit instruction: "If `class Config:` is found in ANY source file, flag as BLOCKER." A prevention rule is only as strong as its verification layer.
+
+**R6 — Refinement: vsm_frontend_coder.md file ownership strengthened to BLOCKER**
+Existing gotcha #12 said "Do NOT overwrite... Append or request additions instead." In FB22, page agents still modified `queries.ts`, causing coordination conflicts. Upgraded to BLOCKER-level with absolute language: "MUST NEVER write to, append to, or modify `queries.ts`, `types.ts`, or `stores/*.ts`." Defense in depth against S3 sequencing bypass.
+
+**R7 — Refinement: vsm_backend_coder.md auth role validation gotcha #16**
+FB22 `ALLOWED_ROLES = ["viewer", "editor", "admin"]` had `"editor"` (not in data model) and missed `"responder"`. Added new gotcha: before finalizing allowlist, read `data-model.md` Role enum and verify every allowlist role exists there. Mismatched roles are a BLOCKER.
+
+**S4 — Structural: SKILL.md Phase 4 Exit Gate — subprocess import check**
+Added step 4 to the HARD BLOCK: `python -c "import app.main; import app.graphql; import app.sio; import app.tasks"` must succeed. Catches module-level side effects (NameError, ImportError) that pytest discovery may miss. Evidence: FB3 `config.py` had `settings = Settings()` at module level; tester agent could not import any backend module for 1800s until timeout (anti-pattern #46).
+
+**S5 — Structural: SKILL.md Phase 6 — vsm_coordinator MANDATORY for Tier 2+**
+Changed Phase 6 from unconditional "Spawn `vsm_coordinator` + `vsm_auditor`" to tier-conditional: Tier 1 may use manual checks; Tier 2+ REQUIRES `vsm_coordinator`. Agent failure = BLOCKER, not fallback opportunity. Evidence: coordinator caught FB17 orphaned exports, FB19 env-var 3-way split, FB20 Prisma relation drift — all missed by manual S5 checks. FB22 used manual integration and scored 4/5 on integration; automated coordinator may have caught additional issues.
+
+**Expected effect**:
+- FB23 backend test count meets tier minimum.
+- FB23 auditor flags ALL `class Config:` occurrences as BLOCKERs.
+- FB23 page agents never touch shared files.
+- FB23 auth roles are validated against data-model.md before implementation proceeds.
+- FB23 cannot pass Phase 4 with module-level import errors.
+- FB23 Tier 2+ builds get automated cross-file contract validation, not manual spot-checks.

@@ -515,6 +515,7 @@ Before proceeding to Phase 5, verify:
 1. `pytest` reports **zero failures** (backend)
 2. `vitest run` / `npm test` reports **zero failures** (frontend)
 3. `npm run build` / `tsc --noEmit` reports **zero errors** (frontend)
+4. **Backend subprocess import check**: `python -c "import app.main; import app.graphql; import app.sio; import app.tasks"` must succeed with zero errors. A NameError or ImportError at module level is a HARD BLOCK even if pytest somehow passes. This catches module-level side effects (e.g., `settings = Settings()`, `engine = create_async_engine(...)`) that break imports but may not surface during pytest discovery.
 
 If ANY of the above report failures, **STOP**. Do not proceed to Phase 5 (Security Gate)
 or Phase 6 (Integration). Route to Phase 7 (Fix Wave). Fixing downstream integration
@@ -564,8 +565,23 @@ are caught before the coordinator invests effort in cross-file contract checks.
 This reduces total fix iterations.
 
 ### Phase 6: Integration Verification
-Spawn `vsm_coordinator` + `vsm_auditor`. Full 20+ point checklist (see
-`references/integration-checklist.md`). ANY failure → back to Phase 3.
+
+**Tier 1 builds** (< 1000 lines, 1-2 services):
+Spawn `vsm_auditor`. `vsm_coordinator` is optional; S5 may run the integration
+checklist manually if the build surface is small.
+
+**Tier 2+ builds** (≥ 1000 lines, 2+ services):
+`vsm_coordinator` is MANDATORY. Spawn `vsm_coordinator` + `vsm_auditor` in
+parallel with `run_in_background=true`. If `vsm_coordinator` fails to spawn,
+errors out, or produces no report, treat this as a BLOCKER. Do NOT proceed
+with manual integration checks as a replacement. Cross-file contract validation
+at Tier 2+ complexity exceeds manual S5 capacity — the coordinator's automated
+20+ point checklist catches env-var drift, orphaned exports, type mismatches,
+and relation name mismatches that manual checks miss (evidence: FB17 orphaned
+exports, FB19 env-var 3-way split, FB20 Prisma relation drift).
+
+Full 20+ point checklist (see `references/integration-checklist.md`).
+ANY failure → back to Phase 3.
 
 > **Algedonic signal — Phase 6/7 Boundary**: If integration verification finds
 > BLOCKERs, do NOT fix them inline. Route to Phase 7 (Fix Wave). Inline fixes
