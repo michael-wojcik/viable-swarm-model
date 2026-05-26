@@ -42,7 +42,7 @@ Must be embedded in a message (e.g., `Let's test a hypothesis. /flow:vsm-fitness
 ```bash
 kimi --agent-file ~/vsm/viable-swarm-model/agents/vsm-main.yaml
 ```
-All subagents (including `vsm_experiment_designer` and `vsm_coder`) are registered in the main skill's base agent file.
+S5 writes experiment code directly.
 
 **Path convention**: This skill assumes the main skill is installed at
 `~/vsm/viable-swarm-model/`. If installed elsewhere,

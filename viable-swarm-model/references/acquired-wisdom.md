@@ -103,7 +103,7 @@ for user intervention.
 **Lesson**:
 1. **Phase 4 hard gate eliminates 100% of downstream BLOCKERs caused by known test failures** (E18). A single failing pytest test (missing RateLimitExceeded handler) predicted both a security HIGH finding and a coordinator BLOCKER. Fixing the test failure before Phase 5/6 eliminated both downstream findings entirely. The hard gate is not just "good practice" — it is a deterministic BLOCKER prevention mechanism.
 2. **Auditor cross-file env var parity check catches mismatches before they reach coordinator** (E19). The auditor flagged a 3-way split (`DB_HOST` / `DATABASE_HOST` / `PG_HOST`) as BLOCKER in all three files. The coordinator would have found the same issue as 1 BLOCKER in Phase 6. Early detection in Phase 2b/3b means the fix agent resolves it before integration, preventing coordinator BLOCKERs entirely.
-3. **The skill now has zero untested hypotheses.** All 109 hypotheses in the backlog have been tested: 107 confirmed, 2 rejected. The mutation system is fully empirically grounded.
+3. **11 untested hypotheses remain.** 98 confirmed, 2 rejected, 11 untested. The mutation system is mostly empirically grounded.
 **Verification**: Controlled gym experiments with minimal reproducible code (E18: 2 variants on identical buggy code; E19: auditor + coordinator on env var mismatch)
 **Sessions**: 2 (E18, E19)
 **Status**: active

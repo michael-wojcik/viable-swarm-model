@@ -104,7 +104,7 @@
 |---|---|---|
 | Test coverage adequate | 30% | Were unit, integration, and edge case tests written? |
 | Tests actually run | 25% | Did `npm test` / `pytest` pass? |
-| Bug fixes inline | 20% | Did the tester fix bugs during test writing? |
+| Bug fixes inline (PENALTY) | -20% | Tester fixed bugs during test writing instead of routing to Phase 7. Deduct points. |
 | Docker/CI config correct | 15% | Were Dockerfiles, docker-compose, CI configs valid? |
 | DevOps entry points | 10% | Did Dockerfile CMD point to existing files? |
 

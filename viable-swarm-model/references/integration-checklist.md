@@ -168,20 +168,20 @@ correction BEFORE quality gates.
 - [ ] `shared/sio-events.ts` constants are imported by both backend and frontend
 - [ ] Every backend `emit` has a matching frontend `socket.on` listener
 
-## 42. (BLOCKER) GraphQL Enum Runtime Safety
+## 30. (BLOCKER) GraphQL Enum Runtime Safety
 - [ ] Python enums used in GraphQL schemas use `str, enum.Enum` (or equivalent) when their values are strings
 - [ ] Enum construction from database string values does not raise `ValueError`
 
-## 43. (BLOCKER) Circular Import Prevention
+## 31. (BLOCKER) Circular Import Prevention
 - [ ] No router/module imports from `main.py` (or equivalent entry point)
 - [ ] Shared singletons (limiter, config, database) live in dedicated modules, not in entry points
 
-## 20. GraphQL-REST Contract Parity
+## 32. GraphQL-REST Contract Parity
 - [ ] GraphQL mutations enforce the same RBAC as REST endpoints
 - [ ] GraphQL list queries apply the same ownership filtering as REST list endpoints
 - [ ] GraphQL geo/spatial endpoints apply the same bounds caps as REST geo endpoints
 
-## 30. (BLOCKER) WebSocket Authentication & Authorization
+## 33. (BLOCKER) WebSocket Authentication & Authorization
 - [ ] WebSocket room subscription handlers (`subscribe_patient`, etc.) verify the socket has authenticated BEFORE allowing room access
 - [ ] WebSocket room unsubscription handlers verify the socket session before leaving a room
 - [ ] Socket.io `cors_allowed_origins` uses the same explicit allowlist as HTTP CORS middleware, never `"*"`
@@ -189,48 +189,48 @@ correction BEFORE quality gates.
 - [ ] WebSocket room handlers verify the user is ENROLLED in the target course (or is the instructor/admin) before allowing room access. Session auth alone is insufficient.
 - [ ] See also: `security-lessons.md` L57 (GraphQL subscription resolvers must verify resource ownership before yielding) for the same underlying principle applied to GraphQL.
 
-## 31. (BLOCKER) Model-Spec Alignment Check
+## 34. (BLOCKER) Model-Spec Alignment Check
 - [ ] SQLAlchemy/model field names match `data-model.md` exactly
 - [ ] SQLAlchemy/model field types match `data-model.md` exactly
 - [ ] All entities in `data-model.md` are represented in the ORM models
 - [ ] All relationships and constraints from `data-model.md` are implemented
 - [ ] If `data-model.md` does not exist, skip this check
 
-## 32. (BLOCKER) Post-Fix Security Re-Check
+## 35. (BLOCKER) Post-Fix Security Re-Check
 - [ ] After any fix wave that modified auth, GraphQL, or WebSocket files, re-run security checks on those specific files
 - [ ] Verify auth middleware still raises on failure (never returns None)
 - [ ] Verify GraphQL `get_context` still propagates exceptions (no broad `except` added)
 - [ ] Verify WebSocket room handlers still verify session before room access
 - [ ] If security regression is found, escalate to S5 immediately
 
-## 33. (BLOCKER) Subprocess Import Verification
+## 36. (BLOCKER) Subprocess Import Verification
 - [ ] After implementation wave and after fix wave, run `python -c "import app.main; import app.graphql; import app.sio"` (or equivalent entry points) in a subprocess
 - [ ] If any module raises `NameError`, `ImportError`, or `ModuleNotFoundError`, treat as BLOCKER
 - [ ] In-process code review (ReadFile) is insufficient — it does not catch missing imports that are only referenced at runtime
 
-## 34. (BLOCKER) Frontend Build Script Verification
+## 37. (BLOCKER) Frontend Build Script Verification
 - [ ] Run `npm run build` (or equivalent package.json script), not just the underlying tool (`vite build`, `next build`, etc.)
 - [ ] Package.json scripts may include additional type-checking or linting steps that `vite build` alone does not exercise
 - [ ] Verify `tsconfig.json` includes all necessary types (e.g., `@types/node` for `vite.config.ts`)
 
-## 35. (BLOCKER) GraphQL Enum Serialization Alignment
+## 38. (BLOCKER) GraphQL Enum Serialization Alignment
 - [ ] GraphQL enum values returned to the client match the values expected by frontend TypeScript unions and REST API contracts
 - [ ] For Strawberry: `strawberry.enum` member names (which become GraphQL enum values) must match frontend enum literals exactly
 - [ ] Changing GraphQL enum definitions must trigger synchronized updates to frontend queries, tests, and shared types
 
-## 36. (HIGH) Frontend Config Fallback Check
+## 39. (HIGH) Frontend Config Fallback Check
 - [ ] No `||` fallbacks in frontend API/WS/GraphQL config files (`src/graphql/client.ts`, `src/sio/client.ts`, etc.)
 - [ ] All API URLs are required build-time env vars with no localhost fallback
 - [ ] Missing env vars cause build-time failure, not silent fallback to localhost
 - [ ] See also: `security-lessons.md` L62 (frontend API URL fallback ban).
 
-## 37. (HIGH) CORS Configuration Validation
+## 40. (HIGH) CORS Configuration Validation
 - [ ] CORS origin is explicit allowlist, never `*` or `true` when `allow_credentials=True`
 - [ ] `Settings.CORS_ORIGINS` has no default wildcard; app refuses to start if CORS_ORIGINS is unset
 - [ ] FastAPI CORS middleware and Socket.io `cors_allowed_origins` use the same explicit allowlist
 - [ ] See also: `security-lessons.md` L61 (CORS wildcard equivalence).
 
-## 38. (BLOCKER) REST Endpoint Auth Guard Check
+## 41. (BLOCKER) REST Endpoint Auth Guard Check
 - [ ] All REST list endpoints (`GET /`) have explicit auth guards or public documentation
 - [ ] All REST detail endpoints (`GET /{id}`) have explicit auth guards or public documentation
 - [ ] Unauthenticated REST endpoints do not expose draft/private data
@@ -242,36 +242,36 @@ correction BEFORE quality gates.
 
 
 
-## 45. GraphQL Context Fail-Closed
+## 42. GraphQL Context Fail-Closed
 - [ ] GraphQL `get_context` or equivalent context builders MUST propagate auth exceptions (JWT errors, missing tokens)
 - [ ] Never silently catch auth exceptions and return an anonymous/unauthenticated context
 - [ ] Auth failures MUST result in GraphQL errors or `AuthenticationError`, not `user = None`
 - [ ] See also: `security-lessons.md` L63 (GraphQL context builders must be fail-closed).
 
-## 39. (BLOCKER) Vite Proxy Port Verification
+## 43. (BLOCKER) Vite Proxy Port Verification
 - [ ] Vite proxy target ports must match the actual exposed ports in docker-compose.yml
 - [ ] `/api` and `/graphql` proxy targets must match the API service port (e.g., 8000)
 - [ ] `/ws` proxy target must match the realtime service port (e.g., 8001)
 - [ ] Never proxy to a default port (e.g., 4000) unless that port is explicitly exposed in docker-compose
 
-## 40. (BLOCKER) WebSocket Auth Handshake Sequence
+## 44. (BLOCKER) WebSocket Auth Handshake Sequence
 - [ ] `api-spec.md` explicitly documents the WebSocket auth handshake: connect → auth event → payload shape → server response → room join
 - [ ] Frontend and backend use the SAME auth mechanism (either Socket.IO `auth` option OR custom `authenticate` event, not both)
 - [ ] Backend rejects all room operations until auth handshake completes
 
-## 41. (BLOCKER) SQLAlchemy Engine Configuration
+## 45. (BLOCKER) SQLAlchemy Engine Configuration
 - [ ] `models.py` does NOT hardcode database connection strings at module level
 - [ ] Engine is created from `get_settings().DATABASE_URL` or uses a lazy factory pattern
 - [ ] Engine creation does not trigger side effects at import time
 
-## 42. GraphQL Schema Introspection Verification
+## 46. GraphQL Schema Introspection Verification
 - [ ] Run `python -c "from app.graphql import schema; print(schema)"` (or equivalent) to introspect the actual GraphQL schema
 - [ ] Verify EVERY frontend query in `queries.ts` matches the schema's argument types exactly (e.g., `DateTime` vs `String`, `Int` vs `Float`)
 - [ ] Verify EVERY frontend mutation's expected return type matches the schema's actual return type (e.g., `Boolean` vs object type)
 - [ ] Verify frontend query field names match schema field names exactly (case-sensitive, including auto-camelCase from Strawberry)
 - [ ] ANY mismatch is a BLOCKER: send to frontend or backend agent for correction
 
-## 43. Frontend Cross-File Import Resolution
+## 47. Frontend Cross-File Import Resolution
 - [ ] After all parallel frontend implementation agents complete, run `npx tsc --noEmit` (or `vite build`, or manual grep of all imports) to verify all cross-file imports resolve
 - [ ] Every export from `queries.ts` MUST be imported by at least one page or component
 - [ ] Every field destructured from Zustand stores MUST exist in the store's type definition

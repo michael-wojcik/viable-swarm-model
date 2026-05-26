@@ -113,12 +113,21 @@
 | H101 | confirmed |
 | H102 | confirmed |
 | H103 | confirmed |
-| H104 | confirmed |
+| H104 | untested |
 | H105 | confirmed |
 | H106 | confirmed |
 | H107 | confirmed |
-| H108 | untested |
-| H109 | untested |
+| H108 | confirmed |
+| H109 | confirmed |
+| H[N+3] | untested |
+| H[N+4] | untested |
+| H150 | untested |
+| H151 | untested |
+| H152 | untested |
+| H153 | untested |
+| H201 | untested |
+| H202 | untested |
+| H203 | untested |
 
 ---
 
