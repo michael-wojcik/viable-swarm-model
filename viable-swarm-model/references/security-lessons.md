@@ -187,7 +187,7 @@ security gate MUST verify it is installed. Also add `MaxAliasesLimiter` and
 **Affected**: vsm_architect, vsm_auditor, vsm_security, vsm_wiring.
 **Source**: FB1, FB18, FB20.
 
-### L38: GraphQL Context Builders Must Be Fail-Closed
+### L63: GraphQL Context Builders Must Be Fail-Closed
 **Prevention rule**: GraphQL `get_context` or equivalent context builders MUST
 NOT catch all exceptions from authentication and set `user = None`. This creates
 a fail-open auth bypass: if a resolver forgets to check `user is None`,
@@ -260,7 +260,7 @@ authenticated user to access any room.
 
 ## CORS & Infrastructure
 
-### L28: CORS origin: true is Equivalent to Wildcard
+### L61: CORS origin: true is Equivalent to Wildcard
 **Prevention rule**: Explicit allowlist from config. Never `origin: true` or
 `origin: "*"` with `credentials: true`. Also verify `allow_methods` and
 `allow_headers` are explicit lists, not `"*"`, when `allow_credentials=True`.
@@ -298,7 +298,7 @@ security headers in nginx.
 fields. Never expose answers in public endpoints.
 **Affected**: S1-Backend, vsm_security.
 
-### L37: Frontend API URL Fallback is Deployment Risk
+### L62: Frontend API URL Fallback is Deployment Risk
 **Prevention rule**: Fail-fast throw Error if `VITE_API_URL` missing. `||
 'http://localhost:8000'` silently routes API calls to localhost in production.
 **Affected**: S1-Frontend, vsm_security.

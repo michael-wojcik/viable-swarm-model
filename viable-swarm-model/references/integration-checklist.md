@@ -165,11 +165,11 @@ correction BEFORE quality gates.
 - [ ] `shared/sio-events.ts` constants are imported by both backend and frontend
 - [ ] Every backend `emit` has a matching frontend `socket.on` listener
 
-## 18. GraphQL Enum Runtime Safety
+## 42. GraphQL Enum Runtime Safety
 - [ ] Python enums used in GraphQL schemas use `str, enum.Enum` (or equivalent) when their values are strings
 - [ ] Enum construction from database string values does not raise `ValueError`
 
-## 19. Circular Import Prevention
+## 43. Circular Import Prevention
 - [ ] No router/module imports from `main.py` (or equivalent entry point)
 - [ ] Shared singletons (limiter, config, database) live in dedicated modules, not in entry points
 
@@ -233,7 +233,7 @@ correction BEFORE quality gates.
 
 ---
 
-## 36. Strawberry GraphQL Field Name Alignment
+## 44. Strawberry GraphQL Field Name Alignment
 - [ ] Run `python -c "from app.graphql import schema; print(schema)"` to inspect the actual GraphQL schema
 - [ ] Verify that Strawberry auto-camelCased field names (`patientId`, `scheduledAt`) match frontend query field names exactly
 - [ ] Frontend queries MUST use camelCase, not snake_case, when the backend uses Strawberry
@@ -241,7 +241,7 @@ correction BEFORE quality gates.
 
 ---
 
-## 37. GraphQL Context Fail-Closed
+## 45. GraphQL Context Fail-Closed
 - [ ] GraphQL `get_context` or equivalent context builders MUST propagate auth exceptions (JWT errors, missing tokens)
 - [ ] Never silently catch auth exceptions and return an anonymous/unauthenticated context
 - [ ] Auth failures MUST result in GraphQL errors or `AuthenticationError`, not `user = None`

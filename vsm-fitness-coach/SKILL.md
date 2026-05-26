@@ -464,7 +464,7 @@ empirical results. It cannot be written before evaluation, hypothesis updates, a
 mutation application are complete. Skipping the synthesis protocol produces prompts
 that test the wrong things, waste build resources, and fail to validate prevention rules.
 
-## 8. The Mutation System
+## 7. The Mutation System
 
 This skill is a learning organism. It modifies its own files between sessions.
 All files in `~/vsm/vsm-fitness-coach/` are mutable.
@@ -518,7 +518,7 @@ If Phase 0 self-test fails because of a bad mutation:
 
 ---
 
-## 7. Fitness Report Template
+## 8. Fitness Report Template
 
 See `assets/fitness-report-template.md` for the full template. Summary:
 
@@ -558,7 +558,7 @@ See `assets/fitness-report-template.md` for the full template. Summary:
 [Is the skill improving? Getting worse? Any structural concerns?]
 ```
 
-## 8. Design Principles
+## 9. Design Principles
 
 1. **The coach is not a builder**: It never writes implementation code.
    It only evaluates, scores, and synthesizes.
