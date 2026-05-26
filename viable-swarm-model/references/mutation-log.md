@@ -1343,3 +1343,33 @@ Spawn `vsm_coordinator` + `vsm_auditor`. Full 20+ point checklist (see
 **Expected effect**: Zero remaining untested hypotheses from the original backlog. Domain fix agents empirically validated. Phase 8b value empirically validated. New hypotheses H108/H109 queued for future gym sessions.
 
 ---
+
+---
+
+## Mutation FB21-23 — 2026-05-25
+
+**Session**: Structural — remove legacy `vsm_tester` agent, unify testing architecture across all tiers
+**File**: `~/vsm/viable-swarm-model/agents/vsm_tester.md`, `~/vsm/viable-swarm-model/references/flow-diagram.mermaid`, `~/vsm/viable-swarm-model/SKILL.md`, `~/vsm/viable-swarm-model/references/security-lessons.md`
+**Type**: structural
+**Rationale**:
+1. `vsm_tester` was labeled "legacy single-agent mode" in the role map. It was created before domain-specific split testers (`vsm_backend_tester`, `vsm_frontend_tester`) and retained only for Tier 1 builds.
+2. The agent's "Bug-Fix Bonus" (fixing bugs inline during test writing) directly contradicted the Phase 4 hard gate and "No Inline Fixes" rules established in H105. Even without the Bug-Fix Bonus, maintaining a special-case unified tester for small builds created tier-based exceptions with no principled justification.
+3. Domain-specific testers have richer prompts: `vsm_backend_tester` includes conftest.py fixtures, router registration verification, and subprocess import checks; `vsm_frontend_tester` includes Apollo Client tests, build verification, and export coverage checks. These depth advantages apply even to small builds.
+4. H59 and H107 both proved domain-specific agents outperform generic/unified ones. There is no evidence that a unified tester produces better outcomes for Tier 1.
+5. `references/flow-diagram.mermaid` was a stale duplicate of the inline diagram in SKILL.md (still referenced generic `coder` in Phase 7). Deleted to eliminate a maintenance liability.
+
+**Changes**:
+- Deleted `agents/vsm_tester.md`
+- Deleted `references/flow-diagram.mermaid`
+- SKILL.md role map: removed S1-Tester row
+- SKILL.md Custom Type section: removed vsm_tester description
+- SKILL.md Agent Output Types: removed vsm_tester bullet
+- SKILL.md flow diagram P4 node: `vsm_tester + vsm_devops_coder` → `vsm_backend_tester + vsm_frontend_tester + vsm_devops_coder`
+- SKILL.md Phase 0 self-test: removed `vsm_tester.md` from file list
+- SKILL.md Phase 4 Tier 1 text: unified tester → domain-specific testers
+- SKILL.md mutation system table: `references/flow-diagram.mermaid` → `SKILL.md flow diagram (inline)`
+- security-lessons.md: L48 supersedes L12 (Tester Bug-Fix Inline is Highly Valued)
+
+**Expected effect**: Zero legacy agents remain. All tiers use the same domain-specific tester architecture. No inline fixes anywhere in the flow. One fewer file to maintain.
+
+---

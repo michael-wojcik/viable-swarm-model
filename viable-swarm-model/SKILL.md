@@ -76,7 +76,6 @@ use symlinks or update paths in mutation commands.
 | **S1-Frontend-Fix** | `vsm_frontend_fix_agent` subagent | Custom | Phase 7 | Frontend surgical fixes, re-audit report |
 | **S1-Backend-Tester** | `vsm_backend_tester` subagent | Custom | Phase 4 | Backend tests (pytest), API tests |
 | **S1-Frontend-Tester** | `vsm_frontend_tester` subagent | Custom | Phase 4 | Frontend tests (vitest), build verification |
-| **S1-Tester** | `vsm_tester` subagent | Custom | Phase 4 (Tier 1 only) | Tests, coverage (legacy single-agent mode) |
 | **S1-Security** | `vsm_security` subagent | Custom | Phase 5 | Security findings |
 | **S1-Meta** | `vsm_meta` subagent | Custom | Phase 8b | Performance evaluation, hypothesis generation |
 | **S1-DevOps** | `vsm_devops_coder` subagent | Custom | Phase 4 | Docker, CI/CD |
@@ -152,10 +151,6 @@ Defined in `agents/vsm_backend_tester.md`.
 (vitest), validates TypeScript compilation, verifies component rendering. Does NOT
 test backend. Defined in `agents/vsm_frontend_tester.md`.
 
-**`vsm_tester`** (S1 Quality — Legacy): Single-agent tester for Tier 1 builds only.
-Tier 2+ builds MUST use split testers to prevent timeout collapse. Defined in
-`agents/vsm_tester.md`.
-
 **`vsm_meta`** (S1 Meta — Evaluation): Evaluates the skill's own performance after a
 build. Reads build artifacts, runs independent test verification, scores agent
 effectiveness, audits prevention rules, and generates falsifiable hypotheses.
@@ -167,8 +162,6 @@ Does NOT write code or design systems. Produces `meta-report.md`. Defined in
 **Writes implementation code:**
 - `vsm_devops_coder` (custom) — Docker, docker-compose, CI/CD, infrastructure
 - `coder` (built-in) — **Legacy fallback only.** Superseded by domain-specific coders.
-- `vsm_tester` (custom) — tests, bug fixes inline
-
 **Writes design/requirements documents:**
 - `vsm_product` (custom) — product briefs, user stories, acceptance criteria
 - `vsm_architect` (custom) — architecture docs, API specs
@@ -213,7 +206,7 @@ flowchart TD
     P3D{<choice>BLOCKERs</choice>?}
     P3E[Entry Point Wiring<br/>MANDATORY]
     P3D2[Phase 3d: Frontend Config Validation<br/>S5 checks frontend config files]
-    P4[Phase 4: Testing + Infra Wave<br/>vsm_tester + vsm_devops_coder]
+    P4[Phase 4: Testing + Infra Wave<br/>vsm_backend_tester + vsm_frontend_tester + vsm_devops_coder]
     P4S[TaskOutput block=true]
     P4R[Shell: run tests]
     P4G{zero test<br/>failures?}
@@ -327,7 +320,7 @@ without contradiction. Specifically verify these agent definition files exist:
 `vsm_wiring.md`, `vsm_backend_coder.md`, `vsm_frontend_coder.md`,
 `vsm_backend_fix_agent.md`, `vsm_frontend_fix_agent.md`, `vsm_devops_coder.md`,
 `vsm_security.md`, `vsm_backend_tester.md`, `vsm_frontend_tester.md`,
-`vsm_tester.md`, `vsm_meta.md`.
+`vsm_meta.md`.
 If any check fails → emit algedonic, write diagnosis
 to `~/vsm/viable-swarm-model/references/mutation-log.md`, ask user to review.
 7. **Read runtime capacity**: Read `~/.kimi/config.toml` and extract
@@ -481,7 +474,9 @@ trivial integration issues.
 ### Phase 4: Testing & Infra Wave
 
 **Tier 1 builds** (< 1000 lines, 1-2 services):
-Spawn `vsm_tester` + `vsm_devops_coder` in parallel. Run tests via Shell.
+Spawn the relevant testers (`vsm_backend_tester` for backend, `vsm_frontend_tester`
+for frontend) + `vsm_devops_coder` in parallel. If the project is full-stack,
+spawn both testers + devops_coder. Run tests via Shell.
 
 **Tier 2+ builds** (≥ 1000 lines, 2+ services):
 Spawn `vsm_backend_tester` + `vsm_frontend_tester` + `vsm_devops_coder` in parallel
@@ -822,7 +817,7 @@ git revert [commit]
 | `references/hypotheses.md` | Append new hypotheses; update status | Low: empirical finding |
 | `references/experiments.md` | Append experiment records | Low: empirical finding |
 | `agents/*.md` | Refine agent prompts | Medium: repeated pattern |
-| `references/flow-diagram.mermaid` | Refine decision logic | High: phase audit shows mismatch |
+| `SKILL.md` flow diagram (inline) | Refine decision logic | High: phase audit shows mismatch |
 | `SKILL.md` | Amend phase details, mutation rules | High: structural issue proven |
 
 ### Mutation Log Format

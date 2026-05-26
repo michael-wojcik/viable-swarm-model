@@ -468,3 +468,9 @@ LOW severity unless they contain production credentials. Distinguish between:
 **Verification**: `grep -r 'allow_methods.*\*' --include='*.py' .` and `grep -r 'allow_headers.*\*' --include='*.py' .`
 **Affected**: vsm_security, vsm_backend_coder.
 **Source**: Gym E16 (H106), FB20-Test security report.
+
+### L48: Tester Bug-Fix Inline is Deprecated — Route ALL Fixes to Phase 7
+**Prevention rule**: The `vsm_tester` legacy agent has been removed. ALL testing is now performed by domain-specific testers (`vsm_backend_tester`, `vsm_frontend_tester`). Neither tester is permitted to fix bugs inline. Test failures MUST be reported to S5, who routes them to Phase 7 (Fix Wave) with the appropriate domain-specific fix agent (`vsm_backend_fix_agent` or `vsm_frontend_fix_agent`). Inline fixes bypass re-audit, post-fix security re-check, and mandatory `re-audit-report.md` production. This applies to ALL tiers, including Tier 1 (<1000 lines).
+**Supersedes**: L12 (Tester Bug-Fix Inline is Highly Valued)
+**Affected**: S5 (main agent), vsm_backend_tester, vsm_frontend_tester, vsm_backend_fix_agent, vsm_frontend_fix_agent.
+**Source**: Gym E15 (H105), FB20/FB21 fitness builds.
