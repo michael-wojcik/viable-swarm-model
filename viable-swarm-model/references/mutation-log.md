@@ -1470,3 +1470,54 @@ Spawn `vsm_coordinator` + `vsm_auditor`. Full 20+ point checklist (see
 
 **Expected effect**: Coverage ledger now accurately reflects all executed builds. Artifact locations are consistent across all fitness builds. Gap analysis and trend detection are now reliable.
 
+
+
+---
+
+## Mutation FB22-1 — 2026-05-25
+
+**Session**: vsm-fitness-coach fitness build #22 (OpsCenter) — post-build mutations batch
+**Files**:
+- `viable-swarm-model/references/anti-patterns.md` (A1)
+- `viable-swarm-model/references/acquired-wisdom.md` (A2)
+- `viable-swarm-model/agents/vsm_backend_tester.md` (R1)
+- `viable-swarm-model/agents/vsm_frontend_tester.md` (R2)
+- `viable-swarm-model/agents/vsm_backend_coder.md` (R3)
+- `viable-swarm-model/SKILL.md` (S1, S2, S3)
+**Type**: mixed — 2 append-only, 3 refinement, 3 structural
+**Rationale**:
+FB22 scored 3.8/5.0 with specific agent failures that all have prevention rules. Rather than letting these failures recur in FB23, we apply a comprehensive mutation batch targeting root causes.
+
+**A1 — Append-only: Anti-Patterns #57 and #58**
+- #57 documents the `strawberry_sqlalchemy_mapper` non-existent package import trap.
+- #58 documents the Vite `"@/"` alias production build failure.
+Both are now in the canonical anti-pattern registry so future agents read them at startup.
+
+**A2 — Append-only: Acquired Wisdom Entry 7**
+Cross-project lesson from FB22: dependency verification BLOCKER, Vite alias standardization, and Phase 0 environment smoke tests. Read at every session startup.
+
+**R1 — Refinement: vsm_backend_tester.md step 8**
+Added explicit Pydantic ConfigDict grep check to the tester's job list. Even if pytest passes, `class Config:` is a BLOCKER-equivalent test failure. This closes the gap where 9 router files in FB22 used deprecated `class Config` despite the backend_coder rule existing.
+
+**R2 — Refinement: vsm_frontend_tester.md minimum meaningful test count**
+FB22 had only 1 frontend render test for a Tier 3 build. Added tier-based minimums (2/5/8) with explicit ban on trivial `expect(true).toBe(true)` tests. Raises the floor on test coverage.
+
+**R3 — Refinement: vsm_backend_coder.md gotcha #13 strengthening**
+Added pre-write instruction: "Before writing ANY Pydantic model, search existing codebase files for ConfigDict usage and copy that exact pattern." The old rule only checked post-write; agents were still writing `class Config:` because they didn't know the correct pattern upfront.
+
+**S1 — Structural: SKILL.md Phase 5 — vsm_security mandatory for Tier 2+**
+Changed Step 5a from "spawn if possible, manual fallback always ok" to "vsm_security is MANDATORY for Tier 2+ builds. Agent failure = BLOCKER, not fallback opportunity." Evidence: FB20 vsm_security caught 5 CRITICAL + 3 HIGH findings that manual checks missed; FB22 manual checklist found zero CRITICAL/HIGH but may have missed classes vsm_security covers.
+
+**S2 — Structural: SKILL.md Phase 0 step 6a — Environment Compatibility Smoke Test**
+Added new conditional step: before dispatching implementation agents, verify declared framework dependencies import cleanly in a fresh subprocess. If strawberry/pydantic/sqlalchemy/etc. fail to import, STOP and report environment issue. Evidence: FB22 graphql.py agent consumed ~15 min on unresolvable import before S5 killed it.
+
+**S3 — Structural: SKILL.md Phase 3 — Sequential Frontend Sub-Wave Enforcement**
+Added explicit "Sub-Wave Sequencing Enforcement (MANDATORY)" paragraph requiring `TaskOutput(block=true)` on the shared-files agent before spawning page agents. The flow diagram already showed Phase 3 as parallel for backend routers; this makes frontend shared files vs pages explicitly sequential. Evidence: FB22 shared-files agent and page agents ran in parallel, causing queries.ts coordination conflicts.
+
+**Expected effect**:
+- FB23 should see zero non-existent package imports.
+- FB23 should see zero `class Config:` occurrences.
+- FB23 should see zero `"@/"` Vite alias failures.
+- FB23 frontend test count should meet Tier 3 minimum (8 meaningful tests).
+- FB23 should have vsm_security actively auditing (not just manual fallback).
+- Any environment incompatibilities should be caught in Phase 0, not Phase 3.

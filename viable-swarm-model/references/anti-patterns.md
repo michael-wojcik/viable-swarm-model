@@ -316,3 +316,17 @@
 **Prevention**: Coordinator output template MUST include a mandatory footer: "If BLOCKERs exist, route to Phase 7. Do NOT fix inline." SKILL.md Phase 4 must be a hard gate (zero test failures before Phase 5/6). S5 must treat integration BLOCKERs as Phase 7 spawn triggers, not inline to-do items.
 **Affected**: S5 (main agent), vsm_coordinator.
 **Source**: Gym E15 (H105), FB20/FB21 fitness builds.
+
+### Anti-Pattern #57: `strawberry_sqlalchemy_mapper` and Other Non-Existent Package Imports
+**What**: Agent imports a package name that sounds plausible (`strawberry_sqlalchemy_mapper`, `sqlalchemy_strawberry`, `fastapi_graphql_auto`) but is not in `requirements.txt` and may not even exist on PyPI. The agent then enters an infinite loop trying to verify the import in a subprocess.
+**When**: Developer (or agent) assumes a popular framework must have an "official" ORM mapper plugin and imports it without checking. In FB22, this consumed ~15 minutes of agent time before S5 killed the task.
+**Prevention**: Dependency Verification BLOCKER (vsm_backend_coder gotcha #14). Before importing ANY third-party package not already used in the codebase, verify it is listed in `requirements.txt`. If the package is NOT listed, STOP and use standard library/framework types instead.
+**Affected**: `vsm_backend_coder`, S1 backend agents, `vsm_auditor`.
+**Source**: FB22 `graphql.py` agent imported `from strawberry_sqlalchemy_mapper import StrawberrySQLAlchemyMapper` (H150).
+
+### Anti-Pattern #58: Vite Alias Key `"@/"` with Trailing Slash
+**What**: `vite.config.ts` uses `"@/"` as the alias key instead of `"@"`. Development builds work because Vite's dev server is lenient, but production builds fail because Rollup does not match the trailing slash.
+**When**: Developer copies an alias pattern from a different project or tutorial without checking Vite/Rollup resolution semantics.
+**Prevention**: Vite Alias Key BLOCKER (vsm_frontend_coder gotcha #8). The alias key MUST be `"@"` mapping to `path.resolve(__dirname, "./src")`. The alias `"@/"` mapping to `./src/` is a BLOCKER.
+**Affected**: `vsm_frontend_coder`, S1 frontend agents.
+**Source**: FB22 `vite.config.ts` used `"@/"` → `./src/`; `npm run build` failed with Rollup resolution error (H153).

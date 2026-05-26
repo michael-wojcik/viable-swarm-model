@@ -108,3 +108,16 @@ for user intervention.
 **Sessions**: 2 (E18, E19)
 **Status**: active
 
+
+---
+
+## Entry 7 — 2026-05-25
+
+**Context**: vsm-fitness-coach fitness build #22 (OpsCenter — Tier 3 full-stack project)
+**Lesson**:
+1. **Dependency verification must be a BLOCKER, not a suggestion.** An agent imported `strawberry_sqlalchemy_mapper` (not in `requirements.txt`) and spent ~15 minutes in an import verification loop before S5 intervention. The cost of a missing dependency check is not just a build failure — it is wasted agent capacity and delayed delivery. The BLOCKER must be enforced by both the agent's own gotcha list AND by the auditor's pre-implementation checklist.
+2. **Vite alias `"@"` vs `"@/"` is a silent production killer.** The alias worked in `npm run dev` but `npm run build` failed with Rollup unable to resolve imports. Frontend config validation in Phase 3e/3f must explicitly verify the alias key, not just its presence.
+3. **Environment compatibility should be checked BEFORE agents are dispatched.** The installed `strawberry-graphql==0.256.0` was incompatible with the system's pydantic version. Catching this in Phase 0 prevents agents from writing code that cannot be runtime-verified.
+**Verification**: Observed once in FB22; 3 distinct agent failures prevented by these rules
+**Sessions**: 1 (FB22)
+**Status**: active

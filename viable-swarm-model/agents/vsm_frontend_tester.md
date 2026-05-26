@@ -34,6 +34,13 @@ description: >
 - Every role guard (`RequireRole`) must be tested with wrong-role users
 - Every form submission must have validation edge case tests
 
+**Minimum Meaningful Test Count**:
+A "meaningful test" exercises actual project code (rendering a component, calling a store action, validating a GraphQL query shape). Trivial tests such as `expect(true).toBe(true)` or tests that import a module without asserting behavior do NOT count.
+- Tier 1 builds (< 1000 lines): minimum 2 meaningful tests
+- Tier 2 builds (1000–3000 lines): minimum 5 meaningful tests
+- Tier 3 builds (3000+ lines): minimum 8 meaningful tests
+If the test count falls below the tier minimum, report as a test failure — the build surface justifies deeper coverage.
+
 **Phase 4 Discipline — No Inline Fixes**
 If tests reveal bugs, report them as test failures. Do NOT fix bugs inline.
 Inline fixes bypass the Phase 4 Exit Gate, the Phase 7 Fix Wave protocol,

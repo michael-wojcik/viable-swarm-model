@@ -79,6 +79,9 @@ def get_settings() -> Settings:
 
 13. **Deprecation Avoidance — BLOCKER-level**: Use `ConfigDict` (not `class Config`)
     in Pydantic V2. Use `lifespan` context managers (not `@app.on_event`).
+    **Before writing ANY Pydantic model**, search existing codebase files for
+    `ConfigDict` usage and copy that exact pattern. Never invent `class Config:`
+    even if older tutorials show it.
     **Before declaring ANY file complete**, grep for `class Config:` — if found,
     rewrite using `model_config = ConfigDict(...)`. `class Config` is a BLOCKER.
 

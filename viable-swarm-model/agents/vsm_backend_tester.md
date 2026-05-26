@@ -28,6 +28,7 @@ description: >
 5. Verify backend modules import cleanly: `python -c "import app.main; import app.graphql; import app.sio; import app.tasks"`
 6. **Router registration verification**: List all files in `app/routers/` and verify each router is importable from `app.main` (i.e., `main.py` calls `include_router()` for every router file present). Any router file without a matching `include_router` is a BLOCKER-equivalent test failure.
 7. Verify Docker Compose services start without immediate crash.
+8. **Pydantic ConfigDict Verification**: After all tests pass, grep the codebase for `class Config:` in Pydantic models. If ANY occurrence is found, report it as a test failure. Pydantic V2 requires `model_config = ConfigDict(...)`. `class Config` is a BLOCKER-equivalent test failure even if pytest passes.
 
 **Test Coverage Requirements**:
 - Every REST endpoint must have at least one test

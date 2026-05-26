@@ -323,6 +323,19 @@ without contradiction. Specifically verify these agent definition files exist:
 `vsm_meta.md`.
 If any check fails → emit algedonic, write diagnosis
 to `~/vsm/viable-swarm-model/references/mutation-log.md`, ask user to review.
+6a. **Environment Compatibility Smoke Test** (conditional): If the build declares
+framework dependencies (e.g., `strawberry-graphql`, `pydantic`, `sqlalchemy`, `fastapi`,
+`celery`), run a quick import verification in a fresh subprocess BEFORE dispatching
+implementation agents:
+```bash
+python -c "import strawberry; import pydantic; import sqlalchemy; import fastapi"
+```
+If ANY import fails, STOP the build immediately. Report the environment
+incompatibility, do NOT dispatch agents that cannot runtime-verify their code,
+and ask the user to resolve the dependency conflict. Writing code that cannot be
+imported wastes agent capacity and produces unverifiable artifacts.
+**Source**: FB22 `strawberry-graphql==0.256.0` failed to import with installed
+pydantic; the graphql.py agent consumed ~15 minutes before S5 intervened (H152).
 7. **Read runtime capacity**: Read `~/.kimi/config.toml` and extract
    `background.max_running_tasks` (default 4 if absent). Log this value in
    `plan.md` as the parallel agent ceiling. NEVER exceed this limit when
@@ -407,11 +420,20 @@ owns these files:
 No other frontend agent may modify these files. The shared-files agent reads
 `data-model.md` and `api-spec.md` to produce complete, correct exports.
 
+**Sub-Wave Sequencing Enforcement (MANDATORY)**:
+S5 MUST spawn the shared-files agent for Sub-Wave 3a, wait via `TaskOutput(block=true)`
+for it to complete, verify the shared files exist and contain valid exports, THEN
+spawn Sub-Wave 3b page agents. Parallelizing shared-files and page agents causes
+race conditions where page agents overwrite shared file contents or write conflicting
+queries. The flow diagram shows Phase 3 as parallel for backend routers only; frontend
+shared files and pages are SEQUENTIAL.
+
 **Frontend Implementation Sub-Wave 3b — Pages & Components (parallel)**:
-After shared files are complete and verified, spawn parallel `vsm_frontend_coder`
-subagents for pages and components. These agents IMPORT from shared files; they
-never write to them. If a page agent needs a new query, it documents the
-requirement and the shared-files agent adds it.
+After shared files are complete and verified (via `TaskOutput(block=true)` on the
+shared-files agent), spawn parallel `vsm_frontend_coder` subagents for pages and
+components. These agents IMPORT from shared files; they never write to them. If a
+page agent needs a new query, it documents the requirement and the shared-files agent
+adds it.
 
 **Backend Implementation (parallel routers)**:
 Backend routers (`app/routers/*.py`) can run in parallel safely because each
@@ -507,9 +529,21 @@ Report combined coverage.
 Spawn `vsm_security`. CRITICAL/HIGH → stop, fix, re-audit. LOW → document.
 Gather vs. Stop: planned wave → gather; mid-build → emergency stop.
 
+**Tier 2+ builds (≥ 1000 lines, 2+ services)**: `vsm_security` is MANDATORY.
+If `vsm_security` fails to spawn, errors out, or produces no report, treat this
+as a BLOCKER. Do NOT proceed to Step 5b as a replacement. Investigate the agent
+failure, fix the underlying issue, and re-spawn `vsm_security`. Manual fallback
+alone has empirically missed findings that `vsm_security` caught (e.g., DTO
+sensitive-field exposure, overly broad exception handling). For Tier 2+, the
+automated scan AND the manual checklist are BOTH required.
+
+**Tier 1 builds (< 1000 lines)**: If `vsm_security` fails to spawn or errors,
+S5 may proceed to Step 5b manual checklist, but MUST log the agent failure in
+`plan.md` as a known limitation.
+
 **Step 5b: Mandatory Manual Fallback Checklist (S5)**
-Regardless of whether `vsm_security` succeeds, fails, or errors out, S5 MUST
-run this manual checklist. A single agent failure must never bypass security.
+For ALL tiers, regardless of `vsm_security` results, S5 MUST run this manual
+checklist. A single agent failure must never bypass security.
 
 Manual checklist (verify by reading source, not trusting agent report):
 1. **Hardcoded secrets**: grep for `SECRET`, `KEY`, `PASSWORD`, `TOKEN` with `=` or `:` assignment. No `||` fallbacks.
