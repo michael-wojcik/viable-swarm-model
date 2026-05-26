@@ -116,6 +116,7 @@
 | H104 | confirmed |
 | H105 | untested |
 | H106 | untested |
+| H107 | untested |
 
 ---
 
@@ -1694,3 +1695,20 @@ Domain-specific prompts measurably improved security posture (explicit CORS orig
 **Expected**: Skipped Phase 8b group: ≥60% recurrence of ≥1 process violation in the next build. Phase 8b group: ≤20% recurrence.
 **Result**: [to be filled]
 **Tested by**: [fitness build or gym experiment]
+
+---
+
+## H107: Domain-specific fix agents produce higher-quality fixes than generic coder for backend/frontend BLOCKERs
+
+**Status**: untested
+**Proposed**: 2026-05-25
+**Rationale**: `vsm_backend_fix_agent` and `vsm_frontend_fix_agent` were created based on observed failure modes (H46, H48, H59, H66, H70, H71, H80, H101, H102) but have never been exercised in a real Phase 7 fix wave. Their prompts embed fix-specific rules (full test suite, no auth weakening, re-audit report), but we lack empirical evidence that these rules translate to better outcomes than a generic `coder` agent fixing the same BLOCKERs.
+**Source**: Structural mutations FB21-9/10 (vsm_backend_fix_agent, vsm_frontend_fix_agent)
+**Experiment**:
+1. Create a build with 3 backend BLOCKERs (circular import, missing `RateLimitExceeded` handler, REST/GraphQL auth parity gap) and 2 frontend BLOCKERs (orphaned query export, `as any` bypass).
+2. Route backend BLOCKERs through `vsm_backend_fix_agent`, frontend through `vsm_frontend_fix_agent`.
+3. Measure: (a) fix correctness, (b) full test suite pass rate post-fix, (c) `re-audit-report.md` production rate, (d) regression count.
+4. Control: Fix identical BLOCKERs with generic `coder` agent.
+**Expected**: Domain fix agents: ≥90% fix correctness, 100% re-audit report production, ≤1 regression. Generic coder: ≤60% fix correctness, 0% re-audit reports, ≥2 regressions.
+**Result**: [to be filled]
+**Tested by**: [gym experiment or fitness build]

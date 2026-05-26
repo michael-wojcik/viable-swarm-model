@@ -21,7 +21,7 @@
 - [Infrastructure](#infrastructure)
 - [GraphQL & Real-Time](#graphql-&-real-time)
 - [Pattern #22: Foundation Wave Sequencing for Multi-Service Projects](#pattern-22-foundation-wave-sequencing-for-multi-service-projects)
-- [Pattern [N]: Pseudo-Recursion — Internal Agent Self-Regulation](#pattern-[n]-pseudo-recursion-—-internal-agent-self-regulation)
+- [Pattern 44: Pseudo-Recursion — Internal Agent Self-Regulation](#pattern-44-pseudo-recursion--internal-agent-self-regulation)
 - [FB17 Patterns](#fb17-patterns)
 
 ---
@@ -299,13 +299,13 @@ Never instantiate at module level. This allows tests to import modules and mock 
 
 ## GraphQL & Real-Time
 
-### 40. Strawberry `str, enum.Enum` for String-Valued GraphQL Enums
+### 42. Strawberry `str, enum.Enum` for String-Valued GraphQL Enums
 **Trigger**: Backend defines GraphQL enums that map to database string columns.  
 **Solves**: `ValueError` when constructing `enum.Enum` from a string value (e.g., `Role("commander")` fails on `enum.Enum` but works on `str, enum.Enum`).  
 **Implementation**: Define enums as `class Role(str, enum.Enum): COMMANDER = "commander"`. Document this requirement in `api-spec.md` so implementation agents follow it.
 **Source**: Fitness build FB5. Coordinator caught `enum.Enum` runtime bug in `graphql.py`.
 
-### 41. Extract Shared Singletons to Dedicated Modules
+### 43. Extract Shared Singletons to Dedicated Modules
 **Trigger**: Multiple modules need access to the same stateful singleton (limiter, config, event bus).  
 **Solves**: Circular imports when routers import from `main.py` to access the singleton.  
 **Implementation**: Create `app/limiter.py`, `app/events.py`, etc. Entry point (`main.py`) imports from these modules; routers also import from these modules. Never import from the entry point.
@@ -344,7 +344,7 @@ Never instantiate at module level. This allows tests to import modules and mock 
 
 ---
 
-## Pattern [N]: Pseudo-Recursion — Internal Agent Self-Regulation
+## Pattern 44: Pseudo-Recursion — Internal Agent Self-Regulation
 
 **Context**: True VSM recursion (every S1 contains its own S1-S5) is impossible in Kimi CLI because subagents cannot spawn their own sub-agent hierarchies.
 

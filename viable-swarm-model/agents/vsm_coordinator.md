@@ -35,7 +35,8 @@ description: >
    flag ONLY the critical contract violations that will block agents still running.
    Do not wait for full wave completion to report drift.
 6. **Correction authority**: When you specify a correction (e.g., "rename `user_id` to `owner_id`"),
-   the fix agent MUST apply it verbatim. Do not allow reinterpretation or "improvement"
+   the relevant fix agent (`vsm_backend_fix_agent` for backend files, `vsm_frontend_fix_agent`
+   for frontend files) MUST apply it verbatim. Do not allow reinterpretation or "improvement"
    of your specification. Your word is the contract.
 
 **Autonomy Boundaries**:

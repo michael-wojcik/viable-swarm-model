@@ -159,7 +159,7 @@ Does NOT write code or design systems. Produces `meta-report.md`. Defined in
 ### Agent Output Types
 
 **Writes implementation code:**
-- `coder` (built-in) — features, backend, frontend, infrastructure
+- `coder` (built-in) — infrastructure, DevOps only. **Superseded for implementation** by `vsm_backend_coder` and `vsm_frontend_coder`.
 - `vsm_tester` (custom) — tests, bug fixes inline
 
 **Writes design/requirements documents:**
@@ -309,7 +309,12 @@ Main agent (S5) performs:
    if exists. Note any untested hypotheses that are relevant to this project.
 5. **Self-test**: Verify all referenced files exist and are readable. Verify
 the flow diagram parses. Verify the skill can describe its own phase sequence
-without contradiction. If any check fails → emit algedonic, write diagnosis
+without contradiction. Specifically verify these agent definition files exist:
+`vsm_architect.md`, `vsm_product.md`, `vsm_auditor.md`, `vsm_coordinator.md`,
+`vsm_wiring.md`, `vsm_backend_coder.md`, `vsm_frontend_coder.md`,
+`vsm_backend_fix_agent.md`, `vsm_frontend_fix_agent.md`, `vsm_security.md`,
+`vsm_backend_tester.md`, `vsm_frontend_tester.md`, `vsm_tester.md`, `vsm_meta.md`.
+If any check fails → emit algedonic, write diagnosis
 to `~/vsm/viable-swarm-model/references/mutation-log.md`, ask user to review.
 6. **Read runtime capacity**: Read `~/.kimi/config.toml` and extract
    `background.max_running_tasks` (default 4 if absent). Log this value in
@@ -396,10 +401,10 @@ No other frontend agent may modify these files. The shared-files agent reads
 `data-model.md` and `api-spec.md` to produce complete, correct exports.
 
 **Frontend Implementation Sub-Wave 3b — Pages & Components (parallel)**:
-After shared files are complete and verified, spawn parallel `coder` subagents
-for pages and components. These agents IMPORT from shared files; they never
-write to them. If a page agent needs a new query, it documents the requirement
-and the shared-files agent adds it.
+After shared files are complete and verified, spawn parallel `vsm_frontend_coder`
+subagents for pages and components. These agents IMPORT from shared files; they
+never write to them. If a page agent needs a new query, it documents the
+requirement and the shared-files agent adds it.
 
 **Backend Implementation (parallel routers)**:
 Backend routers (`app/routers/*.py`) can run in parallel safely because each
