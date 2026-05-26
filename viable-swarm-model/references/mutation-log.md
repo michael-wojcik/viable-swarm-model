@@ -1284,3 +1284,32 @@ Spawn `vsm_coordinator` + `vsm_auditor`. Full 20+ point checklist (see
 **Type**: structural
 **Rationale**: Replaced generic `coder` in Phase 7 with `vsm_backend_fix_agent` + `vsm_frontend_fix_agent`. Updated role map (S1-Backend-Fix, S1-Frontend-Fix rows), flow diagram (`P7` node), Phase 7 text, and Custom Type Prompt Characteristics section. This maintains consistency with the domain-specific implementation agent architecture established in FB21-11.
 **Expected effect**: Phase 7 spawn instructions reference domain-specific fix agents. No generic coders remain in any production phase (implementation or fix).
+
+---
+
+## Mutation FB21-16 — 2026-05-25
+
+**Session**: Post-gym refinement batch — corrections and hypothesis addition
+**File**: `~/vsm/viable-swarm-model/references/hypotheses.md`, `~/vsm/viable-swarm-model/agents/vsm_coordinator.md`, `~/vsm/viable-swarm-model/SKILL.md`, `~/vsm/viable-swarm-model/references/pattern-library.md`
+**Type**: refinement + append-only
+**Rationale**:
+1. H107 added: domain-specific fix agents have never been exercised in a real Phase 7 fix wave. Need empirical validation before trusting them.
+2. `vsm_coordinator.md` referenced "the fix agent" generically — now names `vsm_backend_fix_agent` and `vsm_frontend_fix_agent` explicitly.
+3. `SKILL.md` still referenced generic `coder` for frontend page agents (Phase 3b) and listed it as a primary implementation writer. Updated to `vsm_frontend_coder` and annotated `coder` as legacy/DevOps-only.
+4. `SKILL.md` Phase 0 self-test now explicitly lists all 14 agent definition files to catch missing files early.
+5. `pattern-library.md` had duplicate Pattern 40 (Spatial Bounds + GraphQL Enum) and placeholder `[N]` for Pseudo-Recursion. Renumbered to 42, 43, 44.
+**Expected effect**: No stale generic `coder` references in production phases. Fix agents named explicitly in coordinator authority. Pattern library numbering is unambiguous. Phase 0 catches missing agent files before build begins.
+
+---
+
+## Mutation FB21-17 — 2026-05-25
+
+**Session**: Structural — create `vsm_devops_coder` + Pattern 45 Fix Agent Validation
+**File**: `~/vsm/viable-swarm-model/agents/vsm_devops_coder.md`, `~/vsm/viable-swarm-model/SKILL.md`, `~/vsm/viable-swarm-model/references/pattern-library.md`
+**Type**: structural
+**Rationale**:
+1. Generic `coder` was the LAST remaining un-domain-specific implementation agent. DevOps configs (Docker, docker-compose, CI/CD) have unique failure modes: `:-` fallbacks, Dockerfile layer ordering, missing `.dockerignore`, port mismatches, healthcheck absence, `latest` tag usage, host networking. A generic `coder` misses these because it lacks embedded infrastructure domain knowledge.
+2. `vsm_devops_coder` prompt embeds 12 infrastructure gotchas with mandatory verification commands (grep for `:-`, test `.dockerignore`, verify CMD file exists, port consistency triple-check).
+3. `SKILL.md` updated: role map S1-DevOps row changed from `coder` (Built-in) to `vsm_devops_coder` (Custom). Phase 4 spawn instructions updated. Agent Output Types updated. Phase 6/7 boundary algedonic updated to include `vsm_devops_coder` for infra fixes. Phase 0 self-test includes `vsm_devops_coder.md`.
+4. Pattern 45 (Fix Agent Dry-Run Validation) added to pattern-library.md. Mandates controlled builds with intentional BLOCKERs before trusting new fix agents. Formalizes the validation gap identified in H107.
+**Expected effect**: Zero generic `coder` subagents in any production phase. DevOps configs are produced by an agent with embedded containerization knowledge. New fix agents must pass dry-run validation before being trusted.

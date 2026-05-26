@@ -79,7 +79,7 @@ use symlinks or update paths in mutation commands.
 | **S1-Tester** | `vsm_tester` subagent | Custom | Phase 4 (Tier 1 only) | Tests, coverage (legacy single-agent mode) |
 | **S1-Security** | `vsm_security` subagent | Custom | Phase 5 | Security findings |
 | **S1-Meta** | `vsm_meta` subagent | Custom | Phase 8b | Performance evaluation, hypothesis generation |
-| **S1-DevOps** | `coder` subagent | Built-in | Phase 4 | Docker, CI/CD |
+| **S1-DevOps** | `vsm_devops_coder` subagent | Custom | Phase 4 | Docker, CI/CD |
 | **Algedonic** | Main agent detects/stops | — | Any phase | TaskStop, AskUserQuestion |
 
 **Terminology**: `S5` refers to the main conversation agent (you, the LLM executing
@@ -134,6 +134,12 @@ Inherits all frontend gotchas. Adds fix-specific rules: `npm run build` after ev
 fix, `tsc --noEmit` check, no `as any` bypasses, export verification, Apollo Client
 consistency, and mandatory `re-audit-report.md`. Defined in `agents/vsm_frontend_fix_agent.md`.
 
+**`vsm_devops_coder`** (S1 DevOps Implementation): Writes Docker, docker-compose,
+CI/CD, and infrastructure configs with embedded domain knowledge of containerization
+gotchas. Replaces generic `coder` for all infrastructure waves. Verifies Dockerfile
+CMD files exist, docker-compose has no `:-` fallbacks, ports match across configs,
+and `.dockerignore` excludes secrets. Defined in `agents/vsm_devops_coder.md`.
+
 **`vsm_security`** (Security Audit): Read-only security specialist. Runs 15+
 point security checklist. Prevents, not detects — knows all anti-patterns.
 Defined in `agents/vsm_security.md`.
@@ -159,7 +165,8 @@ Does NOT write code or design systems. Produces `meta-report.md`. Defined in
 ### Agent Output Types
 
 **Writes implementation code:**
-- `coder` (built-in) — infrastructure, DevOps only. **Superseded for implementation** by `vsm_backend_coder` and `vsm_frontend_coder`.
+- `vsm_devops_coder` (custom) — Docker, docker-compose, CI/CD, infrastructure
+- `coder` (built-in) — **Legacy fallback only.** Superseded by domain-specific coders.
 - `vsm_tester` (custom) — tests, bug fixes inline
 
 **Writes design/requirements documents:**
@@ -206,7 +213,7 @@ flowchart TD
     P3D{<choice>BLOCKERs</choice>?}
     P3E[Entry Point Wiring<br/>MANDATORY]
     P3D2[Phase 3d: Frontend Config Validation<br/>S5 checks frontend config files]
-    P4[Phase 4: Testing + Infra Wave<br/>vsm_tester + coder]
+    P4[Phase 4: Testing + Infra Wave<br/>vsm_tester + vsm_devops_coder]
     P4S[TaskOutput block=true]
     P4R[Shell: run tests]
     P5[Phase 5: Security Gate<br/>vsm_security]
@@ -312,8 +319,9 @@ the flow diagram parses. Verify the skill can describe its own phase sequence
 without contradiction. Specifically verify these agent definition files exist:
 `vsm_architect.md`, `vsm_product.md`, `vsm_auditor.md`, `vsm_coordinator.md`,
 `vsm_wiring.md`, `vsm_backend_coder.md`, `vsm_frontend_coder.md`,
-`vsm_backend_fix_agent.md`, `vsm_frontend_fix_agent.md`, `vsm_security.md`,
-`vsm_backend_tester.md`, `vsm_frontend_tester.md`, `vsm_tester.md`, `vsm_meta.md`.
+`vsm_backend_fix_agent.md`, `vsm_frontend_fix_agent.md`, `vsm_devops_coder.md`,
+`vsm_security.md`, `vsm_backend_tester.md`, `vsm_frontend_tester.md`,
+`vsm_tester.md`, `vsm_meta.md`.
 If any check fails → emit algedonic, write diagnosis
 to `~/vsm/viable-swarm-model/references/mutation-log.md`, ask user to review.
 6. **Read runtime capacity**: Read `~/.kimi/config.toml` and extract
@@ -467,10 +475,10 @@ trivial integration issues.
 ### Phase 4: Testing & Infra Wave
 
 **Tier 1 builds** (< 1000 lines, 1-2 services):
-Spawn `vsm_tester` + `coder` (devops) in parallel. Run tests via Shell.
+Spawn `vsm_tester` + `vsm_devops_coder` in parallel. Run tests via Shell.
 
 **Tier 2+ builds** (≥ 1000 lines, 2+ services):
-Spawn `vsm_backend_tester` + `vsm_frontend_tester` + `coder` (devops) in parallel
+Spawn `vsm_backend_tester` + `vsm_frontend_tester` + `vsm_devops_coder` in parallel
 with `run_in_background=true`. Both testers run simultaneously:
 - `vsm_backend_tester`: pytest, database fixtures, API integration, Celery mocks
 - `vsm_frontend_tester`: vitest, component rendering, TypeScript compilation, build verification
@@ -516,7 +524,8 @@ Spawn `vsm_coordinator` + `vsm_auditor`. Full 20+ point checklist (see
 > **Algedonic signal — Phase 6/7 Boundary**: If integration verification finds
 > BLOCKERs, do NOT fix them inline. Route to Phase 7 (Fix Wave). Inline fixes
 > bypass re-audit and post-fix security re-check, violating exit criteria. S5
-> MUST spawn `coder` subagents for fixes, produce a `re-audit-report.md`
+> MUST spawn domain-specific fix agents (`vsm_backend_fix_agent`,
+`vsm_frontend_fix_agent`, `vsm_devops_coder` for infra) for fixes, produce a `re-audit-report.md`
 > artifact, and run Phase 7b post-fix security re-check before returning to
 > the main flow.
 

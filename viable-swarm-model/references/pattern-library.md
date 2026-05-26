@@ -561,3 +561,34 @@ Known Stack Gotchas — verify these explicitly:
 6. NEVER use module-level `engine = create_async_engine(...)` in models.py.
 ```
 **Source**: Gym-2026-05-25 Experiment E14 (H59). Generic coder used `allow_origins=["*"]` and skipped runtime API verification. Domain-specific coder used explicit origins and dynamic signature checks.
+
+### Pattern 45: Fix Agent Dry-Run Validation
+
+**When**: A new domain-specific fix agent (e.g., `vsm_backend_fix_agent`, `vsm_frontend_fix_agent`) is created or its prompt undergoes significant structural changes.
+
+**What**: Before trusting the new fix agent in a production build, run a controlled "dry run" build with intentionally injected BLOCKERs that match the agent's domain.
+
+**Why**: Fix agents are created based on observed failure modes, but their prompts have never been exercised in a real Phase 7 fix wave. A prompt that looks correct on paper may fail to produce the expected `re-audit-report.md`, may introduce regressions, or may miss subtle variants of the BLOCKERs it was designed to catch.
+
+**How**:
+1. Create a minimal build in the target stack (FastAPI/SQLAlchemy for backend, React/Vite for frontend).
+2. Inject 2-3 known BLOCKERs from the agent's domain:
+   - Backend: circular import, missing exception handler, auth parity gap
+   - Frontend: orphaned query export, `as any` bypass, missing tsconfig include
+3. Route BLOCKERs through the new fix agent in a proper Phase 7 flow.
+4. Measure:
+   - Fix correctness (does the code actually work?)
+   - Full test suite pass rate post-fix
+   - `re-audit-report.md` production rate
+   - Regression count (did fixing one thing break another?)
+5. Compare against a control: fix identical BLOCKERs with a generic `coder` agent.
+6. If the domain-specific agent underperforms the generic agent → reject the prompt and iterate.
+
+**Acceptance criteria**:
+- ≥90% fix correctness
+- 100% re-audit report production
+- ≤1 regression per fix wave
+- Full test suite passes after fix
+
+**Source**: Structural mutations FB21-9/10 created `vsm_backend_fix_agent` and `vsm_frontend_fix_agent` without empirical validation. H107 formalizes the gap.
+**See also**: `references/hypotheses.md` H107.
