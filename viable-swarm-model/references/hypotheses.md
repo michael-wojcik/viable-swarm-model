@@ -973,6 +973,7 @@ agent prompt are both effective at detecting this pattern.
 **Expected**: Agent prompt includes "Use QueryDepthLimiter; QueryComplexityExtension may not be available in all versions."
 **Result**: FB15 re-validated this hypothesis with a different API surface. The foundation agent assumed `strawberry.Schema(..., validation_rules=[QueryDepthLimiter])` was valid, but the installed version does not accept `validation_rules`. This caused a `TypeError` on import. The agent did not verify the parameter before using it. H55 generalizes beyond extension names to all Strawberry API parameters — agents must verify at runtime.
 **Tested by**: FB15
+**See also**: Pattern: Runtime Framework API Verification in `references/pattern-library.md`.
 
 ---
 
@@ -1173,45 +1174,8 @@ introspected schema" could prevent H58.
 
 ---
 
-## H70: Fix agents must run circular-import check before adding cross-module imports
-
-**Status**: untested
-**Proposed**: 2026-05-25
-**Rationale**: In FB15 Fix Wave 2, the fix agent added `from app.main import limiter` to `app/routers/auth.py` to wire rate limiting. This created a circular import (`main.py` → `routers/auth.py` → `main.py`) that crashed on import. The agent did not verify imports before reporting success. A pre-flight `python -c "import app.main"` would have caught this immediately.
-**Source**: Fitness build FB15, Phase 7
-**Experiment**: Add "After fixing cross-module imports, run `python -c 'import app.main'` to verify no circular dependencies" to fix agent prompt. Run 5 builds with cross-module fixes. Count circular imports introduced.
-**Expected**: 0 circular imports after checklist addition.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
-
----
-
-## H71: Frontend `as any` usage correlates with store/page contract mismatches
-
-**Status**: untested
-**Proposed**: 2026-05-25
-**Rationale**: FB15 frontend agent used `useEventStore() as any` to destructure `salesMetrics` which did not exist in the store schema. This bypassed TypeScript's static analysis and prevented `tsc --noEmit` from catching the mismatch. The `as any` pattern is a red flag for hidden contract violations.
-**Source**: Fitness build FB15, Phase 3
-**Experiment**: Add "Flag all `as any` casts in frontend code as ISSUE; verify they don't mask missing store fields or query exports" to auditor prompt and frontend import check. Run 5 builds. Count hidden contract mismatches.
-**Expected**: 0 hidden mismatches after checklist addition.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
-
----
-
-## H72: Strawberry Schema parameter validation must be verified at runtime, not assumed
-
-**Status**: untested
-**Proposed**: 2026-05-25
-**Rationale**: FB15 foundation agent assumed `strawberry.Schema(..., validation_rules=[QueryDepthLimiter])` was valid API. The installed version of strawberry-graphql does not accept `validation_rules`, causing `TypeError` on import. The agent did not verify the parameter before using it. This is a recurrence of H55 (Strawberry extension drift) in a different API surface.
-**Source**: Fitness build FB15, Phase 2
-**Experiment**: Add "Before using strawberry.Schema parameters, verify them with `help(strawberry.Schema.__init__)` or a test invocation" to backend coder prompt. Run 3 GraphQL builds. Count schema creation failures.
-**Expected**: 0 schema creation failures after checklist addition.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
 
 
----
 
 ## H70: Fix agents must run circular-import check before adding cross-module imports
 
@@ -1486,57 +1450,9 @@ introspected schema" could prevent H58.
 
 ---
 
-## H90: httpx version drift breaks ASGI test clients
 
-**Status**: untested
-**Proposed**: 2026-05-25
-**Rationale**: FB19 test suite failed with `AsyncClient.__init__() got an unexpected keyword argument 'app'` because httpx 0.28+ requires `ASGITransport(app=app)`. Future httpx releases may break other patterns. The skill's pattern-library has no test-client example.
-**Source**: Fitness build FB19, Phase 4
-**Experiment**: Add `ASGITransport` pattern to `references/pattern-library.md`. Run 3 FastAPI builds and verify test suites pass on first run.
-**Expected**: 0 ASGI transport errors.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
 
----
 
-## H91: SQLAlchemy UUID columns + SQLite test DB require explicit uuid.UUID() conversion
-
-**Status**: untested
-**Proposed**: 2026-05-25
-**Rationale**: FB19 `get_current_user` passed a string UUID (from JWT `sub`) to `User.id == user_id`, where `User.id` is `UUID(as_uuid=True)`. SQLite raised `AttributeError: 'str' object has no attribute 'hex'`. This pattern recurs whenever UUID PKs are used with SQLite test databases.
-**Source**: Fitness build FB19, Phase 4/5
-**Experiment**: Add "Convert string IDs to uuid.UUID before SQLAlchemy filter" to `references/pattern-library.md`. Run 3 builds with UUID PKs + SQLite tests.
-**Expected**: 0 UUID/string type errors.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
-
----
-
-## H92: Rate-limited auth endpoints exhaust test quotas when tests register users repeatedly
-
-**Status**: untested
-**Proposed**: 2026-05-25
-**Rationale**: FB19 `test_orders.py` called `/auth/register` 3 times, and combined with `test_auth.py`'s 3 calls, hit the SlowAPI 5/minute limit. The 6th registration returned 429. Test fixtures should seed users directly into the DB rather than exercising rate-limited endpoints.
-**Source**: Fitness build FB19, Phase 4
-**Experiment**: Add "Use role fixtures instead of repeated /auth/register calls" to `references/pattern-library.md`. Run 3 builds with rate-limited auth and verify no 429s in tests.
-**Expected**: 0 rate-limit test failures.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
-
----
-
-## H93: Celery task tests require broker mocking when Redis is unavailable
-
-**Status**: untested
-**Proposed**: 2026-05-25
-**Rationale**: FB19 Celery task tests attempted to connect to `redis://localhost:6379` on import (module-level `Celery()` instantiation). No Redis was running in the test environment. Mocking `.delay()` is the minimal fix; configuring `task_always_eager` is an alternative.
-**Source**: Fitness build FB19, Phase 4
-**Experiment**: Add Celery test mocking pattern to `references/pattern-library.md`. Run 3 builds with Celery tasks.
-**Expected**: 0 Redis connection errors in tests.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
-
----
 
 ## H90: httpx version drift breaks ASGI test clients
 
@@ -1590,72 +1506,10 @@ introspected schema" could prevent H58.
 
 ---
 
-## H94: S5 will skip spawning vsm_meta in Phase 8b unless the spawn instruction is structurally enforced
-
-**Status**: confirmed
-**Proposed**: 2026-05-25
-**Rationale**: FB20 S5 skipped `vsm_meta` entirely, writing `meta-reflection.md` manually with self-assessed 4.9/5.0. The agent existed in `agents/vsm_meta.md` and the role map, but S5 did not execute the phase instruction. User challenge was required to retroactively spawn it.
-**Source**: Fitness build FB20, Phase 8b process audit
-**Experiment**: Add mandatory `vsm_meta` spawn check to Phase 8b in SKILL.md with an algedonic signal: "If meta-report.md does not exist, Phase 8b is NOT complete." Run 3 builds.
-**Expected**: 0 skipped vsm_meta spawns.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
-
----
-
-## H95: GraphQL subscription resolvers without resource ownership verification leak cross-tenant events
-
-**Status**: confirmed
-**Proposed**: 2026-05-25
-**Rationale**: FB20 `maintenance_status_update` and `payment_received` subscriptions filtered by `property_id` but `_ensure_role` only checked role, not ownership/lease. A tenant could subscribe to `property_id=None` and receive all events.
-**Source**: Fitness build FB20, Phase 5/8b coverage audit
-**Experiment**: Add "GraphQL subscription resolvers verify resource ownership before yielding" to `references/security-lessons.md`. Run 3 builds with subscriptions.
-**Expected**: 0 subscription ACL misses by security gate.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
-
----
-
-## H96: Foundation wave agents embed framework deprecation patterns that break on next major version
-
-**Status**: confirmed
-**Proposed**: 2026-05-25
-**Rationale**: FB20 embedded Pydantic V2 class-based `Config` in 4 files and FastAPI `@app.on_event` in `main.py`. Neither foundation auditor nor security gate flagged these as issues. They will break on Pydantic V3 / FastAPI next major.
-**Source**: Fitness build FB20, Phase 2/4
-**Experiment**: Add "Zero deprecation warnings from application code on test run" to `references/integration-checklist.md` and `agents/vsm_auditor.md`. Run 3 builds.
-**Expected**: Foundation auditor flags deprecation warnings as ISSUES.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
-
----
-
-## H97: In-memory rate limiting is ineffective under multi-process deployments
-
-**Status**: untested
-**Proposed**: 2026-05-25
-**Rationale**: FB20 `graphql.py:33` uses `_rate_limit_store: defaultdict(list)` with `asyncio.Lock`. Under N uvicorn workers, each process has isolated memory, allowing 5×N requests before limiting.
-**Source**: Fitness build FB20, Phase 3/6
-**Experiment**: Build minimal FastAPI app with in-memory rate limiting behind 4 uvicorn workers. Send 5 requests to each worker concurrently. Measure 429 rate.
-**Expected**: 0% of requests receive 429 when distributed across workers.
-**Result**: [to be filled]
-**Tested by**: [vsm-fitness-gym experiment]
-
----
-
-## H98: Fix wave without re-audit report artifact risks undocumented regressions
-
-**Status**: untested
-**Proposed**: 2026-05-25
-**Rationale**: FB20 resolved 9 security findings in Phase 7, but no re-audit report exists in the build directory. The `meta-report.md` notes: "no re-audit report file exists... implying re-audit occurred, but no re-audit report file exists."
-**Source**: Fitness build FB20, Phase 7
-**Experiment**: Add "Re-audit report artifact MUST be written to build directory" to `agents/vsm_auditor.md` Phase 7 section. Run 3 builds with fix waves.
-**Expected**: 100% of fix waves produce a re-audit report file.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
 
 
 
----
+
 
 ## H94: Phase 8b MUST spawn vsm_meta; S5 must NOT write meta-reflection.md manually
 

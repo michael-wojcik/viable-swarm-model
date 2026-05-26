@@ -6,6 +6,9 @@
 >
 > **Mutation rules**: Append only. Each entry includes: session context,
 > file changed, type of change, rationale, expected effect.
+>
+> **Convention**: Use sequential numbers (`Mutation 1`, `Mutation 2`, ...).
+> Reference the fitness build ID in the Session field.
 
 ---
 
@@ -46,26 +49,6 @@ build ID in the Tested by field.
   flow diagram to include P2H node.
 
 ---
-
-## Mutation [N] — YYYY-MM-DD
-
-**Session**: [Brief description of the fitness build or coach self-evaluation]
-**File**: [Which file was modified]
-**Type**: [append | refinement | structural]
-**Rationale**: [What empirical finding motivated this change. Be specific:
-which build, which phase score, which trainer gap.]
-**Expected effect**: [How the next fitness build should behave differently
-because of this mutation.]
-
-**Before**:
-```
-[content or summary of what existed]
-```
-
-**After**:
-```
-[content or summary of what replaced it]
-```
 
 ## Mutation 42 — YYYY-MM-DD (FB13 Documentation Fix)
 **Session**: FB13 fitness build evaluation — user feedback

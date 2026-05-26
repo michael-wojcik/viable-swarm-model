@@ -112,7 +112,7 @@ The `data-model.md` in the build directory MUST specify these EXACT fields. Phas
 - `models.py` field names match `data-model.md` exactly (Phase 2c validation)
 - WebSocket room handlers verify auth before room join
 - Foundation phase has 0 BLOCKERs (H41 validation)
-- Phase 8b produces standalone `meta-reflection.md` artifact
+- Phase 8b produces standalone `meta-report.md` artifact
 ```
 
 ---

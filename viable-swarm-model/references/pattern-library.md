@@ -6,6 +6,25 @@
 
 ---
 
+
+## Table of Contents
+
+- [Foundation](#foundation)
+- [Backend](#backend)
+- [Frontend](#frontend)
+- [Real-Time](#real-time)
+- [Cross-Language](#cross-language)
+- [Testing](#testing)
+- [Game](#game)
+- [GraphQL](#graphql)
+- [Full-Stack](#full-stack)
+- [Infrastructure](#infrastructure)
+- [GraphQL & Real-Time](#graphql-&-real-time)
+- [Pattern #22: Foundation Wave Sequencing for Multi-Service Projects](#pattern-22-foundation-wave-sequencing-for-multi-service-projects)
+- [Pattern [N]: Pseudo-Recursion — Internal Agent Self-Regulation](#pattern-[n]-pseudo-recursion-—-internal-agent-self-regulation)
+- [FB17 Patterns](#fb17-patterns)
+
+---
 ## Foundation
 
 ### 1. Foundation-First Wave Execution
@@ -185,6 +204,17 @@
 **Trigger**: GraphQL API with subscriptions.  
 **Solves**: Deprecated subscription transport.  
 **Implementation**: See Pattern #8.
+
+### Pattern: Runtime Framework API Verification
+**When**: Any agent documents or uses framework-specific parameters (e.g., `strawberry.Schema(validation_rules=[...])`, `socketio.AsyncServer(...)`).
+**What**: Before embedding a parameter in design docs or code, verify it exists in the installed version via `python -c "help(Class.__init__)"` or test invocation.
+**Why**: Framework versions drift. `DepthLimitExtension` becomes `QueryDepthLimiter`; `validation_rules` parameter disappears; `@app.on_event` becomes `lifespan`. Agents that copy parameters from documentation or prompts without runtime verification produce `TypeError` on import.
+**How**:
+1. Before documenting framework-specific parameters in `api-spec.md`, run `python -c "import module; help(Class.__init__)"`
+2. If the parameter is not recognized, do NOT use it — find the correct API for the installed version
+3. This applies to Strawberry, FastAPI, SQLAlchemy, Socket.IO, and any library with version drift
+**Source**: FB12 agent assumed `DepthLimitExtension` and `QueryComplexityExtension` existed; installed version only had `QueryDepthLimiter` (H55). FB15 agent used `validation_rules` parameter that doesn't exist in installed strawberry-graphql (H72). FB20 embedded Pydantic class-based `Config` and FastAPI `@app.on_event` that will break on next major version (H96).
+**See also**: `references/hypotheses.md` H55, H72, H96.
 
 ---
 

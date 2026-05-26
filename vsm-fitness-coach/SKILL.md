@@ -41,7 +41,8 @@ Must be embedded in a message (e.g., `Let's do a fitness build. /flow:vsm-fitnes
 - Main skill: `~/vsm/viable-swarm-model/`
 - Fitness builds: `~/vsm-fitness-builds/coach/[project-id]-[date]/`
 
-If installed elsewhere, adjust paths.
+If installed elsewhere (e.g. via `extra_skill_dirs`), use symlinks or update
+paths in mutation commands.
 
 **Build directory**: Every fitness build creates a dedicated, timestamped
 directory. The athlete (`viable-swarm-model`) builds the project there — never
@@ -188,7 +189,7 @@ draft as the build specification, building in
 `~/vsm-fitness-builds/coach/[project-id]-[date]/`. The main skill's full
 10-phase flow executes:
 - Intelligence, Foundation, Implementation, Testing, Integration, Security, Fix
-- Phase 8b meta-reflection (the main skill's own evaluation)
+- Phase 8b meta-report (the main skill's own evaluation)
 
 The coach does NOT interfere during the build. It observes and records.
 
@@ -209,13 +210,13 @@ The coach does NOT interfere during the build. It observes and records.
 - Test coverage report
 - Fix wave logs
 - Project lessons (`~/vsm-fitness-builds/coach/[id]-[date]/.kimi/lessons.md`)
-- Main skill's own meta-reflection output
+- Main skill's own meta-report output
 
 ### Phase 1c: Coach Completion Verification (MANDATORY — HARD BLOCK)
 
 **This gate is NOT optional.** S5 MUST NOT proceed to Phase 2 until ALL of the following are verified. Failure to verify ANY item means the build is NOT complete.
 
-1. **VSM Phase 8b is fully complete** — meta-reflection written, mutations bucketed, skill logs updated.
+1. **VSM Phase 8b is fully complete** — meta-report written, mutations bucketed, skill logs updated.
 2. **Security Gate has zero unfixed HIGH/MEDIUM findings** — LOW findings may be documented, but HIGH/MEDIUM must be fixed or explicitly escalated to the user with written rationale.
 3. **Integration Verification has zero unfixed HIGH/MEDIUM findings** — same rule as Security Gate.
 4. **All tests pass** — backend pytest green, frontend build green, import checks green.

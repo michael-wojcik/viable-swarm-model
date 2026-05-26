@@ -8,6 +8,8 @@
 > **Organization**: Rules are grouped by TOPIC, not by build discovery date.
 > Each rule includes ALL builds that discovered or validated it. This prevents
 > duplicate rule proposals — scan the relevant topic before adding a new rule.
+>
+> **See also**: Mutation FB21-8 reorganized this file from chronological to topical.
 
 ---
 

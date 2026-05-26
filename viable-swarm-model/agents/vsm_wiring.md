@@ -41,6 +41,8 @@ description: >
 - [ ] `main.tsx` wraps the app in `ApolloProvider` with the client from `graphql/client.ts`
 - [ ] `main.tsx` wraps the app in `BrowserRouter`
 - [ ] No circular imports: routers do NOT import from `main.py`
+- [ ] List ALL Python files in `app/routers/` that define an `APIRouter` instance
+- [ ] Verify EVERY router is `include_router`-ed in `main.py`
 
 **Output**:
 - List of wiring changes made

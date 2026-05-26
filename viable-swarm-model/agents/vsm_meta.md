@@ -123,3 +123,4 @@ flag it as structural with a bold warning.
   Example: "S5 proposed 4 mutations in meta-reflection but only applied 2. This is
   a Mutation Orphan failure mode. Recommend adding Mutation Verification Checkpoint
   to Phase 8b."
+  **See also**: Pattern: Mutation Orphan Prevention in `references/pattern-library.md`.

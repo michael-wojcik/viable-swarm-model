@@ -25,6 +25,7 @@ description: >
 5. Run `npx tsc --noEmit` to verify all TypeScript imports resolve.
 6. Verify every export from `queries.ts` is imported by at least one page/component.
 7. Verify NO `as any` casts without explanatory comments.
+   - `as any` used to destructure store fields is a test failure — the store schema must be updated instead.
 
 **Test Coverage Requirements**:
 - Every page component must have at least a render test

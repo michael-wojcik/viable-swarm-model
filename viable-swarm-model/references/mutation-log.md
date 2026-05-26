@@ -15,6 +15,11 @@
 > FB18-7 (frontend sub-waves), FB18-8 (security fallback), FB18-9 (vsm_meta),
 > FB18-10 (mutation verification), FB19-8 (coach completion), FB19-9 (structural
 > gate), FB20-6 (vsm_meta hard block), FB21-7 (Phase 6/7 boundary).
+>
+> **Convention**: Early mutations use sequential numbers (`Mutation 1`).
+> Build-specific mutations use `FB[N]-[M]` format (e.g., `FB21-7`). All new
+> mutations should use the `FB[N]-[M]` format going forward for consistency
+> with the coach and gym logs.
 
 ---
 

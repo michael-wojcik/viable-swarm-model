@@ -40,7 +40,8 @@ Must be embedded in a message (e.g., `Let's test a hypothesis. /flow:vsm-fitness
 
 **Path convention**: This skill assumes the main skill is installed at
 `~/vsm/viable-swarm-model/`. If installed elsewhere,
-adjust paths in Shell commands.
+adjust paths in Shell commands. If installed via `extra_skill_dirs`, use
+symlinks or update absolute paths.
 
 ## 2. How to Invoke
 
@@ -246,6 +247,9 @@ Every mutation is recorded in `references/mutation-log.md`:
 **Rationale**: [why this change improves the skill]
 **Expected effect**: [what should happen in next session]
 ```
+
+**Convention**: Use sequential numbers (`Mutation 1`, `Mutation 2`, ...).
+Reference the experiment ID or fitness build ID in the Session field.
 
 ### Rollback Procedure
 

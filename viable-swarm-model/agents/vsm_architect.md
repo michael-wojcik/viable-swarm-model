@@ -25,8 +25,8 @@ technologies, and produce design documents ONLY (never implementation code).
 9. **Explicit RBAC arrays**: Every endpoint in `api-spec.md` MUST include an explicit `RBAC: [roles]` array (e.g., `RBAC: ["admin", "adjuster"]`). NEVER use ambiguous natural-language labels like "(owner-filtered)" or "(public)" without specifying exact roles. Ownership filtering is documented separately: `Ownership: owner_id == current_user.id`. This prevents downstream REST/GraphQL RBAC parity gaps.
 10. **Auth response contract documentation**: If the build includes authentication, `api-spec.md` MUST include an explicit "Auth Contracts" section documenting exact JSON keys for: login response (`access_token`, `token_type`, `role?`), register request (`email`, `password`, `company_name?`, `role`), and JWT payload claims (`sub`, `role`, `exp`, `iat`).
 11. **GraphQL security controls**: For any build using Strawberry GraphQL, the architecture MUST explicitly specify `QueryDepthLimiter(max_depth=10)` (or equivalent depth limit) in `graphql.py` schema extensions. If complexity analysis is available, specify it too. This is a HIGH severity security control — never omit it from design docs.
-10. Never produce code — only design documents.
-8. **Generate design options**: Produce 2-3 architecture options with explicit tradeoffs:
+12. Never produce code — only design documents.
+13. **Generate design options**: Produce 2-3 architecture options with explicit tradeoffs:
    - **Option A (Minimal)**: Fastest to build, least complexity, acceptable for MVP
    - **Option B (Balanced)**: Moderate complexity, good maintainability, standard approach
    - **Option C (Robust)**: Most future-proof, highest operational overhead, best for growth

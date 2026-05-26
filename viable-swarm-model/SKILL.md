@@ -549,8 +549,8 @@ Checkpoint. This prevents the recurring failure mode where mutations are
 proposed in `meta-report.md` but never applied.
 
 **Step 8c-1: Produce `mutations-applied.md`**
-Create a tracking artifact in the build directory (or append to
-`.kimi/meta-reflection.md`) with this table:
+Create a tracking artifact in the build directory (`mutations-applied.md`)
+with this table:
 
 ```markdown
 | # | Mutation | Tier | Proposed By | Status | Evidence |
@@ -576,7 +576,7 @@ missed mutation, update the table, and re-verify. Only then proceed to git commi
 The main agent (S5) reads the `meta-report.md` and uses it to inform hypothesis
 generation and mutation decisions.
 
-**Independent verification requirement**: Before writing `meta-reflection.md`,
+**Independent verification requirement**: Before accepting `meta-report.md`,
 S5 MUST independently run the full test suite (`pytest tests/` and `vitest run` /
 `npm test`) and record the ACTUAL pass/fail counts. Do NOT repeat claims from
 upstream phases without verification. If tests fail, the meta-reflection must
