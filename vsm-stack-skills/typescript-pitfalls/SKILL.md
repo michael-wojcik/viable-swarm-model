@@ -37,3 +37,16 @@ const API_URL = import.meta.env.VITE_API_URL;
 ## tsconfig Include Scope
 If `tsconfig.json` includes `vite.config.ts`, verify `@types/node` is installed 
 or `tsc -b` will fail with missing type errors.
+
+## Duplicate Vite Config Files (Discovered FB23)
+If both `vite.config.ts` and `vite.config.js` exist, Vite prefers `.ts` but the
+`.js` file becomes dead weight that confuses tooling and reviewers. Remove the
+`.js` version when the `.ts` version is authoritative.
+
+## Test Files in Production tsconfig (Discovered FB23)
+If `tsconfig.json` includes test files (e.g., via `"include": ["src"]` which
+picks up `src/test/*.tsx`), production `tsc -b` can fail due to test-only
+dependencies (`@testing-library/react`) or missing browser API mocks. Either:
+- Exclude `src/test/` from the production `tsconfig.json`, OR
+- Use a separate `tsconfig.app.json` for the app and `tsconfig.node.json` for
+  the build tool, with `tsconfig.json` as a solution-style config.

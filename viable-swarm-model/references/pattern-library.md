@@ -628,3 +628,23 @@ Known Stack Gotchas — verify these explicitly:
 
 **Source**: Gym E16 (H106), FB20/FB21 fitness builds.
 **See also**: `references/integration-checklist.md` Check 57, `references/hypotheses.md` H108.
+
+## Pattern: Frontend Page Stub Detection (Discovered FB23)
+
+**Problem**: Frontend pages that exist only as structural stubs (`return <div>Name</div>`
+with `void` imports) pass integration checks because routes and wiring are correct,
+but provide zero functional value and hide missing data-fetching logic.
+
+**Detection rule**: If a page component is <15 lines and contains only:
+- `void` references to suppress unused-import warnings, AND
+- A single `<div>Label</div>` return,
+flag as ISSUE.
+
+**Remediation**: The page must contain at least one of:
+- A real GraphQL query / REST call
+- A conditional render based on loaded data
+- A non-trivial form or interactive element
+
+**Affected**: vsm_frontend_coder, vsm_coordinator.
+**Source**: FB23 Dashboard.tsx, Jobs.tsx, Candidates.tsx etc. were all 6–18 line
+stubs with `void` imports. Integration report still PASSed them.

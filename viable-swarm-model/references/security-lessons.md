@@ -474,3 +474,30 @@ LOW severity unless they contain production credentials. Distinguish between:
 **Supersedes**: L12 (Tester Bug-Fix Inline is Highly Valued)
 **Affected**: S5 (main agent), vsm_backend_tester, vsm_frontend_tester, vsm_backend_fix_agent, vsm_frontend_fix_agent.
 **Source**: Gym E15 (H105), FB20/FB21 fitness builds.
+
+## IDOR vs Missing Ownership Checks (Refined FB23)
+
+When auditing detail endpoints (`GET /resource/{id}`), distinguish carefully:
+
+- **Missing authorization** = ANY authenticated user can read ANY resource.
+  This is pure IDOR. Severity: HIGH/BLOCKER.
+
+- **Missing ownership checks** = The endpoint HAS role-based filtering
+  (e.g., non-privileged users see only `published` jobs, or interviewers see
+  only their assigned candidates) but lacks per-resource ownership verification.
+  This is NOT pure IDOR — it is an authorization gap. Severity: MEDIUM/HIGH.
+
+**Do NOT** label role-filtered endpoints as "IDOR" when the actual issue is
+missing ownership. Misclassification reduces signal-to-noise ratio and misleads
+fix agents about the required remediation (ownership check vs full auth rewrite).
+
+**Verification question**: If User A (role: interviewer) can read User B's
+interview record despite not being assigned to it, is that because:
+(a) there is NO auth check at all (IDOR), or
+(b) there IS a role check but no ownership check (auth gap)?
+
+Answer (b) → classify as "missing ownership check", not "IDOR".
+
+**Source**: FB23 security report labeled `jobs.py:get_job()` and
+`candidates.py:get_candidate()` as IDOR when both had role-based access
+controls. The real gap was lack of resource ownership verification.

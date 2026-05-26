@@ -62,3 +62,14 @@ async def rate_limit_handler(request, exc):
     return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"})
 ```
 Without the handler, rate-limited requests crash with 500 instead of 429.
+
+## Celery App Module-Level Instantiation (Discovered FB23)
+Creating a Celery app at module level via a factory still triggers `get_settings()`
+on first import:
+```python
+# WRONG — crashes on import without env vars
+celery_app = _get_celery_app()
+```
+Use a proper lazy import pattern or defer instantiation to a function that is
+called only when the worker starts. The wiring agent MUST grep ALL `*.py` files
+(not just `main.py`) for module-level `get_settings()` / `Settings()` calls.

@@ -447,3 +447,28 @@ correction BEFORE quality gates.
 
 **Affected**: vsm_backend_coder, vsm_auditor, vsm_security.
 **Source**: FB22 `graphql.py` agent imported `strawberry_sqlalchemy_mapper` (not in requirements.txt), causing ~15 min agent timeout before S5 intervention (H150).
+
+## Check 62: Dependency Manifest-Environment Parity (Discovered FB23)
+- [ ] After any Phase 0 environment fix (e.g., upgrading a package to resolve
+  an incompatibility), verify `requirements.txt` / `package.json` reflects the
+  resolved version.
+- [ ] Run `pip install -r requirements.txt` (or `npm ci`) in a fresh environment
+  and verify the app imports cleanly.
+- [ ] If the manifest specifies an incompatible version, treat as BLOCKER.
+
+**Affected**: vsm_backend_coder, vsm_devops_coder, vsm_coordinator.
+**Source**: FB23 Phase 0 upgraded `strawberry-graphql` from 0.235.2 → 0.316.0
+but `requirements.txt` still specified 0.235.2, causing clean-install failures.
+
+## Check 63: Docker-Compose Command Module Verification (Discovered FB23)
+- [ ] For every `command:` or `CMD` in `docker-compose.yml` that references a
+  Python module (e.g., `celery -A app.celery_app`), verify the module path
+  matches the actual file layout inside the container.
+- [ ] If the Dockerfile `WORKDIR` is `/app` and the module is `celery_app.py`
+  at the root, the correct command is `celery -A celery_app`, NOT
+  `celery -A app.celery_app`.
+- [ ] Mismatched module paths are a BLOCKER — the container crashes on startup.
+
+**Affected**: vsm_devops_coder, vsm_coordinator.
+**Source**: FB23 `docker-compose.yml` referenced `celery -A app.celery_app`
+but the module was `celery_app.py` with no `app/` package.
