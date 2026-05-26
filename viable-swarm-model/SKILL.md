@@ -84,8 +84,8 @@ All swarm agents are defined as **custom Kimi CLI agent files** (`agents/*.yaml`
 | **S1-Frontend** | `vsm_frontend_coder` subagent | Custom | Phases 2,3 | Frontend code |
 | **S1-Backend-Fix** | `vsm_backend_fix_agent` subagent | Custom | Phase 7 | Backend surgical fixes, re-audit report |
 | **S1-Frontend-Fix** | `vsm_frontend_fix_agent` subagent | Custom | Phase 7 | Frontend surgical fixes, re-audit report |
-| **S1-Backend-Tester** | `vsm_backend_tester` subagent | Custom | Phase 4 | Backend tests (pytest), API tests |
-| **S1-Frontend-Tester** | `vsm_frontend_tester` subagent | Custom | Phase 4 | Frontend tests (vitest), build verification |
+| **S1-Backend-Tester** | `vsm_backend_tester` subagent | Custom | Phase 4 | Backend tests (framework test runner), API tests |
+| **S1-Frontend-Tester** | `vsm_frontend_tester` subagent | Custom | Phase 4 | Frontend tests (framework test runner), build verification |
 | **S1-Security** | `vsm_security` subagent | Custom | Phase 5 | Security findings |
 | **S1-Meta** | `vsm_meta` subagent | Custom | Phase 8b | Performance evaluation, hypothesis generation |
 | **S1-DevOps** | `vsm_devops_coder` subagent | Custom | Phase 4 | Docker, CI/CD |
@@ -123,7 +123,7 @@ these files. Launched via `Agent(subagent_type="vsm_wiring")`.
 **`vsm_backend_coder`** (S1 Backend Implementation): Writes Python backend code
 with embedded domain knowledge of [backend framework], [ORM], [GraphQL library], [task queue],
 and security gotchas. Replaces generic `coder` for all backend waves. Performs
-runtime framework API verification, subprocess import checks, and pytest validation.
+runtime framework API verification, subprocess import checks, and test validation.
 Launched via `Agent(subagent_type="vsm_backend_coder")`.
 
 **`vsm_frontend_coder`** (S1 Frontend Implementation): Writes [frontend framework]
@@ -154,11 +154,11 @@ point security checklist. Prevents, not detects — knows all anti-patterns.
 Launched via `Agent(subagent_type="vsm_security")`.
 
 **`vsm_backend_tester`** (S1 Quality — Backend): Writes and runs backend tests
-(pytest), validates fixtures, verifies API contracts. Does NOT test frontend.
+(framework test runner), validates fixtures, verifies API contracts. Does NOT test frontend.
 Launched via `Agent(subagent_type="vsm_backend_tester")`.
 
 **`vsm_frontend_tester`** (S1 Quality — Frontend): Writes and runs frontend tests
-(vitest), validates TypeScript compilation, verifies component rendering. Does NOT
+(framework test runner), validates TypeScript compilation, verifies component rendering. Does NOT
 test backend. Launched via `Agent(subagent_type="vsm_frontend_tester")`.
 
 **`vsm_explore`** (S4 Exploration): Fast read-only codebase exploration.
@@ -347,11 +347,11 @@ to `~/vsm/viable-swarm-model/references/mutation-log.md`, ask user to review.
 Emit algedonic: `--agent-file not loaded. Launch with: kimi --agent-file ~/vsm/viable-swarm-model/agents/vsm-main.yaml`.
 Do not proceed with the build.
 6a. **Environment Compatibility Smoke Test** (conditional): If the build declares
-framework dependencies (e.g., `strawberry-graphql`, `pydantic`, `sqlalchemy`, `fastapi`,
+framework dependencies (e.g., `[graphql library]`, `[validation library]`, `[orm library]`, `[backend framework]`,
 `celery`), run a quick import verification in a fresh subprocess BEFORE dispatching
 implementation agents:
 ```bash
-verify imports using language-specific method "import strawberry; import pydantic; import sqlalchemy; import fastapi"
+verify imports using language-specific method for declared dependencies
 ```
 If ANY import fails, STOP the build immediately. Report the environment
 incompatibility, do NOT dispatch agents that cannot runtime-verify their code,
@@ -517,7 +517,7 @@ where they are currently discovered too late.
 After all parallel frontend implementation agents complete and BEFORE spawning
 the auditor, S5 MUST run a lightweight cross-file import verification:
 
-1. Run `run frontend build` (not just `vite build`) to verify the full frontend build
+1. Run `run frontend build` (not just the build command) to verify the full frontend build
    pipeline including TypeScript compilation. Then run `npx run type checker` to verify
    every import statement in `src/pages/` and `src/components/` resolves
 2. Verify every export from `src/graphql/queries.ts` is imported by at least
@@ -541,8 +541,8 @@ spawn both testers + devops_coder. Run tests via Shell.
 **Tier 2+ builds** (≥ 1000 lines, 2+ services):
 Spawn `vsm_backend_tester` + `vsm_frontend_tester` + `vsm_devops_coder` in parallel
 with `run_in_background=true`. Both testers run simultaneously:
-- `vsm_backend_tester`: pytest, database fixtures, API integration, [task queue] mocks
-- `vsm_frontend_tester`: vitest, component rendering, TypeScript compilation, build verification
+- `vsm_backend_tester`: framework test runner, database fixtures, API integration, [task queue] mocks
+- `vsm_frontend_tester`: framework test runner, component rendering, TypeScript compilation, build verification
 
 Wait via `TaskOutput(block=true)` for ALL testers to complete, then aggregate
 results. If either tester times out, treat as a BLOCKER: the build surface
@@ -550,10 +550,10 @@ exceeds single-agent capacity and must be further subdivided or scoped down.
 
 **Phase 4 Exit Gate (HARD BLOCK)**
 Before proceeding to Phase 5, verify:
-1. `pytest` reports **zero failures** (backend)
+1. Test suite reports **zero failures** (backend)
 2. `run frontend tests` / `run frontend tests` reports **zero failures** (frontend)
 3. `run frontend build` / `run type checker` reports **zero errors** (frontend)
-4. **Backend subprocess import check**: `verify imports using language-specific method "import app.main; import app.graphql; import app.sio; import app.tasks"` must succeed with zero errors. A NameError or ImportError at module level is a HARD BLOCK even if pytest somehow passes. This catches module-level side effects (e.g., `settings = Settings()`, `engine = create_async_engine(...)`) that break imports but may not surface during pytest discovery.
+4. **Backend subprocess import check**: `verify imports using language-specific method "import app.main; import app.graphql; import app.sio; import app.tasks"` must succeed with zero errors. A NameError or ImportError at module level is a HARD BLOCK even if tests somehow pass. This catches module-level side effects (e.g., `settings = Settings()`, `engine = create_async_engine(...)`) that break imports but may not surface during test discovery.
 
 If ANY of the above report failures, **STOP**. Do not proceed to Phase 5 (Security Gate)
 or Phase 6 (Integration). Route to Phase 7 (Fix Wave). Fixing downstream integration
