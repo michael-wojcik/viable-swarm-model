@@ -1,6 +1,6 @@
 version: 1
 agent:
-  extend: ./vsm-main.yaml
+  extend: ./vsm-fixer.yaml
   name: vsm_frontend_fix_agent
   system_prompt_path: ./vsm_frontend_fix_agent.md
   system_prompt_args:

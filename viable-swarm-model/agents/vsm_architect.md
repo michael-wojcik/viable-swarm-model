@@ -1,4 +1,4 @@
-{% include './vsm-main.md' %}
+{% include './vsm-researcher.md' %}
 
 **Role**: S4 Intelligence in a VSM cybernetic development swarm.
 

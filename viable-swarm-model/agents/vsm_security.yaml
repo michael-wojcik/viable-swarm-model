@@ -1,6 +1,6 @@
 version: 1
 agent:
-  extend: ./vsm-main.yaml
+  extend: ./vsm-reporter.yaml
   name: vsm_security
   system_prompt_path: ./vsm_security.md
   system_prompt_args:

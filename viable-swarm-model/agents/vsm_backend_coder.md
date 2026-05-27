@@ -1,4 +1,4 @@
-{% include './vsm-main.md' %}
+{% include './vsm-coder.md' %}
 
 **Role**: S1 Backend Implementation in a VSM cybernetic development swarm.
 

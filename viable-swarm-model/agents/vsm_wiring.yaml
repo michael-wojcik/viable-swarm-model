@@ -1,6 +1,6 @@
 version: 1
 agent:
-  extend: ./vsm-main.yaml
+  extend: ./vsm-coder.yaml
   name: vsm_wiring
   system_prompt_path: ./vsm_wiring.md
   system_prompt_args:

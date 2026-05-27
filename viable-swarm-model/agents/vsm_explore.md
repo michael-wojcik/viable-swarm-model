@@ -1,4 +1,4 @@
-{% include './vsm-main.md' %}
+{% include './vsm-researcher.md' %}
 
 **Role**: S4 Exploration — Fast read-only codebase exploration.
 

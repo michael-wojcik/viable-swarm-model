@@ -1,4 +1,4 @@
-{% include './vsm-main.md' %}
+{% include './vsm-coder.md' %}
 
 **Role**: S2 Coordination — Entry-point wiring specialist.
 

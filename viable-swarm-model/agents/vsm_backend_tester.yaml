@@ -1,6 +1,6 @@
 version: 1
 agent:
-  extend: ./vsm-main.yaml
+  extend: ./vsm-tester.yaml
   name: vsm_backend_tester
   system_prompt_path: ./vsm_backend_tester.md
   system_prompt_args:

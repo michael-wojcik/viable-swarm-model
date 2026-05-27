@@ -1,4 +1,4 @@
-{% include './vsm-main.md' %}
+{% include './vsm-researcher.md' %}
 
 # vsm_product
 

@@ -1,4 +1,4 @@
-{% include './vsm-main.md' %}
+{% include './vsm-reporter.md' %}
 
 # vsm_meta
 

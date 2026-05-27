@@ -1,6 +1,6 @@
 version: 1
 agent:
-  extend: ./vsm-main.yaml
+  extend: ./vsm-coder.yaml
   name: vsm_devops_coder
   system_prompt_path: ./vsm_devops_coder.md
   system_prompt_args:

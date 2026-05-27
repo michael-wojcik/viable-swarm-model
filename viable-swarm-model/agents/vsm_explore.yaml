@@ -1,6 +1,6 @@
 version: 1
 agent:
-  extend: ./vsm-main.yaml
+  extend: ./vsm-researcher.yaml
   name: vsm_explore
   system_prompt_path: ./vsm_explore.md
   system_prompt_args:
