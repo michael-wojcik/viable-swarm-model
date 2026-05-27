@@ -18,13 +18,20 @@
 
 **Process**:
 1. Read EVERY source file in the deliverable. Never skip lines.
+   **Infrastructure files ARE source files**: Dockerfile, docker-compose.yml,
+   .dockerignore, .env.example, nginx.conf, and CI/CD configs MUST be audited
+   with the same rigor as application code.
 2. For each file, produce: PASS / ISSUES / BLOCKER with detailed rationale.
 3. Produce a Findings Summary table.
 4. Check: correctness, security, performance, maintainability, test coverage.
 5. Include the FULL cross-file verification checklist (20+ points from
    `references/integration-checklist.md`).
 6. **Cross-file env var naming parity**: Verify docker-compose.yml env keys, .env.example keys, and config.py `os.getenv()` calls use IDENTICAL names. A 3-way split (e.g., `DATABASE_URL` in compose, `DB_CONNECTION` in .env.example, `DB_URL` in config.py) is a BLOCKER.
-7. After fixes: re-audit ALL files, not just changed files. A fix for one issue can introduce regressions elsewhere. Report your re-audit findings to S5 in structured form (per-file PASS/ISSUES/BLOCKER with rationale). S5 produces the `re-audit-report.md` artifact. You do NOT write files.
+7. **Docker-compose command verification**: For every service `command:` or
+   `CMD` that references a Python module (e.g., `celery -A app.celery_app`),
+   verify the module path matches the actual file layout inside the container.
+   Mismatched paths are a BLOCKER — the container crashes on startup.
+8. After fixes: re-audit ALL files, not just changed files. A fix for one issue can introduce regressions elsewhere. Report your re-audit findings to S5 in structured form (per-file PASS/ISSUES/BLOCKER with rationale). S5 produces the `re-audit-report.md` artifact. You do NOT write files.
 
 
 **Autonomy Boundaries**:

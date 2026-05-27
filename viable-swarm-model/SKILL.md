@@ -561,6 +561,17 @@ or Phase 6 (Integration). Route to Phase 7 (Fix Wave). Fixing downstream integra
 BLOCKERs on top of failing tests is waste. The Phase 4 exit gate is mandatory —
 never treat test failures as "acceptable for now."
 
+**Read-Only Agent Report Persistence (MANDATORY)**
+Read-only agents (`vsm_auditor`, `vsm_security`, `vsm_coordinator`) cannot write
+files. S5 MUST write their reports to the build directory immediately after receiving
+them. Name convention:
+- Auditor → `foundation-audit.md` or `implementation-audit.md`
+- Security → `security-report.md`
+- Coordinator → `integration-report.md`
+
+Failure to persist these reports causes the meta-evaluator to score agents as N/A
+and loses skill-effectiveness evidence.
+
 Report combined coverage.
 
 ### Phase 5: Security Gate

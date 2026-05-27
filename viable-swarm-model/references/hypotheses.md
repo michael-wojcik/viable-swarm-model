@@ -125,6 +125,10 @@
 | H151 | untested |
 | H152 | untested |
 | H153 | untested |
+| H154 | untested |
+| H155 | untested |
+| H156 | untested |
+| H157 | untested |
 | H201 | untested |
 | H202 | untested |
 | H203 | untested |
@@ -1855,4 +1859,52 @@ Domain-specific prompts measurably improved security posture (explicit CORS orig
 **Source**: Custom agent file migration
 **Experiment**: Count Pydantic `class Config:` violations, dependency verification failures, and Vite alias misconfigurations in FB23 vs FB22.
 **Expected**: Fewer gotcha violations in FB23 compared to FB22 baseline.
+**Tested by**: —
+
+---
+
+## H154: Requiring `npm run build` as a Phase 4 hard gate would prevent TypeScript/build failures from leaking into Phase 6
+
+**Status**: untested
+**Proposed**: 2026-05-26
+**Rationale**: FB23 frontend build failed in Phase 6 because `tsc -b` errors (unused imports, vite config type mismatch) were not caught in Phase 4.
+**Source**: Fitness build FB23
+**Experiment**: Add "Frontend `npm run build` must pass" to Phase 4 exit criteria in next build.
+**Expected**: Zero build failures discovered in Phase 6.
+**Tested by**: —
+
+---
+
+## H155: Exhaustive module-level settings audit across ALL Python files (not just `main.py`) would catch 100% of import-time env side effects
+
+**Status**: untested
+**Proposed**: 2026-05-26
+**Rationale**: FB23 wiring agent audited only `main.py`, `main.tsx`, `App.tsx` and missed `celery_app.py` module-level instantiation.
+**Source**: Fitness build FB23
+**Experiment**: Update `vsm_wiring` checklist to grep for `get_settings()` and `Settings()` in all `*.py` files.
+**Expected**: Zero module-level instantiation orphans in next build.
+**Tested by**: —
+
+---
+
+## H156: Dependency manifest-environment parity check after Phase 0 fixes would prevent reproducibility failures
+
+**Status**: untested
+**Proposed**: 2026-05-26
+**Rationale**: FB23 Phase 0 upgraded `strawberry-graphql` from 0.235.2 → 0.316.0 but `requirements.txt` still specified 0.235.2, which is incompatible with pydantic 2.13.4. A clean `pip install -r requirements.txt` fails.
+**Source**: Fitness build FB23
+**Experiment**: Add "After any Phase 0 environment fix, update `requirements.txt` / `package.json` to match resolved versions" to Phase 0 checklist.
+**Expected**: `requirements.txt` installs cleanly in a fresh venv in next build.
+**Tested by**: —
+
+---
+
+## H157: Frontend pages generated as stubs (void-referenced imports, no real logic) correlate with missed integration checklist items
+
+**Status**: untested
+**Proposed**: 2026-05-26
+**Rationale**: FB23 frontend pages (Dashboard, Jobs, Candidates, etc.) are all `<div>Name</div>` stubs. The integration report still PASSed them because they exist and routes are wired, not because they implement functionality.
+**Source**: Fitness build FB23
+**Experiment**: Add "Verify at least one page contains non-trivial data fetching/rendering" to integration checklist.
+**Expected**: Next build has ≥1 page with actual GraphQL query execution and rendered data.
 **Tested by**: —
