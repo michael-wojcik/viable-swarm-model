@@ -70,6 +70,14 @@ All swarm agents are defined as **custom Kimi CLI agent files** (`agents/*.yaml`
 
 > **Important**: When using `--agent-file`, built-in subagent types (`coder`, `explore`, `plan`) are **unavailable**. S5 and all spawned agents must use the custom types defined in `agents/vsm-main.yaml`. S5 itself retains full tool access.
 
+**Agent Spawn Hygiene — Context Isolation (MANDATORY)**
+Report-producing agents (`vsm_auditor`, `vsm_security`, `vsm_coordinator`, `vsm_meta`)
+MUST always be spawned as **new instances** (`subagent_type="..."`) — never via
+`resume`. Cross-build context contamination has caused hallucinated findings
+(e.g., vsm_meta reporting FB17 data during FB23). Coding agents
+(`vsm_backend_coder`, `vsm_frontend_coder`, `vsm_devops_coder`) may use `resume`
+within the same build wave for continuity, but start fresh on a new build.
+
 | VSM System | CLI Implementation | Custom Type | Activation | Produces |
 |---|---|---|---|---|
 | **S5 (Policy)** | Main conversation agent (you) | — | Always | Decisions, escalation, mutations |
@@ -367,9 +375,35 @@ pydantic; the API layer file agent consumed ~15 minutes before S5 intervened (H1
    Use the `max_running_tasks` value read in step 7 as the agent ceiling.
    Do not invent artificial sub-limits — if the host allows 8, use up to 8.
    - **Tier 1** (<1000 lines, 1-2 services): Standard flow, no mid-wave gates needed
-   - **Tier 2** (1000-3000 lines, 2-3 services): Add Phase 3c mid-wave S2 check, extend timeouts
-   - **Tier 3** (3000+ lines, 3+ services): Split into sub-builds OR accept that single-session coverage will be partial. Do not pretend the metasystem has requisite variety it lacks.
-   Log the tier and the agent ceiling in `plan.md`. Adjust timeout expectations accordingly.
+   - **Tier 2** (1000-3000 lines, 2-3 services): Add Phase 3c mid-wave S2 check,
+     use background spawning for long-running agents (security, meta)
+   - **Tier 3** (3000+ lines, 3+ services): Split into sub-builds OR accept that
+     single-session coverage will be partial. Do not pretend the metasystem has
+     requisite variety it lacks.
+   Log the tier and the agent ceiling in `plan.md`.
+
+**Agent Timeout & Monitoring Policy**
+Foreground agents default to **no timeout** (run until completion, max 1hr).
+Do NOT set arbitrary short timeouts — deep audits and security scans legitimately
+need time. Instead, apply these guardrails:
+
+| Agent | Explicit Timeout | Notes |
+|---|---|---|
+| `vsm_explore` | 120s | Scout; if it takes longer, scope is too broad |
+| `vsm_auditor` | No limit | Deep multi-file inspection; 5-min progress check |
+| `vsm_security` | No limit | Vuln scanning + web research; 5-min progress check |
+| `vsm_coordinator` | 300s | Cross-file consistency; usually completes faster |
+| `vsm_meta` | No limit | Most comprehensive; 5-min progress check |
+| `vsm_backend_coder` | 300s | Build + test cycle |
+| `vsm_frontend_coder` | 300s | Build + test cycle |
+| `vsm_devops_coder` | 300s | Docker build + verification |
+| `vsm_backend_tester` | 180s | Test runner should finish quickly |
+| `vsm_frontend_tester` | 180s | Test + build verification |
+
+**5-Minute Progress Check Rule**: If ANY agent has not returned after 5 minutes,
+S5 MUST inspect its `output.log` (via `TaskOutput` or `ReadFile`) before assuming
+it is stuck. If the agent is making progress, let it continue. If it is looping
+or hung, stop it with `TaskStop` and re-spawn.
 9. Write `plan.md`.
 
 ### Phase 0: Stack Detection & Skill Verification
@@ -572,6 +606,15 @@ verify the report files exist before proceeding. Name convention:
 If an agent fails to produce its report artifact, S5 MUST prompt it to write the
 report using `WriteFile`. Failure to produce report files causes the meta-evaluator
 to score agents as N/A and loses skill-effectiveness evidence.
+
+**Agent Notification Truncation Handling (MANDATORY)**
+Agent completion notifications may truncate at ~500 characters. S5 MUST NOT act
+on a partial summary. After every agent returns:
+1. Check if the notification contains a clear PASS/FAIL/BLOCKER verdict and
+   artifact file paths.
+2. If truncated, vague, or missing artifact confirmation, `ReadFile` the agent's
+   `output.log` immediately before proceeding.
+3. Never route to the next phase based on an incomplete agent summary.
 
 Report combined coverage.
 
