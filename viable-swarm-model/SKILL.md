@@ -220,6 +220,31 @@ and proposes mutations. Not spawned during normal build flows — invoked via
 - `vsm_meta` (custom) — performance evaluation, `.kimi/meta-report.md`
 - `vsm_explore` (custom) — read-only exploration, optionally `.kimi/explore-findings.md`
 
+### 3.1 Agent Architecture
+
+All 15 leaf agents inherit from a shared base via a **two-level hierarchy**:
+
+**YAML inheritance** (`extend` field): The CLI recursively resolves `extend` by
+overwriting (not appending). Child YAMLs must declare their complete tool lists.
+
+**Markdown inheritance** (`{% include %}`): Jinja2 `FileSystemLoader` resolves
+chained includes. Only `vsm-main.md` contains legitimate `${...}` template
+variables. All other `.md` files MUST escape shell variables with `{% raw %}`.
+
+```
+vsm-main
+├── vsm-coder → backend-coder, frontend-coder, devops-coder, wiring
+│   ├── vsm-fixer → backend-fixer, frontend-fixer
+│   └── vsm-tester → backend-tester, frontend-tester
+├── vsm-researcher → architect, product, explore
+└── vsm-reporter → auditor, security, coordinator, meta
+```
+
+**Validator**: Run `python3 validate-agent-files.py` from `agents/` before committing
+agent changes. It checks YAML parse, system_prompt_path existence, `${...}`
+variable resolution, Jinja2 include resolution, and unescaped shell-variable
+patterns (`${VAR:-default}`).
+
 ## 4. The Golden Rule of Parallelism
 
 ```
@@ -620,15 +645,34 @@ never treat test failures as "acceptable for now."
 
 **Agent Report Artifacts (MANDATORY)**
 All audit/security/coordinator agents now have `WriteFile` restricted to their own
-report artifacts. They MUST write their reports to the build directory. S5 MUST
-verify the report files exist before proceeding. Name convention:
+report artifacts. They MUST write their reports to the `.kimi/` subdirectory in
+the build directory. S5 MUST verify the report files exist before proceeding.
+Name convention:
 - Auditor → `.kimi/foundation-audit.md` or `.kimi/implementation-audit.md`
 - Security → `.kimi/security-report.md`
 - Coordinator → `.kimi/integration-contract.md`
+- Backend Fix Agent → `.kimi/re-audit-report.md`
+- Frontend Fix Agent → `.kimi/re-audit-report.md`
+- Meta → `.kimi/meta-report.md`
+- Explore (optional) → `.kimi/explore-findings.md`
 
 If an agent fails to produce its report artifact, S5 MUST prompt it to write the
 report using `WriteFile`. Failure to produce report files causes the meta-evaluator
 to score agents as N/A and loses skill-effectiveness evidence.
+
+**`.kimi/` Directory Convention**
+Every build directory contains a `.kimi/` subdirectory for ephemeral agent-generated
+artifacts. This separates metadata from source code:
+
+| Location | Purpose |
+|---|---|
+| **Build root** | Source code, configs, design docs (`plan.md`, `architecture.md`, `docker-compose.yml`) |
+| **`.kimi/`** | Agent reports, evaluations, mutation tracking (`lessons.md`, `meta-report.md`, `mutations-applied.md`, `re-audit-report.md`, `security-report.md`, `integration-contract.md`, `explore-findings.md`) |
+| **`references/`** | Persistent skill knowledge (`acquired-wisdom.md`, `hypotheses.md`, `pattern-library.md`, `mutation-log.md`) |
+
+Agents with `WriteFile` MUST restrict usage to their own `.kimi/` artifact or
+`references/` append operations. They MUST NEVER modify source code or build
+configs with `WriteFile`.
 
 **Agent Notification Truncation Handling (MANDATORY)**
 Agent completion notifications may truncate at ~500 characters. S5 MUST NOT act
@@ -787,7 +831,8 @@ Before declaring Phase 8b complete, verify ALL of the following:
 2. It was produced by `vsm_meta`, not written by S5. (Check for "Agent Performance Scores" table — S5 typically omits this structured section.)
 3. It contains a **Phase Audit** section with process violation analysis.
 4. It contains **Hypotheses Generated** with at least one falsifiable hypothesis.
-5. `mutations-applied.md` exists in the build directory with a complete mutation tracking table (per Phase 8c). If missing, Phase 8b is NOT complete.
+5. `.kimi/mutations-applied.md` exists in the build directory with a complete
+   mutation tracking table (per Phase 8c). If missing, Phase 8b is NOT complete.
 
 If any check fails, Phase 8b is NOT complete. Re-spawn `vsm_meta` with explicit
 instructions to include the missing sections.
@@ -810,8 +855,8 @@ Before declaring Phase 8 complete, S5 MUST run the Mutation Verification
 Checkpoint. This prevents the recurring failure mode where mutations are
 proposed in `.kimi/meta-report.md` but never applied.
 
-**Step 8c-1: Produce `mutations-applied.md`**
-Create a tracking artifact in the build directory (`mutations-applied.md`)
+**Step 8c-1: Produce `.kimi/mutations-applied.md`**
+Create a tracking artifact in the `.kimi/` subdirectory (`mutations-applied.md`)
 with this table:
 
 ```markdown

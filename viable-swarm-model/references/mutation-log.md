@@ -1612,3 +1612,189 @@ Expanded Phase 2c from "Model Validation" to "Model + Auth Validation." Added ex
 - FB23 integration checklist has 61 checks covering all known FB22 failure modes.
 - FB23 flow diagram accurately reflects sequential frontend sub-waves, env smoke test, and auth validation.
 - FB23 auth role mismatches are caught in Phase 2c, not Phase 2b audit.
+
+
+---
+
+## Mutation FB23-1 — 2026-05-26
+
+**Session**: vsm-fitness-build fitness build #23 (TalentFlow) — first post-build mutation batch
+**Files**:
+- `viable-swarm-model/agents/vsm_devops_coder.md` (R8 extension)
+- `viable-swarm-model/agents/vsm_backend_fix_agent.md` (R11 extension)
+- `viable-swarm-model/agents/vsm_frontend_fix_agent.md` (R12 extension)
+- `viable-swarm-model/references/integration-checklist.md` (A3 extension)
+- `viable-swarm-model/SKILL.md` (S6, S7)
+**Type**: mixed — 1 append-only, 3 refinement, 2 structural
+**Rationale**:
+Close remaining gaps from FB22-5 and address FB23-specific findings.
+
+**R8 extension — Refinement: vsm_devops_coder.md env-var triple parity**
+Extended gotcha #12 to include verification of `config.py` `os.getenv()` calls.
+
+**R11 extension — Refinement: vsm_backend_fix_agent.md gotcha count 16→?**
+Updated to reflect new gotchas added in FB23.
+
+**R12 extension — Refinement: vsm_frontend_fix_agent.md gotcha count 13→?**
+Updated to reflect new gotchas added in FB23.
+
+**A3 extension — Append-only: integration-checklist.md Checks 62–63**
+- Check 62: Dependency manifest-environment parity after Phase 0 fixes
+- Check 63: Docker-compose service command references existing Python modules
+
+**S6 — Structural: SKILL.md Phase 4 Hard Gate Expansion**
+Added `npm run build` / `tsc -b` as mandatory alongside tests. Build failures are now a HARD BLOCK for Phase 4 exit.
+
+**S7 — Structural: SKILL.md Phase 8b Mutation Verification Checkpoint**
+Added mandatory `.kimi/mutations-applied.md` tracking table. Before declaring Phase 8 complete, S5 must cross-check proposed mutations against applied mutations.
+
+**Expected effect**:
+- FB24 cannot pass Phase 4 with broken frontend builds.
+- FB24 cannot skip mutation tracking.
+- FB24 dependency drift and docker-compose command accuracy are checked.
+
+---
+
+## Mutation FB23-2 — 2026-05-26
+
+**Session**: S5 architecture audit + post-FB23 agent hygiene pass
+**Files**:
+- `viable-swarm-model/agents/vsm_backend_coder.md` (R13)
+- `viable-swarm-model/agents/vsm_frontend_coder.md` (R13)
+- `viable-swarm-model/agents/vsm_backend_fix_agent.md` (R14)
+- `viable-swarm-model/agents/vsm_frontend_fix_agent.md` (R14)
+- `viable-swarm-model/agents/vsm_product.md` + `.yaml` (R15)
+- `viable-swarm-model/agents/vsm_wiring.yaml` (R16)
+- `viable-swarm-model/agents/vsm_coordinator.md` (R17)
+- `viable-swarm-model/agents/vsm_security.md` (R17)
+- `viable-swarm-model/agents/vsm_explore.yaml` (R18)
+- `viable-swarm-model/agents/validate-agent-files.py` (S8, S9, S10)
+- `viable-swarm-model/SKILL.md` (S11, S12, S13)
+**Type**: mixed — 4 refinement, 4 structural
+**Rationale**:
+Comprehensive agent architecture audit revealed broken numbering, tool/role mismatches, missing report paths, YAML inconsistencies, and validator gaps.
+
+**R13 — Refinement: Fix broken gotcha numbering in 4 coder files**
+Backend coder, frontend coder, backend fix agent, frontend fix agent all had broken numbering from prior edits. Renumbered sequentially.
+
+**R14 — Refinement: Remove StrReplaceFile from vsm_product**
+Researcher agent (extends vsm-researcher) had `StrReplaceFile` in tool list despite "do not write code" instruction. Removed from MD and YAML.
+
+**R15 — Refinement: Add SetTodoList to vsm_wiring.yaml**
+MD listed SetTodoList but YAML didn't grant it. Added to YAML.
+
+**R16 — Refinement: Add `.kimi/` report paths to coordinator and security**
+Both agents had WriteFile but didn't specify where to write. Added explicit `.kimi/integration-contract.md` and `.kimi/security-report.md` directives.
+
+**R17 — Refinement: Standardize YAML tool list format**
+`vsm_explore.yaml` used quoted tools while all others used unquoted. Standardized to unquoted.
+
+**S8 — Structural: Fix validator raw-block replacement bug**
+`str.replace()` caused false negatives when raw-block content appeared outside raw blocks. Fixed to use `re.sub()` for precise block removal.
+
+**S9 — Structural: Add Jinja2 include resolution check to validator**
+Validates that `{% include './xxx.md' %}` paths resolve to existing files.
+
+**S10 — Structural: Scope forbidden-keyword check to intermediates**
+The unscoped check prevented backend/frontend coders from having framework-specific guidance (FastAPI, React, etc.), causing broken numbering when content was stripped. Now only checks `vsm-main.md` and `vsm-*.md` intermediates.
+
+**S11 — Structural: SKILL.md agent description accuracy pass**
+Removed stale "Read-only" / "No write tools" descriptions for auditor, coordinator, security, explore. Fixed S1-Security → Security, S1-Meta → S5-Meta. Renamed "Read-only evaluation" → "Writes evaluation reports" and added `.kimi/` paths.
+
+**S12 — Structural: Multi-level inheritance refactor + DRY**
+Created 5 intermediate templates (vsm-coder, vsm-tester, vsm-fixer, vsm-researcher, vsm-reporter) and rewired all 15 leaf agents. Moved duplicated skill lookup block from 15 agents into vsm-main.md.
+
+**S13 — Structural: Standardize per-build reports to `.kimi/` subdirectory**
+All agent reports now directed to `.kimi/` in build directory. Fixed `.gitignore` issue that hid intermediate template files.
+
+**Expected effect**:
+- All 20 agent files pass validation.
+- Leaf agents can contain framework-specific guidance.
+- No template variable crashes from unescaped shell syntax.
+- Report paths are consistent and discoverable.
+
+---
+
+## Mutation FB23-3 — 2026-05-26
+
+**Session**: S5 gap-closing pass + fitness coach cycle completion
+**Files**:
+- `viable-swarm-model/agents/vsm_backend_coder.md` (R19)
+- `viable-swarm-model/agents/vsm_frontend_coder.md` (R19)
+- `viable-swarm-model/agents/vsm_backend_fix_agent.md` (R20)
+- `viable-swarm-model/agents/vsm_frontend_fix_agent.md` (R20)
+- `viable-swarm-model/agents/vsm_frontend_tester.md` (R20)
+- `viable-swarm-model/agents/vsm_meta.md` (R20)
+- `viable-swarm-model/agents/vsm_wiring.md` (R21)
+- `viable-swarm-model/SKILL.md` (S14, S15, S16)
+- `viable-swarm-model/references/hypotheses.md` (A5)
+- `vsm-fitness-coach/references/fitness-projects.md` (A6)
+- `~/vsm-fitness-builds/coach/FB24-prompt-draft.md` (new)
+**Type**: mixed — 5 refinement, 3 structural, 2 append-only
+**Rationale**:
+Close remaining gaps from FB23 trainer evaluation: truncated contracts, missing boundaries, missing gotchas, and incomplete fitness coach cycle.
+
+**R19 — Refinement: Populate backend↔frontend Contracts sections**
+Both coder files had truncated Contracts headings with no content. Added 6 reciprocal integration contracts (auth token key, role enum, GraphQL camelCase, CORS origin, error shape, WebSocket events).
+
+**R20 — Refinement: Add Autonomy Boundaries to 4 agents**
+Added formal Autonomy Boundaries to vsm_frontend_tester, vsm_backend_fix_agent, vsm_frontend_fix_agent, and vsm_meta — all lacked explicit boundary structures.
+
+**R21 — Refinement: Add `.kimi/wiring-report.md` path to vsm_wiring**
+Wiring agent had WriteFile but no report path guidance. Added explicit artifact location.
+
+**S14 — Structural: Add empirical gotchas to coder files**
+Added 5 backend gotchas (Pydantic ConfigDict, SQLAlchemy shadowing, Strawberry params, FastAPI lifespan, module-level settings audit) and 3 frontend gotchas (TypeScript clean compile, config fallbacks, duplicate Vite config) based on FB23 empirical data.
+
+**S15 — Structural: Add external agent descriptions to SKILL.md**
+Added vsm_trainer and vsm_experiment_designer descriptions, clarifying they belong to fitness ecosystem and are not part of normal build flows.
+
+**S16 — Structural: Add Phase 8 hard gate for lessons.md**
+S5 must verify `.kimi/lessons.md` exists with ≥1 structured entry before proceeding to Phase 8b. Prevents reflection skip.
+
+**A5 — Append-only: Hypotheses H158–H161**
+Four new falsifiable hypotheses from trainer evaluation: frontend page verification gate, lessons.md hard gate, Dockerfile production build verification, optional ISSUE sweep.
+
+**A6 — Append-only: Fitness ledger FB23 entry**
+Documented FB23 coverage map, score (3.2/5.0), gaps, and mutations.
+
+**Expected effect**:
+- FB24 prompt targets all FB23 gaps with deliberate traps.
+- Frontend coder cannot declare completion with stub pages.
+- Phase 8 cannot be skipped.
+- Fitness coach cycle is complete with FB24 prompt draft ready.
+
+---
+
+## Mutation FB23-4 — 2026-05-26
+
+**Session**: S5 final structural documentation pass
+**Files**:
+- `viable-swarm-model/SKILL.md` (S17, S18, S19)
+- `viable-swarm-model/agents/vsm_frontend_coder.md` (R22)
+- `viable-swarm-model/agents/vsm_devops_coder.md` (R23)
+- `viable-swarm-model/references/mutation-log.md` (this entry)
+**Type**: mixed — 2 refinement, 3 structural
+**Rationale**:
+SKILL.md lacked structural documentation for the intermediate template architecture, `.kimi/` convention, and validation infrastructure. Mutation log was missing all post-FB22 entries.
+
+**S17 — Structural: Add Agent Architecture subsection (3.1) to SKILL.md**
+Documents the 5 intermediate templates, YAML vs Markdown inheritance, template variable rules, and validator usage.
+
+**S18 — Structural: Add `.kimi/` Directory Convention subsection to SKILL.md**
+Documents the three-tier directory structure (build root / `.kimi/` / `references/`) and agent WriteFile restrictions.
+
+**S19 — Structural: Fix mutations-applied.md path references in SKILL.md**
+Changed "build directory" to "`.kimi/` subdirectory" for report artifacts. Added fix agents, meta, and explore to the artifact list. Fixed Phase 8c mutations-applied.md paths to include `.kimi/`.
+
+**R22 — Refinement: Add frontend page implementation verification to vsm_frontend_coder.md**
+Gotcha #7: Before declaring completion, verify at least one page contains live data fetching. Stub-only pages are BLOCKER.
+
+**R23 — Refinement: Add frontend Dockerfile production build check to vsm_devops_coder.md**
+Gotcha #12: Frontend Dockerfiles must run `npm run build` + static serve. `npm run dev` is BLOCKER.
+
+**Expected effect**:
+- SKILL.md is self-documenting for agent architecture and conventions.
+- Mutation log contains complete history from FB1 through FB23-4.
+- Future agent additions follow documented patterns.
+- Validator is discoverable and maintainable.
