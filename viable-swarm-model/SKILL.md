@@ -101,8 +101,8 @@ build.
 | **S1-Frontend-Fix** | `vsm_frontend_fix_agent` subagent | `vsm-fixer` | Custom | Phase 7 | Frontend surgical fixes, re-audit report |
 | **S1-Backend-Tester** | `vsm_backend_tester` subagent | `vsm-tester` | Custom | Phase 4 | Backend tests (framework test runner), API tests |
 | **S1-Frontend-Tester** | `vsm_frontend_tester` subagent | `vsm-tester` | Custom | Phase 4 | Frontend tests (framework test runner), build verification |
-| **S1-Security** | `vsm_security` subagent | `vsm-reporter` | Custom | Phase 5 | Security findings |
-| **S1-Meta** | `vsm_meta` subagent | `vsm-reporter` | Custom | Phase 8b | Performance evaluation, hypothesis generation |
+| **Security** | `vsm_security` subagent | `vsm-reporter` | Custom | Phase 5 | Security findings |
+| **S5-Meta** | `vsm_meta` subagent | `vsm-reporter` | Custom | Phase 8b | Performance evaluation, hypothesis generation |
 | **S1-DevOps** | `vsm_devops_coder` subagent | `vsm-coder` | Custom | Phase 4 | Docker, CI/CD |
 | **Algedonic** | Main agent detects/stops | — | — | Any phase | TaskStop, AskUserQuestion |
 
@@ -121,14 +121,17 @@ or write code. Launched via `Agent(subagent_type="vsm_product")`.
  design documents ONLY (never code). Validates against S5 policy. Uses product
 brief (if present) as input. Launched via `Agent(subagent_type="vsm_architect")`.
 
-**`vsm_auditor`** (S3* Audit): Read-only. Reads EVERY source file. Produces
-PASS/ISSUES/BLOCKER per file. Checks correctness, security, performance,
-maintainability. Includes full cross-file checklist. Launched via `Agent(subagent_type="vsm_auditor")`.
+**`vsm_auditor`** (S3* Audit): Reads EVERY source file. Produces
+PASS/ISSUES/BLOCKER per file. Writes audit reports to `.kimi/foundation-audit.md`
+and `.kimi/implementation-audit.md` — never modifies source code. Checks correctness,
+security, performance, maintainability. Includes full cross-file checklist.
+Launched via `Agent(subagent_type="vsm_auditor")`.
 
-**`vsm_coordinator`** (S2 Coordination): No write tools. Compares S1 outputs.
-Validates imports, interfaces, naming, type alignment. Checks WebSocket contracts,
-GraphQL SDL, [ORM/Query builder] relations, env vars. May run shell commands for import
-verification. Launched via `Agent(subagent_type="vsm_coordinator")`.
+**`vsm_coordinator`** (S2 Coordination): Compares S1 outputs, validates imports,
+interfaces, naming, type alignment. Checks WebSocket contracts, GraphQL SDL,
+[ORM/Query builder] relations, env vars. Writes integration findings to
+`.kimi/integration-contract.md` — never modifies source code. May run shell commands
+for import verification. Launched via `Agent(subagent_type="vsm_coordinator")`.
 
 **`vsm_wiring`** (S2 Wiring): Runs after Phase 3. Exclusively owns `entry point file`,
 `realtime.py`, `root component file`, and `main.tsx`. Verifies all routers, providers,
@@ -164,8 +167,9 @@ gotchas. Replaces generic `coder` for all infrastructure waves. Verifies Dockerf
 CMD files exist, docker-compose has no `:-` fallbacks, ports match across configs,
 and `.dockerignore` excludes secrets. Launched via `Agent(subagent_type="vsm_devops_coder")`.
 
-**`vsm_security`** (Security Audit): Read-only security specialist. Runs 15+
-point security checklist. Prevents, not detects — knows all anti-patterns.
+**`vsm_security`** (Security Audit): Runs 15+ point security checklist.
+Writes findings to `.kimi/security-report.md` — never modifies source code.
+Prevents, not detects — knows all anti-patterns.
 Launched via `Agent(subagent_type="vsm_security")`.
 
 **`vsm_backend_tester`** (S1 Quality — Backend): Writes and runs backend tests
@@ -178,10 +182,12 @@ test backend. Launched via `Agent(subagent_type="vsm_frontend_tester")`.
 
 **`vsm_explore`** (S4 Exploration): Fast read-only codebase exploration.
 Maps directory structure, searches patterns, reads files, summarizes findings.
-Never writes files. Replaces the built-in `explore` subagent type. Launched via
+Primarily read-only; for investigations covering >5 files or >200 lines of
+findings, MAY write `.kimi/explore-findings.md`. Never modifies source code.
+Replaces the built-in `explore` subagent type. Launched via
 `Agent(subagent_type="vsm_explore")`.
 
-**`vsm_meta`** (S1 Meta — Evaluation): Evaluates the skill's own performance after a
+**`vsm_meta`** (S5 Meta — Evaluation): Evaluates the skill's own performance after a
 build. Reads build artifacts, runs independent test verification, scores agent
 effectiveness, audits prevention rules, and generates falsifiable hypotheses.
 Does NOT write code or design systems. Produces `.kimi/meta-report.md`. Launched via `Agent(subagent_type="vsm_meta")`.
@@ -190,15 +196,16 @@ Does NOT write code or design systems. Produces `.kimi/meta-report.md`. Launched
 
 **Writes implementation code:**
 - `vsm_devops_coder` (custom) — Docker, docker-compose, CI/CD, infrastructure
-- `vsm_explore` (custom) — Read-only parallel codebase exploration (replaces built-in `explore`)
 **Writes design/requirements documents:**
 - `vsm_product` (custom) — product briefs, user stories, acceptance criteria
 - `vsm_architect` (custom) — architecture docs, API specs
 
-**Read-only evaluation (reports, audits, checklists):**
-- `vsm_auditor` (custom) — correctness audit per file
-- `vsm_coordinator` (custom) — cross-file contract validation
-- `vsm_security` (custom) — security audit, anti-pattern detection
+**Writes evaluation reports (never modifies source code):**
+- `vsm_auditor` (custom) — correctness audit per file, `.kimi/*-audit.md`
+- `vsm_coordinator` (custom) — cross-file contract validation, `.kimi/integration-contract.md`
+- `vsm_security` (custom) — security audit, `.kimi/security-report.md`
+- `vsm_meta` (custom) — performance evaluation, `.kimi/meta-report.md`
+- `vsm_explore` (custom) — read-only exploration, optionally `.kimi/explore-findings.md`
 
 ## 4. The Golden Rule of Parallelism
 
