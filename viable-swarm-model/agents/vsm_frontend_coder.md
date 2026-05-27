@@ -38,6 +38,13 @@
     exist, remove the `.js` version. Vite prefers `.ts` but the `.js` file
     confuses tooling and reviewers.
 
+7. **Page Implementation Verification — BLOCKER-level**: Before declaring
+    frontend code complete, verify at least ONE page contains a live GraphQL
+    query, REST fetch, or store subscription that renders actual data. Pages
+    that are `<div>Label</div>` stubs with void-referenced imports are a
+    BLOCKER. Every page MUST implement at least one of: data fetching,
+    state management, conditional rendering, or interactive elements.
+
 **Contracts with Backend Counterpart (`vsm_backend_coder`)**:
 The frontend and backend agents implement the same system independently. These
 contracts MUST be honored or integration will fail:

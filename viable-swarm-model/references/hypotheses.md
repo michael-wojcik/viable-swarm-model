@@ -1908,3 +1908,49 @@ Domain-specific prompts measurably improved security posture (explicit CORS orig
 **Experiment**: Add "Verify at least one page contains non-trivial data fetching/rendering" to integration checklist.
 **Expected**: Next build has ≥1 page with actual GraphQL query execution and rendered data.
 **Tested by**: —
+
+## H158: Frontend coder page-verification gate would reduce stub pages by 80%
+
+**Status**: untested
+**Proposed**: 2026-05-26
+**Rationale**: FB23 frontend pages (Dashboard, Jobs, Candidates, etc.) are all `<div>Name</div>` stubs with void-referenced imports. The coder declared completion without verifying any page actually fetches or renders data. A self-check before completion would catch this.
+**Source**: Fitness build FB23 (trainer evaluation)
+**Experiment**: Add to `vsm_frontend_coder.md`: "Before declaring completion, verify at least ONE page contains a live GraphQL query, REST fetch, or store subscription that renders actual data. Stub-only pages are a BLOCKER."
+**Expected**: Next build has ≥80% of pages with non-trivial data fetching.
+**Tested by**: —
+
+---
+
+## H159: Making lessons.md a hard Phase 8 gate increases production rate to 100%
+
+**Status**: untested
+**Proposed**: 2026-05-26
+**Rationale**: FB23 produced no `.kimi/lessons.md` despite SKILL.md requiring it. Phase 8 proceeded directly to 8b (meta-reflection) without the reflection artifact. A hard gate checked by S5 before spawning vsm_meta would prevent this skip.
+**Source**: Fitness build FB23 (trainer evaluation)
+**Experiment**: Add to SKILL.md Phase 8: "S5 MUST verify `.kimi/lessons.md` exists and contains ≥1 structured entry before proceeding to Phase 8b. If missing, Phase 8 is NOT complete."
+**Expected**: 100% of future builds produce lessons.md.
+**Tested by**: —
+
+---
+
+## H160: DevOps coder Dockerfile build verification prevents `npm run dev` in production images
+
+**Status**: untested
+**Proposed**: 2026-05-26
+**Rationale**: FB23 frontend Dockerfile ran `npm run dev` (development server) instead of `npm run build` + static serve. The docker-pitfalls skill documents this, but the devops coder did not verify the Dockerfile actually builds for production.
+**Source**: Fitness build FB23 (trainer evaluation)
+**Experiment**: Add to `vsm_devops_coder.md`: "Verify frontend Dockerfile runs `npm run build` and serves static assets. If `npm run dev` is present, treat as BLOCKER."
+**Expected**: Zero production Dockerfiles with dev server in next build.
+**Tested by**: —
+
+---
+
+## H161: Optional Phase 7d ISSUE sweep reduces orphaned integration ISSUEs by 90%
+
+**Status**: untested
+**Proposed**: 2026-05-26
+**Rationale**: FB23 coordinator flagged 4 ISSUEs (duplicate vite.config.js, hardcoded ALL_ROLES, env parity, test type-checking) but only the BLOCKER was fixed in Phase 7. The ISSUEs remained unfixed at build completion because only BLOCKERs route to fix agents.
+**Source**: Fitness build FB23 (trainer evaluation)
+**Experiment**: Add optional Phase 7d: "After BLOCKER fix wave clears, S5 MAY spawn lightweight fix agents for ISSUEs marked 'should fix' by coordinator. ISSUEs fixed here do not require full re-audit."
+**Expected**: ≥90% of coordinator ISSUEs are resolved before build completion.
+**Tested by**: —

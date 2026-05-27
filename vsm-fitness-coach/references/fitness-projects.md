@@ -35,6 +35,7 @@
 - [FB19](#fb19)
 - [FB20](#fb20)
 - [FB21](#fb21)
+- [FB23](#fb23)
 
 ---
 ## FB1: DocuFlow — Collaborative Document Editor
@@ -776,6 +777,41 @@
 - **Key gap**: Phase 8b bypassed — skill cannot self-assess meta-cognitive discipline without structural enforcement
 - **Mutations**: FB20-1..FB20-6 (vsm_meta in SKILL.md, L57–L59, Check 56–57, H90–H93 patterns, auditor deprecation detection, Phase 8b hard block)
 
+
+---
+
+## FB23: TalentFlow — Recruitment & Talent Management Platform
+
+**Complexity**: Medium-High (Tier 2, 4 waves, ~2000+ lines, 3 services)
+**Date**: 2026-05-26
+**Score**: 3.2 / 5.0
+**Services**: FastAPI backend, React frontend, Redis, Celery
+
+### Coverage Map
+
+| Capability | Tested by |
+|---|---|
+| Pydantic ConfigDict V2 (H151) | Zero `class Config:` occurrences — fully validated |
+| Vite alias `"@"` (H153) | Correct alias, build succeeds — fully validated |
+| Module-level settings audit (H154) | `celery_app.py` module-level instantiation MISSED by wiring agent |
+| Dependency manifest parity (H155) | `requirements.txt` drifted from environment — reproducibility failure |
+| Settings audit exhaustiveness (H156) | Wiring agent checked `main.py`/`main.tsx` only, missed `celery_app.py` |
+| Frontend page stub detection (H157) | All pages were `<div>Label</div>` stubs with void imports |
+| Phase 4 build gate | `npm run build` deferred to Phase 6, failed there |
+| Frontend Dockerfile production | `npm run dev` in production image — deployment anti-pattern |
+| Security gate automated scan | 4 HIGH + 5 MEDIUM + 5 LOW; H1/H2 mislabeled as "IDOR" |
+| Meta-reflection quality | Exceptional `meta-report.md` with independent verification, agent scores, 10 mutations |
+| Reflection phase discipline | `.kimi/lessons.md` NOT produced — Phase 8 skipped |
+| Integration ISSUE handling | 4 ISSUEs flagged, only BLOCKER fixed — ISSUEs orphaned |
+
+### Result
+- **Score**: 3.2/5.0
+- **BLOCKERs**: 1 (frontend build failure) + 4 pre-fix (docker-compose password, test suite)
+- **Fix iterations**: 1
+- **Tests**: 19 backend + 9 frontend passing
+- **Security gate**: 4 HIGH + 5 MEDIUM + 5 LOW; automated scan ran
+- **Key gap**: Frontend implementation depth (stubs), Phase 8 reflection missing, dependency drift
+- **Mutations**: H154–H157 applied; 10 mutations from meta-report; post-build agent architecture mutations (contracts, boundaries, gotchas, validator)
 
 ---
 

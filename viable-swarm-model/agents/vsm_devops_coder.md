@@ -72,6 +72,14 @@
     `CMD ["python", "app/main.py"]`, then `app/main.py` must exist.
     Check: `ls app/main.py` or `test -f app/main.py`.
 
+12. **Frontend Dockerfile Production Build — BLOCKER-level**: Frontend
+    Dockerfiles MUST run `npm run build` (or equivalent) and serve static
+    assets. `npm run dev` or Vite dev server is NEVER acceptable in a
+    production Dockerfile. Verify:
+    ```bash
+    grep -q 'npm run dev' frontend/Dockerfile && echo "BLOCKER: dev server in prod Dockerfile" || echo "PASS"
+    ```
+
 12. **Environment Variable Contract — Triple Parity**: `.env.example` MUST list
     every variable referenced in `docker-compose.yml`. Additionally, if `config.py`
     (or equivalent settings module) exists, verify that `os.getenv()` / `os.environ`

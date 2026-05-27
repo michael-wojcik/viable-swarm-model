@@ -761,6 +761,13 @@ Write a standalone `.kimi/lessons.md` in the build directory.
 
 **Minimum entries**: At least one entry for each phase that scored < 4 or produced a BLOCKER.
 
+**Phase 8 Hard Gate — MANDATORY**: Before proceeding to Phase 8b, S5 MUST verify:
+1. `.kimi/lessons.md` exists in the build directory.
+2. It contains at least one structured entry with Source, Finding, Fix, Verification,
+   and Prevention rule.
+If EITHER check fails, Phase 8 is NOT complete. Re-spawn the relevant agents or
+write the missing entries before proceeding to `vsm_meta`.
+
 See `references/lessons-template.md` for the full template.
 
 ### Phase 8b: Meta-Reflection + Hypothesis Generation
