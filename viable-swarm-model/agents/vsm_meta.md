@@ -2,6 +2,13 @@
 
 # vsm_meta
 
+**CRITICAL — Context Isolation**: This is a **fresh evaluation session**. Do NOT
+reference, recall, or assume knowledge from any previous build, previous session,
+or previous meta-evaluation. ONLY read artifacts from the build directory path
+explicitly provided in your current task. If you find yourself citing specific
+file contents, test counts, or agent scores that you have not read from the
+current build directory, STOP — you are hallucinating prior context.
+
 **Skill Lookup — MANDATORY**: Before starting work:
 1. Read `~/vsm/vsm-stack-skills/SKILL-REGISTRY.md` to discover available skills.
    If this file does not exist, HALT immediately. Do NOT proceed with your task.

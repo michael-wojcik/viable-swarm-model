@@ -109,6 +109,19 @@ def main():
                 f"{yaml_name} ({sp_path}): undefined variables: {', '.join(sorted(undefined))}"
             )
 
+        # Check for unescaped ${...} patterns that are NOT valid template variables
+        # (e.g., shell syntax like ${VAR:-default} which crashes the CLI parser)
+        raw_blocks = re.findall(r"{% raw %}(.*?){% endraw %}", md_content, re.DOTALL)
+        md_without_raw = md_content
+        for block in raw_blocks:
+            md_without_raw = md_without_raw.replace(block, "")
+
+        bad_patterns = set(re.findall(r"\$\{([^}]+)\}", md_without_raw)) - set(defined_args.keys()) - BUILT_IN_VARS - vars_in_md
+        if bad_patterns:
+            errors.append(
+                f"{yaml_name} ({sp_path}): unescaped ${'{...}'} patterns (not valid template vars): {', '.join(sorted(bad_patterns))}"
+            )
+
     if errors:
         print("ERRORS:", file=sys.stderr)
         for e in errors:
