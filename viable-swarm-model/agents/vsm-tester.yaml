@@ -1,0 +1,5 @@
+version: 1
+agent:
+  extend: ./vsm-coder.yaml
+  name: vsm-tester
+  system_prompt_path: ./vsm-tester.md

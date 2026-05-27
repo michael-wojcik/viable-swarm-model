@@ -1,0 +1,5 @@
+version: 1
+agent:
+  extend: ./vsm-main.yaml
+  name: vsm-reporter
+  system_prompt_path: ./vsm-reporter.md
