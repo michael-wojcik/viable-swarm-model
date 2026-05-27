@@ -64,12 +64,20 @@ Produce a structured fitness report using this template:
 ```markdown
 # Fitness Report: [Project Name]
 
+## Executive Summary
+- **Verdict**: [PASS | ISSUES | BLOCKER]
+- **Overall Score**: [average] / 5.0
+- **BLOCKERs found**: [count]
+- **Fix iterations**: [count]
+- **Top gap**: [one-line description of most severe gap]
+- **Top surprise**: [one-line description of most notable surprise]
+- **Recommendation**: [proceed / address gaps before next build]
+
+---
+
 **Fitness Build ID**: [FB ID]
 **Date**: [YYYY-MM-DD]
 **Total agents spawned**: [count]
-**BLOCKERs found**: [count]
-**Fix iterations**: [count]
-**Overall Score**: [average] / 5.0
 
 ---
 

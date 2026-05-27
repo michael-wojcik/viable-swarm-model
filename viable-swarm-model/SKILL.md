@@ -54,7 +54,26 @@ Must be embedded in a message (e.g., `Let's build something. /flow:viable-swarm-
 absolute paths from this root. If installed elsewhere (e.g. via `extra_skill_dirs`),
 use symlinks or update paths in mutation commands.
 
-## 2. How to Invoke This Skill
+## 2. Context Budget Rule (MANDATORY)
+
+S5 has a finite context window. Every line consumed by file reads is a line
+unavailable for reasoning. Apply these rules **before every `ReadFile`**:
+
+1. **Check file size first**: Use `Shell: wc -l <file>` before `ReadFile`.
+2. **>500 lines?** Never read in full. Use targeted extraction:
+   - Append-only files (`hypotheses.md`, `mutation-log.md`, `fitness-projects.md`):
+     `tail -n 50` for recent entries
+   - Structured files: `grep -A 5 "^## H"` for hypotheses, `grep "^## Mutation"` for logs
+   - Reports: read only the "Executive Summary" section (first 30 lines)
+3. **Already read it this session?** Do not re-read. Reference your prior summary.
+4. **Spawn subagents for bulk reading**: `vsm_synthesizer` reads multiple reports
+   and produces a single executive summary. S5 reads only the synthesis.
+
+**Violation is a BLOCKER**: Reading a 2000-line file in full consumes ~15-20%
+of available context with zero benefit. S5 MUST be ruthless about context
+preservation.
+
+## 3. How to Invoke This Skill
 
 **Prerequisite**: The swarm requires custom agent files. Launch Kimi CLI with the base agent:
 ```bash
@@ -70,7 +89,7 @@ Then in the session:
 
 > **Platform constraint**: This flow MUST be executed by the root conversation agent (S5). It cannot be delegated to a single subagent because the workflow internally spawns custom subagents (`vsm_architect`, `vsm_auditor`, `vsm_security`, etc.) and subagents do not have access to the `Agent` tool.
 
-## 3. VSM Role Map with Custom Agent Files
+## 4. VSM Role Map with Custom Agent Files
 
 All swarm agents are defined as **custom Kimi CLI agent files** (`agents/*.yaml`) that extend a shared base (`agents/vsm-main.yaml`). Each YAML points to a system prompt markdown file (`agents/*.md`) via `system_prompt_path`. To spawn an agent, use `Agent(subagent_type="<name>", ...)` — the system prompt and tool list are loaded automatically; you do NOT need to read or embed the agent definition file into the prompt.
 
@@ -94,6 +113,7 @@ build.
 | **S3 (Control)** | Main agent via SetTodoList | — | — | All phases | Progress tracking, mutation decisions |
 | **S3* (Audit)** | `vsm_auditor` subagent | `vsm-reporter` | Custom | After waves | PASS/ISSUES/BLOCKER |
 | **S2 (Coordination)** | `vsm_coordinator` subagent | `vsm-reporter` | Custom | After Wave 3 | Integration report |
+| **S2 (Synthesis)** | `vsm_synthesizer` subagent | `vsm-reporter` | Custom | After report phases | Executive summary of multiple reports |
 | **S2 (Wiring)** | `vsm_wiring` subagent | `vsm-coder` | Custom | After Phase 3 | Entry-point wiring verification |
 | **S1-Backend** | `vsm_backend_coder` subagent | `vsm-coder` | Custom | Phases 2,3 | Backend code |
 | **S1-Frontend** | `vsm_frontend_coder` subagent | `vsm-coder` | Custom | Phases 2,3 | Frontend code |
@@ -132,6 +152,13 @@ interfaces, naming, type alignment. Checks WebSocket contracts, GraphQL SDL,
 [ORM/Query builder] relations, env vars. Writes integration findings to
 `.kimi/integration-contract.md` — never modifies source code. May run shell commands
 for import verification. Launched via `Agent(subagent_type="vsm_coordinator")`.
+
+**`vsm_synthesizer`** (S2 Synthesis): Reads 1–5 raw audit/test/security/integration
+reports and produces a single executive summary (≤50 lines). Preserves S5 context
+by condensing multi-report findings into a structured verdict. Writes to
+`.kimi/synthesis-[scope].md`. Every report MUST begin with an Executive Summary
+so the synthesizer (and S5) can read only the critical top section.
+Launched via `Agent(subagent_type="vsm_synthesizer")`.
 
 **`vsm_wiring`** (S2 Wiring): Runs after Phase 3. Exclusively owns `entry point file`,
 `realtime.py`, `root component file`, and `main.tsx`. Verifies all routers, providers,
@@ -220,7 +247,7 @@ and proposes mutations. Not spawned during normal build flows — invoked via
 - `vsm_meta` (custom) — performance evaluation, `.kimi/meta-report.md`
 - `vsm_explore` (custom) — read-only exploration, optionally `.kimi/explore-findings.md`
 
-### 3.1 Agent Architecture
+### 4.1 Agent Architecture
 
 All 15 leaf agents inherit from a shared base via a **two-level hierarchy**:
 
@@ -245,141 +272,28 @@ agent changes. It checks YAML parse, system_prompt_path existence, `${...}`
 variable resolution, Jinja2 include resolution, and unescaped shell-variable
 patterns (`${VAR:-default}`).
 
-## 4. The Golden Rule of Parallelism
+## 5. The Golden Rule of Parallelism
 
 ```
 Independent subagents -> run_in_background=true (parallel, up to configured limit in `background.max_running_tasks`)
 Dependent subagents   -> sequential (TaskOutput block=true before next)
 ```
 
-## 5. Executable Flow Diagram
+## 6. Executable Flow Diagram
 
-When invoked via `/flow:viable-swarm-model`, follow this diagram. At diamond
-decision nodes, output `<choice>branch name</choice>` to select the next step.
+See `references/flow-diagram.md` for the full diagram. Summary:
 
-```mermaid
-flowchart TD
-    BEGIN([BEGIN])
-    P0[Phase 0: Viability Check + Self-Test<br/>S5 Main Agent]
-    P0D{<choice>trivial</choice>?}
-    P0R[Read .kimi/lessons.md<br/>Read references/acquired-wisdom.md<br/>Read references/hypotheses.md<br/>Read references/meta-reflection.md<br/>Self-test skill files<br/>Classify prompt<br/>Write plan.md]
-    P0E{<choice>env ok</choice>?}
-    P0E_F[Report env incompatibility<br/>Stop build]
-    P0P[Conditional: Spawn vsm_product<br/>If problem-oriented prompt]
-    P1[Phase 1: Intelligence<br/>vsm_architect subagent<br/>Uses product brief if present]
-    P1H{<choice>S3/S4 deadlock</choice>?}
-    P1A[EnterPlanMode<br/>User Approval]
-    P1D{<choice>approved</choice>?}
-    P2[Phase 2: Foundation Wave<br/>parallel coder agents<br/>run_in_background=true]
-    P2S[TaskOutput block=true]
-    P2A[Phase 2b: Audit<br/>vsm_auditor]
-    P2M[Phase 2c: Model + Auth Validation<br/>S5 checks data models file + auth layer file vs data-model.md]
-    P2D{<choice>BLOCKERs</choice>?}
-    P3[Phase 3: Implementation Wave<br/>Backend: parallel routers<br/>Frontend: sequential shared→pages]
-    P3S[TaskOutput block=true]
-    P3M["Phase 3c: Mid-Wave S2 Check<br/>vsm_coordinator (conditional, Tier 2+)"]
-    P3A[Phase 3b: Audit + Coordination<br/>vsm_auditor + vsm_coordinator]
-    P3D{<choice>BLOCKERs</choice>?}
-    P3E[Entry Point Wiring<br/>MANDATORY]
-    P3D2[Phase 3d: Frontend Config Validation<br/>S5 checks frontend config files]
-    P4[Phase 4: Testing + Infra Wave<br/>vsm_backend_tester + vsm_frontend_tester + vsm_devops_coder]
-    P4S[TaskOutput block=true]
-    P4R[Shell: run tests]
-    P4G{zero test<br/>failures?}
-    P5[Phase 5: Security Gate<br/>vsm_security]
-    P5D{<choice>CRITICAL/HIGH</choice>?}
-    P5L[Document LOW as<br/>known limitation]
-    P6[Phase 6: Integration Verification<br/>vsm_coordinator + vsm_auditor]
-    P6D{<choice>ANY failure</choice>?}
-    P7[Phase 7: Fix Wave<br/>vsm_backend_fix_agent + vsm_frontend_fix_agent]
-    P7R[Re-audit changed files]
-    P7D{<choice>BLOCKERs remain<br/>iterations < 3</choice>?}
-    P7E[Escalate to User<br/>AskUserQuestion]
-    P7S[Phase 7c Post-Fix Security Re-Check<br/>vsm_security on modified auth/GraphQL/WebSocket]
-    P7F{<choice>regressions found</choice>?}
-    P8[Phase 8: Reflection<br/>Append to .kimi/lessons.md]
-    P8M[Phase 8b: Meta-Reflection + Hypothesis Generation<br/>Evaluate performance<br/>Write new hypotheses to hypotheses.md<br/>Bucket mutations: append-only vs refinement vs structural]
-    P8V{.kimi/meta-report<br/>valid?}
-    P8W[Write append-only mutations<br/>security-lessons.md, pattern-library.md,<br/>anti-patterns.md, integration-checklist.md,<br/>experiments.md, hypotheses.md,<br/>mutation-log.md]
-    P8R[Apply refinement mutations<br/>Single file, preserve structure<br/>agents/*.md, references/*.md]
-    P8A{<choice>structural mutations<br/>approved by user</choice>?}
-    P8WS[Write approved structural mutations<br/>SKILL.md, flow diagram,<br/>phase logic, agent architecture]
-    P8L[Log rejection rationale<br/>to mutation-log.md]
-    P8C[git commit all changes]
-    END([END])
-
-    BEGIN --> P0
-    P0 --> P0D
-    P0D -->|<choice>yes</choice>| END
-    P0D -->|<choice>no</choice>| P0R
-    P0R --> P0E
-    P0E -->|<choice>pass</choice>| P0P
-    P0E -->|<choice>fail</choice>| P0E_F
-    P0E_F --> END
-    P0P --> P1
-    P1 --> P1H
-    P1H -->|<choice>yes</choice>| P1
-    P1H -->|<choice>no</choice>| P1A
-    P1A --> P1D
-    P1D -->|<choice>rejected</choice>| P1
-    P1D -->|<choice>approved</choice>| P2
-    P2 --> P2S
-    P2S --> P2A
-    P2A --> P2M
-    P2M --> P2D
-    P2D -->|<choice>yes</choice>| P7_FOUNDATION
-    P2D -->|<choice>no</choice>| P3
-    P3 --> P3S
-    P3S --> P3M
-    P3M --> P3A
-    P3A --> P3D
-    P3D -->|<choice>yes</choice>| P7_IMPL
-    P3D -->|<choice>no</choice>| P3E
-    P3E --> P3D2
-    P3D2 --> P4
-    P4 --> P4S
-    P4S --> P4R
-    P4R --> P4G
-    P4G -->|<choice>yes</choice>| P5
-    P4G -->|<choice>no</choice>| P7_IMPL
-    P5 --> P5D
-    P5D -->|<choice>yes</choice>| P7_IMPL
-    P5D -->|<choice>LOW only</choice>| P5L
-    P5D -->|<choice>none</choice>| P6
-    P5L --> P6
-    P6 --> P6D
-    P6D -->|<choice>yes</choice>| P7_IMPL
-    P6D -->|<choice>no</choice>| P8
-    P7_FOUNDATION[Phase 7: Fix Wave<br/>Foundation BLOCKERs]
-    P7_FOUNDATION --> P7R_F[Full test suite re-run + re-audit ALL files]
-    P7R_F --> P7D_F{BLOCKERs remain<br/>iterations < 3?}
-    P7D_F -->|<choice>yes</choice>| P7_FOUNDATION
-    P7D_F -->|<choice>no, max reached</choice>| P7E
-    P7D_F -->|<choice>no, all clear</choice>| P2
-    P7_IMPL[Phase 7: Fix Wave<br/>Implementation BLOCKERs]
-    P7_IMPL --> P7R_I[Full test suite re-run + re-audit ALL files]
-    P7R_I --> P7D_I{BLOCKERs remain<br/>iterations < 3?}
-    P7D_I -->|<choice>yes</choice>| P7_IMPL
-    P7D_I -->|<choice>no, max reached</choice>| P7E
-    P7D_I -->|<choice>no, all clear</choice>| P7S
-    P7S --> P7F
-    P7F -->|<choice>yes</choice>| P7_IMPL
-    P7F -->|<choice>no</choice>| P4
-    P7E --> END
-    P8 --> P8M
-    P8M --> P8V
-    P8V -->|<choice>yes</choice>| P8W
-    P8V -->|<choice>no</choice>| P8M
-    P8W --> P8R
-    P8R --> P8A
-    P8A -->|<choice>yes</choice>| P8WS
-    P8A -->|<choice>no</choice>| P8L
-    P8WS --> P8C
-    P8L --> P8C
-    P8C --> END
+```
+BEGIN → Phase 0 (Viability) → Phase 1 (Intelligence) → Phase 2 (Foundation)
+  → Phase 2b (Audit) → Phase 3 (Implementation) → Phase 3b (Audit+Coord)
+  → Phase 4 (Testing) → Phase 5 (Security) → Phase 6 (Integration)
+  → Phase 7 (Fix, conditional) → Phase 8 (Reflection + Meta + Mutations) → END
 ```
 
-## 6. Phase Details
+Diamond nodes: `<choice>branch</choice>` selects path. BLOCKERs at any gate
+trigger Phase 7 (max 3 iterations), then loop back to the originating phase.
+
+## 7. Phase Details
 
 ### Phase 0: Viability Check + Self-Test
 Main agent (S5) performs:
@@ -689,6 +603,9 @@ Report combined coverage.
 
 **Step 5a: Automated Scan (vsm_security)**
 Spawn `vsm_security`. It writes findings to `.kimi/security-report.md`.
+Read only the "Executive Summary" section (first 20 lines). If the report
+exceeds 50 lines, spawn `vsm_synthesizer` with the report path and read
+`.kimi/synthesis-security.md` instead.
 CRITICAL/HIGH → stop, fix, re-audit. LOW → document.
 Gather vs. Stop: planned wave → gather; mid-build → emergency stop.
 
@@ -734,14 +651,11 @@ checklist manually if the build surface is small.
 
 **Tier 2+ builds** (≥ 1000 lines, 2+ services):
 `vsm_coordinator` is MANDATORY. Spawn `vsm_coordinator` + `vsm_auditor` in
-parallel with `run_in_background=true`. The coordinator writes its findings to
-`.kimi/integration-contract.md`. If `vsm_coordinator` fails to spawn, errors out,
-or produces no report, treat this as a BLOCKER. Do NOT proceed
-with manual integration checks as a replacement. Cross-file contract validation
-at Tier 2+ complexity exceeds manual S5 capacity — the coordinator's automated
-20+ point checklist catches env-var drift, orphaned exports, type mismatches,
-and relation name mismatches that manual checks miss (evidence: FB17 orphaned
-exports, FB19 env-var 3-way split, FB20 [ORM/Query builder] relation drift).
+parallel with `run_in_background=true`. After both complete, spawn
+`vsm_synthesizer` with both report paths to produce `.kimi/synthesis-integration.md`.
+S5 reads only the synthesis, not the raw reports.
+If `vsm_coordinator` fails to spawn, errors out, or produces no report, treat
+this as a BLOCKER. Do NOT proceed with manual integration checks as a replacement.
 
 Full 20+ point checklist (see `references/integration-checklist.md`).
 ANY failure → back to Phase 3.
@@ -880,8 +794,10 @@ was addressed, not just the symptoms.
 If ANY mutation status is `overlooked`, Phase 8b is NOT complete. Apply the
 missed mutation, update the table, and re-verify. Only then proceed to git commit.
 
-The main agent (S5) reads the `.kimi/meta-report.md` and uses it to inform hypothesis
-generation and mutation decisions.
+The main agent (S5) reads the `.kimi/meta-report.md` **Executive Summary**
+section only (first 20 lines). If the report exceeds 100 lines, spawn
+`vsm_synthesizer` with the meta-report path and read `.kimi/synthesis-meta.md`
+instead.
 
 **Independent verification requirement**: Before accepting `.kimi/meta-report.md`,
 S5 MUST independently run the full test suite (`run backend tests` and `run frontend tests` /
@@ -981,7 +897,7 @@ If findings justify architecture changes:
 Append-only and refinement mutations are unlimited.
 `git commit` all changes.
 
-## 7. Cross-File Integration Verification Checklist
+## 8. Cross-File Integration Verification Checklist
 
 Run ALL checks from `references/integration-checklist.md`. Summary:
 
@@ -1004,7 +920,7 @@ Run ALL checks from `references/integration-checklist.md`. Summary:
 
 **Rule**: ANY failure → send back to responsible S1 BEFORE quality gates.
 
-## 8. Security Gate Checklist
+## 9. Security Gate Checklist
 
 Run ALL checks from `references/security-lessons.md`. Summary:
 
@@ -1026,7 +942,7 @@ Run ALL checks from `references/security-lessons.md`. Summary:
 16. JWT_SECRET required, min 32 chars, app refuses start without it
 17. [server-sent events]: short-lived token exchange, never long-lived JWT in URL
 
-## 9. Exit Criteria
+## 10. Exit Criteria
 
 Stop iterating when ALL true:
 1. No BLOCKERs in **re-audit** report (not original — re-audit after fixes)
@@ -1045,7 +961,7 @@ escalate to user.
 | 1 | MEDIUM | Feature X not implemented | Manual workaround | v2.0 |
 ```
 
-## 10. The Mutation System
+## 11. The Mutation System
 
 This skill is a learning organism. It modifies its own files between sessions.
 All files in `~/vsm/viable-swarm-model/` are mutable.
@@ -1102,50 +1018,10 @@ If Phase 0 self-test fails because of a bad mutation:
 3. Re-run Phase 0 self-test
 4. Document the reversion as a new mutation entry (learning what NOT to change)
 
-## 11. Comprehension Checkpoint
+## 12. Orchestration Guide
 
-Before declaring a phase complete, explain what was built:
-
-1. **Comprehension** — Explain without referring to original spec
-2. **Connections** — Map to broader context (other files, architecture)
-3. **Rationale** — Explain WHY, not just WHAT
-4. **Edge cases** — Identify assumptions and limitations
-5. **Consequences** — Predict impact on other system parts
-
-If explanation reveals gaps → revisit before proceeding.
-
-## 12. Background Task Management
-
-Use `TaskList` to monitor active tasks. Use `TaskOutput(block=true)` to
-synchronize dependent waves. Use `TaskStop` to cancel on algedonic signals.
-Use `/tasks` command for interactive browser.
-
-Max concurrent background tasks defaults to 4, configurable via `background.max_running_tasks`
-in `~/.kimi/config.toml` (e.g., `max_running_tasks = 8`).
-
-## 13. Session Resumption for Learning
-
-When `--continue` resumes a session:
-1. Read `.kimi/lessons.md` at session start
-2. Read `~/vsm/viable-swarm-model/references/acquired-wisdom.md`
-3. Read `~/vsm/viable-swarm-model/references/hypotheses.md`
-4. Apply relevant lessons to planning
-5. After delivery, append new lessons to both project-local and skill-global memory
-6. Over time, this creates both a project-specific and a cross-project knowledge base
-
-**Epistemic rule**: If `.kimi/lessons.md` contradicts this SKILL.md,
-the lessons file wins. It contains empirical data; this file contains
-general guidance.
-
-## 14. Quick Decision Tree
-
-```
-User asks for software engineering work?
-├── Trivial (< 50 lines, one file)?
-│   └── Respond directly, no VSM workflow
-└── Non-trivial?
-    ├── Read .kimi/lessons.md if exists (apply learnings)
-    ├── Read references/acquired-wisdom.md if exists (apply cross-project learnings)
-    ├── Read references/hypotheses.md if exists (test relevant hypotheses)
-    └── Execute VSM workflow via /flow:viable-swarm-model
-```
+See `references/orchestration-guide.md` for:
+- Comprehension Checkpoint (before declaring phase complete)
+- Background Task Management (`TaskList`, `TaskOutput`, concurrency limits)
+- Session Resumption for Learning (`--continue` workflow)
+- Quick Decision Tree (trivial vs non-trivial work routing)

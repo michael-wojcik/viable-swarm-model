@@ -93,6 +93,19 @@ This preserves S5 context for evaluation and mutation decisions.
 this skill). The word `user` refers to the human operator. S5 may escalate to the
 user via `AskUserQuestion` or `EnterPlanMode` when human policy input is required.
 
+## 4. Context Budget Rule (MANDATORY)
+
+S5 has a finite context window. The gym reads large, append-only reference files.
+Apply these rules **before every `ReadFile`**:
+
+1. **Check file size first**: `Shell: wc -l <file>`
+2. **>500 lines?** Use targeted extraction instead of `ReadFile`:
+   - `hypotheses.md`: `grep "^## H"` for untested hypotheses, `grep -A 10` for specifics
+   - `mutation-log.md`: `tail -n 30` for recent mutations
+   - `experiments.md`: `tail -n 30` for recent experiments
+   - Any report: read only the "Executive Summary" section (first 20 lines)
+3. **Use `vsm_synthesizer`** for multi-report reading when available.
+
 ### Custom Type Prompt Characteristics
 
 **`vsm_experiment_designer`** (S4 Designer): Reads a hypothesis from the main
@@ -153,7 +166,10 @@ flowchart TD
 ## 6. Phase Details
 
 ### Phase 0: Read Hypotheses
-Read `~/vsm/viable-swarm-model/references/hypotheses.md`.
+Check line count: `wc -l ~/vsm/viable-swarm-model/references/hypotheses.md`.
+If >500 lines, use `grep "status: untested"` and `grep -B 2 -A 8` for targeted
+extraction instead of `ReadFile`.
+
 Filter for `status: untested`. Present to user (S5) for selection.
 
 ### Phase 1: Design Experiments

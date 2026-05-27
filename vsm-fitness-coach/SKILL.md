@@ -169,10 +169,13 @@ specifications — they live in `~/vsm-fitness-builds/coach/` and are consumed
 by the next build.
 
 **Step 0a: Read operational state**
-1. Read `~/vsm/vsm-fitness-coach/references/fitness-projects.md` (coverage ledger)
-2. Read `~/vsm/viable-swarm-model/references/hypotheses.md`
-3. Read `~/vsm/viable-swarm-model/references/mutation-log.md`
-4. Check for `~/vsm-fitness-builds/coach/FB[N+1]-prompt-draft.md` (from Phase 6 of previous build)
+1. Check line counts: `wc -l` on each file below. If >500 lines, use `tail -n 30`
+   or `grep` for targeted extraction instead of `ReadFile`.
+2. Read `~/vsm/vsm-fitness-coach/references/fitness-projects.md` (coverage ledger)
+3. Read `~/vsm/viable-swarm-model/references/hypotheses.md` — filter for `status: untested`
+   and hypotheses linked to recent builds
+4. Read `~/vsm/viable-swarm-model/references/mutation-log.md` — read only last 30 entries
+5. Check for `~/vsm-fitness-builds/coach/FB[N+1]-prompt-draft.md` (from Phase 6 of previous build)
 
 **Step 0b: Consume or synthesize**
 - **If a prompt draft exists**: Use it directly as the build specification.
@@ -264,12 +267,17 @@ fitness report with phase scores, gap analysis, surprises, and false positives.
 
 **Do not score manually.** The trainer handles all evaluation.
 
+**Context preservation**: The trainer's report begins with an Executive Summary.
+S5 should read only the Executive Summary and the "Gaps Identified" section.
+Skip detailed phase evidence unless a gap requires deeper investigation.
+
 ### Phase 2b: Update Hypothesis Statuses
 
 Before generating new hypotheses, update the status of any hypotheses tested by this build:
 
-1. Read `~/vsm/viable-swarm-model/references/hypotheses.md`.
-2. Identify hypotheses linked to this fitness build (check the **Tested by** field and the build's prompt draft Coverage Map).
+1. Read `~/vsm/viable-swarm-model/references/hypotheses.md` using targeted
+   extraction (`grep` for hypotheses linked to this build by ID).
+2. Update the **Tested by** and **Result** fields for each hypothesis tested.
 3. For each hypothesis tested, update its status based on build results:
    - **Confirmed**: Build results match the expected outcome
    - **Rejected**: Build results contradict the hypothesis

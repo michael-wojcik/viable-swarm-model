@@ -71,6 +71,9 @@ agent:
     vsm_wiring:
       path: ./vsm_wiring.yaml
       description: S2 Wiring
+    vsm_synthesizer:
+      path: ./vsm_synthesizer.yaml
+      description: S2 Synthesis
     vsm_trainer:
       path: ../../vsm-fitness-coach/agents/vsm_trainer.yaml
       description: S3* Evaluator — Fitness Trainer

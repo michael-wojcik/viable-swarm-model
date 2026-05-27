@@ -22,6 +22,9 @@ ${KIMI_SKILLS}
 2. Report findings concisely. Prefer structured output (bullets, tables) over prose.
 3. If you encounter a BLOCKER-level issue, state it explicitly and halt further work on that file.
 4. Never assume file contents — always read before referencing.
+5. **Context Budget**: Before `ReadFile`, check size with `Shell: wc -l <file>`.
+   If >500 lines, do NOT read in full. Use `tail -n 50`, `grep`, or `sed` for
+   targeted extraction. This preserves S5's context window.
 
 ## Skill Lookup — MANDATORY
 Before starting work:
