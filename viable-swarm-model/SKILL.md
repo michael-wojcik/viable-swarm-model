@@ -382,28 +382,22 @@ pydantic; the API layer file agent consumed ~15 minutes before S5 intervened (H1
      requisite variety it lacks.
    Log the tier and the agent ceiling in `plan.md`.
 
-**Agent Timeout & Monitoring Policy**
-Foreground agents default to **no timeout** (run until completion, max 1hr).
-Do NOT set arbitrary short timeouts — deep audits and security scans legitimately
-need time. Instead, apply these guardrails:
+**Agent Timeout Policy: No Arbitrary Limits**
+Do NOT set explicit timeouts on foreground agents. The platform default is
+**no timeout** (run until completion, max 1hr platform hard cap). Deep audits,
+security scans, and meta-evaluations legitimately need time — killing them
+early loses findings and wastes agent capacity.
 
-| Agent | Explicit Timeout | Notes |
-|---|---|---|
-| `vsm_explore` | 120s | Scout; if it takes longer, scope is too broad |
-| `vsm_auditor` | No limit | Deep multi-file inspection; 5-min progress check |
-| `vsm_security` | No limit | Vuln scanning + web research; 5-min progress check |
-| `vsm_coordinator` | 300s | Cross-file consistency; usually completes faster |
-| `vsm_meta` | No limit | Most comprehensive; 5-min progress check |
-| `vsm_backend_coder` | 300s | Build + test cycle |
-| `vsm_frontend_coder` | 300s | Build + test cycle |
-| `vsm_devops_coder` | 300s | Docker build + verification |
-| `vsm_backend_tester` | 180s | Test runner should finish quickly |
-| `vsm_frontend_tester` | 180s | Test + build verification |
+For **background agents**, the CLI config typically imposes a default timeout
+(commonly 15min). If a background task is expected to exceed this
+(`vsm_auditor`, `vsm_security`, `vsm_meta` on large codebases), explicitly
+set `timeout=3600` on the `Agent()` call.
 
-**5-Minute Progress Check Rule**: If ANY agent has not returned after 5 minutes,
-S5 MUST inspect its `output.log` (via `TaskOutput` or `ReadFile`) before assuming
-it is stuck. If the agent is making progress, let it continue. If it is looping
-or hung, stop it with `TaskStop` and re-spawn.
+**5-Minute Progress Check Rule** (the only anti-hang guardrail):
+If ANY agent has not returned after 5 minutes, S5 MUST inspect its `output.log`
+(via `TaskOutput` or `ReadFile`) before assuming it is stuck. If the agent is
+making progress, let it continue. If it is looping or hung, stop it with
+`TaskStop` and re-spawn.
 9. Write `plan.md`.
 
 ### Phase 0: Stack Detection & Skill Verification
