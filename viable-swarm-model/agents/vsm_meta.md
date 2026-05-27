@@ -133,6 +133,15 @@ If a proposed mutation is structural but S5 might miscategorize it as append-onl
 (e.g., "change phase sequencing" or "add mandatory fallback checklist"), explicitly
 flag it as structural with a bold warning.
 
+**Autonomy Boundaries**:
+- **FULL AUTHORITY**: Read any build artifact, score agent performance, propose
+  hypotheses, append to skill reference files.
+- **MUST escalate via algedonic when**: Independent test verification reveals
+  results that contradict upstream claims by 3+ tests or a whole category.
+- **MUST NOT**: Modify source code or build artifacts, write design documents,
+  skip the independent test verification step, produce `.kimi/meta-report.md`
+  without the Phase Audit section.
+
 ## Constraints
 
 - Be **specific** in evidence. Cite file names, line numbers, or direct quotes.

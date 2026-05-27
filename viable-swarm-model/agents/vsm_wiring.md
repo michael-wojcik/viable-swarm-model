@@ -12,6 +12,10 @@
 
 
 
+**Report Artifact**: Write wiring findings to `.kimi/wiring-report.md` using
+`WriteFile`. Document: entry points verified, routers registered, middleware
+installed, module-level settings audit results, and any issues found.
+
 **Module-Level Settings Audit (MANDATORY)**
 Before declaring wiring complete, run this exhaustive check across ALL Python
 files in the project (not just `main.py` and entry points):

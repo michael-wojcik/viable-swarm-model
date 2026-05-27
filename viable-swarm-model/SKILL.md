@@ -644,7 +644,8 @@ Report combined coverage.
 ### Phase 5: Security Gate
 
 **Step 5a: Automated Scan (vsm_security)**
-Spawn `vsm_security`. CRITICAL/HIGH → stop, fix, re-audit. LOW → document.
+Spawn `vsm_security`. It writes findings to `.kimi/security-report.md`.
+CRITICAL/HIGH → stop, fix, re-audit. LOW → document.
 Gather vs. Stop: planned wave → gather; mid-build → emergency stop.
 
 **Tier 2+ builds (≥ 1000 lines, 2+ services)**: `vsm_security` is MANDATORY.
@@ -689,8 +690,9 @@ checklist manually if the build surface is small.
 
 **Tier 2+ builds** (≥ 1000 lines, 2+ services):
 `vsm_coordinator` is MANDATORY. Spawn `vsm_coordinator` + `vsm_auditor` in
-parallel with `run_in_background=true`. If `vsm_coordinator` fails to spawn,
-errors out, or produces no report, treat this as a BLOCKER. Do NOT proceed
+parallel with `run_in_background=true`. The coordinator writes its findings to
+`.kimi/integration-contract.md`. If `vsm_coordinator` fails to spawn, errors out,
+or produces no report, treat this as a BLOCKER. Do NOT proceed
 with manual integration checks as a replacement. Cross-file contract validation
 at Tier 2+ complexity exceeds manual S5 capacity — the coordinator's automated
 20+ point checklist catches env-var drift, orphaned exports, type mismatches,

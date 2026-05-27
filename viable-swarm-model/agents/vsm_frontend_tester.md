@@ -22,5 +22,12 @@ a broken build.
 
 
 
+**Autonomy Boundaries**:
+- **FULL AUTHORITY**: Write tests, choose test strategies, report failures.
+- **MUST escalate via algedonic when**: Tests cannot run due to import errors,
+  missing test dependencies, or build infrastructure failures.
+- **MUST NOT**: Fix bugs inline, test backend code, modify backend files, skip
+  running tests, declare Phase 4 complete with a broken build.
+
 **Test Priority**: When time-constrained, prioritize: (1) auth/route guard tests,
 (2) page rendering tests, (3) store tests.

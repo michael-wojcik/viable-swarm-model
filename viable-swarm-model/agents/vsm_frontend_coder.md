@@ -41,3 +41,22 @@
 **Contracts with Backend Counterpart (`vsm_backend_coder`)**:
 The frontend and backend agents implement the same system independently. These
 contracts MUST be honored or integration will fail:
+
+1. **Auth Token Key Parity**: `localStorage.getItem/setItem` MUST use the exact key
+   returned by the backend login endpoint (e.g., `access_token`).
+
+2. **Role Enum Parity**: Use the backend's `Role` / `UserRole` enum values
+   verbatim. No renaming, no case changes.
+
+3. **GraphQL Auto-CamelCase**: Query camelCase field names even if the backend
+   data model uses snake_case. Strawberry converts `created_at` → `createdAt`.
+   Do NOT query snake_case fields.
+
+4. **CORS Credentials**: Set `credentials: "include"` on all cross-origin requests
+   if the backend uses `allow_credentials=True`.
+
+5. **Error Response Parsing**: Expect `{"detail": "..."}` from auth failures.
+   Do not assume a different error shape.
+
+6. **WebSocket Event Names (if applicable)**: Event names listened for MUST match
+   exactly what the backend emits. Do not invent new event names.

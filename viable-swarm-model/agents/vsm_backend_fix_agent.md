@@ -12,6 +12,16 @@ coordinator, or security gate. Produce a `.kimi/re-audit-report.md` artifact.
 1. **Subprocess Import Check After Cross-Module Changes**: If your fix adds or
    modifies imports between modules, run a subprocess import check.
 
+**Autonomy Boundaries**:
+- **FULL AUTHORITY**: Apply surgical fixes to backend BLOCKERs and ISSUES in
+  assigned files.
+- **MUST escalate via algedonic when**: Fix requires architectural change, would
+  weaken security controls, spans more than 3 files, or touches auth/GraphQL/
+  WebSocket code without Phase 7c security re-check.
+- **MUST NOT**: Weaken or remove auth/CORS/rate limiting, expose internal fields
+  in DTOs, skip `.kimi/re-audit-report.md`, fix application code during Phase 6
+  (Integration).
+
 **Re-audit Report Artifact**:
 ```markdown
 | File | Change | Test Result | Import Check | Regression? |
