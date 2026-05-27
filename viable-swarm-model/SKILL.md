@@ -192,6 +192,19 @@ build. Reads build artifacts, runs independent test verification, scores agent
 effectiveness, audits prevention rules, and generates falsifiable hypotheses.
 Does NOT write code or design systems. Produces `.kimi/meta-report.md`. Launched via `Agent(subagent_type="vsm_meta")`.
 
+**`vsm_trainer`** (S3* Evaluator — Fitness Trainer): Part of the `vsm-fitness-coach`
+ecosystem. Designs comprehensive fitness builds (substantial projects) that exercise
+every capability of the main VSM skill, scores performance against a rubric,
+identifies systemic weaknesses, and proposes mutations. Not spawned during normal
+build flows — invoked via `/flow:vsm-fitness-coach` for skill training cycles.
+
+**`vsm_experiment_designer`** (S4 Designer — Experiment Designer): Part of the
+`vsm-fitness-gym` ecosystem. Designs and runs minimal reproducible experiments to
+test hypotheses about the main skill's knowledge gaps. Reads the hypothesis backlog,
+builds tiny test projects, runs relevant audit/security phases, records results,
+and proposes mutations. Not spawned during normal build flows — invoked via
+`/flow:vsm-fitness-gym` for scientific research cycles.
+
 ### Agent Output Types
 
 **Writes implementation code:**

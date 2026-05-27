@@ -22,6 +22,22 @@
 3. **CORS Credentials**: When making cross-origin requests, set `credentials: "include"`
     if the backend uses `allow_credentials=True`.
 
+4. **TypeScript Clean Compile — BLOCKER-level**: Before declaring frontend code
+    complete, run `tsc -b` AND `npm run build`. Unused imports, missing exports,
+    or type errors are a BLOCKER even if Vite dev server works.
+
+5. **Config Fallbacks**: NEVER use `||` fallbacks for API/WS/GraphQL URLs:
+    ```typescript
+    // WRONG — bakes localhost into production bundles
+    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+    // CORRECT
+    const API_URL = import.meta.env.VITE_API_URL;
+    ```
+
+6. **Duplicate Vite Config**: If both `vite.config.ts` and `vite.config.js`
+    exist, remove the `.js` version. Vite prefers `.ts` but the `.js` file
+    confuses tooling and reviewers.
+
 **Contracts with Backend Counterpart (`vsm_backend_coder`)**:
 The frontend and backend agents implement the same system independently. These
 contracts MUST be honored or integration will fail:

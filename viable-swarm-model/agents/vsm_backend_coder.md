@@ -55,6 +55,32 @@ runtime verification of framework APIs.
     there. Mismatched roles (e.g., `"editor"` in allowlist but `"responder"` in
     the enum) are a BLOCKER. The allowlist and the data model must be identical.
 
+11. **Pydantic ConfigDict (V2)**: `class Config:` inside a Pydantic model is
+    deprecated. Use `model_config = ConfigDict(...)` instead. Flagged as BLOCKER
+    in audit.
+
+12. **SQLAlchemy Column Shadowing**: Never name columns `text`, `select`, `join`,
+    or `update` — they shadow SQLAlchemy imports. Use `sa.Text`, `sa.select`, or
+    rename columns.
+
+13. **Strawberry Schema Parameters**: NEVER assume `strawberry.Schema` accepts
+    `validation_rules` or any parameter. Verify BEFORE using:
+    ```python
+    "validation_rules" in inspect.signature(strawberry.Schema.__init__).parameters
+    ```
+    Using non-existent parameters causes `TypeError` on import.
+
+14. **FastAPI Lifespan Events**: `@app.on_event("startup")` /
+    `@app.on_event("shutdown")` are deprecated. Use `lifespan` context managers
+    instead.
+
+15. **Module-Level Settings in ALL Files**: Grep ALL `.py` files (not just
+    `main.py`) for module-level `get_settings()` / `Settings()` calls:
+    ```bash
+    grep -rn 'get_settings()\|Settings()' backend/ --include='*.py' | grep -v 'def \|class \|#'
+    ```
+    Celery apps, socket.io modules, and task queues are common offenders.
+
 **Contracts with Frontend Counterpart (`vsm_frontend_coder`)**:
 The backend and frontend agents implement the same system independently. These
 contracts MUST be honored or integration will fail:
