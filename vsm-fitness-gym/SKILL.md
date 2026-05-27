@@ -42,7 +42,7 @@ Must be embedded in a message (e.g., `Let's test a hypothesis. /flow:vsm-fitness
 ```bash
 kimi --agent-file ~/vsm/viable-swarm-model/agents/vsm-main.yaml
 ```
-S5 writes experiment code directly.
+The designer writes experiment code directly, preserving S5 context.
 
 **Path convention**: This skill assumes the main skill is installed at
 `~/vsm/viable-swarm-model/`. If installed elsewhere,
@@ -56,13 +56,36 @@ symlinks or update absolute paths.
   selects untested items, designs experiments, runs them, and records results.
 - **`/skill:vsm-fitness-gym`** — Load as knowledge reference.
 
-## 3. Experiment Agent Types
+## 3. Agent Architecture
+
+The fitness gym is a **flow skill** with no internal subagent hierarchy of its own.
+It relies on **one custom agent** registered in the main skill's base agent file:
+
+| Agent | File | Extends | Role | Tools | Spawned By |
+|---|---|---|---|---|---|
+| `vsm_experiment_designer` | `agents/vsm_experiment_designer.yaml` | `default` | S4 Designer | Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL | S5 (main conversation agent) |
+
+**Registration**: `vsm_experiment_designer` is registered in `~/vsm/viable-swarm-model/agents/vsm-main.yaml`
+as an external agent with path `../../vsm-fitness-gym/agents/vsm_experiment_designer.yaml`.
+This allows the main skill's S5 orchestrator to spawn it during experiment design.
+
+**Inheritance**: Unlike the main skill's 15 leaf agents which extend `vsm-main` and
+participate in a 3-tier inheritance chain (main → coder/researcher/reporter → leaf),
+`vsm_experiment_designer` extends `default` directly. It has no Jinja `{% include %}`
+template inheritance — its prompt is a standalone markdown file.
+
+**Tool scope**: The designer both designs and writes minimal reproducible
+experiments. It creates files in `~/vsm-fitness-builds/gym/[H-ID]/` and writes
+the exact code that contains the bug, vulnerability, or gap being tested.
+This preserves S5 context for evaluation and mutation decisions.
+
+## 4. Experiment Agent Types
 
 | Role | CLI Implementation | Custom Type | Activation | Produces |
 |---|---|---|---|---|
 | **S5 (Policy)** | Main conversation agent (you) | — | Always | Hypothesis selection, mutation approval |
-| **S4 (Designer)** | `vsm_experiment_designer` | Custom (registered in `vsm-main.yaml`) | Phase 1 | Experiment spec, minimal code plan |
-| **S1 (Builder)** | S5 (main agent) or `vsm_backend_coder` | — | Phase 2 | Minimal experiment code |
+| **S4 (Designer)** | `vsm_experiment_designer` | Custom (registered in `vsm-main.yaml`) | Phase 1-2 | Experiment spec + written code |
+| **S1 (Builder)** | `vsm_experiment_designer` | Custom (registered in `vsm-main.yaml`) | Phase 2 | Minimal experiment code |
 | **S3* (Tester)** | `vsm_auditor` or `vsm_security` | Custom (registered in `vsm-main.yaml`) | Phase 3 | PASS/ISSUES/BLOCKER on experiment |
 | **S2 (Analyzer)** | Main agent | — | Phase 4 | Result analysis, mutation proposal |
 
@@ -142,11 +165,15 @@ The designer produces a minimal experiment spec:
 - **Success criteria**: how we know the hypothesis is confirmed or rejected
 
 ### Phase 2: Build Experiments
-S5 writes the experiment code directly. For 50-line throwaway experiments,
-spawning a subagent is unnecessary overhead. If the experiment tests a backend
-pattern, write Python. If it tests a frontend pattern, write TypeScript/React.
-Each experiment lives in a temporary directory (e.g., `~/vsm-fitness-builds/gym/H7/`).
-No scaffolding beyond what's needed to run the relevant audit.
+Spawn `vsm_experiment_designer` for each selected hypothesis. The designer
+reads the hypothesis, designs the minimal experiment, and writes the files
+directly to `~/vsm-fitness-builds/gym/[H-ID]/`.
+
+For parallel experiments, use `run_in_background=true`.
+For dependent experiments, use sequential spawning with `TaskOutput block=true`.
+
+Each experiment should be 50 lines or fewer. No scaffolding beyond what's needed
+to run the relevant audit.
 
 ### Phase 3: Run Relevant Audits
 Spawn the main skill's custom agents against the experiment code:

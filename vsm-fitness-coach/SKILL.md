@@ -70,7 +70,29 @@ in the user's actual project directory.
 this skill). The word `user` refers to the human operator. S5 may escalate to the
 user via `AskUserQuestion` or `EnterPlanMode` when human policy input is required.
 
-## 3. Fitness Coach Roles
+## 3. Agent Architecture
+
+The fitness coach is a **flow skill** with no internal subagent hierarchy of its own.
+It relies on **one custom agent** registered in the main skill's base agent file:
+
+| Agent | File | Extends | Role | Tools | Spawned By |
+|---|---|---|---|---|---|
+| `vsm_trainer` | `agents/vsm_trainer.yaml` | `default` | S3* Evaluator | ReadFile, Glob, Grep, SearchWeb, FetchURL | S5 (main conversation agent) |
+
+**Registration**: `vsm_trainer` is registered in `~/vsm/viable-swarm-model/agents/vsm-main.yaml`
+as an external agent with path `../../vsm-fitness-coach/agents/vsm_trainer.yaml`.
+This allows the main skill's S5 orchestrator to spawn it during fitness evaluation.
+
+**Inheritance**: Unlike the main skill's 15 leaf agents which extend `vsm-main` and
+participate in a 3-tier inheritance chain (main → coder/researcher/reporter → leaf),
+`vsm_trainer` extends `default` directly. It has no Jinja `{% include %}` template
+inheritance — its prompt is a standalone markdown file.
+
+**Tool restrictions**: The trainer is intentionally read-only. It evaluates build
+artifacts against a rubric but does not modify files. It reports findings back to
+S5, which applies mutations autonomously or presents them to the user.
+
+## 4. Fitness Coach Roles
 
 | VSM System | CLI Implementation | Custom Type | Activation | Produces |
 |---|---|---|---|---|
