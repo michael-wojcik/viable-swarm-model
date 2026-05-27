@@ -1,0 +1,58 @@
+# VSM Hook Configuration for Kimi Code CLI
+# ==========================================
+# Copy the [[hooks]] sections below into your ~/.kimi-code/config.toml.
+# These hooks provide audit logging, safety guards, and notifications
+# tailored for the viable-swarm-model workflow.
+#
+# Location: ${KIMI_SKILL_DIR}/assets/vsm-hooks.toml
+# Docs:     ${KIMI_SKILL_DIR}/references/kimi-code-integration.md
+
+# ------------------------------------------------------------------
+# 1. Subagent Dispatch Logger
+#    Logs every VSM subagent start to .kimi/agent-dispatch.log
+# ------------------------------------------------------------------
+[[hooks]]
+event = "SubagentStart"
+matcher = "vsm_.*"
+command = "sh -c 'mkdir -p .kimi && echo \"{\\\"ts\\\":\\\"$(date -Iseconds)\\\",\\\"event\\\":\\\"SubagentStart\\\",\\\"agent\\\":\\\"$KIMI_HOOK_AGENT_NAME\\\"}\" >> .kimi/agent-dispatch.log'"
+timeout = 2
+
+# ------------------------------------------------------------------
+# 2. Dangerous Bash Command Blocker
+#    Blocks rm -rf /, destructive redirects, and pipe-to-shell patterns
+# ------------------------------------------------------------------
+[[hooks]]
+event = "PreToolUse"
+matcher = "Bash"
+command = "node -e 'let d=\"\";process.stdin.on(\"data\",c=>d+=c);process.stdin.on(\"end\",()=>{const p=JSON.parse(d);const cmd=p.tool_input?.command??\"\";const danger=[/rm\\s+-rf\\s+\\//,/>\\s*\\/dev\\/null/,/curl\\s+.*\\|\\s*sh/,/mkfs\\./,/dd\\s+if=/];if(danger.some(r=>r.test(cmd))){console.error(\"VSM hook: blocked dangerous command\");process.exit(2);}});'"
+timeout = 3
+
+# ------------------------------------------------------------------
+# 3. Background Task Completion Notification
+#    Prints a short message when background agents finish
+# ------------------------------------------------------------------
+[[hooks]]
+event = "Notification"
+matcher = "task\\.completed"
+command = "echo '[VSM] Background task completed successfully'"
+timeout = 2
+
+# ------------------------------------------------------------------
+# 4. Background Task Failure Alert
+#    Prints a short message when background agents fail
+# ------------------------------------------------------------------
+[[hooks]]
+event = "Notification"
+matcher = "task\\.failed"
+command = "echo '[VSM] WARNING: Background task failed — check .kimi/ logs'"
+timeout = 2
+
+# ------------------------------------------------------------------
+# 5. Session Start Reminder
+#    Prints a VSM context hint when a new or resumed session starts
+# ------------------------------------------------------------------
+[[hooks]]
+event = "SessionStart"
+matcher = ""
+command = "echo 'VSM session active. Run /flow:viable-swarm-model to start a build. See /help for commands.'"
+timeout = 1

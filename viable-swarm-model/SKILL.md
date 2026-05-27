@@ -7,6 +7,8 @@ description: >
   builds with custom sub-agent types, and appends new lessons to BOTH the
   project-local memory AND its own files. Invoke with /flow:viable-swarm-model.
 type: flow
+whenToUse: When the user wants to build, refactor, or design a multi-file software project, especially full-stack applications, new features, or system architectures.
+disableModelInvocation: false
 triggers:
   - "build a new project"
   - "create an application"
@@ -38,7 +40,7 @@ targeted workouts).
    project-local `.kimi/lessons.md`.
 
    **File Location Convention**:
-   - `references/` in the skill repo (`~/vsm/viable-swarm-model/references/`) →
+   - `references/` in the skill repo (`${KIMI_SKILL_DIR}/references/`) →
      persistent skill-level knowledge (acquired-wisdom, hypotheses, meta-reflection)
    - `.kimi/` in the build directory → per-build artifacts (lessons, agent reports)
 2. During execution, it applies prevention rules, patterns, and anti-patterns.
@@ -50,7 +52,7 @@ Must be embedded in a message (e.g., `Let's build something. /flow:viable-swarm-
 **Reference loading**: `/skill:viable-swarm-model` loads knowledge without execution.
 
 **Path convention**: This skill assumes installation at
-`~/vsm/viable-swarm-model/`. When self-modifying, the model uses
+`${KIMI_SKILL_DIR}`. When self-modifying, the model uses
 absolute paths from this root. If installed elsewhere (e.g. via `extra_skill_dirs`),
 use symlinks or update paths in mutation commands.
 
@@ -302,10 +304,10 @@ Main agent (S5) performs:
    ("Users need Z")? If problem-oriented, spawn `vsm_product` subagent to
    produce a product brief with user stories and acceptance criteria.
 3. **Read project memory**: `.kimi/lessons.md` if exists.
-4. **Read acquired wisdom**: `~/vsm/viable-swarm-model/references/acquired-wisdom.md`
+4. **Read acquired wisdom**: `${KIMI_SKILL_DIR}/references/acquired-wisdom.md`
    if exists.
-5. **Read hypotheses**: `~/vsm/viable-swarm-model/references/hypotheses.md`
-6. **Read meta-reflection**: `~/vsm/viable-swarm-model/references/meta-reflection.md`
+5. **Read hypotheses**: `${KIMI_SKILL_DIR}/references/hypotheses.md`
+6. **Read meta-reflection**: `${KIMI_SKILL_DIR}/references/meta-reflection.md`
    if exists.
    if exists. Note any untested hypotheses that are relevant to this project.
 6. **Self-test**: Verify all referenced files exist and are readable. Verify
@@ -317,7 +319,7 @@ without contradiction. Specifically verify these custom agent definition files e
 `vsm_devops_coder.yaml`, `vsm_security.yaml`, `vsm_backend_tester.yaml`,
 `vsm_frontend_tester.yaml`, `vsm_meta.yaml`, `vsm_explore.yaml`.
 If any check fails → emit algedonic, write diagnosis
-to `~/vsm/viable-swarm-model/references/mutation-log.md`, ask user to review.
+to `${KIMI_SKILL_DIR}/references/mutation-log.md`, ask user to review.
 6b. **Agent-File Verification**: Spawn a trivial `vsm_meta` subagent with the task
 `"Reply 'ok'"`. If this fails with an unknown subagent type error, **STOP immediately**.
 Emit algedonic: `--agent-file not loaded. Launch with: kimi --agent-file ~/vsm/viable-swarm-model/agents/vsm-main.yaml`.
@@ -335,7 +337,7 @@ and ask the user to resolve the dependency conflict. Writing code that cannot be
 imported wastes agent capacity and produces unverifiable artifacts.
 **Source**: FB22 `strawberry-graphql==0.256.0` failed to import with installed
 pydantic; the API layer file agent consumed ~15 minutes before S5 intervened (H152).
-7. **Read runtime capacity**: Read `~/.kimi/config.toml` and extract
+7. **Read runtime capacity**: Read `~/.kimi-code/config.toml` and extract
    `background.max_running_tasks` (default 4 if absent). Log this value in
    `plan.md` as the parallel agent ceiling. NEVER exceed this limit when
    spawning background subagents.
@@ -850,7 +852,7 @@ After verification, proceed with:
 5. **Anomaly detection**: What was surprising? What did the skill get wrong?
    What vulnerability class is completely absent from our knowledge base?
 6. **Propose hypotheses**: For each anomaly, write a new hypothesis to
-   `~/vsm/viable-swarm-model/references/hypotheses.md` with:
+   `${KIMI_SKILL_DIR}/references/hypotheses.md` with:
    - Status: untested
    - Rationale: what was observed
    - Experiment: minimal test to validate
@@ -964,7 +966,7 @@ escalate to user.
 ## 11. The Mutation System
 
 This skill is a learning organism. It modifies its own files between sessions.
-All files in `~/vsm/viable-swarm-model/` are mutable.
+All files in `${KIMI_SKILL_DIR}` are mutable.
 
 ### Why Mutation Is Safe
 
@@ -972,7 +974,7 @@ The skill directory is a **git repository**. Every mutation is committed.
 If a mutation breaks viability, the user (or the skill itself) can revert:
 
 ```bash
-cd ~/vsm/viable-swarm-model
+cd ${KIMI_SKILL_DIR}
 git log --oneline
 git revert [commit]
 ```

@@ -30,6 +30,7 @@ BUILT_IN_VARS = {
     "KIMI_AGENTS_MD",
     "KIMI_SKILLS",
     "KIMI_ADDITIONAL_DIRS_INFO",
+    "KIMI_SKILL_DIR",
 }
 
 # Framework keywords that should NOT appear in base/intermediate templates.

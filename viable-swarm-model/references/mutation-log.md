@@ -1798,3 +1798,47 @@ Gotcha #12: Frontend Dockerfiles must run `npm run build` + static serve. `npm r
 - Mutation log contains complete history from FB1 through FB23-4.
 - Future agent additions follow documented patterns.
 - Validator is discoverable and maintainable.
+
+---
+
+## Mutation [N] — 2026-05-27
+
+**Session**: Comprehensive Kimi Code CLI v0.3.0 documentation analysis and ecosystem update
+**File**: Multiple (see below)
+**Type**: refinement + structural
+**Rationale**: Kimi Code CLI released v0.3.0 with heavily updated documentation. Analysis revealed six critical gaps in VSM skill ecosystem alignment: (1) stale `~/.kimi/` paths migrated to `~/.kimi-code/` in v0.2.0, (2) missing `whenToUse`/`arguments` frontmatter fields, (3) zero hook integration despite 12+ available lifecycle events, (4) MCP unmentioned, (5) no permission configuration guidance, (6) missing modern CLI feature references (`/fork`, `/compact`, `/init`).
+
+**Tier 2 refinements applied autonomously**:
+- M1: Fixed `~/.kimi/` → `~/.kimi-code/` in README.md, SKILL.md, orchestration-guide.md, security-lessons.md, vsm-main.md
+- M2: Added `whenToUse`, `disableModelInvocation: false`, and `arguments` to all three skill frontmatters
+- M3: Replaced hardcoded `~/vsm/viable-swarm-model/` paths with `${KIMI_SKILL_DIR}` in SKILL.md, agent prompts, and reference files
+- M4: Created `references/kimi-code-integration.md` — comprehensive guide covering config.toml, hooks, MCP, modern CLI commands, and skill system enhancements
+- M5: Updated README with permission quick-start and `--agent-file` launch instructions
+
+**Tier 3 structural mutations applied (user approved)**:
+- S1: Created `assets/vsm-hooks.toml` — ready-to-use hook configuration for SubagentStart logging, PreToolUse bash guarding, Notification task completion alerts, and SessionStart reminders
+- S2: Created `vsm-orchestrator/` inline skill — auto-invoked trigger that recommends the full VSM flow for multi-file tasks, with fallback guidance for standard inline mode
+
+**Expected effect**:
+- New users will install skills in the correct `~/.kimi-code/` directory
+- Skill auto-invocation will work correctly with `whenToUse` descriptions
+- Portability improves via `${KIMI_SKILL_DIR}` placeholders
+- Users can reduce approval friction with documented permission rules
+- Hooks provide audit trails and safety guards without manual setup
+- Inline orchestrator skill bridges gap between simple tasks and full flow builds
+
+**Files changed**:
+- `README.md` — path fixes, permission quick-start, launch instructions
+- `viable-swarm-model/SKILL.md` — frontmatter enrichment, ${KIMI_SKILL_DIR} paths, config path fix
+- `viable-swarm-model/agents/vsm-main.md` — config path fix
+- `viable-swarm-model/agents/vsm_meta.md` — ${KIMI_SKILL_DIR} paths
+- `viable-swarm-model/references/orchestration-guide.md` — ${KIMI_SKILL_DIR} paths
+- `viable-swarm-model/references/security-lessons.md` — config path fix
+- `viable-swarm-model/references/meta-reflection.md` — ${KIMI_SKILL_DIR} path
+- `viable-swarm-model/references/kimi-code-integration.md` — NEW
+- `viable-swarm-model/assets/vsm-hooks.toml` — NEW
+- `vsm-fitness-coach/SKILL.md` — frontmatter enrichment, ${KIMI_SKILL_DIR} paths
+- `vsm-fitness-gym/SKILL.md` — frontmatter enrichment, ${KIMI_SKILL_DIR} paths
+- `vsm-orchestrator/SKILL.md` — NEW
+
+---

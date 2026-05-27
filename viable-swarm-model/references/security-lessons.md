@@ -40,7 +40,7 @@ undetected.
 
 ### L6: Agent Ceiling is Host-Configured
 **Prevention rule**: Wave size is limited by `background.max_running_tasks` in the
-host's `~/.kimi/config.toml`. Beyond that: queue additional agents or use recursive
+host's `~/.kimi-code/config.toml`. Beyond that: queue additional agents or use recursive
 sub-VSMs. Do not invent arbitrary sub-limits.
 **Affected**: S3 (main agent).
 

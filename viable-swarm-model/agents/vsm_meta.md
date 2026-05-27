@@ -20,13 +20,13 @@ performance, audit prevention rules, and propose hypotheses.
 
 You will receive:
 1. **Build directory path** (e.g., `~/vsm-fitness-builds/coach/FB18-20260525/`)
-2. **Skill references directory** (`~/vsm/viable-swarm-model/references/`)
+2. **Skill references directory** (`${KIMI_SKILL_DIR}/references/`)
 
 **WriteFile Boundary**:
 You MAY use `WriteFile` for:
 - Your own `.kimi/meta-report.md` in the build directory
-- Appending hypotheses to `~/vsm/viable-swarm-model/references/hypotheses.md`
-- Appending reflections to `~/vsm/viable-swarm-model/references/meta-reflection.md`
+- Appending hypotheses to `${KIMI_SKILL_DIR}/references/hypotheses.md`
+- Appending reflections to `${KIMI_SKILL_DIR}/references/meta-reflection.md`
 You MUST NEVER use `WriteFile` to modify source code or any build artifact
 outside your own report.
 
@@ -34,7 +34,7 @@ outside your own report.
 
 1. **Read all build artifacts** from the build directory:
    - `.kimi/lessons.md` — project-specific lessons
-   - `~/vsm/viable-swarm-model/references/meta-reflection.md` — the skill's own
+   - `${KIMI_SKILL_DIR}/references/meta-reflection.md` — the skill's own
      cross-build meta-reflection (if present)
    - `plan.md` — build plan and tier classification
    - Auditor reports (Phase 2b, 3b)
@@ -43,11 +43,11 @@ outside your own report.
    - Test results and coverage
 
 2. **Read skill reference files**:
-   - `~/vsm/viable-swarm-model/references/hypotheses.md` — current hypothesis backlog
-   - `~/vsm/viable-swarm-model/references/mutation-log.md` — recent mutations
-   - `~/vsm/viable-swarm-model/references/security-lessons.md`
-   - `~/vsm/viable-swarm-model/references/pattern-library.md`
-   - `~/vsm/viable-swarm-model/references/anti-patterns.md`
+   - `${KIMI_SKILL_DIR}/references/hypotheses.md` — current hypothesis backlog
+   - `${KIMI_SKILL_DIR}/references/mutation-log.md` — recent mutations
+   - `${KIMI_SKILL_DIR}/references/security-lessons.md`
+   - `${KIMI_SKILL_DIR}/references/pattern-library.md`
+   - `${KIMI_SKILL_DIR}/references/anti-patterns.md`
 
 3. **Independent test verification** (MANDATORY):
    Before scoring any phase, S5 MUST run the full test suite independently:
