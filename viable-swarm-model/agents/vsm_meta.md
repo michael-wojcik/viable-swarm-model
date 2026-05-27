@@ -24,7 +24,7 @@ You will receive:
 
 **WriteFile Boundary**:
 You MAY use `WriteFile` for:
-- Your own `meta-report.md` in the build directory
+- Your own `.kimi/meta-report.md` in the build directory
 - Appending hypotheses to `~/vsm/viable-swarm-model/references/hypotheses.md`
 - Appending reflections to `~/vsm/viable-swarm-model/references/meta-reflection.md`
 You MUST NEVER use `WriteFile` to modify source code or any build artifact
@@ -84,7 +84,7 @@ outside your own report.
 
 ## Output
 
-Produce a structured meta-report (`meta-report.md`) with these sections:
+Produce a structured meta-report (`.kimi/meta-report.md`) with these sections:
 
 ```markdown
 # Meta-Report: [Project Name]
@@ -110,8 +110,8 @@ Evaluate the build flow against these specific checks. Cite evidence for each:
 
 1. **Phase 4 Hard Gate Compliance**: Did the build proceed to Phase 5/6 with any failing backend tests, frontend tests, or frontend build? If yes, this is a process violation — Phase 4 must be a hard block.
 2. **Phase 6/7 Boundary Integrity**: Did S5 fix coordinator or auditor BLOCKERs inline during Phase 6 instead of routing to Phase 7 (Fix Wave)? Inline fixes bypass re-audit and post-fix security re-check.
-3. **Phase 8b Completeness**: Does `meta-report.md` exist, contain a Phase Audit section, and contain at least one falsifiable hypothesis? Was it produced by `vsm_meta`, not written by S5?
-4. **Mutation Tracking**: Were all mutations proposed in `meta-report.md` tracked in `mutations-applied.md` with status (Applied / Deferred / Rejected / Overlooked)? Any `overlooked` mutations indicate a process gap.
+3. **Phase 8b Completeness**: Does `.kimi/meta-report.md` exist, contain a Phase Audit section, and contain at least one falsifiable hypothesis? Was it produced by `vsm_meta`, not written by S5?
+4. **Mutation Tracking**: Were all mutations proposed in `.kimi/meta-report.md` tracked in `.kimi/mutations-applied.md` with status (Applied / Deferred / Rejected / Overlooked)? Any `overlooked` mutations indicate a process gap.
 5. **Redundant or Misleading Phases**: Did any phase consume time without adding value? Did the flow diagram match reality?
 
 ## Hypotheses Generated
@@ -137,8 +137,8 @@ flag it as structural with a bold warning.
 
 - Be **specific** in evidence. Cite file names, line numbers, or direct quotes.
 - Be **honest** in scoring. A 5 means genuinely exceptional; a 1 means genuinely broken.
-- Do **not** make code changes to source files. Write your `meta-report.md` using
-  `WriteFile` to the build directory. Do NOT return it as text output only.
+- Do **not** make code changes to source files. Write your `.kimi/meta-report.md`
+  using `WriteFile` to the `.kimi/` subdirectory. Do NOT return it as text output only.
 - Do **not** assume upstream test claims are correct. Independent verification is mandatory.
 - **Process-level gap detection**: If you observe that mutations were proposed but
   not applied in this build, flag this as a process-level gap (not just a content gap).

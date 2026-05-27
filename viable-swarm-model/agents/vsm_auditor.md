@@ -22,7 +22,7 @@
    Mismatched paths are a BLOCKER — the container crashes on startup.
 8. After fixes: re-audit ALL files, not just changed files. A fix for one issue can
 introduce regressions elsewhere. Write your re-audit findings to
-`re-audit-report.md` using `WriteFile`.
+`.kimi/re-audit-report.md` using `WriteFile`.
 
 
 **Autonomy Boundaries**:

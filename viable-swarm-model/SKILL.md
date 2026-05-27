@@ -150,13 +150,13 @@ runs `run frontend build` before completion. Launched via `Agent(subagent_type="
 **`vsm_backend_fix_agent`** (S1 Backend Fix): Surgical fixes to backend BLOCKERs.
 Inherits all backend gotchas. Adds fix-specific rules: full test suite after every
 fix, subprocess import check after cross-module changes, auth-weakening guard,
-rate-limit/CORS/security freeze, GraphQL auth parity, and mandatory `re-audit-report.md`.
+rate-limit/CORS/security freeze, GraphQL auth parity, and mandatory `.kimi/re-audit-report.md`.
 Launched via `Agent(subagent_type="vsm_backend_fix_agent")`.
 
 **`vsm_frontend_fix_agent`** (S1 Frontend Fix): Surgical fixes to frontend BLOCKERs.
 Inherits all frontend gotchas. Adds fix-specific rules: `run frontend build` after every
 fix, `run type checker` check, no `as any` bypasses, export verification, [API client]
-consistency, and mandatory `re-audit-report.md`. Launched via `Agent(subagent_type="vsm_frontend_fix_agent")`.
+consistency, and mandatory `.kimi/re-audit-report.md`. Launched via `Agent(subagent_type="vsm_frontend_fix_agent")`.
 
 **`vsm_devops_coder`** (S1 DevOps Implementation): Writes Docker, docker-compose,
 CI/CD, and infrastructure configs with embedded domain knowledge of containerization
@@ -184,7 +184,7 @@ Never writes files. Replaces the built-in `explore` subagent type. Launched via
 **`vsm_meta`** (S1 Meta — Evaluation): Evaluates the skill's own performance after a
 build. Reads build artifacts, runs independent test verification, scores agent
 effectiveness, audits prevention rules, and generates falsifiable hypotheses.
-Does NOT write code or design systems. Produces `meta-report.md`. Launched via `Agent(subagent_type="vsm_meta")`.
+Does NOT write code or design systems. Produces `.kimi/meta-report.md`. Launched via `Agent(subagent_type="vsm_meta")`.
 
 ### Agent Output Types
 
@@ -254,7 +254,7 @@ flowchart TD
     P7F{<choice>regressions found</choice>?}
     P8[Phase 8: Reflection<br/>Append to .kimi/lessons.md]
     P8M[Phase 8b: Meta-Reflection + Hypothesis Generation<br/>Evaluate performance<br/>Write new hypotheses to hypotheses.md<br/>Bucket mutations: append-only vs refinement vs structural]
-    P8V{meta-report<br/>valid?}
+    P8V{.kimi/meta-report<br/>valid?}
     P8W[Write append-only mutations<br/>security-lessons.md, pattern-library.md,<br/>anti-patterns.md, integration-checklist.md,<br/>experiments.md, hypotheses.md,<br/>mutation-log.md]
     P8R[Apply refinement mutations<br/>Single file, preserve structure<br/>agents/*.md, references/*.md]
     P8A{<choice>structural mutations<br/>approved by user</choice>?}
@@ -602,9 +602,9 @@ never treat test failures as "acceptable for now."
 All audit/security/coordinator agents now have `WriteFile` restricted to their own
 report artifacts. They MUST write their reports to the build directory. S5 MUST
 verify the report files exist before proceeding. Name convention:
-- Auditor → `foundation-audit.md` or `implementation-audit.md`
-- Security → `security-report.md`
-- Coordinator → `integration-report.md`
+- Auditor → `.kimi/foundation-audit.md` or `.kimi/implementation-audit.md`
+- Security → `.kimi/security-report.md`
+- Coordinator → `.kimi/integration-contract.md`
 
 If an agent fails to produce its report artifact, S5 MUST prompt it to write the
 report using `WriteFile`. Failure to produce report files causes the meta-evaluator
@@ -684,7 +684,7 @@ ANY failure → back to Phase 3.
 > BLOCKERs, do NOT fix them inline. Route to Phase 7 (Fix Wave). Inline fixes
 > bypass re-audit and post-fix security re-check, violating exit criteria. S5
 > MUST spawn domain-specific fix agents (`vsm_backend_fix_agent`,
-`vsm_frontend_fix_agent`, `vsm_devops_coder` for infra) for fixes, produce a `re-audit-report.md`
+`vsm_frontend_fix_agent`, `vsm_devops_coder` for infra) for fixes, produce a `.kimi/re-audit-report.md`
 > artifact, and run Phase 7c post-fix security re-check before returning to
 > the main flow.
 
@@ -695,7 +695,7 @@ within file. Spawn `vsm_backend_fix_agent` for backend BLOCKERs and
 spawn both agents in parallel with `run_in_background=true`.
 
 **Phase 7a — Fix Execution**: Fix agents apply surgical changes and produce
-`re-audit-report.md` (advisory only).
+`.kimi/re-audit-report.md` (advisory only).
 
 **Phase 7b — Binding Re-Audit + Full Test Suite (MANDATORY)**: S5 MUST spawn
 `vsm_auditor` to independently verify ALL modified files. Fix agent self-reports
@@ -743,18 +743,18 @@ See `references/lessons-template.md` for the full template.
 
 ### Phase 8b: Meta-Reflection + Hypothesis Generation
 After project reflection, spawn `vsm_meta` subagent to evaluate the skill's own
-performance. This agent produces a standalone `meta-report.md` with independent
+performance. This agent produces a standalone `.kimi/meta-report.md` with independent
 test verification, agent performance scores, rule effectiveness ratings, and
 process bottleneck analysis.
 
 **Step 8b-1: Spawn `vsm_meta` (MANDATORY — HARD BLOCK)**
 S5 MUST spawn `vsm_meta` before proceeding. `vsm_meta` produces the per-build
-`meta-report.md`. S5 then synthesizes cross-build insights and appends them to
+`.kimi/meta-report.md`. S5 then synthesizes cross-build insights and appends them to
 `~/vsm/viable-swarm-model/references/meta-reflection.md`.
 
-**Step 8b-2: Verify `meta-report.md` exists and is valid**
+**Step 8b-2: Verify `.kimi/meta-report.md` exists and is valid**
 Before declaring Phase 8b complete, verify ALL of the following:
-1. `meta-report.md` exists in the build directory.
+1. `.kimi/meta-report.md` exists in the build directory.
 2. It was produced by `vsm_meta`, not written by S5. (Check for "Agent Performance Scores" table — S5 typically omits this structured section.)
 3. It contains a **Phase Audit** section with process violation analysis.
 4. It contains **Hypotheses Generated** with at least one falsifiable hypothesis.
@@ -763,7 +763,7 @@ Before declaring Phase 8b complete, verify ALL of the following:
 If any check fails, Phase 8b is NOT complete. Re-spawn `vsm_meta` with explicit
 instructions to include the missing sections.
 
-> **Algedonic signal**: If S5 is about to write `meta-report.md` manually,
+> **Algedonic signal**: If S5 is about to write `.kimi/meta-report.md` manually,
 > STOP immediately. This is a process violation. The builder cannot evaluate
 > itself. Spawn `vsm_meta`. S5 MAY synthesize and append to the skill-level
 > `references/meta-reflection.md` after reading the meta-report.
@@ -779,7 +779,7 @@ If this build discovered new empirical pitfalls or validated new patterns:
 ### Phase 8c: Mutation Verification Checkpoint (MANDATORY)
 Before declaring Phase 8 complete, S5 MUST run the Mutation Verification
 Checkpoint. This prevents the recurring failure mode where mutations are
-proposed in `meta-report.md` but never applied.
+proposed in `.kimi/meta-report.md` but never applied.
 
 **Step 8c-1: Produce `mutations-applied.md`**
 Create a tracking artifact in the build directory (`mutations-applied.md`)
@@ -790,7 +790,7 @@ with this table:
 |---|----------|------|-------------|--------|----------|
 ```
 
-**Step 8c-2: Cross-check against `meta-report.md`**
+**Step 8c-2: Cross-check against `.kimi/meta-report.md`**
 For every mutation proposed by `vsm_meta`, confirm one of:
 - **Applied**: File was modified; git diff shows the change
 - **Deferred**: Intentionally postponed with rationale logged
@@ -806,10 +806,10 @@ was addressed, not just the symptoms.
 If ANY mutation status is `overlooked`, Phase 8b is NOT complete. Apply the
 missed mutation, update the table, and re-verify. Only then proceed to git commit.
 
-The main agent (S5) reads the `meta-report.md` and uses it to inform hypothesis
+The main agent (S5) reads the `.kimi/meta-report.md` and uses it to inform hypothesis
 generation and mutation decisions.
 
-**Independent verification requirement**: Before accepting `meta-report.md`,
+**Independent verification requirement**: Before accepting `.kimi/meta-report.md`,
 S5 MUST independently run the full test suite (`run backend tests` and `run frontend tests` /
 `run frontend tests`) and record the ACTUAL pass/fail counts. Do NOT repeat claims from
 upstream phases without verification. If tests fail, the meta-reflection must
