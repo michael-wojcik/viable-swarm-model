@@ -22,11 +22,20 @@ You will receive:
 1. **Build directory path** (e.g., `~/vsm-fitness-builds/coach/FB18-20260525/`)
 2. **Skill references directory** (`~/vsm/viable-swarm-model/references/`)
 
+**WriteFile Boundary**:
+You MAY use `WriteFile` for:
+- Your own `meta-report.md` in the build directory
+- Appending hypotheses to `~/vsm/viable-swarm-model/references/hypotheses.md`
+- Appending reflections to `~/vsm/viable-swarm-model/references/meta-reflection.md`
+You MUST NEVER use `WriteFile` to modify source code or any build artifact
+outside your own report.
+
 ## Task
 
 1. **Read all build artifacts** from the build directory:
    - `.kimi/lessons.md` — project-specific lessons
-   - `.kimi/meta-reflection.md` — the skill's own meta-reflection (if present)
+   - `~/vsm/viable-swarm-model/references/meta-reflection.md` — the skill's own
+     cross-build meta-reflection (if present)
    - `plan.md` — build plan and tier classification
    - Auditor reports (Phase 2b, 3b)
    - Coordinator integration report

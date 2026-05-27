@@ -33,8 +33,14 @@ performance) and `vsm-fitness-gym` is the gym (isolated equipment for
 targeted workouts).
 
 **How learning works**:
-1. At startup (Phase 0), the skill reads its own `references/acquired-wisdom.md`
-   (if it exists) and the project-local `.kimi/lessons.md`.
+1. At startup (Phase 0), the skill reads its own skill-level reference files
+   (`references/acquired-wisdom.md`, `references/meta-reflection.md`) and the
+   project-local `.kimi/lessons.md`.
+
+   **File Location Convention**:
+   - `references/` in the skill repo (`~/vsm/viable-swarm-model/references/`) →
+     persistent skill-level knowledge (acquired-wisdom, hypotheses, meta-reflection)
+   - `.kimi/` in the build directory → per-build artifacts (lessons, agent reports)
 2. During execution, it applies prevention rules, patterns, and anti-patterns.
 3. At shutdown (Phase 8b), it evaluates its own performance, proposes new
    hypotheses, and appends new knowledge to its own files.
@@ -71,33 +77,34 @@ All swarm agents are defined as **custom Kimi CLI agent files** (`agents/*.yaml`
 > **Important**: When using `--agent-file`, built-in subagent types (`coder`, `explore`, `plan`) are **unavailable**. S5 and all spawned agents must use the custom types defined in `agents/vsm-main.yaml`. S5 itself retains full tool access.
 
 **Agent Spawn Hygiene — Context Isolation (MANDATORY)**
-Report-producing agents (`vsm_auditor`, `vsm_security`, `vsm_coordinator`, `vsm_meta`)
-MUST always be spawned as **new instances** (`subagent_type="..."`) — never via
-`resume`. Cross-build context contamination has caused hallucinated findings
-(e.g., vsm_meta reporting FB17 data during FB23). Coding agents
-(`vsm_backend_coder`, `vsm_frontend_coder`, `vsm_devops_coder`) may use `resume`
-within the same build wave for continuity, but start fresh on a new build.
+Report-producing agents (all `vsm-reporter` descendants: `vsm_auditor`,
+`vsm_security`, `vsm_coordinator`, `vsm_meta`) MUST always be spawned as
+**new instances** (`subagent_type="..."`) — never via `resume`. Cross-build
+context contamination has caused hallucinated findings (e.g., vsm_meta reporting
+FB17 data during FB23). Coding agents (all `vsm-coder` descendants) may use
+`resume` within the same build wave for continuity, but start fresh on a new
+build.
 
-| VSM System | CLI Implementation | Custom Type | Activation | Produces |
-|---|---|---|---|---|
-| **S5 (Policy)** | Main conversation agent (you) | — | Always | Decisions, escalation, mutations |
-| **S4 (Intelligence)** | `vsm_architect` subagent | Custom | Phase 1 | Architecture doc, API spec |
-| **S4 (Intelligence)** | `vsm_product` subagent | Custom | Phase 0 (conditional) | Product brief, user stories, acceptance criteria |
-| **S4 (Exploration)** | `vsm_explore` subagent | Custom | Any phase | Read-only file mapping, pattern search |
-| **S3 (Control)** | Main agent via SetTodoList | — | All phases | Progress tracking, mutation decisions |
-| **S3* (Audit)** | `vsm_auditor` subagent | Custom | After waves | PASS/ISSUES/BLOCKER |
-| **S2 (Coordination)** | `vsm_coordinator` subagent | Custom | After Wave 3 | Integration report |
-| **S2 (Wiring)** | `vsm_wiring` subagent | Custom | After Phase 3 | Entry-point wiring verification |
-| **S1-Backend** | `vsm_backend_coder` subagent | Custom | Phases 2,3 | Backend code |
-| **S1-Frontend** | `vsm_frontend_coder` subagent | Custom | Phases 2,3 | Frontend code |
-| **S1-Backend-Fix** | `vsm_backend_fix_agent` subagent | Custom | Phase 7 | Backend surgical fixes, re-audit report |
-| **S1-Frontend-Fix** | `vsm_frontend_fix_agent` subagent | Custom | Phase 7 | Frontend surgical fixes, re-audit report |
-| **S1-Backend-Tester** | `vsm_backend_tester` subagent | Custom | Phase 4 | Backend tests (framework test runner), API tests |
-| **S1-Frontend-Tester** | `vsm_frontend_tester` subagent | Custom | Phase 4 | Frontend tests (framework test runner), build verification |
-| **S1-Security** | `vsm_security` subagent | Custom | Phase 5 | Security findings |
-| **S1-Meta** | `vsm_meta` subagent | Custom | Phase 8b | Performance evaluation, hypothesis generation |
-| **S1-DevOps** | `vsm_devops_coder` subagent | Custom | Phase 4 | Docker, CI/CD |
-| **Algedonic** | Main agent detects/stops | — | Any phase | TaskStop, AskUserQuestion |
+| VSM System | CLI Implementation | Parent Category | Custom Type | Activation | Produces |
+|---|---|---|---|---|---|
+| **S5 (Policy)** | Main conversation agent (you) | — | — | Always | Decisions, escalation, mutations |
+| **S4 (Intelligence)** | `vsm_architect` subagent | `vsm-researcher` | Custom | Phase 1 | Architecture doc, API spec |
+| **S4 (Intelligence)** | `vsm_product` subagent | `vsm-researcher` | Custom | Phase 0 (conditional) | Product brief, user stories, acceptance criteria |
+| **S4 (Exploration)** | `vsm_explore` subagent | `vsm-researcher` | Custom | Any phase | Read-only file mapping, pattern search |
+| **S3 (Control)** | Main agent via SetTodoList | — | — | All phases | Progress tracking, mutation decisions |
+| **S3* (Audit)** | `vsm_auditor` subagent | `vsm-reporter` | Custom | After waves | PASS/ISSUES/BLOCKER |
+| **S2 (Coordination)** | `vsm_coordinator` subagent | `vsm-reporter` | Custom | After Wave 3 | Integration report |
+| **S2 (Wiring)** | `vsm_wiring` subagent | `vsm-coder` | Custom | After Phase 3 | Entry-point wiring verification |
+| **S1-Backend** | `vsm_backend_coder` subagent | `vsm-coder` | Custom | Phases 2,3 | Backend code |
+| **S1-Frontend** | `vsm_frontend_coder` subagent | `vsm-coder` | Custom | Phases 2,3 | Frontend code |
+| **S1-Backend-Fix** | `vsm_backend_fix_agent` subagent | `vsm-fixer` | Custom | Phase 7 | Backend surgical fixes, re-audit report |
+| **S1-Frontend-Fix** | `vsm_frontend_fix_agent` subagent | `vsm-fixer` | Custom | Phase 7 | Frontend surgical fixes, re-audit report |
+| **S1-Backend-Tester** | `vsm_backend_tester` subagent | `vsm-tester` | Custom | Phase 4 | Backend tests (framework test runner), API tests |
+| **S1-Frontend-Tester** | `vsm_frontend_tester` subagent | `vsm-tester` | Custom | Phase 4 | Frontend tests (framework test runner), build verification |
+| **S1-Security** | `vsm_security` subagent | `vsm-reporter` | Custom | Phase 5 | Security findings |
+| **S1-Meta** | `vsm_meta` subagent | `vsm-reporter` | Custom | Phase 8b | Performance evaluation, hypothesis generation |
+| **S1-DevOps** | `vsm_devops_coder` subagent | `vsm-coder` | Custom | Phase 4 | Docker, CI/CD |
+| **Algedonic** | Main agent detects/stops | — | — | Any phase | TaskStop, AskUserQuestion |
 
 **Terminology**: `S5` refers to the main conversation agent (you, the LLM executing
 this skill). The word `user` refers to the human operator. S5 may escalate to the
@@ -210,7 +217,7 @@ flowchart TD
     BEGIN([BEGIN])
     P0[Phase 0: Viability Check + Self-Test<br/>S5 Main Agent]
     P0D{<choice>trivial</choice>?}
-    P0R[Read .kimi/lessons.md<br/>Read references/acquired-wisdom.md<br/>Read references/hypotheses.md<br/>Self-test skill files<br/>Classify prompt<br/>Write plan.md]
+    P0R[Read .kimi/lessons.md<br/>Read references/acquired-wisdom.md<br/>Read references/hypotheses.md<br/>Read references/meta-reflection.md<br/>Self-test skill files<br/>Classify prompt<br/>Write plan.md]
     P0E{<choice>env ok</choice>?}
     P0E_F[Report env incompatibility<br/>Stop build]
     P0P[Conditional: Spawn vsm_product<br/>If problem-oriented prompt]
@@ -339,6 +346,8 @@ Main agent (S5) performs:
 4. **Read acquired wisdom**: `~/vsm/viable-swarm-model/references/acquired-wisdom.md`
    if exists.
 5. **Read hypotheses**: `~/vsm/viable-swarm-model/references/hypotheses.md`
+6. **Read meta-reflection**: `~/vsm/viable-swarm-model/references/meta-reflection.md`
+   if exists.
    if exists. Note any untested hypotheses that are relevant to this project.
 6. **Self-test**: Verify all referenced files exist and are readable. Verify
 the flow diagram parses. Verify the skill can describe its own phase sequence
@@ -725,7 +734,8 @@ Write a standalone `.kimi/lessons.md` in the build directory.
 **Required structure**: Follow `references/lessons-template.md`:
 - One entry per significant issue or pattern discovered
 - Each entry must include: Source, Finding, Fix, Verification, Prevention rule
-- Never merge reflection content into `meta-reflection.md`
+- Lessons are per-build; skill-level meta-reflection lives in
+  `references/meta-reflection.md` (see Phase 8d)
 
 **Minimum entries**: At least one entry for each phase that scored < 4 or produced a BLOCKER.
 
@@ -738,8 +748,9 @@ test verification, agent performance scores, rule effectiveness ratings, and
 process bottleneck analysis.
 
 **Step 8b-1: Spawn `vsm_meta` (MANDATORY — HARD BLOCK)**
-S5 MUST spawn `vsm_meta` before proceeding. S5 MUST NOT write meta-reflection
-content directly.
+S5 MUST spawn `vsm_meta` before proceeding. `vsm_meta` produces the per-build
+`meta-report.md`. S5 then synthesizes cross-build insights and appends them to
+`~/vsm/viable-swarm-model/references/meta-reflection.md`.
 
 **Step 8b-2: Verify `meta-report.md` exists and is valid**
 Before declaring Phase 8b complete, verify ALL of the following:
@@ -752,9 +763,10 @@ Before declaring Phase 8b complete, verify ALL of the following:
 If any check fails, Phase 8b is NOT complete. Re-spawn `vsm_meta` with explicit
 instructions to include the missing sections.
 
-> **Algedonic signal**: If S5 is about to write `meta-reflection.md` manually,
+> **Algedonic signal**: If S5 is about to write `meta-report.md` manually,
 > STOP immediately. This is a process violation. The builder cannot evaluate
-> itself. Spawn `vsm_meta`.
+> itself. Spawn `vsm_meta`. S5 MAY synthesize and append to the skill-level
+> `references/meta-reflection.md` after reading the meta-report.
 
 ### Phase 8c: Skill Improvement (Conditional)
 
