@@ -96,21 +96,21 @@ Because this repo contains three skills, use `extra_skill_dirs`:
 git clone https://github.com/michael-wojcik/viable-swarm-model.git ~/vsm
 
 # Add to your Kimi CLI config
-echo 'extra_skill_dirs = ["~/vsm"]' >> ~/.kimi-code/config.toml
+echo 'extra_skill_dirs = ["~/vsm"]' >> ~/.kimi/config.toml
 ```
 
 Or symlink all three skills individually:
 
 ```bash
 git clone https://github.com/michael-wojcik/viable-swarm-model.git ~/vsm
-ln -s ~/vsm/viable-swarm-model ~/.kimi-code/skills/viable-swarm-model
-ln -s ~/vsm/vsm-fitness-gym ~/.kimi-code/skills/vsm-fitness-gym
-ln -s ~/vsm/vsm-fitness-coach ~/.kimi-code/skills/vsm-fitness-coach
+ln -s ~/vsm/viable-swarm-model ~/.kimi/skills/viable-swarm-model
+ln -s ~/vsm/vsm-fitness-gym ~/.kimi/skills/vsm-fitness-gym
+ln -s ~/vsm/vsm-fitness-coach ~/.kimi/skills/vsm-fitness-coach
 ```
 
 ## Permission Quick-Start
 
-VSM workflows spawn many subagents and use file tools heavily. To reduce approval friction, add these rules to `~/.kimi-code/config.toml`:
+VSM workflows spawn many subagents and use file tools heavily. To reduce approval friction, add these rules to `~/.kimi/config.toml`:
 
 ```toml
 [[permission.rules]]

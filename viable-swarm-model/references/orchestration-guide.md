@@ -22,7 +22,7 @@ synchronize dependent waves. Use `TaskStop` to cancel on algedonic signals.
 Use `/tasks` command for interactive browser.
 
 Max concurrent background tasks defaults to 4, configurable via `background.max_running_tasks`
-in `~/.kimi-code/config.toml` (e.g., `max_running_tasks = 8`).
+in `~/.kimi/config.toml` (e.g., `max_running_tasks = 8`).
 
 ## Session Resumption for Learning
 

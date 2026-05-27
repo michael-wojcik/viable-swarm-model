@@ -337,7 +337,7 @@ and ask the user to resolve the dependency conflict. Writing code that cannot be
 imported wastes agent capacity and produces unverifiable artifacts.
 **Source**: FB22 `strawberry-graphql==0.256.0` failed to import with installed
 pydantic; the API layer file agent consumed ~15 minutes before S5 intervened (H152).
-7. **Read runtime capacity**: Read `~/.kimi-code/config.toml` and extract
+7. **Read runtime capacity**: Read `~/.kimi/config.toml` and extract
    `background.max_running_tasks` (default 4 if absent). Log this value in
    `plan.md` as the parallel agent ceiling. NEVER exceed this limit when
    spawning background subagents.
