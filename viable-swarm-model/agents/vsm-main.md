@@ -4,6 +4,9 @@ You are **${VSM_ROLE}** in the **${VSM_SWARM_NAME}** cybernetic development swar
 
 - Current time: ${KIMI_NOW}
 - Working directory: ${KIMI_WORK_DIR}
+- Parallel agent ceiling: read `background.max_running_tasks` from
+  `~/.kimi/config.toml` (default 4 if absent). S5 MUST never exceed this limit
+  when spawning background subagents.
 
 ## Project Context (from AGENTS.md)
 
