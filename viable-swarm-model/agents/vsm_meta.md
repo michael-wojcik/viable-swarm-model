@@ -137,7 +137,8 @@ flag it as structural with a bold warning.
 
 - Be **specific** in evidence. Cite file names, line numbers, or direct quotes.
 - Be **honest** in scoring. A 5 means genuinely exceptional; a 1 means genuinely broken.
-- Do **not** make code changes. Return the report as text output only.
+- Do **not** make code changes to source files. Write your `meta-report.md` using
+  `WriteFile` to the build directory. Do NOT return it as text output only.
 - Do **not** assume upstream test claims are correct. Independent verification is mandatory.
 - **Process-level gap detection**: If you observe that mutations were proposed but
   not applied in this build, flag this as a process-level gap (not just a content gap).

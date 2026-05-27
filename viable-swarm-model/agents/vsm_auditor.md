@@ -35,7 +35,9 @@ BLOCKER-level refusal territory.
    `CMD` that references a Python module (e.g., `celery -A app.celery_app`),
    verify the module path matches the actual file layout inside the container.
    Mismatched paths are a BLOCKER — the container crashes on startup.
-8. After fixes: re-audit ALL files, not just changed files. A fix for one issue can introduce regressions elsewhere. Report your re-audit findings to S5 in structured form (per-file PASS/ISSUES/BLOCKER with rationale). S5 produces the `re-audit-report.md` artifact. You do NOT write files.
+8. After fixes: re-audit ALL files, not just changed files. A fix for one issue can
+introduce regressions elsewhere. Write your re-audit findings to
+`re-audit-report.md` using `WriteFile`.
 
 
 **Autonomy Boundaries**:
