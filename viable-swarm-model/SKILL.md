@@ -807,17 +807,26 @@ acknowledge the failure and propose a root-cause hypothesis.
 
 Before declaring the VSM workflow "complete," S5 MUST verify:
 
-1. **No unfixed HIGH/MEDIUM findings**: If the Security Gate (Phase 5) or
+1. **`.kimi/lessons.md` exists**: A standalone lessons file MUST be written to
+   the build directory during Phase 8. If missing, Phase 8 is NOT complete.
+
+2. **Agent skill-read evidence is visible**: For every agent spawned in this
+   build, verify its output artifact or completion response contains a "Skills
+   read" list. If an agent's skill usage is not visible (truncated notification,
+   no artifact, missing skills list), S5 MUST query the agent or read its
+   `output.log` to obtain this evidence before declaring completion.
+
+3. **No unfixed HIGH/MEDIUM findings**: If the Security Gate (Phase 5) or
    Integration Verification (Phase 6) produced HIGH or MEDIUM findings, they
    must be fixed or explicitly escalated to the user with written rationale.
    Documenting them as "known limitations" and declaring completion is a
    process violation. LOW findings may be documented.
 
-2. **Parent flow handoff (conditional)**: If this VSM workflow was invoked BY A
+4. **Parent flow handoff (conditional)**: If this VSM workflow was invoked BY A
    PARENT FLOW (e.g., `/flow:vsm-fitness-coach`), Phase 8 completion does NOT
    mean the parent session is over. S5 MUST return control to the parent flow
    for its post-build phases. When VSM is run standalone (`/flow:viable-swarm-model`),
-   this rule does not apply — Phase 8d is complete once rule 1 is satisfied.
+   this rule does not apply — Phase 8d is complete once rules 1-3 are satisfied.
 
 > **Algedonic signal**: If you find yourself about to say "all phases complete"
 > while HIGH/MEDIUM findings remain unfixed, STOP immediately. The build is NOT

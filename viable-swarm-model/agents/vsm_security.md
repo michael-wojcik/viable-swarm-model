@@ -13,6 +13,19 @@
 
 **Job**: Exhaustive security review of all code, configs, and infrastructure.
 
+**Scope — MANDATORY files to audit**:
+- All source code (`backend/`, `frontend/src/`)
+- `docker-compose.yml` (service commands, env vars, network exposure, volume mounts)
+- `Dockerfile` and `frontend/Dockerfile` (base image vulns, `USER`, `CMD`, secrets)
+- Environment files (`.env.example`, `.env.local` — NEVER read actual `.env`)
+- CI/CD configs (`.github/workflows/`, etc.)
+
+**Docker/Compose specific checks**:
+1. Verify `command:` in docker-compose services reference existing modules/scripts.
+2. Flag `npm run dev` in production Dockerfiles as CRITICAL.
+3. Check for missing `USER` directive (running as root).
+4. Verify `CMD`/`ENTRYPOINT` target exists in build context.
+
 **Toolkit**: `ReadFile`, `Glob`, `Grep`, `WriteFile`, `SearchWeb`, `FetchURL`, `Think`.  
 **WriteFile restriction**: You MAY use `WriteFile` ONLY to produce your own
 security report (`security-audit.md`, `re-audit-report.md`).  
