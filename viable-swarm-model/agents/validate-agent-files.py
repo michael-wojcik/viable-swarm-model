@@ -7,6 +7,10 @@ Checks:
 2. Every .yaml's system_prompt_path points to an existing .md file.
 3. Every ${VAR} in .md files is either a built-in var or defined in the
    corresponding .yaml's system_prompt_args (including inherited args).
+4. Every {% include './xxx.md' %} in .md files resolves to an existing file.
+5. No unescaped ${...} shell-variable patterns (e.g., ${VAR:-default}).
+6. Intermediate templates (vsm-main.md, vsm-*.md) are framework-agnostic
+   (no FastAPI, React, etc. keywords).
 
 Run from the agents/ directory:
     python3 validate-agent-files.py
@@ -27,6 +31,13 @@ BUILT_IN_VARS = {
     "KIMI_SKILLS",
     "KIMI_ADDITIONAL_DIRS_INFO",
 }
+
+# Framework keywords that should NOT appear in base/intermediate templates.
+FORBIDDEN_KEYWORDS = [
+    "FastAPI", "Pydantic", "SQLAlchemy", "Strawberry",
+    "React", "Vite", "Apollo", "Zustand",
+    "pytest", "vitest"
+]
 
 
 def load_yaml(path: str):
@@ -63,6 +74,11 @@ def extract_vars(md_content: str) -> set:
     return set(re.findall(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}", md_content))
 
 
+def is_intermediate_template(md_name: str) -> bool:
+    """Intermediate templates are framework-agnostic and must not mention stacks."""
+    return md_name == "vsm-main.md" or md_name.startswith("vsm-")
+
+
 def main():
     errors = []
     warnings = []
@@ -91,14 +107,20 @@ def main():
         with open(md_path) as f:
             md_content = f.read()
 
-        FORBIDDEN_KEYWORDS = [
-            "FastAPI", "Pydantic", "SQLAlchemy", "Strawberry",
-            "React", "Vite", "Apollo", "Zustand",
-            "pytest", "vitest"
-        ]
-        for keyword in FORBIDDEN_KEYWORDS:
-            if keyword in md_content:
-                errors.append(f"{yaml_name}: forbidden keyword '{keyword}' in {md_path}")
+        md_name = os.path.basename(md_path)
+
+        # 4. Check Jinja2 includes resolve
+        includes = re.findall(r"{%\s+include\s+['\"](.+?)['\"]\s+%}", md_content)
+        for inc in includes:
+            inc_path = os.path.join(os.path.dirname(md_path), inc)
+            if not os.path.exists(inc_path):
+                errors.append(f"{yaml_name} ({sp_path}): include not found: {inc}")
+
+        # 6. Forbidden keywords — only for intermediate templates
+        if is_intermediate_template(md_name):
+            for keyword in FORBIDDEN_KEYWORDS:
+                if keyword in md_content:
+                    errors.append(f"{yaml_name}: forbidden keyword '{keyword}' in intermediate template {md_name}")
 
         vars_in_md = extract_vars(md_content)
         defined_args = collect_system_prompt_args(yaml_path)
@@ -109,14 +131,13 @@ def main():
                 f"{yaml_name} ({sp_path}): undefined variables: {', '.join(sorted(undefined))}"
             )
 
-        # Check for unescaped ${...} patterns that are NOT valid template variables
-        # (e.g., shell syntax like ${VAR:-default} which crashes the CLI parser)
-        raw_blocks = re.findall(r"{% raw %}(.*?){% endraw %}", md_content, re.DOTALL)
-        md_without_raw = md_content
-        for block in raw_blocks:
-            md_without_raw = md_without_raw.replace(block, "")
+        # 5. Check for unescaped ${...} patterns that are NOT valid template variables
+        # Remove {% raw %} blocks entirely before checking
+        md_without_raw = re.sub(r"{%\s*raw\s*%}(.*?){%\s*endraw\s*%}", "", md_content, flags=re.DOTALL)
 
-        bad_patterns = set(re.findall(r"\$\{([^}]+)\}", md_without_raw)) - set(defined_args.keys()) - BUILT_IN_VARS - vars_in_md
+        all_dollar_patterns = set(re.findall(r"\$\{([^}]+)\}", md_without_raw))
+        valid_vars = set(defined_args.keys()) | BUILT_IN_VARS | vars_in_md
+        bad_patterns = all_dollar_patterns - valid_vars
         if bad_patterns:
             errors.append(
                 f"{yaml_name} ({sp_path}): unescaped ${'{...}'} patterns (not valid template vars): {', '.join(sorted(bad_patterns))}"

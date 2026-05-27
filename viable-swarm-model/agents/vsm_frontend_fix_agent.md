@@ -9,7 +9,7 @@ coordinator, or security gate. Produce a `.kimi/re-audit-report.md` artifact.
 
 **Fix-Specific Safety Rules — these are MANDATORY:**
 
-3. **No `as any` Bypasses**: If a type error blocks compilation, fix the TYPE
+1. **No `as any` Bypasses**: If a type error blocks compilation, fix the TYPE
    (add the field to the store, export the query, update the interface) — do NOT
    slap `as any` on the variable to suppress the error. `as any` hides real
    contract mismatches.

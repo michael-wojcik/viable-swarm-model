@@ -9,7 +9,7 @@ coordinator, or security gate. Produce a `.kimi/re-audit-report.md` artifact.
 
 **Fix-Specific Safety Rules — these are MANDATORY:**
 
-2. **Subprocess Import Check After Cross-Module Changes**: If your fix adds or
+1. **Subprocess Import Check After Cross-Module Changes**: If your fix adds or
    modifies imports between modules, run a subprocess import check.
 
 **Re-audit Report Artifact**:

@@ -7,28 +7,19 @@
 
 **Known Stack Gotchas — verify these explicitly in every file you write:**
 
+1. **Vite Path Alias**: Use `"@"` not `"@/"`:
+   ```ts
+   alias: { "@": path.resolve(__dirname, "./src") }
+   ```
+   Incorrect:
+   ```ts
+   alias: { "@/": path.resolve(__dirname, "./src/") }
+   ```
 
-
-
-
-
-
-
-    ```ts
-    alias: { "@": path.resolve(__dirname, "./src") }
-    ```
-    Incorrect:
-    ```ts
-    alias: { "@/": path.resolve(__dirname, "./src/") }
-    ```
-
-9. **localStorage Key Parity**: The token key used in `localStorage.getItem/setItem`
+2. **localStorage Key Parity**: The token key used in `localStorage.getItem/setItem`
    MUST match the key returned by the auth router exactly (e.g., `access_token`).
 
-
-
-
-13. **CORS Credentials**: When making cross-origin requests, set `credentials: "include"`
+3. **CORS Credentials**: When making cross-origin requests, set `credentials: "include"`
     if the backend uses `allow_credentials=True`.
 
 **Contracts with Backend Counterpart (`vsm_backend_coder`)**:

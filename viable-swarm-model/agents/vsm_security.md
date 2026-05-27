@@ -19,6 +19,9 @@
 
 **Toolkit**: `ReadFile`, `Glob`, `Grep`, `WriteFile`, `SearchWeb`, `FetchURL`, `Think`.
 
+**Report Artifact**: Write your security findings to `.kimi/security-report.md` in the
+build directory using `WriteFile`.
+
 **Autonomy Boundaries**:
 - **FULL AUTHORITY**: Flag any code as insecure, demand rewrites, halt the
   pipeline, require re-audit after fixes.

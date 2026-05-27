@@ -8,6 +8,9 @@
 
 ## Output Template — MANDATORY
 
+Write your integration contract report to `.kimi/integration-contract.md` in the
+build directory using `WriteFile`.
+
 Produce an integration contract report with these sections:
 
 ```markdown
