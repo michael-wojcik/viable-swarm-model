@@ -321,10 +321,10 @@ flowchart TD
     P3[Phase 3: Implementation Wave<br/>Backend: parallel routers<br/>Frontend: sequential shared→pages]
     P3S[TaskOutput block=true]
     P3M["Phase 3c: Mid-Wave S2 Check<br/>vsm_coordinator (conditional, Tier 2+)"]
-    P3A[Phase 3b: Audit + Coordination<br/>vsm_auditor + vsm_coordinator]
+    P3A[Audit + Coordination<br/>vsm_auditor + vsm_coordinator]
     P3D{<choice>BLOCKERs</choice>?}
-    P3E[Entry Point Wiring<br/>MANDATORY]
-    P3D2[Phase 3d: Frontend Config Validation<br/>S5 checks frontend config files]
+    P3E[Phase 3d: Entry-Point Wiring<br/>MANDATORY]
+    P3D2[Phase 3e: Frontend Config Validation<br/>S5 checks frontend config files]
     P4[Phase 4: Testing + Infra Wave<br/>vsm_backend_tester + vsm_frontend_tester + vsm_devops_coder]
     P4S[TaskOutput block=true]
     P4R[Shell: run tests]
@@ -379,7 +379,9 @@ flowchart TD
     P3D -->|<choice>yes</choice>| P7_IMPL
     P3D -->|<choice>no</choice>| P3E
     P3E --> P3D2
-    P3D2 --> P4
+    P3D2 --> P3F
+    P3F[Phase 3f: Frontend Cross-File Import Check<br/>S5 verifies all imports resolve]
+    P3F --> P4
     P4 --> P4S
     P4S --> P4R
     P4R --> P4G
@@ -412,7 +414,9 @@ flowchart TD
     P8 --> P8M
     P8M --> P8V
     P8V -->|<choice>yes</choice>| P8W
-    P8V -->|<choice>no</choice>| P8M
+    P8V -->|<choice>no</choice>| P8M_R
+    P8M_R[Re-spawn the relevant agent<br/>vsm_meta or vsm_process_auditor]
+    P8M_R --> P8M
     P8W --> P8R
     P8R --> P8A
     P8A -->|<choice>yes</choice>| P8WS
@@ -427,7 +431,7 @@ trigger Phase 7 (max 3 iterations), then loop back to the originating phase.
 
 ## 7. Phase Details
 
-### Phase 0: Viability Check + Self-Test
+### Phase 0a: Viability Check + Self-Test
 Main agent (S5) performs:
 1. **Viability check**: trivial (<50 lines, one file)? If yes, respond directly.
 2. **Classify prompt**: Prescriptive ("Build X with Y") or problem-oriented
@@ -437,10 +441,10 @@ Main agent (S5) performs:
 4. **Read acquired wisdom**: `~/vsm/viable-swarm-model/references/acquired-wisdom.md`
    if exists.
 5. **Read hypotheses**: `~/vsm/viable-swarm-model/references/hypotheses.md`
+   if exists. Note any untested hypotheses that are relevant to this project.
 6. **Read meta-reflection**: `~/vsm/viable-swarm-model/references/meta-reflection.md`
    if exists.
-   if exists. Note any untested hypotheses that are relevant to this project.
-6. **Self-test**: Verify all referenced files exist and are readable. Verify
+7. **Self-test**: Verify all referenced files exist and are readable. Verify
 the flow diagram parses. Verify the skill can describe its own phase sequence
 without contradiction. Specifically verify these custom agent definition files exist:
 `vsm-main.yaml`, `vsm_architect.yaml`, `vsm_product.yaml`, `vsm_auditor.yaml`,
@@ -450,11 +454,11 @@ without contradiction. Specifically verify these custom agent definition files e
 `vsm_frontend_tester.yaml`, `vsm_meta.yaml`, `vsm_process_auditor.yaml`, `vsm_explore.yaml`.
 If any check fails → emit algedonic, write diagnosis
 to `~/vsm/viable-swarm-model/references/mutation-log.md`, ask user to review.
-6b. **Agent-File Verification**: Spawn a trivial `vsm_meta` subagent with the task
+8. **Agent-File Verification**: Spawn a trivial `vsm_meta` subagent with the task
 `"Reply 'ok'"`. If this fails with an unknown subagent type error, **STOP immediately**.
 Emit algedonic: `--agent-file not loaded. Launch with: kimi --agent-file ~/vsm/viable-swarm-model/agents/vsm-main.yaml`.
 Do not proceed with the build.
-6a. **Environment Compatibility Smoke Test** (conditional): If the build declares
+9. **Environment Compatibility Smoke Test** (conditional): If the build declares
 framework dependencies (e.g., `[graphql library]`, `[validation library]`, `[orm library]`, `[backend framework]`,
 `celery`), run a quick import verification in a fresh subprocess BEFORE dispatching
 implementation agents:
@@ -467,12 +471,12 @@ and ask the user to resolve the dependency conflict. Writing code that cannot be
 imported wastes agent capacity and produces unverifiable artifacts.
 **Source**: FB22 `strawberry-graphql==0.256.0` failed to import with installed
 pydantic; the API layer file agent consumed ~15 minutes before S5 intervened (H152).
-7. **Read runtime capacity**: Read `~/.kimi/config.toml` and extract
+10. **Read runtime capacity**: Read `~/.kimi/config.toml` and extract
    `background.max_running_tasks` (default 4 if absent). Log this value in
    `plan.md` as the parallel agent ceiling. NEVER exceed this limit when
    spawning background subagents.
-8. **Variety Assessment** (Ashby's Law): Estimate project complexity and classify tier.
-   Use the `max_running_tasks` value read in step 7 as the agent ceiling.
+11. **Variety Assessment** (Ashby's Law): Estimate project complexity and classify tier.
+   Use the `max_running_tasks` value read in step 10 as the agent ceiling.
    Do not invent artificial sub-limits — if the host allows 8, use up to 8.
    - **Tier 1** (<1000 lines, 1-2 services): Standard flow, no mid-wave gates needed
    - **Tier 2** (1000-3000 lines, 2-3 services): Add Phase 3c mid-wave S2 check,
@@ -490,7 +494,7 @@ early loses findings and wastes agent capacity.
 
 For **background agents**, the CLI config typically imposes a default timeout
 (commonly 15min). If a background task is expected to exceed this
-(`vsm_auditor`, `vsm_security`, `vsm_meta` on large codebases), explicitly
+(`vsm_auditor`, `vsm_security`, `vsm_meta`, `vsm_process_auditor` on large codebases), explicitly
 set `timeout=3600` on the `Agent()` call.
 
 **5-Minute Progress Check Rule** (the only anti-hang guardrail):
@@ -498,9 +502,18 @@ If ANY agent has not returned after 5 minutes, S5 MUST inspect its `output.log`
 (via `TaskOutput` or `ReadFile`) before assuming it is stuck. If the agent is
 making progress, let it continue. If it is looping or hung, stop it with
 `TaskStop` and re-spawn.
-9. Write `plan.md`.
+12. Write `plan.md`.
 
-### Phase 0: Stack Detection & Skill Verification
+**Comprehension Checkpoint** (universal — apply before declaring ANY phase complete):
+Before proceeding to the next phase, S5 MUST be able to explain:
+1. **Comprehension** — What was built, without referring to the original spec
+2. **Connections** — How it maps to broader context (other files, architecture)
+3. **Rationale** — WHY it was built this way, not just WHAT
+4. **Edge cases** — What assumptions and limitations exist
+5. **Consequences** — Predicted impact on other system parts
+If explanation reveals gaps → revisit before proceeding.
+
+### Phase 0b: Stack Detection & Skill Verification
 
 Before starting any build:
 1. Detect the stack (user-specified, auto-detected from manifest files, or asked)
@@ -912,8 +925,7 @@ Before declaring Phase 8b complete, verify ALL of the following:
 3. It contains a **Phase Audit** section with process violation analysis.
 4. It contains **Hypotheses Generated** with at least one falsifiable hypothesis.
 5. `.kimi/process-audit.md` exists and contains a compliance score.
-6. `.kimi/mutations-applied.md` exists in the build directory with a complete
-   mutation tracking table (per Phase 8c). If missing, Phase 8b is NOT complete.
+6. ~~`.kimi/mutations-applied.md` exists in the build directory~~ (verified in Phase 8c-ii, not here).
 
 If any check fails, Phase 8b is NOT complete. Re-spawn the relevant agent with
 explicit instructions to include the missing sections.
@@ -923,7 +935,7 @@ explicit instructions to include the missing sections.
 > itself. Spawn `vsm_meta`. S5 MAY synthesize and append to the skill-level
 > `references/meta-reflection.md` after reading the meta-report.
 
-### Phase 8c: Skill Improvement (Conditional)
+### Phase 8c-i: Skill Improvement (Conditional)
 
 If this build discovered new empirical pitfalls or validated new patterns:
 1. Append the finding to the relevant skill in `~/vsm/vsm-stack-skills/`
@@ -931,7 +943,7 @@ If this build discovered new empirical pitfalls or validated new patterns:
 3. If new skill needed, create it and update registry
 4. `git commit` skill changes
 
-### Phase 8c: Mutation Verification Checkpoint (MANDATORY)
+### Phase 8c-ii: Mutation Verification Checkpoint (MANDATORY)
 Before declaring Phase 8 complete, S5 MUST run the Mutation Verification
 Checkpoint. This prevents the recurring failure mode where mutations are
 proposed in `.kimi/meta-report.md` but never applied.
@@ -960,6 +972,20 @@ was addressed, not just the symptoms.
 **Step 8c-4: Hard block**
 If ANY mutation status is `overlooked`, Phase 8b is NOT complete. Apply the
 missed mutation, update the table, and re-verify. Only then proceed to git commit.
+
+**Step 8c-5: Measured effect enforcement**
+For EVERY mutation logged in this build (both in `references/mutation-log.md` and
+`.kimi/mutations-applied.md`), the "Measured effect" field MUST be non-empty
+before Phase 8c-ii is complete. If empty, fill it now based on this build's
+results: Did the mutation prevent its target failure? Did it have no observable
+effect? Did it cause a new issue?
+
+**Step 8c-6: Mutation removal gate**
+Count mutations scored as ineffective (1–2 on the 1–5 effectiveness scale) in
+the trainer's Mutation Effectiveness Audit. If the count is ≥2, S5 MUST propose
+a **consolidation mutation** to REMOVE or REDESIGN those ineffective mutations.
+The skill must prune bloat, not just accumulate rules. Append-only does not
+mean immortal.
 
 The main agent (S5) reads the `.kimi/meta-report.md` **Executive Summary**
 section only (first 20 lines). If the report exceeds 100 lines, spawn

@@ -165,14 +165,14 @@ flowchart TD
 
 ## 6. Phase Details
 
-### Phase 0: Read Hypotheses
+### Gym Phase 0: Read Hypotheses
 Check line count: `wc -l ~/vsm/viable-swarm-model/references/hypotheses.md`.
 If >500 lines, use `grep "status: untested"` and `grep -B 2 -A 8` for targeted
 extraction instead of `ReadFile`.
 
 Filter for `status: untested`. Present to user (S5) for selection.
 
-### Phase 1: Design Experiments
+### Gym Phase 1: Design Experiments
 For each selected hypothesis, spawn `vsm_experiment_designer` subagent.
 The designer produces a minimal experiment spec:
 - **Files needed**: usually 1-3 files (e.g., one route handler, one model, one test)
@@ -180,7 +180,7 @@ The designer produces a minimal experiment spec:
 - **Expected agent behavior**: what the main skill's auditor/security SHOULD catch
 - **Success criteria**: how we know the hypothesis is confirmed or rejected
 
-### Phase 2: Build Experiments
+### Gym Phase 2: Build Experiments
 Spawn `vsm_experiment_designer` for each selected hypothesis. The designer
 reads the hypothesis, designs the minimal experiment, and writes the files
 directly to `~/vsm-fitness-builds/gym/[H-ID]/`.
@@ -191,7 +191,7 @@ For dependent experiments, use sequential spawning with `TaskOutput block=true`.
 Each experiment should be 50 lines or fewer. No scaffolding beyond what's needed
 to run the relevant audit.
 
-### Phase 3: Run Relevant Audits
+### Gym Phase 3: Run Relevant Audits
 Spawn the main skill's custom agents against the experiment code:
 - Security hypothesis → `vsm_security`
 - Integration hypothesis → `vsm_coordinator`
@@ -201,13 +201,13 @@ Spawn the main skill's custom agents against the experiment code:
 If the agent **catches** the issue → hypothesis may be rejected (skill already knows).
 If the agent **misses** the issue → hypothesis confirmed (gap exists).
 
-### Phase 4: Analyze Results
+### Gym Phase 4: Analyze Results
 Compare expected vs. actual agent behavior.
 - **Confirmed**: The main skill has a genuine gap. Propose a mutation.
 - **Rejected**: The main skill already handles this. Update hypothesis status.
 - **Inconclusive**: Experiment design was flawed. Redesign and retry (max 2).
 
-### Phase 5: Propose Mutations
+### Gym Phase 5: Propose Mutations
 
 Use the **three-tier mutation system** for all changes:
 

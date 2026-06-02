@@ -5,10 +5,15 @@
 > this log is the audit trail for `git revert`.
 >
 > **Mutation rules**: Append only. Each entry includes: session context,
-> file changed, type of change, rationale, expected effect.
+> file changed, type of change, rationale, expected effect, **target failure mode**,
+> **measured effect**.
 >
 > **Convention**: Use sequential numbers (`Mutation 1`, `Mutation 2`, ...).
 > Reference the fitness build ID in the Session field.
+>
+> **Required fields** (from now on):
+> - **Target failure mode**: What specific failure was this mutation trying to prevent?
+> - **Measured effect**: Did it prevent that failure in subsequent builds? Cite build IDs.
 
 ---
 

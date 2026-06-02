@@ -161,7 +161,7 @@ flowchart TD
 
 ## 6. Phase Details
 
-### Phase 0: Synthesize Next Build
+### Coach Phase 0: Synthesize Next Build
 
 The fitness coach does not select from a menu. It **synthesizes** the next
 experiment based on empirical state. Prompt drafts are ephemeral build
@@ -199,7 +199,7 @@ cd ~/vsm-fitness-builds/coach/FB[N]-[date]
 Copy the prompt draft into the build directory as `prompt.md` so the athlete
 skill has a stable reference during the build.
 
-### Phase 1: Create Build Directory + Execute Build
+### Coach Phase 1: Create Build Directory + Execute Build
 
 **Step 1a: Create build directory**
 ```bash
@@ -243,7 +243,7 @@ The coach does NOT interfere during the build. It observes and records.
 - Project lessons (`~/vsm-fitness-builds/coach/[id]-[date]/.kimi/lessons.md`)
 - Main skill's own meta-report output
 
-### Phase 1c: Coach Completion Verification (MANDATORY — HARD BLOCK)
+### Coach Phase 1c: Coach Completion Verification (MANDATORY — HARD BLOCK)
 
 **This gate is NOT optional.** S5 MUST NOT proceed to Phase 2 until ALL of the following are verified. Failure to verify ANY item means the build is NOT complete.
 
@@ -256,7 +256,7 @@ The coach does NOT interfere during the build. It observes and records.
 
 > **Algedonic signal**: If you find yourself about to declare the fitness build "complete" or ask the user "what next?" before running Coach Phases 2-6, STOP immediately. This is a critical process violation. The coach flow has 6 phases. Phase 1 is only the build execution.
 
-### Phase 2: Evaluate Performance
+### Coach Phase 2: Evaluate Performance
 
 Spawn `vsm_trainer` subagent with:
 - Build directory: `~/vsm-fitness-builds/coach/[project-id]-[date]/`
@@ -278,7 +278,7 @@ flag the mutation as **ineffective** and recommend removal or redesign.
 S5 should read only the Executive Summary and the "Gaps Identified" section.
 Skip detailed phase evidence unless a gap requires deeper investigation.
 
-### Phase 2b: Update Hypothesis Statuses
+### Coach Phase 2b: Update Hypothesis Statuses
 
 Before generating new hypotheses, update the status of any hypotheses tested by this build:
 
@@ -294,7 +294,7 @@ Before generating new hypotheses, update the status of any hypotheses tested by 
 
 This step prevents the hypothesis backlog from accumulating stale untested items.
 
-### Phase 3: Generate Hypotheses
+### Coach Phase 3: Generate Hypotheses
 
 Read the trainer's fitness report. For every gap identified (phases scored < 4),
 generate a hypothesis and append to the main skill's `references/hypotheses.md`:
@@ -309,7 +309,7 @@ generate a hypothesis and append to the main skill's `references/hypotheses.md`:
 **Expected**: [Confirm/reject criteria]
 ```
 
-### Phase 4: Propose Mutations
+### Coach Phase 4: Propose Mutations
 Map confirmed gaps to specific skill file changes:
 - Scored 1-2 → High-confidence mutation
 - Scored 3 → Medium-confidence (propose hypothesis, monitor next build)
@@ -359,7 +359,7 @@ Skill mutations follow the same three-tier system:
 - Refinement: logged
 - Structural (new skill): user approval via AskUserQuestion
 
-### Phase 5: Apply Mutations
+### Coach Phase 5: Apply Mutations
 
 Use the **three-tier mutation system** for all changes:
 
@@ -385,7 +385,7 @@ Write all applied mutations to:
 - Fitness report using `assets/fitness-report-template.md`
 - `git commit` all changes with descriptive message
 
-### Phase 5b: Structural Mutation Approval Gate (MANDATORY — HARD BLOCK)
+### Coach Phase 5b: Structural Mutation Approval Gate (MANDATORY — HARD BLOCK)
 
 **This gate is NOT optional. It is a hard dependency for Phase 6.**
 
@@ -427,7 +427,7 @@ Write all applied mutations to:
 logic, and phase sequencing. They affect every future build. Autonomous
 application without user approval risks breaking the entire skill ecosystem.
 
-### Phase 6: Prepare Next Build Prompt
+### Coach Phase 6: Prepare Next Build Prompt
 
 After the fitness report is written, mutations are committed, and the
 Structural Mutation Gate is cleared, **automatically synthesize** the next
@@ -448,6 +448,13 @@ improved or degraded skill performance over time.
 4. After the regression build completes, compare the new score to the gold
    standard score.
 
+**Gold standard prompt recovery**:
+If the gold standard prompt file (`~/vsm-fitness-builds/coach/FB[N]-prompt-draft.md`)
+is missing, reconstruct it from:
+- The build directory's `plan.md` (contains the original prompt)
+- `references/fitness-projects.md` ledger entry for that build
+If neither exists, fall back to the next-highest-scoring build with an intact prompt.
+
 **Score comparison**:
 - **New score ≥ gold standard**: Mutations are working or neutral. Proceed with
   normal next-build synthesis.
@@ -455,6 +462,19 @@ improved or degraded skill performance over time.
   finding. Propose a **mutation review**: identify which mutations applied
   since the gold standard build may have caused the regression. Flag
   suspicious mutations in `mutation-log.md` for effectiveness audit.
+
+**Mutation prioritization heuristic after regression**:
+When reviewing mutations since the gold standard, suspect IN THIS ORDER:
+1. **Structural mutations to SKILL.md** (phase changes, agent definitions) — highest impact
+2. **Refinement mutations to agent prompts** (new rules, changed checklists) — may have introduced contradictions
+3. **Append-only mutations to reference files** (new anti-patterns, security lessons) — may conflict with existing rules
+4. **Stack skill changes** — may have moved rules that agents relied on
+
+**Environmental confounders caveat**:
+Regression builds assume the prompt is the only variable. In practice,
+dependency versions, Python/Node environments, and LLM non-determinism may
+introduce variance. A small delta (±0.2) may be noise, not mutation effect.
+Treat deltas ≥0.5 as significant.
 
 **Is this a regression build?** Check the build ID: if FB[N] where N mod 5 == 0,
 it is a regression build. Skip to "Step R: Write regression build prompt" below.

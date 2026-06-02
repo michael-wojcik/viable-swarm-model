@@ -18,8 +18,6 @@
 
 ---
 
-## Example
-
 ## Entry 1 — 2026-05-26
 
 **Builds**: FB17, FB22, FB23
@@ -32,7 +30,6 @@ Phase 4 — it was deferred to Phase 6, where it failed."
 production build verification alongside test counts.
 **Action taken**: Added `npm run build` / `tsc -b` as mandatory Phase 4 gate in
 `SKILL.md` (H154).
-
 
 ---
 
@@ -57,3 +54,35 @@ production build verification alongside test counts.
 - Proposed append-only mutations to `anti-patterns.md`, `integration-checklist.md`, `security-lessons.md`.
 - Proposed refinement mutations to `agents/vsm_auditor.md` and `SKILL.md` Phase 7.
 - Proposed structural mutations to `SKILL.md` Phase 4 (hard gate enforcement) and Phase 8b (mutation checkpoint hard block).
+
+---
+
+## Entry 3 — 2026-06-02
+
+**Builds**: FB4–FB24 (comprehensive)
+**Pattern**: Fitness build scores have remained flat (3.2–4.0) for 24 builds and
+80+ mutations. The peak was FB9 at 4.0 (2026-05-23). No sustained upward
+trajectory exists despite continuous mutation.
+**Evidence**:
+- Score series: 3.6, 3.7, 3.6, 3.5, 3.9, **4.0**, 3.3, 3.7, 3.2, 3.6, 3.7,
+  3.4, —, 3.6, 3.2, 3.4, 3.7, 3.8, 3.2, 3.2.
+- Zero mutations have ever been removed for ineffectiveness.
+- "Measured effect" field in mutation log is almost universally empty.
+- Persistent failure modes: Phase 4 gate bypass (FB20, FB21, FB24), inline fixes
+  (FB20, FB21, FB23), frontend stubs (FB23, FB24), architect trap propagation
+  (FB16–FB18), security gate misses (FB20, FB21).
+**Implication**:
+1. **Detection ≠ Enforcement**. The skill has excellent detection (checklists,
+   audits, tests catch issues) but poor enforcement at the S5 level. Process
+   boundaries rely on S5 self-discipline, which degrades under time pressure.
+2. **Mutation bloat without removal**. Rules accumulate but are never pruned.
+   Fragile transfer (H65 reverted in FB15) indicates rules work once but don't stick.
+3. **Effectiveness tracking is template-only**. The infrastructure exists
+   (evaluation-rubric.md, fitness-report-template.md) but is not structurally
+   enforced in agent output.
+**Action taken**:
+- Added Mutation Effectiveness Scoring to coach rubric (Phase 2a, 1–5 scale).
+- Added regression build mode every 5 builds (Coach Phase 6).
+- Added process auditor agent (`vsm_process_auditor`) for Phase 8b compliance.
+- Added "mutation removal gate" concept: ineffective mutations should be removed.
+- Added this meta-reflection entry to track the stagnation pattern.

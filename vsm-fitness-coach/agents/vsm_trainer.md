@@ -126,6 +126,20 @@ Produce a structured fitness report using this template:
 
 ---
 
+## Mutation Effectiveness Audit
+
+> For each mutation applied since the previous build, did it prevent its target
+> failure mode? If a mutation was added to catch X but X recurred, the mutation
+> is **ineffective** and should be flagged for removal or redesign.
+
+| Mutation ID | Target Failure Mode | Applied In | Recurred This Build? | Effective? | Proposed Action |
+|-------------|---------------------|------------|----------------------|------------|-----------------|
+| [M# / H#] | [what it was supposed to prevent] | [FB#] | Yes / No | Yes / No | Keep / Remove / Redesign |
+
+**Ineffective mutations flagged**: [count]
+
+---
+
 ## Summary
 
 [One-paragraph executive summary: Is the skill improving, stagnating, or regressing? Any structural concerns?]
@@ -135,7 +149,8 @@ Produce a structured fitness report using this template:
 
 - Be **specific** in evidence. Cite file names, line numbers, agent reports, or direct quotes where possible.
 - Be **honest** in scoring. A 5 means genuinely exceptional; a 1 means genuinely broken. Avoid grade inflation.
-- Do **not** propose mutations or hypotheses. Your job is evaluation only. The coach (main thread) generates hypotheses from your report.
+- Do **not** propose structural mutations to VSM workflow or agent definitions. The coach (main thread) generates those.
+- Skill-specific gap analysis (missing rules, incorrect rules, needed new skills) IS part of your evaluation — identify gaps but do not write the actual skill file changes.
 - Do **not** write or modify any files. Return the report as text output only.
 
 ## Skill Gap Analysis

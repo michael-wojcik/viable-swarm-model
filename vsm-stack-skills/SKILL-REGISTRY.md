@@ -18,7 +18,8 @@
 | python-pitfalls | Python | Full | Module-level instantiation, Pydantic ConfigDict, SQLAlchemy shadowing, etc. |
 | typescript-pitfalls | TypeScript | Full | Vite alias failure, build gaps, `as any` bypasses, etc. |
 | docker-pitfalls | Docker/Compose | Full | Containerization traps: fallback bans, layer ordering, production build verification, port parity, healthchecks |
-| dependency-drift-pitfalls | All | Stub | (Awaiting empirical data) |
+| dependency-drift-pitfalls | All | Full | Manifest-environment parity, version drift, lockfile hygiene (FB23-sourced) |
+| graphql-pitfalls | GraphQL | Full | Strawberry schema traps, depth limiting, RBAC parity, orphaned queries, enum type mismatch |
 | go-pitfalls | Go | Stub | (Awaiting empirical data) |
 | rust-pitfalls | Rust | Stub | (Awaiting empirical data) |
 | java-pitfalls | Java | Stub | (Placeholder) |

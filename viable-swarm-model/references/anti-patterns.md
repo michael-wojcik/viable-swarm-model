@@ -19,17 +19,20 @@
 **Prevention**: Explicit validation, `process.exit(1)` if missing. Ban `||` for SECRET/KEY/PASSWORD/TOKEN.
 
 ### 3. Fake JWT parsers for development
-**What**: Base64-decode without signature verification, generate random UUID on failure.  
+**What**: Base64-decode without signature verification, generate random UUID on failure.
+**See also**: `security-lessons.md` L18, L28  
 **When**: "Temporary" bypass for easier local testing.  
 **Prevention**: jsonwebtoken::decode with HMAC-SHA256, no bypass path, app panics at startup if JWT_SECRET missing.
 
 ### 4. CORS wildcard with credentials
-**What**: `origin: "*"` or `origin: true` with `credentials: true`.  
+**What**: `origin: "*"` or `origin: true` with `credentials: true`.
+**See also**: `security-lessons.md` L61  
 **When**: Developer enables CORS broadly to "fix" a frontend connection issue.  
 **Prevention**: Explicit allowlist from config. Functionally identical to wildcard.
 
 ### 5. JWT in WebSocket URL
-**What**: `?token=...` in WebSocket URL leaks to logs/history/Referer.  
+**What**: `?token=...` in WebSocket URL leaks to logs/history/Referer.
+**See also**: `security-lessons.md` L16  
 **When**: Developer passes auth the easiest way they can find.  
 **Prevention**: In-band auth as first message after connection.
 
@@ -54,12 +57,14 @@
 **Prevention**: bcrypt via passlib, HTTPS, httpOnly cookies for refresh tokens.
 
 ### 10. Auth middleware returns None
-**What**: Silent failure disables security controls. `get_organization_id()` returned None on failure.  
+**What**: Silent failure disables security controls. `get_organization_id()` returned None on failure.
+**See also**: `security-lessons.md` L36  
 **When**: Developer prefers graceful degradation over explicit failures.  
 **Prevention**: Raise HTTPException on failure, never return None for auth context.
 
 ### 11. Frontend API URL localhost fallback
-**What**: `|| 'http://localhost:8000'` silently routes API calls to localhost in production.  
+**What**: `|| 'http://localhost:8000'` silently routes API calls to localhost in production.
+**See also**: `security-lessons.md` L62  
 **When**: Developer adds fallback to make local dev easier.  
 **Prevention**: Fail-fast throw Error if VITE_API_URL missing.
 
@@ -205,11 +210,6 @@
 
 ## Data/Architecture Anti-Patterns
 
-### 38. Storing passwords in plaintext or with weak hashing
-**What**: MD5/SHA1 for passwords.  
-**When**: Legacy code or inexperienced developer.  
-**Prevention**: bcrypt, strong JWT secrets, HTTPS, httpOnly cookies.
-
 ### 39. Frontend components without project scaffolding
 **What**: Config files forgotten when scope split across agents.  
 **When**: Multiple agents each assume another handled config.  
@@ -243,7 +243,8 @@
 **See also**: Pattern #22 (Foundation Wave Sequencing) for the broader parallel-agent coordination strategy; Mutation 52 (`agents/vsm_wiring.md`) for the dedicated wiring agent solution.
 
 ### 44. Docker-Compose Default-Value Fallbacks Embedding Secrets
-**What**: `docker-compose.yml` uses `${DATABASE_URL:-postgresql://user:pass@db/db}` or `POSTGRES_PASSWORD: geoquiz` as defaults.  
+**What**: `docker-compose.yml` uses `${DATABASE_URL:-postgresql://user:pass@db/db}` or `POSTGRES_PASSWORD: geoquiz` as defaults.
+**See also**: `security-lessons.md` L37  
 **When**: Developer adds fallbacks to make local dev easier.  
 **Prevention**: Ban `:-` fallbacks in docker-compose entirely. Use `.env` files for local dev. Services must fail to start if required vars are missing. Grep for `:-` in docker-compose as a BLOCKER.  
 **Affected**: S1-DevOps, vsm_security.
@@ -261,8 +262,9 @@
 **Example**: FB3 `backend/app/config.py` had `settings = Settings()` at bottom. Tester agent could not import any backend module for 1800s until timeout.  
 **Affected**: S1-Backend, vsm_tester, vsm_auditor.
 
-### 19. JWT Signature Verification Bypass
-**What**: A `decode_token` helper or similar function uses `jwt.decode(token, options={"verify_signature": False}, ...)` to "conveniently" read the payload without verifying the signature.  
+### 47. JWT Signature Verification Bypass
+**What**: A `decode_token` helper or similar function uses `jwt.decode(token, options={"verify_signature": False}, ...)`
+**See also**: `security-lessons.md` L28 (JWT Signature Verification is Non-Negotiable) to "conveniently" read the payload without verifying the signature.  
 **When**: Developer thinks they need to decode the token in a context where the secret is "unavailable" (e.g., WebSocket auth, logging, debugging).  
 **Prevention**: NEVER disable JWT signature verification. If the secret is needed, pass it explicitly. Ban any function that sets `verify_signature=False`. The security gate must flag this as CRITICAL.
 
@@ -311,7 +313,8 @@
 **Source**: FB17 frontend agent wrote `../shared/types` but tsconfig.json alias was `@flux/shared/types` (H80)
 
 ### Anti-Pattern #56: S5 Inline Fix During Integration Verification
-**What**: S5 fixes coordinator BLOCKERs directly during Phase 6 (Integration Verification) instead of routing to Phase 7 (Fix Wave). This bypasses: (1) full test suite re-run, (2) `re-audit-report.md` artifact production, (3) Phase 7b post-fix security re-check.
+**What**: S5 fixes coordinator BLOCKERs directly during Phase 6 (Integration Verification) instead of routing to Phase 7 (Fix Wave).
+**See also**: `security-lessons.md` L67 This bypasses: (1) full test suite re-run, (2) `re-audit-report.md` artifact production, (3) Phase 7b post-fix security re-check.
 **When**: Coordinator finds BLOCKERs; S5 interprets them as "quick fixes" and applies them immediately to keep the build moving. The algedonic signal at the Phase 6/7 boundary is advisory, not enforced.
 **Prevention**: Coordinator output template MUST include a mandatory footer: "If BLOCKERs exist, route to Phase 7. Do NOT fix inline." SKILL.md Phase 4 must be a hard gate (zero test failures before Phase 5/6). S5 must treat integration BLOCKERs as Phase 7 spawn triggers, not inline to-do items.
 **Affected**: S5 (main agent), vsm_coordinator.

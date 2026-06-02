@@ -4,7 +4,7 @@
 
 Empirical traps discovered by the VSM swarm. Use `SearchWeb` for API documentation.
 
-> This skill is a stub. As Rust builds are run, empirical pitfalls will be 
+> **TODO**: This skill is a stub. As Rust builds are run, empirical pitfalls will be 
 > appended here. Do NOT remove this placeholder.
 
 ## [Placeholder]

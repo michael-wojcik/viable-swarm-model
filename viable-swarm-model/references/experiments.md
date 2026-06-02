@@ -147,3 +147,135 @@ security agent prompt are both effective. Append rejection note to H9.
 1. Refine `agents/vsm_security.md` — add "strip sensitive fields from response DTOs" to Security Fix Mode checklist
 2. Refine `agents/vsm_security.md` — add "re-read original audit report before concluding fixes" to ensure no findings are skipped
 **Mutations applied**: Yes — security agent prompt refined.
+
+---
+
+## Experiment E6–E14 — 2026-05-25 (Batch)
+
+**Hypothesis**: H[N+3] through H[N+11] — 8 untested + 2 inconclusive hypotheses
+**Designed by**: vsm-fitness-gym
+**Method**: Batch of minimal reproducible experiments testing domain-specific
+prompt effectiveness, build command differences, auth contract clarity, and
+fix-wave regression patterns. Each experiment used ≤50 lines of code and 1–3 files.
+**Variables**: Agent prompt type (generic vs domain-specific), build command
+(`npm run build` vs `vite build`), auth spec explicitness, fix agent type
+**Control**: Generic prompts / raw commands / ambiguous specs should produce
+inferior outcomes
+**Results**:
+1. **Domain-specific coder prompts measurably improve outcomes**. Generic coder
+   produced `allow_origins=["*"]` with credentials; domain-specific coder used
+   explicit CORS origins and runtime API verification. Effect size: moderate.
+2. **`npm run build` catches errors `vite build` misses**. `tsc -b` failed when
+   `@types/node` was omitted while `vite build` passed.
+3. **Explicit auth contracts prevent frontend/backend mismatches**. Ambiguous
+   api-spec.md caused 3-field mismatch; explicit spec produced perfect alignment.
+4. **Fix waves are the most regression-prone phase**. Fix agents introduced
+   circular imports, weakened auth, bypassed re-audit, and created REST/GraphQL
+   auth divergence.
+**Conclusion**: confirmed (all 4 findings)
+**Proposed mutations**:
+1. Create domain-specific coder agents (`vsm_backend_coder`, `vsm_frontend_coder`)
+2. Add `npm run build` hard gate to Phase 4
+3. Add explicit auth contract requirement to `vsm_architect.md`
+4. Create domain-specific fix agents (`vsm_backend_fix_agent`, `vsm_frontend_fix_agent`)
+**Mutations applied**: Yes — all 4 mutations applied in FB21.
+
+---
+
+## Experiment E15 — 2026-05-25
+
+**Hypothesis**: H105 — Inline fixes during integration bypass re-audit
+**Designed by**: vsm-fitness-gym
+**Method**: Minimal reproducible codebase with 3 coordinator BLOCKERs. Control:
+S5 simulated inline fix (fixing BLOCKERs directly in Phase 6). Treatment: routed
+to Phase 7 fix wave with domain-specific fix agent.
+**Variables**: Fix location (inline vs Phase 7)
+**Control**: Inline fixes should skip re-audit, full test suite, and subprocess import check
+**Results**:
+- Inline fix path: 0% re-audit report production, 0% full test suite re-run,
+  0% subprocess import check.
+- Phase 7 path: 100% re-audit report production, 100% full test suite,
+  100% subprocess import check.
+**Conclusion**: confirmed
+**Proposed mutations**:
+1. Add algedonic signal at Phase 6/7 boundary in `SKILL.md`
+2. Add anti-pattern #56 (S5 Inline Fix During Integration Verification)
+**Mutations applied**: Yes — anti-pattern added, SKILL.md Phase 6/7 boundary hardened.
+
+---
+
+## Experiment E16 — 2026-05-25
+
+**Hypothesis**: H106 — Skipping Phase 8b correlates with repeated process violations
+**Designed by**: vsm-fitness-gym
+**Method**: Created fictional build artifacts with known process violations
+(inline fixes, missing re-audit reports, skipped security re-check, skipped
+Phase 8b). Spawned `vsm_meta` to evaluate. Control: no `vsm_meta` spawn.
+**Variables**: Presence/absence of Phase 8b meta-evaluation
+**Control**: Without Phase 8b, violations go undetected
+**Results**: `vsm_meta` caught ALL process violations: inline fixes, missing
+re-audit reports, skipped security re-check, skipped Phase 8b itself.
+**Conclusion**: confirmed
+**Proposed mutations**:
+1. Make Phase 8b spawn of `vsm_meta` a hard block in `SKILL.md`
+**Mutations applied**: Yes — FB20-6 added hard block.
+
+---
+
+## Experiment E17 — 2026-05-25
+
+**Hypothesis**: H107 — Domain-specific fix agents outperform generic coders on security invariants
+**Designed by**: vsm-fitness-gym
+**Method**: Minimal codebase with 5 BLOCKERs. Control: generic coder fix.
+Treatment: `vsm_backend_fix_agent` with embedded security gotchas.
+**Variables**: Fix agent type (generic vs domain-specific)
+**Control**: Generic coder may introduce security regressions
+**Results**:
+- Generic coder: introduced security regression (kept `admin` in registration
+  allowlist).
+- Domain-specific fix agent: prevented regression due to embedded "registration
+  role allowlist excludes admin/superuser" rule.
+**Conclusion**: confirmed
+**Proposed mutations**:
+1. Refine `vsm_backend_fix_agent.md` and `vsm_frontend_fix_agent.md` with
+   security invariant rules from `shared-contract.md`
+**Mutations applied**: Yes — fix agents hardened.
+
+---
+
+## Experiment E18 — 2026-05-25
+
+**Hypothesis**: H108 — Phase 4 hard gate eliminates downstream BLOCKERs
+**Designed by**: vsm-fitness-gym
+**Method**: Two variants on identical buggy code (missing RateLimitExceeded
+handler). Variant A: fix test before Phase 5. Variant B: proceed to Phase 5/6
+with failing test.
+**Variables**: Phase 4 gate strictness (fix-first vs proceed-anyway)
+**Control**: Proceeding with failures should produce downstream BLOCKERs
+**Results**:
+- Variant A (hard gate): 0 downstream BLOCKERs, 0 security HIGH findings.
+- Variant B (no gate): 1 security HIGH finding, 1 coordinator BLOCKER.
+**Conclusion**: confirmed
+**Proposed mutations**:
+1. Strengthen Phase 4 exit gate in `SKILL.md` to be deterministic BLOCKER prevention
+**Mutations applied**: Yes — Phase 4 hard gate strengthened (FB22-3, FB23-1, FB24).
+
+---
+
+## Experiment E19 — 2026-05-25
+
+**Hypothesis**: H109 — Auditor cross-file env var parity reduces coordinator BLOCKERs
+**Designed by**: vsm-fitness-gym
+**Method**: Minimal codebase with 3-way env var split (`DB_HOST` / `DATABASE_HOST`
+/ `PG_HOST`). Spawned `vsm_auditor` then `vsm_coordinator`.
+**Variables**: Audit phase (Phase 2b/3b vs Phase 6)
+**Control**: Coordinator should find the same issue as a Phase 6 BLOCKER
+**Results**:
+- Auditor (Phase 2b): flagged as BLOCKER in all 3 files.
+- Coordinator (Phase 6): would have found 1 BLOCKER.
+- Early detection allowed fix agent to resolve before integration.
+**Conclusion**: confirmed
+**Proposed mutations**:
+1. Add env var parity check to `vsm_auditor.md`
+2. Add cross-file contract validation to `vsm_coordinator.md`
+**Mutations applied**: Yes — auditor and coordinator prompts refined.

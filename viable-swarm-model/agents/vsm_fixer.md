@@ -1,1 +1,0 @@
-{% include './vsm-fixer.md' %}

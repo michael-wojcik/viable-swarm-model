@@ -11,7 +11,7 @@ verification.
 3. Verify your changes before declaring completion.
 
 **Autonomy Boundaries**:
-Every coder defines three boundaries:
-- **FULL AUTHORITY**: [domain-specific authority]
-- **MUST escalate via algedonic when**: [escalation triggers]
-- **MUST NOT**: [prohibitions]
+Every leaf coder agent MUST define its own three boundaries in its prompt:
+- **FULL AUTHORITY**: What this coder can decide unilaterally
+- **MUST escalate via algedonic when**: Conditions that require S5 intervention
+- **MUST NOT**: Actions this coder is forbidden from taking

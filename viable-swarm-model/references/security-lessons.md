@@ -288,7 +288,7 @@ Also ban hardcoded literal passwords in docker-compose (e.g.,
 **Source**: FB2, FB18 (rule persisted despite prior mutation).
 **See also**: `integration-checklist.md` Check 37 (CORS configuration validation).
 
-### L38: Infrastructure Security Is as Critical as Application Security
+### L66: Infrastructure Security Is as Critical as Application Security
 **Prevention rule**: Security gate must inspect docker-compose.yml, Dockerfile,
 .env.example, and nginx config with the same rigor as application code. Check for
 hardcoded passwords, `:-` fallbacks, wildcard CORS in compose, and missing
@@ -394,12 +394,12 @@ severity configuration error.
 
 ## Testing & Verification
 
-### L12: Tester Bug-Fix Inline is Highly Valued
+### ~~L12: Tester Bug-Fix Inline is Highly Valued~~ (SUPERSEDED by L67)
 **Prevention rule**: vsm_tester prompt includes: "Fix bugs inline during test
 writing. Document each under 'Bugs Found and Fixed'."
 **Affected**: vsm_tester.
 
-### L26: Every Service Must Have a Verifiable Entry Point
+### L64: Every Service Must Have a Verifiable Entry Point
 **Prevention rule**: After each build wave, verify every Dockerfile's CMD
 points to a file that exists. Report generator had no src/index.ts but
 Dockerfile referenced it.
@@ -443,7 +443,7 @@ of known anti-patterns but revealed new failure modes.
 CORS reflection attacks, hardcoded secrets, SSRF go undetected.
 **Affected**: S3 (main agent).
 
-### L29: Fix Agents Can Introduce Vulnerabilities
+### L65: Fix Agents Can Introduce Vulnerabilities
 **Prevention rule**: Fix agents (especially generic coders fixing
 security-related code) can accidentally introduce vulnerabilities while trying to
 be helpful. The security gate MUST re-audit ALL files modified during any fix
@@ -469,7 +469,7 @@ LOW severity unless they contain production credentials. Distinguish between:
 **Affected**: vsm_security, vsm_backend_coder.
 **Source**: Gym E16 (H106), FB20-Test security report.
 
-### L48: Tester Bug-Fix Inline is Deprecated — Route ALL Fixes to Phase 7
+### L67: Tester Bug-Fix Inline is Deprecated — Route ALL Fixes to Phase 7
 **Prevention rule**: The `vsm_tester` legacy agent has been removed. ALL testing is now performed by domain-specific testers (`vsm_backend_tester`, `vsm_frontend_tester`). Neither tester is permitted to fix bugs inline. Test failures MUST be reported to S5, who routes them to Phase 7 (Fix Wave) with the appropriate domain-specific fix agent (`vsm_backend_fix_agent` or `vsm_frontend_fix_agent`). Inline fixes bypass re-audit, post-fix security re-check, and mandatory `re-audit-report.md` production. This applies to ALL tiers, including Tier 1 (<1000 lines).
 **Supersedes**: L12 (Tester Bug-Fix Inline is Highly Valued)
 **Affected**: S5 (main agent), vsm_backend_tester, vsm_frontend_tester, vsm_backend_fix_agent, vsm_frontend_fix_agent.

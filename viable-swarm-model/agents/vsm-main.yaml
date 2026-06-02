@@ -62,6 +62,9 @@ agent:
     vsm_meta:
       path: ./vsm_meta.yaml
       description: S5 Meta Evaluation
+    vsm_process_auditor:
+      path: ./vsm_process_auditor.yaml
+      description: S5 Process Audit
     vsm_product:
       path: ./vsm_product.yaml
       description: S4 Intelligence (Product)

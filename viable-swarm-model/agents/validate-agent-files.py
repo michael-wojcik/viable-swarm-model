@@ -11,6 +11,10 @@ Checks:
 5. No unescaped ${...} shell-variable patterns (e.g., ${VAR:-default}).
 6. Intermediate templates (vsm-main.md, vsm-*.md) are framework-agnostic
    (no FastAPI, React, etc. keywords).
+7. Every leaf .yaml is registered in vsm-main.yaml's subagents block.
+8. No orphaned .md files (no matching .yaml, not included by any chain).
+9. No unfilled bracket placeholders ([...]) in leaf agent prompts.
+10. External file references (~/vsm/...) resolve to real paths.
 
 Run from the agents/ directory:
     python3 validate-agent-files.py
@@ -22,6 +26,7 @@ import sys
 import yaml
 
 AGENTS_DIR = os.path.dirname(os.path.abspath(__file__))
+VSM_ROOT = os.path.dirname(AGENTS_DIR)
 
 BUILT_IN_VARS = {
     "KIMI_NOW",
@@ -79,11 +84,56 @@ def is_intermediate_template(md_name: str) -> bool:
     return md_name == "vsm-main.md" or md_name.startswith("vsm-")
 
 
+def resolve_include_chain(md_path: str, visited=None) -> set:
+    """Recursively collect all .md files included by a given .md file."""
+    if visited is None:
+        visited = set()
+    abs_path = os.path.abspath(md_path)
+    if abs_path in visited:
+        return visited
+    visited.add(abs_path)
+
+    with open(md_path) as f:
+        content = f.read()
+
+    includes = re.findall(r"{%\s+include\s+['\"](.+?)['\"]\s+%}", content)
+    for inc in includes:
+        inc_path = os.path.join(os.path.dirname(md_path), inc)
+        if os.path.exists(inc_path):
+            resolve_include_chain(inc_path, visited)
+
+    return visited
+
+
 def main():
     errors = []
     warnings = []
 
     yaml_files = sorted(f for f in os.listdir(AGENTS_DIR) if f.endswith(".yaml"))
+
+    # --- Pre-compute include chains and subagent registry ---
+
+    # Build map of which .md files include which other .md files
+    all_md_files = {f for f in os.listdir(AGENTS_DIR) if f.endswith(".md")}
+    included_by = {md: set() for md in all_md_files}
+    for md_name in all_md_files:
+        md_path = os.path.join(AGENTS_DIR, md_name)
+        chain = resolve_include_chain(md_path)
+        for inc in chain:
+            inc_name = os.path.basename(inc)
+            if inc_name in included_by:
+                included_by[inc_name].add(md_name)
+
+    # Load vsm-main.yaml subagents registry
+    vsm_main_path = os.path.join(AGENTS_DIR, "vsm-main.yaml")
+    registered_subagents = set()
+    if os.path.exists(vsm_main_path):
+        vsm_main = load_yaml(vsm_main_path)
+        registered_subagents = set(vsm_main.get("agent", {}).get("subagents", {}).keys())
+    else:
+        errors.append("vsm-main.yaml not found — cannot verify subagent registration")
+
+    # --- Per-yaml validation ---
 
     for yaml_name in yaml_files:
         yaml_path = os.path.join(AGENTS_DIR, yaml_name)
@@ -122,6 +172,25 @@ def main():
                 if keyword in md_content:
                     errors.append(f"{yaml_name}: forbidden keyword '{keyword}' in intermediate template {md_name}")
 
+        # 9. Unfilled bracket placeholders in LEAF agent prompts
+        # Leaf = not an intermediate template (i.e., final agent prompt)
+        if not is_intermediate_template(md_name):
+            placeholders = re.findall(r"\[([A-Za-z\s\-]+)\]", md_content)
+            # Filter out legitimate markdown link text and common terms
+            common_ok = {"source", "build", "fb", "fix", "backend", "frontend", "devops"}
+            bad_placeholders = [p for p in placeholders if p.lower() not in common_ok and len(p) > 3]
+            if bad_placeholders:
+                warnings.append(
+                    f"{yaml_name} ({sp_path}): unfilled bracket placeholders: {', '.join(sorted(set(bad_placeholders)))}"
+                )
+
+        # 10. External file existence check
+        external_refs = re.findall(r"~/vsm/([A-Za-z0-9_\-/]+\.md)", md_content)
+        for ref in external_refs:
+            full_path = os.path.expanduser(f"~/vsm/{ref}")
+            if not os.path.exists(full_path):
+                errors.append(f"{yaml_name} ({sp_path}): external file not found: ~/vsm/{ref}")
+
         vars_in_md = extract_vars(md_content)
         defined_args = collect_system_prompt_args(yaml_path)
         undefined = vars_in_md - set(defined_args.keys()) - BUILT_IN_VARS
@@ -142,6 +211,28 @@ def main():
             errors.append(
                 f"{yaml_name} ({sp_path}): unescaped ${'{...}'} patterns (not valid template vars): {', '.join(sorted(bad_patterns))}"
             )
+
+    # 7. Subagent registration check
+    for yaml_name in yaml_files:
+        agent_name = yaml_name.replace(".yaml", "")
+        # Skip intermediate/base templates
+        if agent_name in ("vsm-main", "vsm-coder", "vsm-fixer", "vsm-tester", "vsm-reporter", "vsm-researcher"):
+            continue
+        if agent_name not in registered_subagents:
+            errors.append(f"{yaml_name}: NOT registered in vsm-main.yaml subagents block")
+
+    # 8. Orphaned .md file check
+    for md_name in all_md_files:
+        yaml_match = md_name.replace(".md", ".yaml")
+        has_yaml = yaml_match in {y.replace(".yaml", "") for y in yaml_files}
+        # Also check hyphen vs underscore
+        yaml_match_alt = yaml_match.replace("_", "-")
+        has_yaml_alt = yaml_match_alt in {y.replace(".yaml", "") for y in yaml_files}
+
+        is_included = len(included_by.get(md_name, set())) > 0
+
+        if not has_yaml and not has_yaml_alt and not is_included:
+            warnings.append(f"{md_name}: orphaned — no matching .yaml and not included by any file")
 
     if errors:
         print("ERRORS:", file=sys.stderr)
