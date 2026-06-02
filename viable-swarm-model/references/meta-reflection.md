@@ -86,3 +86,28 @@ trajectory exists despite continuous mutation.
 - Added process auditor agent (`vsm_process_auditor`) for Phase 8b compliance.
 - Added "mutation removal gate" concept: ineffective mutations should be removed.
 - Added this meta-reflection entry to track the stagnation pattern.
+
+
+---
+
+## Entry 4 — 2026-06-02
+
+**Builds**: FB25
+**Pattern**: All 5 hypotheses under test (H203–H205, H40, H157) were validated successfully in a single build for the first time. The prevention-rule stack is maturing — no enum `.value` crash, no stub pages, no Phase 4 gate bypass, no inline fixes. However, the Mutation Verification Checkpoint (FB18-10) continues to be bypassed in practice despite being a structural mutation.
+**Evidence**:
+- FB25 meta-report: "No `mutations-applied.md` exists in `.kimi/` despite FB18-10 structural mutation mandating it."
+- Agent scores: minimum 4/5 across all 8 agent types — highest since FB9.
+- Independent test verification: 82 backend + 53 frontend passed, 0 failures. Phase 4 gate was legitimate.
+- H203 (sa.Enum trap): All enum columns used `sa.Enum(...)`; no `.value` crash.
+- H204 (hard gate): `.kimi/phase4-gate.md` written before Phase 5.
+- H205 (ISSUE sweep): `issue-sweep.md` categorizes all unfixed issues.
+- H40 (router imports): Consistent `APIRouter` usage verified.
+- H157 (stub prevention): All 5 pages have live data fetching.
+**Implication**:
+1. Prevention rules work when they are specific and stack-skill-enforced.
+2. Process-level mutations (like FB18-10) fail without tool-enforced or hook-level backing. Prompt-only instructions degrade under session-end time pressure.
+3. The skill's detection capability is now stronger than its enforcement capability at the S5 level.
+**Action taken**:
+- Proposed structural mutation to enforce `mutations-applied.md` as hard block in Phase 8c.
+- Proposed refinement mutation to `vsm_meta.md` to explicitly check for `mutations-applied.md`.
+- Added 4 new hypotheses (H206–H209) to backlog for gym testing.

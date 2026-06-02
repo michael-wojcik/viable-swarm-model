@@ -10,7 +10,7 @@
 | vsm_frontend_coder | React/TS/Vite | 65% | 3, 2, 2 | Stub pages, void-referenced imports, build failures |
 | vsm_security | Auth/GraphQL | 80% | 4, 4, 3 | Misses enum runtime bugs, type-safety gaps |
 | vsm_auditor | Code review | 75% | 4, 3, 3 | Duplicates checks across foundation/implementation |
-| vsm_architect | Design | 85% | 4, 5, 4 | Scope creep without product brief guardrails |
+| vsm_architect | Design | 85% | 3,  4, 5 | Scope creep without product brief guardrails |
 | vsm_coordinator | Integration | 70% | 3, 3, 4 | Drift detection only active on Tier 2+ builds |
 | vsm_wiring | Entry-point wiring | 80% | 4, 4, 3 | Router registration misses, ApolloProvider gaps |
 | vsm_backend_tester | Test writing | 70% | 3, 3, 4 | Incomplete coverage, missing edge cases |

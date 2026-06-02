@@ -30,6 +30,10 @@
 | H203 | untested |
 | H[N+3] | untested |
 | H[N+4] | untested |
+| H206 | untested |
+| H207 | untested |
+| H208 | untested |
+| H209 | untested |
 
 ---
 
@@ -224,3 +228,49 @@
 
 ---
 
+
+## H206: Auditor batch-size limit (≤10 files) eliminates ≥50% of BLOCKER-level false positives in builds with >15 source files
+
+**Status**: untested
+**Proposed**: 2026-06-02
+**Rationale**: FB25 implementation audit reviewed ~25 files and produced 0 BLOCKERs (all ISSUEs). FB13 had 3 BLOCKER false positives on 26 files before the batch limit was introduced. FB25 had 0 false positives. Correlation suggests the limit works, but sample size = 1.
+**Source**: Fitness build FB25, Phase 3b
+**Experiment**: Run gym experiment: audit identical codebase with batch limit ON vs OFF. Count BLOCKER false positives.
+**Expected**: Batch-limit ON produces ≤1 false positive; OFF produces ≥2.
+**Tested by**: —
+
+---
+
+## H207: Phase 3c Mid-Wave S2 Check catches contract drift before Phase 3b auditor, reducing Phase 3b BLOCKER count by ≥30%
+
+**Status**: untested
+**Proposed**: 2026-06-02
+**Rationale**: FB25 had 0 BLOCKERs in Phase 3b. Prior builds (FB4–FB7) without Phase 3c averaged 2.3 BLOCKERs in Phase 3b from GraphQL field drift, auth contract mismatch, and WebSocket event name drift. Correlation is suggestive but not causal — prevention rules also matured between FB7 and FB25.
+**Source**: Fitness build FB25, Phase 3c/3b
+**Experiment**: Run regression build on FB4-equivalent spec with Phase 3c enabled vs disabled. Measure Phase 3b BLOCKER count.
+**Expected**: Phase 3c enabled → ≤1 BLOCKER in 3b; disabled → ≥2 BLOCKERs.
+**Tested by**: —
+
+---
+
+## H208: Domain-specific fix agents produce fewer test regressions than generic coder agents when fixing security findings
+
+**Status**: untested
+**Proposed**: 2026-06-02
+**Rationale**: FB25 fix wave modified 6 files; full test suite went from 80 → 82 tests with 0 regressions. Generic coder in FB21 fix wave broke 4 unrelated GraphQL tests. Sample is small and confounded by build complexity differences.
+**Source**: Fitness build FB25, Phase 7
+**Experiment**: Gym dry-run: inject identical CRITICAL findings into minimal FastAPI app. Fix with `vsm_backend_fix_agent` vs generic `coder` agent. Measure test pass rate post-fix.
+**Expected**: Domain agent: 100% pass rate, 0 regressions. Generic coder: ≤90% pass rate.
+**Tested by**: —
+
+---
+
+## H209: The Mutation Verification Checkpoint (`mutations-applied.md`) is bypassed because `vsm_meta` lacks tool-enforced authority to block Phase 8 completion
+
+**Status**: untested
+**Proposed**: 2026-06-02
+**Rationale**: FB18-10 structural mutation mandated `mutations-applied.md` production. FB25 (and FB23, FB24 per meta-reflection.md Entry 2) produced no such file. Prompt-only instructions are insufficient; S5 attention degrades at session end.
+**Source**: Fitness builds FB23, FB24, FB25, Phase 8b
+**Experiment**: Add explicit `mutations-applied.md` presence check to `vsm_meta.md` output template. In next build, verify if the file exists before S5 declares completion.
+**Expected**: If `vsm_meta.md` is updated → file exists in next build. If not → file absent again.
+**Tested by**: —
