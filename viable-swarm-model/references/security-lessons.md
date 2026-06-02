@@ -501,3 +501,39 @@ Answer (b) → classify as "missing ownership check", not "IDOR".
 **Source**: FB23 security report labeled `jobs.py:get_job()` and
 `candidates.py:get_candidate()` as IDOR when both had role-based access
 controls. The real gap was lack of resource ownership verification.
+
+---
+
+## File Upload Size Limits (FB25)
+
+File upload endpoints using `UploadFile` (or language-equivalent) MUST enforce a
+`max_bytes` limit or stream to disk. Loading entire files into memory with
+`await file.read()` is a **MEDIUM** severity DoS vector, not LOW.
+
+Pattern:
+```python
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
+
+@router.post("/upload")
+async def upload(file: UploadFile):
+    contents = await file.read()
+    if len(contents) > MAX_UPLOAD_BYTES:
+        raise HTTPException(413, "File too large")
+```
+
+**Source**: FB25 `uploads.py` read entire uploaded files into memory with no
+size cap. Security auditor rated it LOW/pre-existing; should be MEDIUM.
+
+## Rate Limiting Applied (FB25)
+
+If rate-limiting middleware is installed (e.g., `SlowAPIMiddleware`), at least
+two high-risk endpoints MUST have `@limiter.limit()` decorators. Middleware
+installation without endpoint decoration is a configuration gap.
+
+Minimum decorated endpoints:
+- `/auth/login` or `/auth/token`
+- `/auth/register`
+- `/graphql` (if exposed)
+
+**Source**: FB25 `app/main.py` registered `SlowAPIMiddleware` and a
+`RateLimitExceeded` handler, but zero endpoints applied `@limiter.limit()`.

@@ -648,3 +648,36 @@ flag as ISSUE.
 **Affected**: vsm_frontend_coder, vsm_coordinator.
 **Source**: FB23 Dashboard.tsx, Jobs.tsx, Candidates.tsx etc. were all 6–18 line
 stubs with `void` imports. Integration report still PASSed them.
+
+## Pattern: Phase 4 Gate Re-Run After Fix Wave (Discovered FB25)
+
+**Problem**: When fix agents add or modify tests during the fix wave, the
+`phase4-gate.md` document becomes stale. It still claims the original test
+counts (e.g., "80 backend tests") while the actual suite has grown (e.g., 82).
+
+**Detection rule**: If `.kimi/re-audit-report.md` exists and lists test files
+modified during the fix wave, compare gate test counts to post-fix reality.
+
+**Remediation**: After ANY fix wave that adds or modifies tests, S5 MUST:
+1. Re-run the full test suite (`pytest`, `vitest`)
+2. Update `.kimi/phase4-gate.md` with fresh counts
+3. Only then proceed to Phase 5 (Security Gate)
+
+**Affected**: S5 orchestrator, vsm_process_auditor.
+**Source**: FB25 `phase4-gate.md` claimed "80 backend" but fix wave added 2
+tests (upload ownership + task ownership), actual count was 82.
+
+## Pattern: Persistent Test Artifacts (Discovered FB25)
+
+**Problem**: Phase 4 gate test counts are textual claims with no auditable trail.
+An auditor or meta-evaluator cannot independently verify that tests actually ran.
+
+**Remediation**: Before writing `phase4-gate.md`, redirect test output to
+persistent artifacts:
+- Backend: `pytest -v > .kimi/pytest-report.md 2>&1`
+- Frontend: `vitest run > .kimi/vitest-report.md 2>&1`
+
+The gate document should reference these artifacts by path.
+
+**Affected**: S5 orchestrator (Phase 4), vsm_process_auditor.
+**Source**: FB25 process audit flagged missing persistent test reports as LOW gap.

@@ -878,3 +878,38 @@
 - **Key gap**: Phase 4 Test-First Exit Gate bypassed; SQLAlchemy enum type-safety rule missing
 - **Mutations**: python-pitfalls enum trap, integration-checklist GraphQL/Socket.IO checks, fitness ledger entry
 
+
+---
+
+## FB25: BudgetWise — Personal Finance & Budget Management Platform
+
+**Complexity**: High (Tier 2+, 4-5 waves, ~2000+ lines, 4 services)
+**Date**: 2026-06-02
+**Score**: 4.0 / 5.0
+**Services**: FastAPI backend, React frontend, Redis, Celery, PostgreSQL, Socket.IO, Strawberry GraphQL
+
+### Coverage Map
+
+| Capability | Tested by |
+|---|---|
+| H203 — SQLAlchemy enum `.value` trap | **Avoided** — all enums use `sa.Enum(...)`; no `.value` crashes |
+| H204 — Phase 4 hard gate bypass | **Prevented** — gate legitimate, 82 backend + 53 frontend passed, 0 failures |
+| H205 — Fix wave scope limitation | **Prevented** — Phase 7d ISSUE sweep completed, all CRITICAL/HIGH fixed |
+| H40 — GraphQL RBAC parity with REST | **Validated** — `delete_budget` admin-only, ownership filtering on list queries |
+| H157 — Frontend stub pages | **Prevented** — ALL 5 pages live (Dashboard, Budgets, Transactions, Categories, Upload) |
+| Foundation phase stability | Partial — 2 BLOCKERs (Celery module-level `app`, Dockerfile COPY syntax) |
+| Hook enforcement system | **CRITICAL FAILURE** — 0 of 8 expected hooks fired for background subagents (H300 confirmed) |
+| Security gate | 0 BLOCKERs, 2 CRITICAL + 2 HIGH + 6 MEDIUM + 3 LOW; all CRITICAL/HIGH fixed |
+| Integration verification | 0 BLOCKERs, 5 ISSUEs (orphaned exports, dead wsLink, unused proxy) |
+| Testing wave | 82 backend passed, 53 frontend passed, 0 failures; frontend build green |
+| Fix wave | Zero regressions; defense-in-depth ownership checks at API + worker layers |
+| Reflection | `lessons.md` — 6 structured entries (L1-L6) |
+| Meta-reflection | `meta-report.md` — 4 new hypotheses (H206-H209), 8 mutation proposals |
+| Process audit | 82/100 compliance; flagged missing `meta-report.md` and `mutations-applied.md` |
+
+### Result
+- **Score**: 4.0/5.0 (up from FB24's 3.2)
+- **BLOCKERs**: 2 code-level (foundation) + 0 process-level
+- **Fix iterations**: 1 fix wave + security re-check + re-audit
+- **Key gap**: Hook system non-functional for background agents; foundation Dockerfile/Celery wiring still brittle
+- **Mutations**: python-pitfalls Celery guard rule, docker-pitfalls COPY syntax rule, security-lessons worker defense-in-depth, vsm_meta checkpoint enforcement, H206-H209

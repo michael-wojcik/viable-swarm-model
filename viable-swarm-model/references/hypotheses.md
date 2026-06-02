@@ -143,13 +143,14 @@
 
 ## H157: Frontend pages generated as stubs (void-referenced imports, no real logic) correlate with missed integration checklist items
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-26
 **Rationale**: FB23 frontend pages (Dashboard, Jobs, Candidates, etc.) are all `<div>Name</div>` stubs. The integration report still PASSed them because they exist and routes are wired, not because they implement functionality.
 **Source**: Fitness build FB23
 **Experiment**: Add "Verify at least one page contains non-trivial data fetching/rendering" to integration checklist.
 **Expected**: Next build has ≥1 page with actual GraphQL query execution and rendered data.
-**Tested by**: —
+**Tested by**: FB25
+**Result**: ALL 5 pages (Dashboard, Budgets, Transactions, Categories, Upload) contain live `useQuery` / `useMutation` calls. Implementation audit verdict: "ALL PAGES LIVE." Four-build streak of stub pages (FB21-FB24) broken.
 
 
 ## H201: Custom agent files reduce per-subagent context usage by >30% vs prompt injection
@@ -274,3 +275,47 @@
 **Experiment**: Add explicit `mutations-applied.md` presence check to `vsm_meta.md` output template. In next build, verify if the file exists before S5 declares completion.
 **Expected**: If `vsm_meta.md` is updated → file exists in next build. If not → file absent again.
 **Tested by**: —
+
+---
+
+## H204: Phase 4 gate bypass when >=1 test fails
+
+**Status**: confirmed
+**Proposed**: 2026-06-02
+**Rationale**: FB24 build proceeded through Phases 5-8 with 1 failing test
+(enum `.value` AttributeError). The gate was either absent or bypassed.
+**Source**: Fitness build FB24
+**Experiment**: Build a minimal app with a deliberate failing test. Run full VSM
+workflow. Does the build stop at Phase 4?
+**Expected**: Build halts at Phase 4 with explicit BLOCK verdict.
+**Tested by**: FB25
+**Result**: Phase 4 gate was legitimate PASS (82 backend + 53 frontend, 0 failures).
+No bypass occurred. Gate anti-fraud note was present.
+
+## H205: Unfixed ISSUEs accumulate after fix wave unless Phase 7d sweep performed
+
+**Status**: confirmed
+**Proposed**: 2026-06-02
+**Rationale**: FB24 ended with 6+ unfixed ISSUEs because no systematic sweep
+was performed after the fix wave. Security, integration, and implementation ISSUEs
+were left open.
+**Source**: Fitness build FB24
+**Experiment**: After fix wave, produce `issue-sweep.md` categorizing all open
+ISSUEs as FIXED / DEFERRED / MISSED.
+**Expected**: Zero MISSED ISSUEs at build completion.
+**Tested by**: FB25
+**Result**: Phase 7d ISSUE sweep produced `issue-sweep.md` with all issues
+categorized as FIXED or DEFERRED. Zero MISSED.
+
+## H40: GraphQL RBAC parity with REST endpoints
+
+**Status**: confirmed
+**Proposed**: 2026-05-22
+**Rationale**: GraphQL resolvers often lack the same access controls as REST
+endpoints because they are written separately by different agents.
+**Source**: Multiple fitness builds (FB4, FB10, FB21, FB24)
+**Experiment**: Build with both REST and GraphQL. Auditor checks parity table.
+**Expected**: 100% parity on admin-only mutations and ownership-filtered list queries.
+**Tested by**: FB25
+**Result**: GraphQL `delete_budget` admin-only (matches REST). All list queries
+filter by `user_id` unless admin. Parity table: pass.
