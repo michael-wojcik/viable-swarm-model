@@ -1838,3 +1838,47 @@ Gotcha #12: Frontend Dockerfiles must run `npm run build` + static serve. `npm r
 - Removed duplicated "Phase 7b: Post-Fix Security Re-Check" paragraph at lines 703-709
 - Kept canonical occurrence at lines 687-693
 
+
+---
+
+## Mutation FB25-S1 — 2026-06-02 (Structural — APPLIED, user approved)
+
+**Session**: FB25 fitness coach evaluation
+**File**: `viable-swarm-model/SKILL.md`
+**Type**: structural
+**Target failure mode**: Skill claims "13 active VSM hooks" but empirical testing
+(FB25, H300) proves 0 of 8 expected hooks fire for background subagents.
+**Rationale**: The build prompt for FB25 explicitly claimed "13 active VSM hooks"
+as a primary innovation. The fitness report proved this claim was false for
+background agents (which perform ~90% of the work). Continuing to claim hook
+enforcement risks a credibility gap. The skill must be honest about its actual
+capabilities.
+
+**Expected effect**: Future build prompts will not claim hook enforcement for
+background agents. Users will understand that prompt-hardened rules (Layer 1)
+are the primary defense, with hooks as secondary enforcement for S5/foreground
+only.
+
+**Measured effect**: PENDING — verify in FB26 that no build prompt claims
+"13 active VSM hooks" for background agent enforcement.
+
+---
+
+## Mutation FB25-S2 — 2026-06-02 (Structural — APPLIED, user approved)
+
+**Session**: FB25 fitness coach evaluation
+**File**: `viable-swarm-model/SKILL.md` (Phase 8c-ii)
+**Type**: structural
+**Target failure mode**: Mutation Verification Checkpoint (`mutations-applied.md`)
+is systematically bypassed because `vsm_meta` lacks tool-enforced authority to
+block Phase 8 completion (FB18-10 scored 3/5 — partially effective).
+**Rationale**: The checkpoint existed as a procedure but was not self-enforcing.
+S5 could (and sometimes did) skip it. The redesign makes Phase 8c-ii completion
+explicitly depend on three verifiable criteria: (1) file exists, (2) all measured
+effects non-empty, (3) S5 explicitly states completion.
+
+**Expected effect**: Future builds will not declare Phase 8 complete without
+producing `mutations-applied.md` and filling measured effects.
+
+**Measured effect**: PENDING — verify in FB26 that `mutations-applied.md` exists
+BEFORE `process-audit.md` runs and that all mutations have measured effects.
