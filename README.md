@@ -108,38 +108,6 @@ ln -s ~/vsm/vsm-fitness-gym ~/.kimi/skills/vsm-fitness-gym
 ln -s ~/vsm/vsm-fitness-coach ~/.kimi/skills/vsm-fitness-coach
 ```
 
-## Permission Quick-Start
-
-VSM workflows spawn many subagents and use file tools heavily. To reduce approval friction, add these rules to `~/.kimi/config.toml`:
-
-```toml
-[[permission.rules]]
-decision = "allow"
-pattern = "Read"
-
-[[permission.rules]]
-decision = "allow"
-pattern = "Grep"
-
-[[permission.rules]]
-decision = "allow"
-pattern = "Glob"
-
-[[permission.rules]]
-decision = "allow"
-pattern = "Agent"
-
-[[permission.rules]]
-decision = "allow"
-pattern = "TaskOutput"
-
-[[permission.rules]]
-decision = "allow"
-pattern = "TodoList"
-```
-
-See `viable-swarm-model/references/kimi-code-integration.md` for the full recommended configuration, including hooks and MCP.
-
 ## Usage
 
 ### Launch with the VSM agent file

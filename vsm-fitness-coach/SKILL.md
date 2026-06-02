@@ -8,10 +8,6 @@ description: >
   real builds into structured skill improvement. Invoke with
   /flow:vsm-fitness-coach.
 type: flow
-whenToUse: When the user wants to evaluate, stress-test, or improve the viable-swarm-model skill through structured fitness builds and performance scoring.
-disableModelInvocation: false
-arguments:
-  - build_hint
 triggers:
   - "fitness build"
   - "test the skill"
@@ -48,7 +44,7 @@ kimi --agent-file ~/vsm/viable-swarm-model/agents/vsm-main.yaml
 All subagents (including `vsm_trainer`) are registered in the main skill's base agent file.
 
 **Path convention**:
-- Main skill: `${KIMI_SKILL_DIR}/../viable-swarm-model/`
+- Main skill: `~/vsm/viable-swarm-model/`
 - Fitness builds: `~/vsm-fitness-builds/coach/[project-id]-[date]/`
 
 If installed elsewhere (e.g. via `extra_skill_dirs`), use symlinks or update
@@ -175,10 +171,10 @@ by the next build.
 **Step 0a: Read operational state**
 1. Check line counts: `wc -l` on each file below. If >500 lines, use `tail -n 30`
    or `grep` for targeted extraction instead of `ReadFile`.
-2. Read `${KIMI_SKILL_DIR}/references/fitness-projects.md` (coverage ledger)
-3. Read `${KIMI_SKILL_DIR}/../viable-swarm-model/references/hypotheses.md` — filter for `status: untested`
+2. Read `~/vsm/vsm-fitness-coach/references/fitness-projects.md` (coverage ledger)
+3. Read `~/vsm/viable-swarm-model/references/hypotheses.md` — filter for `status: untested`
    and hypotheses linked to recent builds
-4. Read `${KIMI_SKILL_DIR}/../viable-swarm-model/references/mutation-log.md` — read only last 30 entries
+4. Read `~/vsm/viable-swarm-model/references/mutation-log.md` — read only last 30 entries
 5. Check for `~/vsm-fitness-builds/coach/FB[N+1]-prompt-draft.md` (from Phase 6 of previous build)
 
 **Step 0b: Consume or synthesize**
@@ -264,7 +260,7 @@ The coach does NOT interfere during the build. It observes and records.
 
 Spawn `vsm_trainer` subagent with:
 - Build directory: `~/vsm-fitness-builds/coach/[project-id]-[date]/`
-- Rubric: `${KIMI_SKILL_DIR}/references/evaluation-rubric.md`
+- Rubric: `~/vsm/vsm-fitness-coach/references/evaluation-rubric.md`
 
 The trainer reads all build artifacts and the rubric, then returns a structured
 fitness report with phase scores, gap analysis, surprises, and false positives.
@@ -279,7 +275,7 @@ Skip detailed phase evidence unless a gap requires deeper investigation.
 
 Before generating new hypotheses, update the status of any hypotheses tested by this build:
 
-1. Read `${KIMI_SKILL_DIR}/../viable-swarm-model/references/hypotheses.md` using targeted
+1. Read `~/vsm/viable-swarm-model/references/hypotheses.md` using targeted
    extraction (`grep` for hypotheses linked to this build by ID).
 2. Update the **Tested by** and **Result** fields for each hypothesis tested.
 3. For each hypothesis tested, update its status based on build results:
@@ -520,7 +516,7 @@ that test the wrong things, waste build resources, and fail to validate preventi
 ## 7. The Mutation System
 
 This skill is a learning organism. It modifies its own files between sessions.
-All files in `${KIMI_SKILL_DIR}` are mutable.
+All files in `~/vsm/vsm-fitness-coach/` are mutable.
 
 ### Why Mutation Is Safe
 
@@ -528,7 +524,7 @@ The skill directory is a **git repository**. Every mutation is committed.
 If a mutation breaks viability, the user (or the skill itself) can revert:
 
 ```bash
-cd ${KIMI_SKILL_DIR}
+cd ~/vsm/vsm-fitness-coach
 git log --oneline
 git revert [commit]
 ```

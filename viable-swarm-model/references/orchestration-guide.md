@@ -28,8 +28,8 @@ in `~/.kimi/config.toml` (e.g., `max_running_tasks = 8`).
 
 When `--continue` resumes a session:
 1. Read `.kimi/lessons.md` at session start
-2. Read `${KIMI_SKILL_DIR}/references/acquired-wisdom.md`
-3. Read `${KIMI_SKILL_DIR}/references/hypotheses.md`
+2. Read `~/vsm/viable-swarm-model/references/acquired-wisdom.md`
+3. Read `~/vsm/viable-swarm-model/references/hypotheses.md`
 4. Apply relevant lessons to planning
 5. After delivery, append new lessons to both project-local and skill-global memory
 6. Over time, this creates both a project-specific and a cross-project knowledge base

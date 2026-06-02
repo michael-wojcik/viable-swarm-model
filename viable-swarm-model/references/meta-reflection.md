@@ -2,7 +2,7 @@
 
 > **Purpose**: Cross-build reflections on the viable-swarm-model skill's own
 > performance. Synthesized from individual `meta-report.md` artifacts.
-> **Location**: `${KIMI_SKILL_DIR}/references/meta-reflection.md`
+> **Location**: `~/vsm/viable-swarm-model/references/meta-reflection.md`
 > **Read by**: `vsm_meta` at startup (if present)
 > **Written by**: S5 during Phase 8, after reviewing `meta-report.md`
 

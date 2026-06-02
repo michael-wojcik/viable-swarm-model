@@ -7,10 +7,6 @@ description: >
   runs relevant audit/security phases, records results, and proposes mutations.
   Invoke with /flow:vsm-fitness-gym.
 type: flow
-whenToUse: When the user wants to run targeted scientific experiments to validate or falsify specific hypotheses about the viable-swarm-model skill's knowledge gaps.
-disableModelInvocation: false
-arguments:
-  - hypothesis_ids
 triggers:
   - "test hypothesis"
   - "run experiment"
@@ -49,7 +45,7 @@ kimi --agent-file ~/vsm/viable-swarm-model/agents/vsm-main.yaml
 The designer writes experiment code directly, preserving S5 context.
 
 **Path convention**: This skill assumes the main skill is installed at
-`${KIMI_SKILL_DIR}/../viable-swarm-model/`. If installed elsewhere,
+`~/vsm/viable-swarm-model/`. If installed elsewhere,
 adjust paths in Shell commands. If installed via `extra_skill_dirs`, use
 symlinks or update absolute paths.
 
@@ -280,7 +276,7 @@ If the agent catches it → the skill is validated (note in mutation log).
 ## 9. The Mutation System
 
 This skill is a learning organism. It modifies its own files between sessions.
-All files in `${KIMI_SKILL_DIR}` are mutable.
+All files in `~/vsm/vsm-fitness-gym/` are mutable.
 
 ### Why Mutation Is Safe
 
@@ -288,7 +284,7 @@ The skill directory is a **git repository**. Every mutation is committed.
 If a mutation breaks viability, the user (or the skill itself) can revert:
 
 ```bash
-cd ${KIMI_SKILL_DIR}
+cd ~/vsm/vsm-fitness-gym
 git log --oneline
 git revert [commit]
 ```
