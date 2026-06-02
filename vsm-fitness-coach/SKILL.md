@@ -434,6 +434,33 @@ Structural Mutation Gate is cleared, **automatically synthesize** the next
 build prompt. This is not optional — it is the causal output of the current
 build's empirical results.
 
+#### Regression Build Mode (Every 5th Build)
+
+Every 5th fitness build (FB5, FB10, FB15, FB20, FB25...) is a **regression
+build** instead of a new domain build. This measures whether mutations have
+improved or degraded skill performance over time.
+
+**Regression build rules**:
+1. Select the highest-scoring previous build that scored ≥ 4.0 as the "gold
+   standard." If no build scored ≥ 4.0, select the highest-scoring build.
+2. Re-run the **exact same prompt** as the gold standard build.
+3. Do NOT modify the prompt to add new traps or requirements.
+4. After the regression build completes, compare the new score to the gold
+   standard score.
+
+**Score comparison**:
+- **New score ≥ gold standard**: Mutations are working or neutral. Proceed with
+  normal next-build synthesis.
+- **New score < gold standard**: A mutation broke something. This is a CRITICAL
+  finding. Propose a **mutation review**: identify which mutations applied
+  since the gold standard build may have caused the regression. Flag
+  suspicious mutations in `mutation-log.md` for effectiveness audit.
+
+**Is this a regression build?** Check the build ID: if FB[N] where N mod 5 == 0,
+it is a regression build. Skip to "Step R: Write regression build prompt" below.
+
+---
+
 Follow this synthesis protocol **exactly**. Do not skip steps.
 
 #### Step 1: Read all source material
@@ -510,6 +537,19 @@ If ANY check fails: revise the prompt. Do NOT write the file with known gaps.
 1. Fill `assets/prompt-template.md` with the synthesized content
 2. Write to `~/vsm-fitness-builds/coach/FB[N+1]-prompt-draft.md`
 3. Verify the file is complete and self-contained (no references to external context)
+
+#### Step R: Write regression build prompt (Regression Mode Only)
+If this is a regression build (every 5th build):
+1. Read the gold standard build's prompt from
+   `~/vsm-fitness-builds/coach/[FB#]-prompt-draft.md`.
+2. Copy it verbatim to `~/vsm-fitness-builds/coach/FB[N+1]-prompt-draft.md`.
+3. Add a header note:
+   ```markdown
+   > **REGRESSION BUILD**: This is a re-run of [FB#] (gold standard, score [X]/5.0).
+   > The prompt is copied verbatim to measure whether mutations since [FB#]
+   > have improved or degraded skill performance. Do NOT modify requirements.
+   ```
+4. Verify the copied prompt is complete and self-contained.
 
 **Git scope**: The prompt draft is a build artifact for the *next* fitness build. It lives
 in `~/vsm-fitness-builds/coach/` (outside the skill repo) and **must NOT be committed**

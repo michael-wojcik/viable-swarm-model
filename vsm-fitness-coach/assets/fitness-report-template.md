@@ -115,6 +115,25 @@ Is the skill improving? Which phases are getting better? Which are getting worse
 |-------|---------------|---------------|-------|
 | [Phase] | [score] | [score] | ↑ / ↓ / → |
 
+### Regression Build Comparison (if applicable)
+
+[Only for regression builds (every 5th build). Compare to the gold standard build.]
+
+| Metric | Gold Standard ([FB#]) | This Build | Delta |
+|--------|----------------------|------------|-------|
+| Overall Score | [X]/5.0 | [Y]/5.0 | [+/- Z] |
+| Lowest Phase | [phase] | [phase] | — |
+| BLOCKERs Found | [N] | [M] | [+/-] |
+
+**Regression Verdict**: [Improved / Stable / Regressed]
+
+If **Regressed**: List mutations applied since the gold standard build that may
+have caused the regression. Flag for mutation review.
+
+| Mutation | Applied Since | Suspicious? | Action |
+|----------|--------------|-------------|--------|
+| [M#] | [FB#] | Yes / No | Review / Clear |
+
 ---
 
 ## Recommendations
