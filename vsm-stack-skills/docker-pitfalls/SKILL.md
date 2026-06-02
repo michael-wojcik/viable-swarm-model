@@ -100,3 +100,13 @@ module (e.g., `celery -A app.celery_app`), verify the module path matches the
 actual file layout inside the container. If `WORKDIR` is `/app` and the module is
 `celery_app.py` at the root, the correct command is `celery -A celery_app`, NOT
 `celery -A app.celery_app`.
+
+## Dockerfile COPY Syntax Purity (FB25)
+Dockerfile `COPY`, `ADD`, and non-`RUN` instructions MUST use pure Dockerfile
+syntax ONLY. Never embed shell operators (`||`, `&&`, `>`, `2>/dev/null`,
+`|`, `;`) in COPY/ADD instructions. If a file might not exist, use a separate
+`RUN` step or omit the COPY and document the fallback.
+
+**Source**: FB25 `frontend/Dockerfile` contained
+`COPY nginx.conf /etc/nginx/conf.d/default.conf 2>/dev/null || true`,
+which Docker's COPY parser rejected as invalid syntax.

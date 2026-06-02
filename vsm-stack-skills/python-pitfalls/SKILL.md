@@ -150,3 +150,17 @@ are a BLOCKER. The allowlist and the data model must be identical.
 **Source**: FB22 `auth.py` had `ALLOWED_ROLES = ["viewer", "editor", "admin"]`
 but data model defined `"viewer"`, `"responder"`, `"admin"`. `"editor"` did not
 exist; `"responder"` was missing (H151).
+
+## Celery Module-Level App Guard (FB25)
+For any module consumed by `celery -A module worker`, the module MUST expose a
+top-level `app` object. If module-level instantiation risks env-dependent crashes
+(e.g., `get_settings()` on import), guard it with an env var skip flag:
+
+```python
+import os
+if os.environ.get("_CELERY_SKIP_IMPORT") != "1":
+    app = create_celery_app()
+```
+
+**Source**: FB25 `celery_app.py` had only a factory; `celery -A app.celery_app worker`
+failed because the CLI could not find `app.celery_app.app`.

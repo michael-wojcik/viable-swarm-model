@@ -50,3 +50,23 @@ pitfall skills.
 ## WebSocket-Specific
 - Auth must be in-band, never in URL
   → See `anti-patterns.md` #5 / `security-lessons.md` L16
+
+## Async Worker Defense-in-Depth (FB25)
+Celery tasks (and other async workers) that operate on user-owned resources
+MUST re-verify ownership boundaries inside the worker. Do not trust enqueue-time
+validation alone. A malicious actor could craft a task payload targeting another
+user's resources.
+
+Pattern:
+```python
+@shared_task
+def process_user_resource(resource_id: str, user_id: str):
+    resource = await db.get(Resource, resource_id)
+    if str(resource.owner_id) != user_id:
+        logger.error("Ownership mismatch")
+        return {"status": "failed", "errors": ["Access denied"]}
+    # ... process resource
+```
+
+**Source**: FB25 `process_csv_import` task did not verify the target budget
+belonged to the user_id passed in the task arguments.
