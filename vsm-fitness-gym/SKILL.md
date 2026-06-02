@@ -165,12 +165,17 @@ flowchart TD
 
 ## 6. Phase Details
 
-### Gym Phase 0: Read Hypotheses
-Check line count: `wc -l ~/vsm/viable-swarm-model/references/hypotheses.md`.
-If >500 lines, use `grep "status: untested"` and `grep -B 2 -A 8` for targeted
-extraction instead of `ReadFile`.
+### Gym Phase 0: Read Hypotheses + Broker Digest
 
-Filter for `status: untested`. Present to user (S5) for selection.
+1. Check line count: `wc -l ~/vsm/viable-swarm-model/references/hypotheses.md`.
+   If >500 lines, use `grep "status: untested"` and `grep -B 2 -A 8` for targeted
+   extraction instead of `ReadFile`.
+2. Read `~/vsm/viable-swarm-model/references/knowledge-broker.md` — cross-skill
+   digest of main skill gaps and coach-scored weaknesses. Prioritize hypotheses
+   that address recently identified active failure modes.
+3. Filter hypotheses for `status: untested`. Present to user (S5) for selection,
+   ordered by: (a) relevance to knowledge-broker gaps, (b) confidence level,
+   (c) time since last test.
 
 ### Gym Phase 1: Design Experiments
 For each selected hypothesis, spawn `vsm_experiment_designer` subagent.

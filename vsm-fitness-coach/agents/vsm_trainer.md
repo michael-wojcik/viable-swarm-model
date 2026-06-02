@@ -140,6 +140,27 @@ Produce a structured fitness report using this template:
 
 ---
 
+## Mutation Effectiveness Backfill (REQUIRED)
+
+> This section is MANDATORY. The coach S5 will use this table to update the
+> "Measured effect" field for every mutation in `references/mutation-log.md`.
+> If this section is missing, the `stop-verifier.sh` hook will block session end.
+
+For each mutation evaluated above, output a backfill entry in this exact format:
+
+```
+## Backfill: [Mutation ID]
+**Measured effect**: [Effective / Ineffective / Partially effective]
+**Evidence**: [Specific evidence from this build — e.g., "Target failure (stub pages) recurred in frontend/src/pages/Dashboard.tsx" or "No inline fixes detected during Phase 6/7 boundary"]
+**Score**: [1-5, where 5 = fully prevented target failure, 1 = failure recurred unchanged]
+**Proposed action**: [Keep / Remove / Redesign / Consolidate]
+**Rationale**: [Why this action is justified]
+```
+
+**Backfill entries**: [count] (must equal number of mutations audited above)
+
+---
+
 ## Summary
 
 [One-paragraph executive summary: Is the skill improving, stagnating, or regressing? Any structural concerns?]

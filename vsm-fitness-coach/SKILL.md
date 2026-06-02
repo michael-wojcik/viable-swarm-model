@@ -175,7 +175,10 @@ by the next build.
 3. Read `~/vsm/viable-swarm-model/references/hypotheses.md` — filter for `status: untested`
    and hypotheses linked to recent builds
 4. Read `~/vsm/viable-swarm-model/references/mutation-log.md` — read only last 30 entries
-5. Check for `~/vsm-fitness-builds/coach/FB[N+1]-prompt-draft.md` (from Phase 6 of previous build)
+5. Read `~/vsm/viable-swarm-model/references/knowledge-broker.md` — cross-skill digest
+   from main skill gaps and gym experiment results. Use this to design build traps
+   that target recently identified weaknesses.
+6. Check for `~/vsm-fitness-builds/coach/FB[N+1]-prompt-draft.md` (from Phase 6 of previous build)
 
 **Step 0b: Consume or synthesize**
 - **If a prompt draft exists**: Use it directly as the build specification.

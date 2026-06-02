@@ -34,8 +34,19 @@ targeted workouts).
 
 **How learning works**:
 1. At startup (Phase 0), the skill reads its own skill-level reference files
-   (`references/acquired-wisdom.md`, `references/meta-reflection.md`) and the
+   (`references/acquired-wisdom.md`, `references/skill-state.md`, `references/meta-reflection.md`) and the
    project-local `.kimi/lessons.md`.
+
+   **Structural Enforcement (Hooks)**: This skill uses kimi-cli hooks for
+   un-bypassable enforcement. Hooks are configured in `~/.kimi/config.toml` and
+   run in the local shell — S5 cannot override them. Active hooks:
+   - `gate-guardian`: Blocks fraudulent Phase 4 gate-pass documents
+   - `boundary-guardian`: Blocks inline fixes during Phase 6/7 boundary
+   - `structural-guardian`: Blocks unapproved SKILL.md/architecture changes
+   - `stop-verifier`: Blocks session end if Phase 8c-ii is incomplete
+   - `telemetry-logger` + `subagent-counter`: Log all tool/agent usage
+   - `session-start/end`: Load/skill-state.md and efficiency baselines
+   - `knowledge-broker`: Write cross-skill digests on session end
 
    **File Location Convention**:
    - `references/` in the skill repo (`~/vsm/viable-swarm-model/references/`) →
@@ -440,11 +451,17 @@ Main agent (S5) performs:
 3. **Read project memory**: `.kimi/lessons.md` if exists.
 4. **Read acquired wisdom**: `~/vsm/viable-swarm-model/references/acquired-wisdom.md`
    if exists.
-5. **Read hypotheses**: `~/vsm/viable-swarm-model/references/hypotheses.md`
+5. **Read skill state**: `~/vsm/viable-swarm-model/references/skill-state.md`
+   if exists. This is the organism's self-model — it knows what it is good/bad at,
+   what its current "mood" is, and which mutations are pending measurement.
+6. **Read knowledge broker**: `~/vsm/viable-swarm-model/references/knowledge-broker.md`
+   if exists. This contains cross-skill digests from coach and gym — recent gaps,
+   confirmed hypotheses, and suggested experiments.
+7. **Read hypotheses**: `~/vsm/viable-swarm-model/references/hypotheses.md`
    if exists. Note any untested hypotheses that are relevant to this project.
-6. **Read meta-reflection**: `~/vsm/viable-swarm-model/references/meta-reflection.md`
+8. **Read meta-reflection**: `~/vsm/viable-swarm-model/references/meta-reflection.md`
    if exists.
-7. **Self-test**: Verify all referenced files exist and are readable. Verify
+9. **Self-test**: Verify all referenced files exist and are readable. Verify
 the flow diagram parses. Verify the skill can describe its own phase sequence
 without contradiction. Specifically verify these custom agent definition files exist:
 `vsm-main.yaml`, `vsm_architect.yaml`, `vsm_product.yaml`, `vsm_auditor.yaml`,
@@ -454,7 +471,7 @@ without contradiction. Specifically verify these custom agent definition files e
 `vsm_frontend_tester.yaml`, `vsm_meta.yaml`, `vsm_process_auditor.yaml`, `vsm_explore.yaml`.
 If any check fails → emit algedonic, write diagnosis
 to `~/vsm/viable-swarm-model/references/mutation-log.md`, ask user to review.
-8. **Agent-File Verification**: Spawn a trivial `vsm_meta` subagent with the task
+10. **Agent-File Verification**: Spawn a trivial `vsm_meta` subagent with the task
 `"Reply 'ok'"`. If this fails with an unknown subagent type error, **STOP immediately**.
 Emit algedonic: `--agent-file not loaded. Launch with: kimi --agent-file ~/vsm/viable-swarm-model/agents/vsm-main.yaml`.
 Do not proceed with the build.
@@ -979,6 +996,11 @@ For EVERY mutation logged in this build (both in `references/mutation-log.md` an
 before Phase 8c-ii is complete. If empty, fill it now based on this build's
 results: Did the mutation prevent its target failure? Did it have no observable
 effect? Did it cause a new issue?
+
+> **Hook enforcement**: The `stop-verifier.sh` hook (Stop event) will BLOCK
+> session completion if `mutations-applied.md` is missing OR if any mutation has
+> a pending/empty "Measured effect" field. S5 cannot bypass this — the hook runs
+> in the local shell and will append a blocking message to context.
 
 **Step 8c-6: Mutation removal gate**
 Count mutations scored as ineffective (1–2 on the 1–5 effectiveness scale) in
