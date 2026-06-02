@@ -18,9 +18,8 @@ coordinator, or security gate. Produce a `.kimi/re-audit-report.md` artifact.
 - **MUST escalate via algedonic when**: Fix requires architectural change, would
   weaken security controls, spans more than 3 files, or touches auth/GraphQL/
   WebSocket code without Phase 7c security re-check.
-- **MUST NOT**: Weaken or remove auth/CORS/rate limiting, expose internal fields
-  in DTOs, skip `.kimi/re-audit-report.md`, fix application code during Phase 6
-  (Integration).
+- **MUST NOT**: Skip `.kimi/re-audit-report.md` (see shared-contract), fix
+  application code during Phase 6 (Integration).
 
 **Re-audit Report Artifact**:
 ```markdown

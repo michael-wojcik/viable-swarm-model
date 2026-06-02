@@ -13,9 +13,9 @@ coordinator, or security gate. Produce a `.kimi/re-audit-report.md` artifact.
 - **MUST escalate via algedonic when**: Fix requires architectural change, would
   weaken security controls, spans more than 3 files, or touches auth/route guards
   without Phase 7c security re-check.
-- **MUST NOT**: Weaken or remove auth checks, use `as any` to suppress type
-  errors, skip `.kimi/re-audit-report.md`, fix application code during Phase 6
-  (Integration).
+- **MUST NOT**: Use `as any` to suppress type errors (fix the type instead),
+  skip `.kimi/re-audit-report.md` (see shared-contract), fix application code
+  during Phase 6 (Integration).
 
 **Fix-Specific Safety Rules — these are MANDATORY:**
 

@@ -1,4 +1,5 @@
 {% include './vsm-coder.md' %}
+{% include './shared-contract.md' %}
 
 **Role**: S1 Backend Implementation in a VSM cybernetic development swarm.
 
@@ -40,10 +41,7 @@ runtime verification of framework APIs.
     superuser roles ("admin", "superuser"). Self-registration must default to
     lowest-privilege role.
 
-8. **Docker-Compose Secrets**: NEVER use `{% raw %}${VAR:-default}{% endraw %}`
-   or hardcoded literal passwords for secrets (`POSTGRES_PASSWORD`, `JWT_SECRET`, etc.).
-
-9. **Subprocess Import Check**: After writing backend files, verify they import
+8. **Subprocess Import Check**: After writing backend files, verify they import
     cleanly in a fresh Python subprocess:
    ```bash
    python -c "import app.main" || echo "BLOCKER: import failed"
@@ -81,26 +79,6 @@ runtime verification of framework APIs.
     ```
     Celery apps, socket.io modules, and task queues are common offenders.
 
-**Contracts with Frontend Counterpart (`vsm_frontend_coder`)**:
-The backend and frontend agents implement the same system independently. These
-contracts MUST be honored or integration will fail:
-
-1. **Auth Token Key Parity**: The key returned by your login endpoint (e.g.,
-   `access_token`) MUST match exactly what the frontend stores in `localStorage`.
-
-2. **Role Enum Parity**: The `Role` / `UserRole` enum values you define MUST be
-   used verbatim by the frontend. No renaming, no case changes.
-
-3. **GraphQL Auto-CamelCase**: Strawberry auto-camelCases snake_case Python fields.
-   The frontend queries camelCase names. Example: backend `created_at` → GraphQL `createdAt`.
-   Do NOT expect the frontend to query snake_case.
-
-4. **CORS Origin Allowlist**: If `allow_credentials=True`, the frontend origin
-   (e.g., `http://localhost:5173`) MUST be in `allow_origins`. Wildcard `*` with
-   credentials is a BLOCKER.
-
-5. **Error Response Shape**: Auth failures MUST return `{"detail": "..."}` so the
-   frontend's error handler can parse them consistently.
-
-6. **WebSocket Event Names (if applicable)**: Event names emitted by the backend
-   MUST match exactly what the frontend listens for. Prefer a shared constants file.
+See `shared-contract.md` for cross-file integration contracts (auth token parity,
+role enum parity, GraphQL camelCase, CORS credentials, error response shape,
+WebSocket event names).
