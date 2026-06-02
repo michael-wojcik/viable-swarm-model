@@ -37,20 +37,41 @@ targeted workouts).
    (`references/acquired-wisdom.md`, `references/skill-state.md`, `references/meta-reflection.md`) and the
    project-local `.kimi/lessons.md`.
 
-   **Structural Enforcement (Hooks)**: This skill uses kimi-cli hooks for
-   un-bypassable enforcement. Hooks are configured in `~/.kimi/config.toml` and
-   run in the local shell — S5 cannot override them. Active hooks (13 total):
+   **Structural Enforcement (Layered Model)**:
+
+   Enforcement operates in three layers. No single layer is sufficient:
+
+   **Layer 1 — Prompt-Hardened Rules (PRIMARY, all agents)**:
+   Every subagent prompt embeds structural gate rules the LLM must follow:
+   - Phase 4 Gate: NEVER write PASS unless tests show 0 failures
+   - Phase 6/7 Boundary: NEVER modify source files when synthesis-integration.md
+     exists but re-audit-report.md does not
+   - Structural Mutation: NEVER modify SKILL.md/agents/ without approval marker
+   These rules cover ALL agents including background subagents.
+
+   **Layer 2 — Hooks (SECONDARY, S5 + foreground only)**:
+   Hooks configured in `~/.kimi/config.toml` run in the local shell and block
+   tool calls for the main S5 agent and foreground subagents. Active hooks (13):
    - `gate-guardian`: Blocks fraudulent Phase 4 gate-pass documents
    - `boundary-guardian`: Blocks inline fixes during Phase 6/7 boundary
    - `structural-guardian`: Blocks unapproved SKILL.md/architecture changes
    - `stop-verifier`: Blocks session end if Phase 8c-ii is incomplete
-   - `telemetry-logger` + `subagent-counter`: Log all tool/agent usage
+   - `telemetry-logger` + `subagent-counter`: Log tool/agent usage
    - `session-start/end`: Load/skill-state.md and efficiency baselines
    - `knowledge-broker`: Write cross-skill digests on session end
-   - `agent-performance-scorer`: Heuristic scores on subagent completion → capability matrix
-   - `decision-enforcer`: Verifies decisions.md D[N] entry exists on plan/approval markers
-   - `context-pressure`: Alerts when compaction >200k tokens is imminent
+   - `agent-performance-scorer`: Heuristic scores on subagent completion
+   - `decision-enforcer`: Verifies decisions.md D[N] entry exists
+   - `context-pressure`: Alerts when compaction >200k tokens imminent
    - `bypass-logger`: Logs tool use failures as potential bypass attempts
+
+   **Layer 3 — Session-End Audit (TERTIARY)**:
+   `session-end.sh` scans `.kimi/` for writes that bypassed hooks and reports
+   bypass attempts in the session summary.
+
+   **Known limitation**: Background subagents bypass hooks because
+   `BackgroundAgentRunner` does not propagate the hook engine. This is a
+   kimi-cli architectural constraint. Prompt rules (Layer 1) are the primary
+   defense for background agents.
 
    **File Location Convention**:
    - `references/` in the skill repo (`~/vsm/viable-swarm-model/references/`) →

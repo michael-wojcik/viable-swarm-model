@@ -56,6 +56,33 @@ if [[ -f "$TELEMETRY_DIR/sessions.jsonl" ]]; then
     fi
 fi
 
+# ── Background Agent Bypass Audit ──
+# Hooks do NOT fire for background subagents. Scan for evidence of bypasses.
+AUDIT_WARNINGS=""
+
+# Check 1: Unverified phase4-gate.md with PASS
+if [[ -f "$CWD/.kimi/phase4-gate.md" ]] && grep -qi "PASS" "$CWD/.kimi/phase4-gate.md" 2>/dev/null; then
+    if [[ ! -f "$CWD/.kimi/.gate-guardian-verified" ]]; then
+        AUDIT_WARNINGS="${AUDIT_WARNINGS}AUDIT: phase4-gate.md contains PASS but no hook verification marker. Possible background agent bypass.\n"
+    fi
+fi
+
+# Check 2: Boundary window violations
+if [[ -f "$CWD/.kimi/synthesis-integration.md" ]] && [[ ! -f "$CWD/.kimi/re-audit-report.md" ]]; then
+    # Note: precise mtime comparison is unreliable cross-platform; flag for manual review
+    AUDIT_WARNINGS="${AUDIT_WARNINGS}AUDIT: Boundary window open (synthesis-integration.md exists, re-audit-report.md missing). Review for inline fixes.\n"
+fi
+
+# Check 3: Unapproved structural changes
+if [[ ! -f "$CWD/.kimi/.structural-mutation-approved" ]]; then
+    if [[ -f "$CWD/SKILL.md" ]] && [[ -f "$TELEMETRY_DIR/sessions.jsonl" ]]; then
+        # Simple heuristic: if SKILL.md mtime is after session start, flag it
+        SESSION_START_FILE="$TELEMETRY_DIR/sessions.jsonl"
+        # This is a coarse check — precise tracking would need session-start marker file
+        AUDIT_WARNINGS="${AUDIT_WARNINGS}AUDIT: No structural mutation approval marker. If SKILL.md or agents/ were modified this session, it was unapproved.\n"
+    fi
+fi
+
 # Build telemetry update block
 UPDATE_BLOCK=$(cat << EOF
 
@@ -70,6 +97,13 @@ UPDATE_BLOCK=$(cat << EOF
 | Stop reason | $REASON |
 EOF
 )
+
+# Append audit warnings if any
+if [[ -n "$AUDIT_WARNINGS" ]]; then
+    UPDATE_BLOCK="${UPDATE_BLOCK}
+| Bypass audit | WARNINGS DETECTED |
+${AUDIT_WARNINGS}"
+fi
 
 # Append to skill-state.md if it exists
 if [[ -f "$SKILL_STATE" ]]; then

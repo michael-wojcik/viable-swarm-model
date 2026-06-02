@@ -30,6 +30,13 @@ echo "========================================"
 echo "VSM Hook Validation Test Suite"
 echo "========================================"
 echo ""
+echo "NOTE: These tests validate hook scripts in isolation."
+echo "They do NOT test kimi-cli integration. A known limitation"
+echo "(confirmed 2026-06-02): Background subagents bypass hooks"
+echo "because BackgroundAgentRunner does not propagate hook_engine."
+echo "Primary enforcement is prompt-hardened rules in agent files."
+echo "Hooks remain as secondary safety net for S5 + foreground."
+echo ""
 
 # --- Test 1: gate-guardian blocks fraudulent PASS ---
 echo "Test 1: gate-guardian blocks fraudulent phase4-gate.md PASS..."

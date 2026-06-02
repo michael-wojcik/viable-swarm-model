@@ -23,6 +23,10 @@
 - **Domain struggle**: "Frontend builds: 4 consecutive stub pages (FB21–FB24)"
 - **Agent concern**: "vsm_frontend_coder consistency declining (scores: 3→2→2)"
 - **Risk elevation**: "Time pressure detected — high file-write velocity in FB24"
+- **CRITICAL (2026-06-02)**: Background subagents bypass all PreToolUse/PostToolUse hooks.
+  Primary enforcement shifted to in-prompt mandatory rules. Hooks remain as
+  secondary safety net for S5 + foreground agents. See plan amendment
+  `winter-soldier-aqualad-power-girl-amendment.md`.
 - **Systemic diagnosis**: "Detection ≠ Enforcement. S5 self-discipline degrades under pressure."
 
 ## Hook Enforcement Baseline
@@ -35,13 +39,16 @@
 - Active hooks: 0
 - Tests per gate: advisory only (no enforcement)
 
-### After targets (FB25–FB29, under hook enforcement)
+### After targets (FB25–FB29, under layered enforcement)
 - Mutation removals per 5 builds: ≥1
-- Measured effect fill rate: ≥80%
-- S5 bypassed gates: 0
+- Measured effect fill rate: ≥60% (revised from 80% — prompt enforcement is
+  probabilistic, not deterministic like hooks)
+- S5 + subagent bypassed gates: ≤1 (revised from 0 — prompt rules are strong
+  but not absolute; combined with hooks for foreground + session audit)
 - Reference files loaded at Phase 0: 7+
-- Active hooks: 13
-- Tests per gate: automated + live
+- Active hooks: 13 (secondary layer for S5 + foreground)
+- Prompt-hardened agents: ALL writing agents (primary layer)
+- Tests per gate: automated + live + prompt-rule verification
 
 ## Active Mutation Portfolio
 | Mutation ID | Target Failure | Applied | Measured Effect | Status |
@@ -76,6 +83,9 @@
 | H201: Custom agent files reduce tokens by >30% | 60% | NEVER | HIGH | untested |
 | H202: Tool-enforced read-only boundaries > prompt-only | 85% | NEVER | CRITICAL | untested — hooks now test this |
 | H203: SQLAlchemy Mapped[Enum] = mapped_column(String) bug | 80% | NEVER | MEDIUM | untested |
+| H300: Background subagents bypass hooks | **CONFIRMED** | 2026-06-02 | CRITICAL | confirmed — BackgroundAgentRunner lacks set_hook_engine |
+| H301: Prompt-hardened rules prevent background bypasses | 70% | NEVER | HIGH | untested — implemented 2026-06-02 |
+| H302: session-end audit catches residual bypasses | 50% | NEVER | MEDIUM | untested — implemented 2026-06-02 |
 
 ## Algedonic Telemetry
 | Build | Emissions | Heeded | Ignored | Ignored Rate |
@@ -91,9 +101,9 @@
 - **T1**: "Frontend builds: 4 consecutive stub pages (FB21–FB24)" (Confidence: HIGH)
   - Action: Pre-emptively inject "no stubs" constraint to vsm_frontend_coder
 - **T2**: "Phase 4 gate bypassed when exactly 1 test fails" (Confidence: HIGH)
-  - Action: Gate guardian hook hardened (see Phase 3a)
+  - Action: Prompt-hardened gate rule in ALL agent prompts + gate-guardian hook
 - **T3**: "Inline fixes during Phase 6/7 boundary in 3 of last 5 builds" (Confidence: HIGH)
-  - Action: Boundary guardian hook activated (see Phase 3b)
+  - Action: Prompt-hardened boundary rule in ALL agent prompts + boundary-guardian hook
 - **T4**: "Security gate misses enum runtime bugs in 2 consecutive builds" (Confidence: MEDIUM)
   - Action: Elevate enum type-safety to BLOCKER in security audit
 
