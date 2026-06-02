@@ -1,0 +1,14 @@
+version: 1
+agent:
+  extend: ./vsm-reporter.yaml
+  name: vsm_process_auditor
+  system_prompt_path: ./vsm_process_auditor.md
+  system_prompt_args:
+    VSM_ROLE: S5 Process Audit
+  tools:
+  - kimi_cli.tools.file:ReadFile
+  - kimi_cli.tools.file:Glob
+  - kimi_cli.tools.file:Grep
+  - kimi_cli.tools.file:WriteFile
+  - kimi_cli.tools.think:Think
+  - kimi_cli.tools.todo:SetTodoList

@@ -123,6 +123,7 @@ build.
 | **S1-Frontend-Tester** | `vsm_frontend_tester` subagent | `vsm-tester` | Custom | Phase 4 | Frontend tests (framework test runner), build verification |
 | **Security** | `vsm_security` subagent | `vsm-reporter` | Custom | Phase 5 | Security findings |
 | **S5-Meta** | `vsm_meta` subagent | `vsm-reporter` | Custom | Phase 8b | Performance evaluation, hypothesis generation |
+| **S5-Process** | `vsm_process_auditor` subagent | `vsm-reporter` | Custom | Phase 8b | Process compliance audit (gate files, re-audit reports) |
 | **S1-DevOps** | `vsm_devops_coder` subagent | `vsm-coder` | Custom | Phase 4 | Docker, CI/CD |
 | **Algedonic** | Main agent detects/stops | — | — | Any phase | TaskStop, AskUserQuestion |
 
@@ -245,6 +246,7 @@ and proposes mutations. Not spawned during normal build flows — invoked via
 - `vsm_coordinator` (custom) — cross-file contract validation, `.kimi/integration-contract.md`
 - `vsm_security` (custom) — security audit, `.kimi/security-report.md`
 - `vsm_meta` (custom) — performance evaluation, `.kimi/meta-report.md`
+- `vsm_process_auditor` (custom) — process compliance, `.kimi/process-audit.md`
 - `vsm_explore` (custom) — read-only exploration, optionally `.kimi/explore-findings.md`
 
 ### 4.1 Agent Architecture
@@ -325,8 +327,8 @@ flowchart TD
     P7S[Phase 7c Post-Fix Security Re-Check<br/>vsm_security on modified auth/GraphQL/WebSocket]
     P7F{<choice>regressions found</choice>?}
     P8[Phase 8: Reflection<br/>Append to .kimi/lessons.md]
-    P8M[Phase 8b: Meta-Reflection + Hypothesis Generation<br/>Evaluate performance<br/>Write new hypotheses to hypotheses.md<br/>Bucket mutations: append-only vs refinement vs structural]
-    P8V{.kimi/meta-report<br/>valid?}
+    P8M[Phase 8b: Meta-Reflection + Hypothesis Generation<br/>Spawn vsm_meta + vsm_process_auditor<br/>Evaluate performance + process compliance<br/>Write new hypotheses to hypotheses.md<br/>Bucket mutations: append-only vs refinement vs structural]
+    P8V{.kimi/meta-report<br/>&& process-audit<br/>valid?}
     P8W[Write append-only mutations<br/>security-lessons.md, pattern-library.md,<br/>anti-patterns.md, integration-checklist.md,<br/>experiments.md, hypotheses.md,<br/>mutation-log.md]
     P8R[Apply refinement mutations<br/>Single file, preserve structure<br/>agents/*.md, references/*.md]
     P8A{<choice>structural mutations<br/>approved by user</choice>?}
@@ -431,7 +433,7 @@ without contradiction. Specifically verify these custom agent definition files e
 `vsm_coordinator.yaml`, `vsm_wiring.yaml`, `vsm_backend_coder.yaml`,
 `vsm_frontend_coder.yaml`, `vsm_backend_fix_agent.yaml`, `vsm_frontend_fix_agent.yaml`,
 `vsm_devops_coder.yaml`, `vsm_security.yaml`, `vsm_backend_tester.yaml`,
-`vsm_frontend_tester.yaml`, `vsm_meta.yaml`, `vsm_explore.yaml`.
+`vsm_frontend_tester.yaml`, `vsm_meta.yaml`, `vsm_process_auditor.yaml`, `vsm_explore.yaml`.
 If any check fails → emit algedonic, write diagnosis
 to `~/vsm/viable-swarm-model/references/mutation-log.md`, ask user to review.
 6b. **Agent-File Verification**: Spawn a trivial `vsm_meta` subagent with the task
@@ -684,6 +686,16 @@ or deprioritize test failures (e.g., "just an enum edge case", "only 1 of 85").
 Any non-zero failure count routes to Phase 7. The gate verdict file is evidence
 for the fitness coach's process audit.
 
+**Gate Bypass Prevention (CRITICAL)**
+- S5 MUST verify `.kimi/phase4-gate.md` exists and contains `PASS` before spawning
+  ANY Phase 5 or Phase 6 agent.
+- If the gate file does not exist, is empty, or contains `BLOCK`, STOP immediately.
+- Do NOT proceed to Phase 5 by "checking the tests informally" or "trusting the
+  tester agent's verbal report." The gate file is the single source of truth.
+- **Algedonic signal**: If you find yourself about to spawn a Phase 5 agent
+  without a `PASS` gate file on disk, emit an algedonic: "Phase 4 gate bypass
+  detected. Halting." Then write the gate file with `BLOCK` and route to Phase 7.
+
 **Agent Report Artifacts (MANDATORY)**
 All audit/security/coordinator agents now have `WriteFile` restricted to their own
 report artifacts. They MUST write their reports to the `.kimi/` subdirectory in
@@ -695,6 +707,7 @@ Name convention:
 - Backend Fix Agent → `.kimi/re-audit-report.md`
 - Frontend Fix Agent → `.kimi/re-audit-report.md`
 - Meta → `.kimi/meta-report.md`
+- Process Auditor → `.kimi/process-audit.md`
 - Explore (optional) → `.kimi/explore-findings.md`
 
 If an agent fails to produce its report artifact, S5 MUST prompt it to write the
@@ -708,7 +721,7 @@ artifacts. This separates metadata from source code:
 | Location | Purpose |
 |---|---|
 | **Build root** | Source code, configs, design docs (`plan.md`, `architecture.md`, `docker-compose.yml`) |
-| **`.kimi/`** | Agent reports, evaluations, mutation tracking (`lessons.md`, `meta-report.md`, `mutations-applied.md`, `re-audit-report.md`, `security-report.md`, `integration-contract.md`, `explore-findings.md`) |
+| **`.kimi/`** | Agent reports, evaluations, mutation tracking (`lessons.md`, `meta-report.md`, `mutations-applied.md`, `re-audit-report.md`, `security-report.md`, `integration-contract.md`, `process-audit.md`, `explore-findings.md`) |
 | **`references/`** | Persistent skill knowledge (`acquired-wisdom.md`, `hypotheses.md`, `pattern-library.md`, `mutation-log.md`) |
 
 Agents with `WriteFile` MUST restrict usage to their own `.kimi/` artifact or
@@ -871,17 +884,25 @@ S5 MUST spawn `vsm_meta` before proceeding. `vsm_meta` produces the per-build
 `.kimi/meta-report.md`. S5 then synthesizes cross-build insights and appends them to
 `~/vsm/viable-swarm-model/references/meta-reflection.md`.
 
-**Step 8b-2: Verify `.kimi/meta-report.md` exists and is valid**
+**Step 8b-2: Spawn `vsm_process_auditor` (MANDATORY)**
+After `vsm_meta` completes, spawn `vsm_process_auditor` to audit process
+compliance. This agent reads `.kimi/` artifacts and produces
+`.kimi/process-audit.md` with a compliance score and any process violations
+found. Process violations are separate from code quality issues — they indicate
+that the build workflow itself was not followed correctly.
+
+**Step 8b-3: Verify `.kimi/meta-report.md` and `.kimi/process-audit.md` exist and are valid**
 Before declaring Phase 8b complete, verify ALL of the following:
 1. `.kimi/meta-report.md` exists in the build directory.
 2. It was produced by `vsm_meta`, not written by S5. (Check for "Agent Performance Scores" table — S5 typically omits this structured section.)
 3. It contains a **Phase Audit** section with process violation analysis.
 4. It contains **Hypotheses Generated** with at least one falsifiable hypothesis.
-5. `.kimi/mutations-applied.md` exists in the build directory with a complete
+5. `.kimi/process-audit.md` exists and contains a compliance score.
+6. `.kimi/mutations-applied.md` exists in the build directory with a complete
    mutation tracking table (per Phase 8c). If missing, Phase 8b is NOT complete.
 
-If any check fails, Phase 8b is NOT complete. Re-spawn `vsm_meta` with explicit
-instructions to include the missing sections.
+If any check fails, Phase 8b is NOT complete. Re-spawn the relevant agent with
+explicit instructions to include the missing sections.
 
 > **Algedonic signal**: If S5 is about to write `.kimi/meta-report.md` manually,
 > STOP immediately. This is a process violation. The builder cannot evaluate
