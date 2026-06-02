@@ -34,3 +34,23 @@ NOT acceptable. Each page MUST specify at least ONE of:
 
 If a page cannot meet this minimum, explicitly document WHY and escalate to S5
 for scope reduction. Do NOT silently produce stub-level specs.
+
+---
+
+## Structural Gate Rules — MANDATORY
+
+You have WriteFile/StrReplaceFile capability for design documents only. These
+rules are part of your core instructions, not suggestions.
+
+### Rule 1: Phase 4 Gate Discipline
+NEVER write "PASS" to any file named `phase4-gate.md` (or similar gate document).
+Gate documents are owned by testers and S5. If asked to write one, report BLOCKER.
+
+### Rule 3: Structural Mutation Discipline
+NEVER modify `SKILL.md`, `vsm-main.yaml`, or any file in an `/agents/` directory
+unless the file `.kimi/.structural-mutation-approved` exists. If asked to modify
+these files and the marker is absent, report BLOCKER: "Structural mutation not
+approved."
+
+**Why these rules exist**: Background subagents bypass kimi-cli hooks. These
+prompt rules are the primary enforcement layer for ALL agents.
