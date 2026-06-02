@@ -34,6 +34,7 @@ The result is a structured, multi-agent workflow that produces higher-quality co
 | Same skill every time | **Different skill every time** — it learns and mutates |
 | Human tests hypotheses | **Built-in scientific method**: hypothesis → experiment → falsification → theory update |
 | Ad-hoc evaluation | **Structured fitness builds** with scored rubrics and standardized reports |
+| Text-only enforcement | **Hook-based structural enforcement** the AI cannot bypass |
 
 ## Repository Structure
 
@@ -59,15 +60,30 @@ viable-swarm-model/                    ← the repo
 │   │   ├── vsm_product.md
 │   │   ├── vsm_security.md
 │   │   └── vsm_wiring.md
+│   ├── hooks/                         ← structural enforcement scripts (un-bypassable)
+│   │   ├── gate-guardian.sh
+│   │   ├── boundary-guardian.sh
+│   │   ├── structural-guardian.sh
+│   │   ├── stop-verifier.sh
+│   │   ├── telemetry-logger.sh
+│   │   ├── subagent-counter.sh
+│   │   ├── session-start.sh
+│   │   ├── session-end.sh
+│   │   ├── knowledge-broker.sh
+│   │   └── test-hooks.sh
 │   ├── references/
 │   │   ├── acquired-wisdom.md
 │   │   ├── anti-patterns.md
+│   │   ├── decisions.md               ← decision provenance log
 │   │   ├── experiments.md             ← experiment log
 │   │   ├── hypotheses.md              ← hypothesis backlog
 │   │   ├── integration-checklist.md
+│   │   ├── knowledge-broker.md        ← cross-skill digest
+│   │   ├── mutation-cemetery.md       ← removed rules archive
 │   │   ├── mutation-log.md
 │   │   ├── pattern-library.md
-│   │   └── security-lessons.md
+│   │   ├── security-lessons.md
+│   │   └── skill-state.md             ← living self-model
 │   └── assets/
 │       └── lessons-template.md
 ├── vsm-fitness-gym/             ← companion skill (the research lab)
@@ -107,6 +123,131 @@ ln -s ~/vsm/viable-swarm-model ~/.kimi/skills/viable-swarm-model
 ln -s ~/vsm/vsm-fitness-gym ~/.kimi/skills/vsm-fitness-gym
 ln -s ~/vsm/vsm-fitness-coach ~/.kimi/skills/vsm-fitness-coach
 ```
+
+## Hook Configuration (Required for Structural Enforcement)
+
+The VSM ecosystem uses [kimi-cli hooks](https://moonshotai.github.io/kimi-cli/en/customization/hooks.html) to provide **un-bypassable structural enforcement**. These hooks run in your local shell — the AI cannot override them. Without this configuration, the skill relies entirely on AI self-discipline, which degrades under time pressure.
+
+### Prerequisites
+
+- `bash` (macOS/Linux default)
+- `jq` (JSON parser): `brew install jq` or `apt-get install jq`
+- `python3` (for JSON parsing fallbacks)
+
+### What the hooks enforce
+
+| Hook | Blocks When... | Why It Matters |
+|------|---------------|----------------|
+| `gate-guardian` | S5 writes PASS in phase4-gate.md while tests still fail | Prevents the #1 recurring failure mode (FB20–FB24) |
+| `boundary-guardian` | S5 modifies source files after integration but before re-audit | Stops inline fixes that bypass the fix-agent protocol |
+| `structural-guardian` | S5 modifies SKILL.md or agent files without approval marker | Protects architecture from accidental mutations |
+| `stop-verifier` | S5 tries to end session with missing mutations-applied.md | Forces completion of the mutation lifecycle |
+| `telemetry-logger` | *(observes)* Every file write | Builds efficiency baselines for the capability matrix |
+| `subagent-counter` | *(observes)* Every subagent spawn | Tracks which agents are used and how often |
+| `session-start/end` | *(observes)* Session lifecycle | Loads skill-state.md at start, writes telemetry at end |
+| `knowledge-broker` | *(observes)* Session end | Writes cross-skill digest for coach/gym/main coordination |
+
+### Add to your `~/.kimi/config.toml`
+
+Append this block to your existing `~/.kimi/config.toml`:
+
+```toml
+# === VSM SELF-IMPROVING ORGANISM HOOKS ===
+# These hooks provide structural enforcement that the AI cannot bypass.
+# See: https://moonshotai.github.io/kimi-cli/en/customization/hooks.html
+
+[[hooks]]
+event = "SessionStart"
+command = "bash ~/vsm/viable-swarm-model/hooks/session-start.sh"
+timeout = 10
+
+[[hooks]]
+event = "PreToolUse"
+matcher = "WriteFile|StrReplaceFile"
+command = "bash ~/vsm/viable-swarm-model/hooks/gate-guardian.sh"
+timeout = 5
+
+[[hooks]]
+event = "PreToolUse"
+matcher = "WriteFile|StrReplaceFile"
+command = "bash ~/vsm/viable-swarm-model/hooks/boundary-guardian.sh"
+timeout = 5
+
+[[hooks]]
+event = "PreToolUse"
+matcher = "WriteFile|StrReplaceFile"
+command = "bash ~/vsm/viable-swarm-model/hooks/structural-guardian.sh"
+timeout = 5
+
+[[hooks]]
+event = "PostToolUse"
+matcher = "WriteFile|StrReplaceFile"
+command = "bash ~/vsm/viable-swarm-model/hooks/telemetry-logger.sh"
+timeout = 3
+
+[[hooks]]
+event = "SubagentStart"
+command = "bash ~/vsm/viable-swarm-model/hooks/subagent-counter.sh"
+timeout = 3
+
+[[hooks]]
+event = "Stop"
+command = "bash ~/vsm/viable-swarm-model/hooks/stop-verifier.sh"
+timeout = 10
+
+[[hooks]]
+event = "SessionEnd"
+command = "bash ~/vsm/viable-swarm-model/hooks/session-end.sh"
+timeout = 10
+
+[[hooks]]
+event = "SessionEnd"
+command = "bash ~/vsm/viable-swarm-model/hooks/knowledge-broker.sh"
+timeout = 10
+```
+
+> **Note**: If you cloned to a path other than `~/vsm`, update the `command` paths above to match your installation directory.
+
+### Verify hooks are active
+
+After editing `~/.kimi/config.toml`, launch a new kimi session and run:
+
+```
+/hooks
+```
+
+You should see all 8 VSM hooks listed. Then run the validation suite:
+
+```bash
+bash ~/vsm/viable-swarm-model/hooks/test-hooks.sh
+```
+
+Expected output: `7 passed, 0 failed`.
+
+### How hooks fail
+
+All VSM hooks follow the **fail-open** policy mandated by the kimi-cli hook system:
+- Hook crashes, timeouts, or non-zero exits (other than code 2) → allow the operation
+- Only exit code 2 blocks the operation
+- This ensures a buggy hook cannot brick your workflow
+
+### Why this is not optional
+
+The VSM ecosystem's meta-reflection (Entry 3, 2026-06-02) explicitly diagnosed its primary failure mode as **"Detection ≠ Enforcement"** — the skill could detect problems but could not make itself act on them. The hooks close this gap by converting advisory text instructions into structural checks that the AI physically cannot bypass.
+
+Without hooks:
+- Phase 4 gate bypasses recur (FB20, FB21, FB24)
+- Inline fixes during integration go undetected
+- Mutation tracking is abandoned under time pressure
+- No efficiency or capability data is collected
+
+With hooks:
+- Fraudulent gate passes are blocked at the tool-call level
+- Boundary violations trigger immediate rollback
+- Session completion requires mutation audit closure
+- Every build feeds telemetry into the living skill-state.md
+
+---
 
 ## Usage
 
