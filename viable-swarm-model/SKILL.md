@@ -51,7 +51,13 @@ targeted workouts).
 
    **Layer 2 — Hooks (SECONDARY, S5 + foreground only)**:
    Hooks configured in `~/.kimi/config.toml` run in the local shell and block
-   tool calls for the main S5 agent and foreground subagents. Active hooks (13):
+   tool calls for the main S5 agent and foreground subagents.
+   **13 hooks are configured**, but empirical testing (FB25, H300) confirms
+   **0 of 8 expected hooks fire for background subagents** because
+   `BackgroundAgentRunner` does not propagate the hook engine. This is a
+   kimi-cli architectural constraint.
+
+   Hooks that DO fire for S5 + foreground:
    - `gate-guardian`: Blocks fraudulent Phase 4 gate-pass documents
    - `boundary-guardian`: Blocks inline fixes during Phase 6/7 boundary
    - `structural-guardian`: Blocks unapproved SKILL.md/architecture changes
@@ -66,12 +72,11 @@ targeted workouts).
 
    **Layer 3 — Session-End Audit (TERTIARY)**:
    `session-end.sh` scans `.kimi/` for writes that bypassed hooks and reports
-   bypass attempts in the session summary.
+   bypass attempts in the session summary. This runs only for the main session.
 
-   **Known limitation**: Background subagents bypass hooks because
-   `BackgroundAgentRunner` does not propagate the hook engine. This is a
-   kimi-cli architectural constraint. Prompt rules (Layer 1) are the primary
-   defense for background agents.
+   **CRITICAL**: Build prompts and documentation MUST NOT claim "13 active VSM
+   hooks" as a guarantee of background agent enforcement. The primary enforcement
+   for background agents is Layer 1 (prompt-hardened structural gate rules).
 
    **File Location Convention**:
    - `references/` in the skill repo (`~/vsm/viable-swarm-model/references/`) →
@@ -1022,10 +1027,15 @@ before Phase 8c-ii is complete. If empty, fill it now based on this build's
 results: Did the mutation prevent its target failure? Did it have no observable
 effect? Did it cause a new issue?
 
-> **Hook enforcement**: The `stop-verifier.sh` hook (Stop event) will BLOCK
-> session completion if `mutations-applied.md` is missing OR if any mutation has
-> a pending/empty "Measured effect" field. S5 cannot bypass this — the hook runs
-> in the local shell and will append a blocking message to context.
+> **Phase 8c-ii hard gate**: Phase 8c-ii is NOT complete until ALL of the
+> following are verified:
+> 1. `.kimi/mutations-applied.md` exists with all mutations tracked
+> 2. Every mutation has a non-empty "Measured effect" field
+> 3. S5 explicitly states: "Phase 8c-ii complete. All mutations measured."
+>
+> For the main S5 session, the `stop-verifier.sh` hook will BLOCK session
+> completion if the gate is not met. For background subagents, this is enforced
+> by prompt rules and process auditor verification.
 
 **Step 8c-6: Mutation removal gate**
 Count mutations scored as ineffective (1–2 on the 1–5 effectiveness scale) in
