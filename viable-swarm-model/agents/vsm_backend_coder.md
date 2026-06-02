@@ -8,76 +8,13 @@ runtime verification of framework APIs.
 
 **Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL.
 
-**Known Stack Gotchas — verify these explicitly in every file you write:**
+**Stack Skill Read — MANDATORY**
+Before writing any code, read `~/vsm/vsm-stack-skills/python-pitfalls/SKILL.md`.
+In your first response, list the specific rules from that skill you will apply
+in this build. If you cannot read the file, HALT and report BLOCKER.
 
-1. **Settings / lru_cache**: NEVER instantiate settings at module level.
-   ```python
-   @lru_cache
-   def get_settings() -> Settings:
-       return Settings()
-   ```
-   Module-level instantiation crashes on import without env vars.
-
-2. **Enum Definitions**: ALWAYS use `str, enum.Enum` for string-valued enums.
-   Plain `enum.Enum` raises `ValueError` when constructed from strings.
-
-3. **CORS**: NEVER use `allow_origins=["*"]` with `allow_credentials=True`.
-   Always use an explicit allowlist:
-   ```python
-   allow_origins=["http://localhost:3000", "https://app.example.com"]
-   ```
-
-4. **JWT Auth**: `jwt.decode` MUST verify signatures. Never pass
-   `options={"verify_signature": False}`. `get_current_user` MUST raise HTTPException(401)
-   on ALL failure paths — never return `None`.
-
-5. **GraphQL Context**: `get_context` MUST propagate auth exceptions. Never catch
-   JWT errors and return an anonymous context (fail-open pattern).
-
-6. **GraphQL Ownership Filtering**: ALL list queries MUST filter by authenticated
-   user. Unscoped list queries are a HIGH severity finding.
-
-7. **Registration Role Allowlist**: `ALLOWED_ROLES` MUST exist AND exclude
-    superuser roles ("admin", "superuser"). Self-registration must default to
-    lowest-privilege role.
-
-8. **Subprocess Import Check**: After writing backend files, verify they import
-    cleanly in a fresh Python subprocess:
-   ```bash
-   python -c "import app.main" || echo "BLOCKER: import failed"
-   ```
-
-10. **Auth Role Validation — BLOCKER-level**: Before finalizing `ALLOWED_ROLES`
-    (or any role-based access control list), read `data-model.md` and verify
-    EVERY role in the allowlist exists in the `Role` / `UserRole` enum defined
-    there. Mismatched roles (e.g., `"editor"` in allowlist but `"responder"` in
-    the enum) are a BLOCKER. The allowlist and the data model must be identical.
-
-11. **Pydantic ConfigDict (V2)**: `class Config:` inside a Pydantic model is
-    deprecated. Use `model_config = ConfigDict(...)` instead. Flagged as BLOCKER
-    in audit.
-
-12. **SQLAlchemy Column Shadowing**: Never name columns `text`, `select`, `join`,
-    or `update` — they shadow SQLAlchemy imports. Use `sa.Text`, `sa.select`, or
-    rename columns.
-
-13. **Strawberry Schema Parameters**: NEVER assume `strawberry.Schema` accepts
-    `validation_rules` or any parameter. Verify BEFORE using:
-    ```python
-    "validation_rules" in inspect.signature(strawberry.Schema.__init__).parameters
-    ```
-    Using non-existent parameters causes `TypeError` on import.
-
-14. **FastAPI Lifespan Events**: `@app.on_event("startup")` /
-    `@app.on_event("shutdown")` are deprecated. Use `lifespan` context managers
-    instead.
-
-15. **Module-Level Settings in ALL Files**: Grep ALL `.py` files (not just
-    `main.py`) for module-level `get_settings()` / `Settings()` calls:
-    ```bash
-    grep -rn 'get_settings()\|Settings()' backend/ --include='*.py' | grep -v 'def \|class \|#'
-    ```
-    Celery apps, socket.io modules, and task queues are common offenders.
+S5 has injected this skill path into your task description. Do NOT rely on
+your own memory of Python rules — read the current skill file every time.
 
 See `shared-contract.md` for cross-file integration contracts (auth token parity,
 role enum parity, GraphQL camelCase, CORS credentials, error response shape,

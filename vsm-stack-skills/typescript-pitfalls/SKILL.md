@@ -50,3 +50,13 @@ dependencies (`@testing-library/react`) or missing browser API mocks. Either:
 - Exclude `src/test/` from the production `tsconfig.json`, OR
 - Use a separate `tsconfig.app.json` for the app and `tsconfig.node.json` for
   the build tool, with `tsconfig.json` as a solution-style config.
+
+## Page Implementation Verification (FB24)
+Before declaring frontend code complete, verify at least ONE page contains a
+live GraphQL query, REST fetch, or store subscription that renders actual data.
+Pages that are `<div>Label</div>` stubs with void-referenced imports are a
+BLOCKER. Every page MUST implement at least one of: data fetching, state
+management, conditional rendering, or interactive elements.
+
+**Source**: FB24 stub pages detected — pages had import statements but no
+actual data fetching (H158).

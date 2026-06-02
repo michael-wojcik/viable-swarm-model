@@ -172,11 +172,21 @@ and security gotchas. Replaces generic `coder` for all backend waves. Performs
 runtime framework API verification, subprocess import checks, and test validation.
 Launched via `Agent(subagent_type="vsm_backend_coder")`.
 
+**Stack Skill Injection (MANDATORY)**: When spawning `vsm_backend_coder`, S5 MUST
+include the stack skill path in the agent's task description:
+`"Read ~/vsm/vsm-stack-skills/python-pitfalls/SKILL.md before writing code."`
+The agent prompt strips embedded gotchas and relies on this file. Do not rely on
+the agent to self-discover the skill.
+
 **`vsm_frontend_coder`** (S1 Frontend Implementation): Writes [frontend framework]
 frontend code with embedded domain knowledge of [build tool], [API client], [state library],
 [GraphQL library] auto-camelCase, and path aliases. Replaces generic `coder` for all
 frontend waves. Verifies schema introspection before writing GraphQL queries and
 runs `run frontend build` before completion. Launched via `Agent(subagent_type="vsm_frontend_coder")`.
+
+**Stack Skill Injection (MANDATORY)**: When spawning `vsm_frontend_coder`, S5 MUST
+include the stack skill path in the agent's task description:
+`"Read ~/vsm/vsm-stack-skills/typescript-pitfalls/SKILL.md before writing code."`
 
 **`vsm_backend_fix_agent`** (S1 Backend Fix): Surgical fixes to backend BLOCKERs.
 Inherits all backend gotchas. Adds fix-specific rules: full test suite after every
@@ -194,6 +204,10 @@ CI/CD, and infrastructure configs with embedded domain knowledge of containeriza
 gotchas. Replaces generic `coder` for all infrastructure waves. Verifies Dockerfile
 CMD files exist, docker-compose has no `:-` fallbacks, ports match across configs,
 and `.dockerignore` excludes secrets. Launched via `Agent(subagent_type="vsm_devops_coder")`.
+
+**Stack Skill Injection (MANDATORY)**: When spawning `vsm_devops_coder`, S5 MUST
+include the stack skill path in the agent's task description:
+`"Read ~/vsm/vsm-stack-skills/docker-pitfalls/SKILL.md before writing code."`
 
 **`vsm_security`** (Security Audit): Runs 15+ point security checklist.
 Writes findings to `.kimi/security-report.md` — never modifies source code.

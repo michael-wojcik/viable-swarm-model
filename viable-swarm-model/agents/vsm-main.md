@@ -34,7 +34,13 @@ Before starting work:
 2. Read the skills relevant to your role (see registry "Relevant Agents" column).
 3. Use `SearchWeb` or `FetchURL` for framework API documentation as needed.
 
-**Output verification**: In your completion report, list which skills you read.
+**S5 Skill Injection**: S5 (the orchestrator) MUST name the exact skill file in
+your task description. Example: `"Read ~/vsm/vsm-stack-skills/python-pitfalls/SKILL.md"`.
+If S5 did not provide a specific skill path, read the registry and self-discover.
+If you cannot read the named skill file, HALT and report BLOCKER.
+
+**Output verification**: In your first response, list which skills you read and
+which specific rules you will apply. This is proof that the skill was consulted.
 
 ---
 

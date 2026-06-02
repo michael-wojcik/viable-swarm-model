@@ -17,7 +17,7 @@
 |---|---|---|---|
 | python-pitfalls | Python | Full | Module-level instantiation, Pydantic ConfigDict, SQLAlchemy shadowing, etc. |
 | typescript-pitfalls | TypeScript | Full | Vite alias failure, build gaps, `as any` bypasses, etc. |
-| docker-pitfalls | Docker/Compose | Stub | (Awaiting empirical data) |
+| docker-pitfalls | Docker/Compose | Full | Containerization traps: fallback bans, layer ordering, production build verification, port parity, healthchecks |
 | dependency-drift-pitfalls | All | Stub | (Awaiting empirical data) |
 | go-pitfalls | Go | Stub | (Awaiting empirical data) |
 | rust-pitfalls | Rust | Stub | (Awaiting empirical data) |

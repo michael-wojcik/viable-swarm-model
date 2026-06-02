@@ -107,3 +107,46 @@ with `AttributeError: 'str' object has no attribute 'value'`.
 
 **Evidence**: FB24 `app/routers/stock.py:338` crashed with this exact bug.
 All four audit passes missed it; only pytest caught it.
+
+## CORS Wildcard with Credentials
+NEVER use `allow_origins=["*"]` with `allow_credentials=True`. Always use an
+explicit allowlist:
+```python
+allow_origins=["http://localhost:3000", "https://app.example.com"]
+```
+Wildcard `*` with credentials is a BLOCKER. See also `security-lessons.md` L61.
+
+## JWT Auth Signature Verification
+`jwt.decode` MUST verify signatures. Never pass
+`options={"verify_signature": False}`.
+
+`get_current_user` MUST raise `HTTPException(401)` on ALL failure paths —
+never return `None`. Returning `None` silently creates an anonymous session
+that bypasses auth guards.
+
+## GraphQL Context Fail-Closed
+`get_context` or equivalent context builders MUST propagate auth exceptions
+(JWT errors, missing tokens). Never silently catch auth exceptions and return
+an anonymous/unauthenticated context. Auth failures MUST result in GraphQL
+errors or `AuthenticationError`, not `user = None`.
+
+See also: `security-lessons.md` L63 (GraphQL context builders must be fail-closed).
+
+## GraphQL Ownership Filtering
+ALL list queries MUST filter by authenticated user. Unscoped list queries
+that return all documents regardless of ownership are a HIGH severity finding.
+
+This applies to both REST list endpoints AND GraphQL list resolvers.
+
+## Registration Role Allowlist
+`ALLOWED_ROLES` MUST exist AND exclude superuser roles ("admin", "superuser").
+Self-registration must default to the lowest-privilege role.
+
+Before finalizing `ALLOWED_ROLES`, read `data-model.md` and verify EVERY role
+in the allowlist exists in the `Role` / `UserRole` enum defined there.
+Mismatched roles (e.g., `"editor"` in allowlist but `"responder"` in the enum)
+are a BLOCKER. The allowlist and the data model must be identical.
+
+**Source**: FB22 `auth.py` had `ALLOWED_ROLES = ["viewer", "editor", "admin"]`
+but data model defined `"viewer"`, `"responder"`, `"admin"`. `"editor"` did not
+exist; `"responder"` was missing (H151).
