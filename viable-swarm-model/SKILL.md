@@ -1131,9 +1131,11 @@ Every mutation is recorded in `references/mutation-log.md`:
 ## Mutation [N] — YYYY-MM-DD
 **Session**: [task description]
 **File**: [path]
-**Type**: [append | edit | remove | structural]
+**Type**: [append | refinement | removal | structural]
+**Target failure mode**: [specific bug/pattern this mutation was designed to prevent]
 **Rationale**: [why this change improves the skill]
 **Expected effect**: [what should happen in next session]
+**Measured effect**: [filled in by next fitness build: did it prevent the target?]
 ```
 
 ### Epistemic Rule for Self-Modification

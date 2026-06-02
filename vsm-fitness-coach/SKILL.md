@@ -261,9 +261,16 @@ The coach does NOT interfere during the build. It observes and records.
 Spawn `vsm_trainer` subagent with:
 - Build directory: `~/vsm-fitness-builds/coach/[project-id]-[date]/`
 - Rubric: `~/vsm/vsm-fitness-coach/references/evaluation-rubric.md`
+- Mutation log: `~/vsm/viable-swarm-model/references/mutation-log.md` (last 30 entries)
 
-The trainer reads all build artifacts and the rubric, then returns a structured
-fitness report with phase scores, gap analysis, surprises, and false positives.
+The trainer reads all build artifacts, the rubric, and the mutation log, then
+returns a structured fitness report with phase scores, gap analysis, surprises,
+false positives, and **mutation effectiveness audit**.
+
+**Mutation effectiveness instruction for trainer**: For every mutation applied
+since the previous fitness build, determine whether its target failure mode
+recurred in this build. If a mutation was designed to prevent X but X recurred,
+flag the mutation as **ineffective** and recommend removal or redesign.
 
 **Do not score manually.** The trainer handles all evaluation.
 
@@ -312,10 +319,16 @@ Classify each mutation:
 - **Append-only**: new rules, patterns, anti-patterns, checklists
 - **Structural**: agent prompt changes, flow diagram changes, phase logic changes, add/remove agents
 
+**Also propose REMOVALS**: If the mutation effectiveness audit (Phase 2) found
+ineffective mutations, propose removing or redesigning them. Ineffective
+mutations accumulate bloat and reduce agent performance. A removal is treated
+as a **refinement** mutation (logged, autonomous).
+
 Present all proposed mutations to S5 in a structured report:
 - Phase-by-phase scoring
+- Mutation effectiveness audit results (effective / ineffective / flagged for removal)
 - Each gap with rationale
-- Proposed changes (append-only vs structural)
+- Proposed changes (append-only vs structural vs removal)
 
 **CRITICAL**: Structural mutations are NEVER inferred from ambiguous user responses.
 They require EXPLICIT approval via `AskUserQuestion` with:
@@ -546,9 +559,11 @@ Every mutation is recorded in `references/mutation-log.md`:
 ## Mutation [N] — YYYY-MM-DD
 **Session**: [task description]
 **File**: [path]
-**Type**: [append | refinement | structural]
+**Type**: [append | refinement | structural | removal]
+**Target failure mode**: [specific bug/pattern this mutation was designed to prevent]
 **Rationale**: [why this change improves the skill]
 **Expected effect**: [what should happen in next session]
+**Measured effect**: [filled in by next fitness build's trainer: did it prevent the target?]
 ```
 
 ### Epistemic Rule for Self-Modification

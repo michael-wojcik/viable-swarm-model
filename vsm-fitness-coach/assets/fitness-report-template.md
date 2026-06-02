@@ -92,6 +92,20 @@ Is the skill improving, stagnating, or regressing?]
 
 ---
 
+## Mutation Effectiveness Audit
+
+> For each mutation applied since the previous build, did it prevent its target
+> failure mode? If a mutation was added to catch X but X recurred, the mutation
+> is **ineffective** and should be flagged for removal or redesign.
+
+| Mutation ID | Target Failure Mode | Applied In | Recurred This Build? | Effective? | Proposed Action |
+|-------------|---------------------|------------|----------------------|------------|-----------------|
+| [M# / H#] | [what it was supposed to prevent] | [FB#] | Yes / No | Yes / No | Keep / Remove / Redesign |
+
+**Ineffective mutations flagged**: [count]
+
+---
+
 ## Comparison to Previous Fitness Builds
 
 [If this is not the first fitness build, compare scores to previous runs.

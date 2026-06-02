@@ -207,14 +207,49 @@
 
 | Criterion | Weight | Evidence |
 |---|---|---|
-| Effectiveness audit | 25% | Which rules caught real bugs? Which were false positives? |
-| Coverage audit | 25% | Were any vulnerability classes missed entirely? |
-| Phase audit | 20% | Were any phases redundant or misleading? |
+| Effectiveness audit | 20% | Which rules caught real bugs? Which were false positives? |
+| Coverage audit | 20% | Were any vulnerability classes missed entirely? |
+| Phase audit | 15% | Were any phases redundant or misleading? |
 | Agent audit | 15% | Did any custom agent underperform? |
 | Hypothesis generation | 15% | Were falsifiable hypotheses proposed for every gap? |
+| Mutation effectiveness audit | 15% | Did mutations from previous builds prevent their target failures? |
 
 **Common failure modes**:
 - Meta-reflection is superficial ("everything went well" with no evidence)
 - Missed gaps that were obvious in retrospect
 - No hypotheses proposed (just vague suggestions)
 - Mutations proposed without empirical justification
+- Ineffective mutations not flagged for removal (accumulating bloat)
+
+---
+
+## Mutation Effectiveness Scoring (Phase 8b Supplement)
+
+**Purpose**: Verify that mutations applied in previous builds actually prevent
+their target failure modes.
+
+| Score | Meaning |
+|---|---|
+| 5 | Every mutation from previous builds prevented its target failure. No bloat. |
+| 4 | Most mutations effective; 1-2 minor inefficiencies noted. |
+| 3 | Some mutations effective; 1-2 mutations failed to prevent target failure. |
+| 2 | Several mutations ineffective. Accumulated bloat is hindering performance. |
+| 1 | Mutations are actively harmful or consistently ineffective. Major bloat. |
+
+**Evaluation method**:
+1. Read `references/mutation-log.md` — identify all mutations applied since the
+   previous fitness build.
+2. For each mutation, identify its **target failure mode** (what was it trying
+   to prevent?).
+3. Check the current build's artifacts: did that failure mode recur?
+   - If NO → mutation is **effective**
+   - If YES → mutation is **ineffective** (flag for removal/redesign)
+4. Count effective vs ineffective mutations.
+5. If ineffective mutations > 2, propose a **consolidation mutation** (remove or
+   redesign ineffective rules).
+
+**Common failure modes**:
+- Mutation had no clear target failure mode (vague rationale)
+- Target failure mode recurred but was blamed on agent non-compliance rather
+  than mutation design
+- Ineffective mutations accumulate because there's no removal mechanism
