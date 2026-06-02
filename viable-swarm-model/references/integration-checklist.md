@@ -472,3 +472,18 @@ but `requirements.txt` still specified 0.235.2, causing clean-install failures.
 **Affected**: vsm_devops_coder, vsm_coordinator.
 **Source**: FB23 `docker-compose.yml` referenced `celery -A app.celery_app`
 but the module was `celery_app.py` with no `app/` package.
+
+## 20. GraphQL Mutation RBAC Parity (FB24)
+- [ ] Every GraphQL `create_*`, `update_*`, `delete_*` mutation has the SAME
+  role/ownership guards as the equivalent REST endpoint
+- [ ] `viewer` cannot perform mutations that REST restricts to `admin` only
+
+## 21. Socket.IO Event Emit Verification (FB24)
+- [ ] For every event the frontend listens for, the backend emits it at least once
+- [ ] Event name strings match exactly (case-sensitive) between `src/shared/sio-events.ts`
+  and backend `sio.emit(...)` calls
+
+## 22. Frontend Page Data Fetching Verification (FB24 — H158)
+- [ ] Every page component contains at least one live data fetch (GraphQL query,
+  REST fetch, or store subscription) that renders actual data
+- [ ] Stub pages (`<div>Label</div>` with void imports) are BLOCKERs

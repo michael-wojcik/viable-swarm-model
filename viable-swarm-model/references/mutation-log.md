@@ -1798,3 +1798,43 @@ Gotcha #12: Frontend Dockerfiles must run `npm run build` + static serve. `npm r
 - Mutation log contains complete history from FB1 through FB23-4.
 - Future agent additions follow documented patterns.
 - Validator is discoverable and maintainable.
+
+## Mutation Log — FB24 Cycle (2026-06-02)
+
+### Appendix-only Mutations Applied
+
+#### 1. python-pitfalls/SKILL.md — SQLAlchemy String-Mapped Enum `.value` Trap (H203)
+- **Problem**: When `Mapped[EnumType] = mapped_column(sa.String(N))`, SQLAlchemy loads the column value as a plain `str`, not the Enum instance. Calling `.value` crashes with `AttributeError`.
+- **Solution**: Prefer `sa.Enum(EnumType)`. If `sa.String(N)` is used, compare the plain string directly and never call `.value`.
+- **Evidence**: FB24 `stock.py:338` — `transfer.status.value` crashed where `status` was `sa.String(50)`.
+
+#### 2. integration-checklist.md — Three New Check Items
+- **Item 20**: GraphQL Mutation RBAC Parity — every GraphQL mutation must have the same role/ownership guards as its REST equivalent.
+- **Item 21**: Socket.IO Event Emit Verification — backend must emit every event that frontend listens for; names must match exactly.
+- **Item 22**: Frontend Page Data Fetching Verification — every page must contain at least one live data fetch; stub pages are BLOCKERs.
+
+#### 3. vsm-fitness-coach/references/fitness-projects.md — FB24 Entry
+- Complete score, coverage map, services, blockers, fix iterations, and key gaps.
+
+
+### Structural Mutations Applied (FB24)
+
+#### M1: Phase 4 Exit Gate Strengthening (SKILL.md)
+- Added **Phase 4 Gate Declaration (MANDATORY)** section
+- S5 MUST write `.kimi/phase4-gate.md` with PASS/BLOCK verdict before spawning Phase 5 agents
+- Explicit language: "A single failing test is a HARD BLOCK. S5 MUST NOT rationalize..."
+- Evidence: FB24 S5 treated 1 failing test as "acceptable noise" and proceeded through Phases 5-8
+
+#### M2: Phase 7d — Post-Test ISSUE Sweep (SKILL.md)
+- New phase inserted after 7c (security re-check)
+- S5 MUST compile all unfixed ISSUEs from original + re-audit reports
+- Categorize as FIXED / DEFERRED / MISSED
+- DEFERRED → document in `lessons.md` with `[ISSUE-DEFERRED]` tag
+- MISSED → document with `[ISSUE-MISSED]` tag
+- Builds with MISSED ISSUEs score capped at 3.5/5
+- Evidence: FB24 had 6+ unfixed ISSUEs at build completion with no systematic tracking
+
+#### M3: Remove Duplicate Phase 7c Text (SKILL.md)
+- Removed duplicated "Phase 7b: Post-Fix Security Re-Check" paragraph at lines 703-709
+- Kept canonical occurrence at lines 687-693
+

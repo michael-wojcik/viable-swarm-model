@@ -557,6 +557,17 @@ or Phase 6 (Integration). Route to Phase 7 (Fix Wave). Fixing downstream integra
 BLOCKERs on top of failing tests is waste. The Phase 4 exit gate is mandatory —
 never treat test failures as "acceptable for now."
 
+**Phase 4 Gate Declaration (MANDATORY)**
+After aggregating test results, S5 MUST write a one-line gate verdict to
+`.kimi/phase4-gate.md` BEFORE spawning any Phase 5 agent:
+- `PASS: N backend passed, M frontend passed, 0 failures`
+- `BLOCK: X backend failures, Y frontend failures — routing to Phase 7`
+
+A single failing test is a HARD BLOCK. S5 MUST NOT rationalize, categorize,
+or deprioritize test failures (e.g., "just an enum edge case", "only 1 of 85").
+Any non-zero failure count routes to Phase 7. The gate verdict file is evidence
+for the fitness coach's process audit.
+
 **Agent Report Artifacts (MANDATORY)**
 All audit/security/coordinator agents now have `WriteFile` restricted to their own
 report artifacts. They MUST write their reports to the `.kimi/` subdirectory in
@@ -692,6 +703,19 @@ CRITICAL/HIGH regressions (e.g., a fix agent weakened auth), loop back to Phase 
 This prevents fix/test agents from introducing vulnerabilities after the main
 security gate.
 
+**Phase 7d — Post-Test ISSUE Sweep (MANDATORY)**
+After re-audit passes (0 BLOCKERs) and security re-check passes, S5 MUST read
+ALL audit reports (original + re-audit) and compile a list of every ISSUE that
+was NOT fixed during the fix wave. For each unfixed ISSUE, categorize:
+- `FIXED` — resolved during fix wave
+- `DEFERRED` — intentionally not fixed; document in `lessons.md` with
+  `[ISSUE-DEFERRED]` tag and rationale
+- `MISSED` — not addressed at all; document with `[ISSUE-MISSED]` tag
+
+Phase 7d is a MANDATORY gate before Phase 8 (Reflection). Builds with `MISSED`
+ISSUEs score capped at 3.5/5 in fitness evaluation. S5 MUST NOT skip Phase 7d
+by declaring "only BLOCKERs matter."
+
 **Return paths differ by BLOCKER source**:
 - **Foundation BLOCKERs** (Phase 2b/2c audit): After fix clears, return to
   Sub-Wave 2b (Dependent Infrastructure) to re-verify the foundation.
@@ -699,14 +723,6 @@ security gate.
   Phase 4 (Testing) → Phase 5 (Security) → Phase 6 (Integration) before
   proceeding to Phase 8. NEVER skip Testing, Security, or Integration after
   fixing implementation-phase issues.
-
-**Phase 7b: Post-Fix Security Re-Check** — After fix wave clears all BLOCKERs
-and BEFORE returning to the main flow, S5 MUST run a lightweight security
-re-check on any file modified during the fix wave that touches auth, GraphQL,
-or WebSocket code. Spawn `vsm_security` with a focused scope (modified files
-only). If the re-check finds CRITICAL/HIGH regressions (e.g., a fix agent
-weakened auth), loop back to Phase 7. This prevents fix/test agents from
-introducing vulnerabilities after the main security gate.
 
 ### Phase 8: Reflection
 Write a standalone `.kimi/lessons.md` in the build directory.

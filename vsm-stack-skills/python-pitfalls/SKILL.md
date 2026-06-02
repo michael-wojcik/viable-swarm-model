@@ -64,12 +64,46 @@ async def rate_limit_handler(request, exc):
 Without the handler, rate-limited requests crash with 500 instead of 429.
 
 ## Celery App Module-Level Instantiation (Discovered FB23)
-Creating a Celery app at module level via a factory still triggers `get_settings()`
-on first import:
+A module-level `celery_app = ...` is **NOT a BLOCKER** if it does NOT trigger
+any env-dependent factory at import time. The BLOCKER is specifically if the
+assignment calls a function that accesses `get_settings()` / `Settings()` /
+`os.environ` or any env-dependent resource before the Celery worker process
+initializes:
 ```python
 # WRONG — crashes on import without env vars
-celery_app = _get_celery_app()
+celery_app = _get_celery_app()   # if _get_celery_app() calls Settings()
 ```
-Use a proper lazy import pattern or defer instantiation to a function that is
-called only when the worker starts. The wiring agent MUST grep ALL `*.py` files
-(not just `main.py`) for module-level `get_settings()` / `Settings()` calls.
+Safe pattern: keep the module-level assignment but make the factory itself
+lazy (use `@lru_cache` for settings, or have the factory defer env reads to
+`celery.conf.update(...)` called at worker boot). The wiring agent MUST grep
+ALL `*.py` files (not just `main.py`) for module-level `get_settings()` /
+`Settings()` calls. Audit MUST distinguish "module-level assignment" from
+"module-level env-dependent side effect."
+
+## SQLAlchemy String-Mapped Enum `.value` Trap (FB24)
+
+When an enum column is declared as:
+```python
+class Status(str, enum.Enum):
+    pending = "pending"
+    done = "done"
+
+class Task(Base):
+    status: Mapped[Status] = mapped_column(sa.String(50))
+```
+
+SQLAlchemy loads the value from the database as a **plain `str`**, NOT as the
+`Status` enum instance. Endpoint code that calls `task.status.value` will crash
+with `AttributeError: 'str' object has no attribute 'value'`.
+
+**Prevention rules**:
+1. Prefer `sa.Enum(Status)` over `sa.String(N)` for enum columns.
+2. If `sa.String(N)` must be used, NEVER call `.value` on the attribute.
+   Compare directly: `if task.status == Status.pending.value:` is wrong;
+   `if task.status == Status.pending:` is also wrong (comparing str to enum).
+   Use: `if task.status == "pending":` or cast explicitly.
+3. Auditor MUST flag any `.value` call on a model attribute whose column is
+   declared with `sa.String` rather than `sa.Enum`.
+
+**Evidence**: FB24 `app/routers/stock.py:338` crashed with this exact bug.
+All four audit passes missed it; only pytest caught it.

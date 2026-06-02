@@ -843,3 +843,38 @@
 - **Security gate**: Zero CRITICAL/HIGH findings; manual checklist passed
 - **Key gap**: Backend coder agents lack dependency verification against requirements.txt before importing
 - **Mutations**: FB22-1 (dependency verification BLOCKER in vsm_backend_coder, Vite alias BLOCKER in vsm_frontend_coder, H150-H153)
+
+---
+
+## FB24: InventoryFlow — Warehouse Inventory Management
+
+**Complexity**: High (Tier 2+, 4-5 waves, ~2000+ lines, 4 services)
+**Date**: 2026-06-02
+**Score**: 3.2 / 5.0
+**Services**: FastAPI backend, React frontend, Redis, Celery, PostgreSQL, Socket.IO
+
+### Coverage Map
+
+| Capability | Tested by |
+|---|---|
+| H158 — Frontend page verification gate | ✅ Dashboard.tsx live Recharts chart, Products.tsx sortable table — all 5 pages real data |
+| H159 — lessons.md hard Phase 8 gate | ✅ 7 structured entries produced before vsm_meta spawned |
+| H160 — Frontend Dockerfile production build | ✅ Multi-stage nginx build, zero `npm run dev` |
+| H161 — Optional ISSUE sweep | Partial — some ISSUEs fixed, several remained unfixed (no systematic Phase 7d) |
+| SQLAlchemy enum `.value` trap (H203) | Confirmed — `stock.py:338` crashed, all 4 auditors missed it, only pytest caught it |
+| Phase 4 hard gate bypass (H204) | Confirmed — build proceeded with 1 failing test through Phases 5-8 |
+| Fix wave scope limitation (H205) | Confirmed — 6+ unfixed ISSUEs at build completion |
+| GraphQL RBAC parity | Partial — transfer mutations fixed, product mutations still gap |
+| Socket.IO event pipeline | Non-functional — frontend listens, backend never emits |
+| Frontend build / TypeScript | ✅ `npm run build` and `tsc -b` pass with zero errors |
+| Backend tests | 84 passed, 1 failed (enum `.value` AttributeError) |
+| Frontend tests | 17 passed, 0 failed |
+| Security gate | 0 BLOCKERs, 0 CRITICAL, 0 HIGH, 2 MEDIUM, 4 LOW |
+
+### Result
+- **Score**: 3.2/5.0
+- **BLOCKERs**: 7 code-level + 1 process-level (Phase 4 hard gate bypass)
+- **Fix iterations**: 1 main fix wave + inline fixes
+- **Key gap**: Phase 4 Test-First Exit Gate bypassed; SQLAlchemy enum type-safety rule missing
+- **Mutations**: python-pitfalls enum trap, integration-checklist GraphQL/Socket.IO checks, fitness ledger entry
+
