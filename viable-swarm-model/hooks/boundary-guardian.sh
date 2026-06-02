@@ -9,7 +9,7 @@
 set -euo pipefail
 
 PAYLOAD=$(cat)
-FILE_PATH=$(echo "$PAYLOAD" | jq -r '.tool_input.file_path // ""')
+FILE_PATH=$(echo "$PAYLOAD" | jq -r '.tool_input.path // .tool_input.file_path // ""')
 CWD=$(echo "$PAYLOAD" | jq -r '.cwd // "/tmp"')
 
 # Only check source code files

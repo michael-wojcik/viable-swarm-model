@@ -11,7 +11,7 @@ PAYLOAD=$(cat)
 SESSION_ID=$(echo "$PAYLOAD" | jq -r '.session_id // "unknown"')
 CWD=$(echo "$PAYLOAD" | jq -r '.cwd // "/tmp"')
 TOOL_NAME=$(echo "$PAYLOAD" | jq -r '.tool_name // "unknown"')
-FILE_PATH=$(echo "$PAYLOAD" | jq -r '.tool_input.file_path // ""')
+FILE_PATH=$(echo "$PAYLOAD" | jq -r '.tool_input.path // .tool_input.file_path // ""')
 
 # Create telemetry directory
 TELEMETRY_DIR="$HOME/.vsm-telemetry"

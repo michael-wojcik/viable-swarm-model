@@ -9,7 +9,7 @@
 set -euo pipefail
 
 PAYLOAD=$(cat)
-FILE_PATH=$(echo "$PAYLOAD" | jq -r '.tool_input.file_path // ""')
+FILE_PATH=$(echo "$PAYLOAD" | jq -r '.tool_input.path // .tool_input.file_path // ""')
 CONTENT=$(echo "$PAYLOAD" | jq -r '.tool_input.content // ""')
 CWD=$(echo "$PAYLOAD" | jq -r '.cwd // "/tmp"')
 
