@@ -39,7 +39,7 @@ targeted workouts).
 
    **Structural Enforcement (Hooks)**: This skill uses kimi-cli hooks for
    un-bypassable enforcement. Hooks are configured in `~/.kimi/config.toml` and
-   run in the local shell — S5 cannot override them. Active hooks:
+   run in the local shell — S5 cannot override them. Active hooks (13 total):
    - `gate-guardian`: Blocks fraudulent Phase 4 gate-pass documents
    - `boundary-guardian`: Blocks inline fixes during Phase 6/7 boundary
    - `structural-guardian`: Blocks unapproved SKILL.md/architecture changes
@@ -47,6 +47,10 @@ targeted workouts).
    - `telemetry-logger` + `subagent-counter`: Log all tool/agent usage
    - `session-start/end`: Load/skill-state.md and efficiency baselines
    - `knowledge-broker`: Write cross-skill digests on session end
+   - `agent-performance-scorer`: Heuristic scores on subagent completion → capability matrix
+   - `decision-enforcer`: Verifies decisions.md D[N] entry exists on plan/approval markers
+   - `context-pressure`: Alerts when compaction >200k tokens is imminent
+   - `bypass-logger`: Logs tool use failures as potential bypass attempts
 
    **File Location Convention**:
    - `references/` in the skill repo (`~/vsm/viable-swarm-model/references/`) →

@@ -25,6 +25,24 @@
 - **Risk elevation**: "Time pressure detected — high file-write velocity in FB24"
 - **Systemic diagnosis**: "Detection ≠ Enforcement. S5 self-discipline degrades under pressure."
 
+## Hook Enforcement Baseline
+
+### Before (pre-hook, advisory-only)
+- Mutation removals per 5 builds: 0
+- Measured effect fill rate: ~5%
+- S5 bypassed gates (last 5 builds): ~2
+- Reference files loaded at Phase 0: 3
+- Active hooks: 0
+- Tests per gate: advisory only (no enforcement)
+
+### After targets (FB25–FB29, under hook enforcement)
+- Mutation removals per 5 builds: ≥1
+- Measured effect fill rate: ≥80%
+- S5 bypassed gates: 0
+- Reference files loaded at Phase 0: 7+
+- Active hooks: 13
+- Tests per gate: automated + live
+
 ## Active Mutation Portfolio
 | Mutation ID | Target Failure | Applied | Measured Effect | Status |
 |-------------|---------------|---------|-----------------|--------|
