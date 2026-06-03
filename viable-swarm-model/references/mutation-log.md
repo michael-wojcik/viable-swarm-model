@@ -2207,3 +2207,43 @@ producing `mutations-applied.md` and filling measured effects.
 **Change**: Added "Agent Task Sizing for Tier 2+ Builds" subsection to Phase 2. Mandates splitting work across multiple focused spawns with ≤500 lines of expected output per agent.
 **Expected effect**: Agent timeout rate drops from 5/10 to ≤1/10.
 **Measured effect**: Pending — awaits FB29 validation.
+
+
+---
+
+## Mutation FB28-A4 — 2026-06-03 (Append-Only — Autonomous)
+
+**Session**: FB28 fitness build follow-up
+**File**: `viable-swarm-model/SKILL.md` Phase 4
+**Type**: append-only
+**Target failure mode**: FB28 process audit scored missing `phase4-gate.md` as CRITICAL (−20 points). The existing Phase 4 gate rule existed but was one-line and lacked enforcement weight.
+**Rationale**: Strengthen the existing gate rule with explicit file format, test counts, and process auditor penalty.
+**Change**: Expanded Phase 4 Gate Declaration to require structured markdown with test results, build status, import check status, and explicit PASS/BLOCK verdict. Added process auditor penalty clause.
+**Expected effect**: Zero builds proceed to Phase 5 without a properly formatted phase4-gate.md.
+**Measured effect**: Pending — awaits FB29 validation.
+
+---
+
+## Mutation FB28-A5 — 2026-06-03 (Append-Only — Autonomous)
+
+**Session**: FB28 fitness build follow-up
+**File**: `viable-swarm-model/SKILL.md` Phase 6
+**Type**: append-only
+**Target failure mode**: FB28 skipped Phase 6 entirely — no `vsm_coordinator` spawned, no `integration-contract.md`. Current text said coordinator was MANDATORY but didn't specify timeout fallback.
+**Rationale**: Timeout is not a valid reason to skip a mandatory phase.
+**Change**: Added Phase 6 Skip Prevention subsection. Requires re-spawning coordinator with narrower scope if timeout occurs. `.kimi/integration-contract.md` must exist before Phase 7/8.
+**Expected effect**: Zero Tier 2+ builds skip integration verification.
+**Measured effect**: Pending — awaits FB29 validation.
+
+---
+
+## Mutation FB28-S5 — 2026-06-03 (Structural — USER APPROVED)
+
+**Session**: FB28 fitness build follow-up
+**File**: `viable-swarm-model/SKILL.md` Phase 2
+**Type**: structural
+**Target failure mode**: FB28 had 5 agent timeouts. S5 manually completed foundation audit, test writing, and main.py wiring — ~30% of agent work done by S5 instead of agents.
+**Rationale**: S5 manual coding/auditing violates the VSM parallelization premise and consumes context needed for orchestration.
+**Change**: Added Agent Timeout Fallback Protocol subsection. Mandates re-spawning with narrower scope on first timeout, `vsm_explore` fallback on second timeout, and S5 manual work capped at ONE file only.
+**Expected effect**: S5 manual intervention drops from ~30% of agent work to ≤5%.
+**Measured effect**: Pending — awaits FB29 validation.
