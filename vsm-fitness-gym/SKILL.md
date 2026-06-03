@@ -170,10 +170,15 @@ flowchart TD
 1. Check line count: `wc -l ~/vsm/viable-swarm-model/references/hypotheses.md`.
    If >500 lines, use `grep "status: untested"` and `grep -B 2 -A 8` for targeted
    extraction instead of `ReadFile`.
-2. Read `~/vsm/viable-swarm-model/references/knowledge-broker.md` — cross-skill
-   digest of main skill gaps and coach-scored weaknesses. Prioritize hypotheses
-   that address recently identified active failure modes.
-3. Filter hypotheses for `status: untested`. Present to user (S5) for selection,
+2. Read `~/vsm/viable-swarm-model/references/knowledge-broker.md` — **MANDATORY**.
+   Cross-skill digest of main skill gaps and coach-scored weaknesses. Prioritize
+   hypotheses that address recently identified active failure modes. If the broker
+   is empty or >7 days old, emit algedonic: "Knowledge broker stale."
+3. Read `~/vsm/viable-swarm-model/references/mutation-state.md` — **MANDATORY**.
+   Check which mutations are on probation or ineffective. Design experiments that
+   test probationary mutations. If a mutation is ineffective, design an experiment
+   that tests whether a redesigned version would work.
+4. Filter hypotheses for `status: untested`. Present to user (S5) for selection,
    ordered by: (a) relevance to knowledge-broker gaps, (b) confidence level,
    (c) time since last test.
 

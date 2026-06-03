@@ -46,12 +46,22 @@ was followed correctly.
      written by S5, this is a MEDIUM process violation.
 
 5. **Phase 8b Mutation Tracking Compliance**
-   - Does `mutations-applied.md` exist in the build directory?
+   - Does `.kimi/mutations-applied.md` exist in the build directory?
    - Does it track all proposed mutations with status
      (Applied / Deferred / Rejected / Overlooked)?
    - Are any mutations marked `Overlooked` without justification?
-   - **Finding**: Overlooked mutations without justification are a MEDIUM
-     process violation.
+   - Does `references/mutation-state.md` exist and contain entries for mutations
+     from this build (status: probation, effective, monitor, or ineffective)?
+   - **Finding**: Missing `mutations-applied.md` is a CRITICAL process violation
+     (hard gate bypass). Missing `mutation-state.md` update is a HIGH violation.
+     Overlooked mutations without justification are a MEDIUM violation.
+
+6. **Knowledge Broker Compliance**
+   - Does `references/knowledge-broker.md` exist and contain structured content
+     (not just the template header)?
+   - Is the "Last updated" field within 7 days of the build date?
+   - **Finding**: Empty or stale broker (>7 days) is a MEDIUM process violation.
+     The organism cannot learn cross-skill without a populated broker.
 
 **Output**:
 Write findings to `.kimi/process-audit.md` using this structure:
@@ -68,6 +78,7 @@ Write findings to `.kimi/process-audit.md` using this structure:
 | Phase 7c Security Re-Check | [PASS/FAIL] | [CRITICAL/HIGH/MEDIUM] | [evidence] |
 | Phase 8 Reflection | [PASS/FAIL] | [CRITICAL/HIGH/MEDIUM] | [evidence] |
 | Phase 8b Mutations | [PASS/FAIL] | [CRITICAL/HIGH/MEDIUM] | [evidence] |
+| Knowledge Broker | [PASS/FAIL] | [MEDIUM] | [evidence] |
 
 ## Process Violations
 

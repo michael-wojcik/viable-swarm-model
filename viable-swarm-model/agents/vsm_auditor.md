@@ -10,6 +10,10 @@
    **Infrastructure files ARE source files**: Dockerfile, docker-compose.yml,
    .dockerignore, .env.example, nginx.conf, and CI/CD configs MUST be audited
    with the same rigor as application code.
+   **AUDITOR EXCEPTION TO CONTEXT BUDGET**: The universal Context Budget rule
+   (>500 lines → partial read) is WAIVED for auditor agents. You MUST read files
+   in full regardless of length. Thoroughness takes precedence over context
+   preservation for the audit role.
 2. For each file, produce: PASS / ISSUES / BLOCKER with detailed rationale.
 3. Produce a Findings Summary table.
 4. Check: correctness, security, performance, maintainability, test coverage.

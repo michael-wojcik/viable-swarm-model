@@ -39,16 +39,18 @@
 - Active hooks: 0
 - Tests per gate: advisory only (no enforcement)
 
-### After targets (FB25–FB29, under layered enforcement)
-- Mutation removals per 5 builds: ≥1
-- Measured effect fill rate: ≥60% (revised from 80% — prompt enforcement is
-  probabilistic, not deterministic like hooks)
-- S5 + subagent bypassed gates: ≤1 (revised from 0 — prompt rules are strong
-  but not absolute; combined with hooks for foreground + session audit)
-- Reference files loaded at Phase 0: 7+
+### After targets (FB26–FB30, post-comprehensive-audit)
+- Mutation removals per 5 builds: ≥2 (enforced by removal gate + cemetery)
+- Measured effect fill rate: ≥80% (enforced by Phase 8c-ii hard gate)
+- S5 bypassed gates: 0 (enforced by Gate Artifact Protocol — every transition
+  requires a verifiable artifact; unlogged overrides are process violations)
+- Reference files loaded at Phase 0: 8+ (including knowledge-broker.md and
+  mutation-state.md as MANDATORY)
 - Active hooks: 9 (secondary layer for S5 ONLY)
-- Prompt-hardened agents: ALL writing agents (primary layer)
-- Tests per gate: automated + live + prompt-rule verification
+- Prompt-hardened agents: ALL agents (primary layer)
+- Gate artifact verification: EVERY phase transition
+- Knowledge broker freshness: ≤7 days (checked by process auditor)
+- Ineffective mutation redesign deadline: FB26 for all 3 remaining
 
 ## Telemetry Archive Note
 > **2026-06-02**: All pre-2026-06-02 telemetry in `~/.vsm-telemetry-pre-2026-06-02-archive`
@@ -60,16 +62,28 @@
 ## Active Mutation Portfolio
 | Mutation ID | Target Failure | Applied | Measured Effect | Status |
 |-------------|---------------|---------|-----------------|--------|
-| FB24-1 | Phase 4 bypass when 1 test fails | 2026-06-02 | **PENDING** | Awaiting FB25 |
-| FB24-2 | Enum type safety audit | 2026-06-02 | **PENDING** | Awaiting FB25 |
-| FB23-3 | Inline fix prevention (Phase 6/7) | 2026-06-01 | Ineffective | Inline fixes occurred in FB23, FB24 |
-| FB23-4 | Frontend build script verification | 2026-06-01 | **PENDING** | Awaiting FB25 |
-| FB22-2 | Frontend stub prevention | 2026-05-30 | Ineffective | Stubs in FB23, FB24 |
+| FB25-S1 | False hook claim removal | 2026-06-02 | **PENDING** | Awaiting FB26 |
+| FB25-S2 | Mutation checkpoint hard gate | 2026-06-02 | **PENDING** | Awaiting FB26 |
+| FB24-1 | Phase 4 bypass when 1 test fails | 2026-06-02 | **PENDING** | Awaiting FB26 |
+| FB24-2 | Enum type safety audit | 2026-06-02 | **PENDING** | Awaiting FB26 |
+| FB23-4 | Frontend build script verification | 2026-06-01 | **PENDING** | Awaiting FB26 |
 | FB21-8 | Security-lessons topical reorg | 2026-05-25 | Effective | No duplicate L-numbers since |
-| FB21-24 | Process auditor spawn | 2026-05-25 | **PENDING** | Awaiting FB25 |
-| FB19-7 | Cross-skill mutation log review | 2026-05-25 | Ineffective | Main log still records gym/coach mutations |
-| FB18-10 | Mutation tracking checkpoint | 2026-05-24 | Ineffective | FB24 missing mutations-applied.md |
-| FB9 | Pattern 46 (Test-First Exit Gate) | 2026-05-23 | Ineffective | Bypassed in FB20, FB21, FB24 |
+| FB21-24 | Process auditor spawn | 2026-05-25 | Effective | Process auditor now checks 6 items |
+| R19 | Contract repopulation | 2026-05-26 | Effective | Contracts present in FB25 |
+| R20 | Validate agent files script | 2026-05-26 | Effective | All validators pass |
+
+## Removed Mutation Portfolio (Cemetery)
+| Mutation ID | Target Failure | Removed | Rationale |
+|-------------|---------------|---------|-----------|
+| FB19-7 | Cross-skill log review | 2026-06-02 | Skills share git repo; separation artificial |
+| FB23-3 | Inline fix prevention (prompt-only) | 2026-06-02 | Redundant with hook + vsm-main.md Layer 1 |
+
+## Ineffective Mutations Awaiting Redesign
+| Mutation ID | Target Failure | Builds Failed | Action |
+|-------------|---------------|---------------|--------|
+| FB22-2 | Frontend stub prevention | FB23, FB24 | Redesign — add live-data-fetch verification |
+| FB18-10 | Mutation tracking checkpoint | FB23, FB24, FB25 | Redesign — hard gate in vsm_meta.md |
+| FB9/P46 | Test-First Exit Gate | FB20, FB21, FB24 | Redesign — explicit S5 verification command |
 
 ## Efficiency Baselines
 > Populated by session-end hook telemetry. Initial values are estimates.

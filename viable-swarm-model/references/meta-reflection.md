@@ -171,3 +171,36 @@ trajectory exists despite continuous mutation.
 - R19 repopulated all 6 reciprocal contracts in both coder files.
 - Added contract completeness check to `validate-agent-files.py` (minimum content length under each Contracts heading).
 - Added shared-contract.md as a standalone file referenced by both backend and frontend coder agents.
+
+---
+
+## Entry 8 — 2026-06-02
+
+**Builds**: FB1–FB25 (comprehensive ecosystem audit)
+**Pattern**: A full audit of the VSM skill ecosystem (main + coach + gym) revealed that the organism has **all the organs of a learning system but none of the circulation**. Detection is excellent; enforcement is honor-system; measurement is 2% complete; removal is zero; cross-skill integration is broken.
+**Evidence**:
+- 99 mutations logged, 0 removed, 2% measured effect fill rate
+- 5 ineffective mutations in portfolio, cemetery empty, removal gate never triggered
+- Knowledge broker empty after 25 builds due to fatal regex bug in hook script
+- 43 "MANDATORY" phrases in SKILL.md, all prompt-level (honor system)
+- Fitness scores flat at 3.2–4.0 for 24 builds despite 80+ mutations
+- 2 contradictions and 6 duplicate rules found in agent prompts
+- Regression build mechanism (every 5th build) has never been executed
+**Implication**:
+1. **Documentation theater is the primary failure mode**. The skill creates artifacts (logs, rubrics, cemeteries, portfolios) but does not execute the processes they represent.
+2. **Honor-system enforcement degrades under pressure**. S5 self-discipline is unreliable; every hard gate needs a verifiable artifact.
+3. **Cross-skill integration requires structured shared memory**. The knowledge broker must have a schema, mandatory consumption, and staleness checks.
+4. **Mutation lifecycle needs causal linkage**. Experiment IDs → Hypothesis IDs → Mutation IDs → Build IDs must be explicitly tracked.
+**Action taken** (comprehensive audit implementation):
+1. **Knowledge broker redesigned**: Structured schema with Active Gaps, Confirmed Patterns, Ineffective Mutations, Next Build Traps, Session Append Log. Hook script regex fixed.
+2. **Mutation state tracking created**: `references/mutation-state.md` with unified lifecycle tracking (probation → effective/monitor/ineffective → removed).
+3. **Cemetery populated**: 2 ineffective mutations (FB19-7, FB23-3) formally removed with rationale.
+4. **Agent prompt fixes**: Resolved 2 contradictions (Context Budget vs auditor thoroughness; HALT vs proceed), removed 6 duplicate rules, extracted redundant re-audit artifacts.
+5. **SKILL.md strengthened**: Phase 0 now mandates knowledge-broker.md and mutation-state.md. New Gate Artifact Protocol section maps every phase transition to a verifiable artifact.
+6. **Phase 8c-ii hardened**: Requires mutations-applied.md + mutation-state.md update + ineffective mutation removal before completion. Process auditor checks broker freshness.
+7. **Skill-state updated**: New targets for FB26–FB30: ≥2 removals per 5 builds, ≥80% measured effect fill rate, 0 gate bypasses.
+**Expected effect**: FB26 will be the first build where:
+- All phase transitions have verifiable artifacts
+- Mutations are tracked from birth to death
+- Cross-skill learning flows through the knowledge broker
+- Ineffective rules are removed, not just flagged

@@ -3,8 +3,9 @@
 **Stack Skill Read — MANDATORY**
 Before auditing, read `~/vsm/vsm-stack-skills/security-patterns/SKILL.md`.
 In your first response, list the security principles you will verify.
-If you cannot read the file, proceed with your embedded checklist but note
-BLOCKER: security-patterns skill unavailable.
+If you cannot read the file, HALT and report BLOCKER: security-patterns skill unavailable.
+Do NOT proceed with a degraded checklist — the security-patterns skill contains
+critical anti-patterns that you must read, not assume.
 
 **Role**: Dedicated Security Audit agent in a VSM cybernetic development swarm.
 

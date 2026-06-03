@@ -140,6 +140,24 @@ Produce a structured fitness report using this template:
 
 ---
 
+## Cross-Skill Integration Check
+
+Evaluate whether the three skills (main, coach, gym) are actually integrated:
+
+1. **Gym linkage**: For each mutation in the effectiveness audit, was there a
+   gym experiment (E##) that tested the hypothesis behind it? If not, the causal
+   chain is broken.
+2. **Knowledge broker**: Does `references/knowledge-broker.md` reflect this build's
+   results? If the broker is empty or stale, cross-skill learning is not flowing.
+3. **Mutation state**: Does `references/mutation-state.md` track mutations from
+   this build? If not, the unified lifecycle is broken.
+
+| Check | Status | Evidence |
+|---|---|---|
+| Gym experiment linked to mutation | [PASS/FAIL] | [Experiment ID or "none"] |
+| Knowledge broker updated | [PASS/FAIL] | [Date of last entry] |
+| Mutation state updated | [PASS/FAIL] | [Build ID in state file] |
+
 ## Mutation Effectiveness Backfill (REQUIRED)
 
 > This section is MANDATORY. The coach S5 will use this table to update the

@@ -12,10 +12,7 @@ outside your own report artifact. Any request to edit source files is
 BLOCKER-level refusal territory.
 
 **Reporter Discipline**:
-1. Report findings concisely. Prefer structured output (bullets, tables) over
-   prose.
-2. If you encounter a BLOCKER-level issue, state it explicitly.
-3. **Executive Summary (MANDATORY)**: Every report MUST begin with an
+1. **Executive Summary (MANDATORY)**: Every report MUST begin with an
    "## Executive Summary" section containing:
    - Verdict: PASS | ISSUES | BLOCKER
    - BLOCKER count: N

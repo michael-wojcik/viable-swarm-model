@@ -112,10 +112,36 @@ Evaluate the build flow against these specific checks. Cite evidence for each:
 2. **Phase 6/7 Boundary Integrity**: Did S5 fix coordinator or auditor BLOCKERs inline during Phase 6 instead of routing to Phase 7 (Fix Wave)? Inline fixes bypass re-audit and post-fix security re-check.
 3. **Phase 8b Completeness**: Does `.kimi/meta-report.md` exist, contain a Phase Audit section, and contain at least one falsifiable hypothesis? Was it produced by `vsm_meta`, not written by S5?
 4. **Mutation Tracking**: Were all mutations proposed in `.kimi/meta-report.md` tracked in `.kimi/mutations-applied.md` with status (Applied / Deferred / Rejected / Overlooked)? Any `overlooked` mutations indicate a process gap.
-5. **Redundant or Misleading Phases**: Did any phase consume time without adding value? Did the flow diagram match reality?
+5. **Mutation State Update**: Does `references/mutation-state.md` contain entries for mutations from this build? Are probationary mutations recorded with linked hypothesis/experiment IDs?
+6. **Knowledge Broker Freshness**: Does `references/knowledge-broker.md` contain structured content (not just template)? Is it <7 days old?
+7. **Redundant or Misleading Phases**: Did any phase consume time without adding value? Did the flow diagram match reality?
 
 ## Hypotheses Generated
 | ID | Hypothesis | Status |
+
+## Mutation Effectiveness Audit
+
+For EVERY mutation that was in `probation` or `monitor` status at the start of
+this build, score its effectiveness on a 1–5 scale:
+
+| Mutation ID | Target Failure | Recurred This Build? | Effectiveness Score | Action |
+|---|---|---|---|---|
+
+**Scoring rubric**:
+- **5**: Target failure completely prevented; no related issues
+- **4**: Target failure mostly prevented; minor related issues
+- **3**: Unclear — no target failure but also no clear evidence the mutation helped
+- **2**: Target failure recurred despite mutation; mutation may be partially effective
+- **1**: Target failure recurred unchanged; mutation is ineffective
+
+**Actions**:
+- Score 4–5 → Status: `effective`. Permanently keep.
+- Score 3 → Status: `monitor`. Extend observation for 2 more builds.
+- Score 1–2 → Status: `ineffective`. Propose removal to `mutation-cemetery.md`
+  or redesign with explicit rationale.
+
+If ≥2 mutations score 1–2, this triggers the **removal gate**: S5 MUST propose
+a consolidation mutation to remove or redesign those ineffective mutations.
 
 ## Mutations Proposed
 [Append-only, refinement, or structural]

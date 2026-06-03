@@ -509,13 +509,20 @@ Main agent (S5) performs:
    if exists. This is the organism's self-model — it knows what it is good/bad at,
    what its current "mood" is, and which mutations are pending measurement.
 6. **Read knowledge broker**: `~/vsm/viable-swarm-model/references/knowledge-broker.md`
-   if exists. This contains cross-skill digests from coach and gym — recent gaps,
-   confirmed hypotheses, and suggested experiments.
-7. **Read hypotheses**: `~/vsm/viable-swarm-model/references/hypotheses.md`
+   **MANDATORY**. This contains cross-skill digests from coach and gym — recent gaps,
+   confirmed hypotheses, and suggested experiments. If the broker is empty or
+   >7 days old, emit algedonic: "Knowledge broker stale. Cross-skill learning
+   may be impaired."
+7. **Read mutation state**: `~/vsm/viable-swarm-model/references/mutation-state.md`
+   **MANDATORY**. This tracks which mutations are active, probationary, ineffective,
+   or removed. S5 MUST know which rules are currently enforced before starting a build.
+8. **Read hypotheses**: `~/vsm/viable-swarm-model/references/hypotheses.md`
    if exists. Note any untested hypotheses that are relevant to this project.
 8. **Read meta-reflection**: `~/vsm/viable-swarm-model/references/meta-reflection.md`
    if exists.
-9. **Self-test + Agent-File Verification**: Verify all referenced files exist and are
+9. **Read meta-reflection**: `~/vsm/viable-swarm-model/references/meta-reflection.md`
+   if exists.
+10. **Self-test + Agent-File Verification**: Verify all referenced files exist and are
 readable. Verify the flow diagram parses. Verify the skill can describe its own
 phase sequence without contradiction. Specifically verify these custom agent definition
 files exist: `vsm-main.yaml`, `vsm_architect.yaml`, `vsm_product.yaml`,
@@ -529,7 +536,7 @@ Then spawn a trivial `vsm_meta` subagent with the task `"Reply 'ok'"`. If this f
 with an unknown subagent type error, **STOP immediately**. Emit algedonic:
 `--agent-file not loaded. Launch with: kimi --agent-file ~/vsm/viable-swarm-model/agents/vsm-main.yaml`.
 Do not proceed with the build.
-10. **Environment Compatibility Smoke Test** (conditional): If the build declares
+11. **Environment Compatibility Smoke Test** (conditional): If the build declares
 framework dependencies (e.g., `[graphql library]`, `[validation library]`, `[orm library]`, `[backend framework]`,
 `celery`), run a quick import verification in a fresh subprocess BEFORE dispatching
 implementation agents:
@@ -542,11 +549,11 @@ and ask the user to resolve the dependency conflict. Writing code that cannot be
 imported wastes agent capacity and produces unverifiable artifacts.
 **Source**: FB22 `strawberry-graphql==0.256.0` failed to import with installed
 pydantic; the API layer file agent consumed ~15 minutes before S5 intervened (H152).
-11. **Read runtime capacity**: Read `~/.kimi/config.toml` and extract
+12. **Read runtime capacity**: Read `~/.kimi/config.toml` and extract
    `background.max_running_tasks` (default 4 if absent). Log this value in
    `plan.md` as the parallel agent ceiling. NEVER exceed this limit when
    spawning background subagents.
-12. **Variety Assessment** (Ashby's Law): Estimate project complexity and classify tier.
+13. **Variety Assessment** (Ashby's Law): Estimate project complexity and classify tier.
    Use the `max_running_tasks` value read in step 11 as the agent ceiling.
    Do not invent artificial sub-limits — if the host allows 8, use up to 8.
    - **Tier 1** (<1000 lines, 1-2 services): Standard flow, no mid-wave gates needed
@@ -1055,7 +1062,20 @@ effect? Did it cause a new issue?
 > following are verified:
 > 1. `.kimi/mutations-applied.md` exists with all mutations tracked
 > 2. Every mutation has a non-empty "Measured effect" field
-> 3. S5 explicitly states: "Phase 8c-ii complete. All mutations measured."
+> 3. `references/mutation-state.md` has been updated with new mutations (status:
+>    probation) and any status changes from this build
+> 4. Ineffective mutations (score 1–2) have been moved to `mutation-cemetery.md`
+>    or explicitly deferred with rationale
+> 5. S5 explicitly states: "Phase 8c-ii complete. All mutations measured.
+>    [N] new probationary, [M] effective, [O] ineffective removed."
+>
+> **Self-enforcement mechanism**: Before spawning `vsm_process_auditor`, S5 MUST
+> verify `.kimi/mutations-applied.md` exists. If it does not exist, STOP — do not
+> spawn the process auditor. Write the file now. The process auditor's report
+> MUST include a check that `.kimi/mutations-applied.md` exists and that
+> `references/mutation-state.md` was updated. If the process auditor finds the
+> checkpoint bypassed, its compliance score is capped at 2/5 and the build is
+> NOT complete.
 >
 > For the main S5 session, the `stop-verifier.sh` hook will BLOCK session
 > completion if the gate is not met. For background subagents, this is enforced
@@ -1171,7 +1191,39 @@ If findings justify architecture changes:
 Append-only and refinement mutations are unlimited.
 `git commit` all changes.
 
-## 8. Cross-File Integration Verification Checklist
+## 8. Gate Artifact Protocol (Self-Enforcement Architecture)
+
+Every phase transition in the VSM workflow MUST have a **verifiable artifact**
+that proves the gate was cleared. S5 CANNOT proceed to the next phase without
+producing or verifying the artifact. This replaces honor-system enforcement
+with evidence-based enforcement.
+
+### Artifact Map
+
+| Phase Transition | Required Artifact | Verification Command | If Missing |
+|---|---|---|---|
+| Phase 2b → 2c | `.kimi/foundation-audit.md` | `ls .kimi/foundation-audit.md` | Re-spawn auditor |
+| Phase 3b → 3d | `.kimi/implementation-audit.md` | `ls .kimi/implementation-audit.md` | Re-spawn auditor |
+| Phase 4 → 5 | `.kimi/phase4-gate.md` with `PASS` | `grep PASS .kimi/phase4-gate.md` | Route to Phase 7 |
+| Phase 5 → 6 | `.kimi/security-report.md` | `ls .kimi/security-report.md` | Re-spawn security |
+| Phase 6 → 7 | `.kimi/synthesis-integration.md` | `ls .kimi/synthesis-integration.md` | Re-spawn coordinator + auditor |
+| Phase 7 → 4/8 | `.kimi/re-audit-report.md` | `ls .kimi/re-audit-report.md` | Fix wave NOT complete |
+| Phase 8 → 8b | `.kimi/lessons.md` with structured entry | `grep "Source:" .kimi/lessons.md` | Write missing entries |
+| Phase 8b → 8c | `.kimi/meta-report.md` | `ls .kimi/meta-report.md` | Re-spawn vsm_meta |
+| Phase 8b → 8c | `.kimi/process-audit.md` | `ls .kimi/process-audit.md` | Re-spawn process_auditor |
+| Phase 8c → end | `.kimi/mutations-applied.md` + updated `mutation-state.md` | `ls .kimi/mutations-applied.md` + `grep "probation\|effective\|ineffective" references/mutation-state.md` | STOP — hard gate |
+
+### Override Protocol
+
+If S5 believes an artifact is unnecessary for a specific build (e.g., trivial
+single-file refactor), the override MUST be:
+1. **Documented** in `plan.md` with rationale
+2. **Logged** in `.kimi/mutations-applied.md` as "Artifact [X] waived — rationale: [Y]"
+3. **Reviewed** by `vsm_process_auditor` in its compliance score
+
+Unlogged overrides are process violations.
+
+## 9. Cross-File Integration Verification Checklist
 
 Run ALL checks from `references/integration-checklist.md`. Summary:
 
@@ -1194,7 +1246,7 @@ Run ALL checks from `references/integration-checklist.md`. Summary:
 
 **Rule**: ANY failure → send back to responsible S1 BEFORE quality gates.
 
-## 9. Security Gate Checklist
+## 10. Security Gate Checklist
 
 Run ALL checks from `references/security-lessons.md`. Summary:
 
@@ -1216,7 +1268,7 @@ Run ALL checks from `references/security-lessons.md`. Summary:
 16. JWT_SECRET required, min 32 chars, app refuses start without it
 17. [server-sent events]: short-lived token exchange, never long-lived JWT in URL
 
-## 10. Exit Criteria
+## 11. Exit Criteria
 
 Stop iterating when ALL true:
 1. No BLOCKERs in **re-audit** report (not original — re-audit after fixes)
@@ -1235,7 +1287,7 @@ escalate to user.
 | 1 | MEDIUM | Feature X not implemented | Manual workaround | v2.0 |
 ```
 
-## 11. The Mutation System
+## 12. The Mutation System
 
 This skill is a learning organism. It modifies its own files between sessions.
 All files in `~/vsm/viable-swarm-model` are mutable.
@@ -1294,7 +1346,7 @@ If Phase 0 self-test fails because of a bad mutation:
 3. Re-run Phase 0 self-test
 4. Document the reversion as a new mutation entry (learning what NOT to change)
 
-## 12. Orchestration Guide
+## 13. Orchestration Guide
 
 Content distributed to canonical locations:
 - **Comprehension Checkpoint**, **Background Task Management**, **Quick Decision Tree** → `SKILL.md` Phase 0a
