@@ -1,7 +1,7 @@
 #!/bin/bash
 # VSM Knowledge Broker Hook
-# Writes cross-skill digest to knowledge-broker.md on session end.
-# Fixed 2026-06-02: regex patterns now match actual build directory paths.
+# Appends raw session entries to the build directory's .kimi/ folder.
+# The curated digest lives in references/knowledge-broker.md (updated by S5).
 #
 # Event: SessionEnd
 
@@ -12,10 +12,9 @@ SESSION_ID=$(echo "$PAYLOAD" | jq -r '.session_id // "unknown"')
 CWD=$(echo "$PAYLOAD" | jq -r '.cwd // "/tmp"')
 REASON=$(echo "$PAYLOAD" | jq -r '.reason // "unknown"')
 
-BROKER_FILE="$HOME/vsm/viable-swarm-model/references/knowledge-broker.md"
 TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
-# Determine skill context from CWD — FIXED: match actual directory structures
+# Determine skill context from CWD
 SKILL_CONTEXT="unknown"
 if [[ "$CWD" =~ vsm-fitness-builds/coach || "$CWD" =~ vsm-fitness-coach ]]; then
     SKILL_CONTEXT="coach"
@@ -28,7 +27,7 @@ fi
 # If CWD doesn't have .kimi/, try to find the most recent build directory
 BUILD_DIR="$CWD"
 if [[ ! -d "$BUILD_DIR/.kimi" ]]; then
-    if [[ "$SKILL_CONTEXT" == "main" ]]; then
+    if [[ "$SKILL_CONTEXT" == "main" || "$SKILL_CONTEXT" == "unknown" ]]; then
         LATEST=$(find "$HOME/vsm-fitness-builds/coach" -maxdepth 1 -name 'FB*' -type d 2>/dev/null | sort | tail -1)
         if [[ -n "$LATEST" && -d "$LATEST/.kimi" ]]; then
             BUILD_DIR="$LATEST"
@@ -54,7 +53,7 @@ if [[ "$SKILL_CONTEXT" == "main" ]]; then
     fi
 
     DIGEST=$(cat << EOF
-- [$TIMESTAMP] Main Build ($SESSION_ID): Gaps — $GAPS
+[$TIMESTAMP] Main Build ($SESSION_ID): Gaps — $GAPS
 EOF
 )
 
@@ -65,7 +64,7 @@ elif [[ "$SKILL_CONTEXT" == "coach" ]]; then
         LAST_SCORE=$(grep -E 'FB[0-9]+.*score' "$FITNESS_LEDGER" 2>/dev/null | tail -1 | grep -oE '[0-9]\.[0-9]' | tail -1 || true)
     fi
     DIGEST=$(cat << EOF
-- [$TIMESTAMP] Coach Eval ($SESSION_ID): Last score $LAST_SCORE
+[$TIMESTAMP] Coach Eval ($SESSION_ID): Last score $LAST_SCORE
 EOF
 )
 
@@ -79,23 +78,14 @@ elif [[ "$SKILL_CONTEXT" == "gym" ]]; then
         RECENT_RESULTS="(no recent results)"
     fi
     DIGEST=$(cat << EOF
-- [$TIMESTAMP] Gym Results ($SESSION_ID): $RECENT_RESULTS
+[$TIMESTAMP] Gym Results ($SESSION_ID): $RECENT_RESULTS
 EOF
 )
 fi
 
-# Append to Session Append Log section if it exists; otherwise append to file
-if [[ -n "$DIGEST" ]]; then
-    if grep -q "## Session Append Log" "$BROKER_FILE" 2>/dev/null; then
-        # Append after the marker line
-        sed -i '' "/## Session Append Log/a\\
-$DIGEST" "$BROKER_FILE" 2>/dev/null || echo "$DIGEST" >> "$BROKER_FILE"
-    else
-        echo "" >> "$BROKER_FILE"
-        echo "## Session Append Log" >> "$BROKER_FILE"
-        echo "" >> "$BROKER_FILE"
-        echo "$DIGEST" >> "$BROKER_FILE"
-    fi
+# Write to project-local .kimi/ directory (ephemeral, not tracked)
+if [[ -n "$DIGEST" && -d "$BUILD_DIR/.kimi" ]]; then
+    echo "$DIGEST" >> "$BUILD_DIR/.kimi/knowledge-broker-log.md"
 fi
 
 exit 0

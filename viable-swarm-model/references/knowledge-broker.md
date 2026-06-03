@@ -1,8 +1,8 @@
 # VSM Knowledge Broker — Cross-Skill Digest
 
-> **Updated by**: Session-end hook, fitness coach Phase 5, gym Phase 5
+> **Updated by**: S5 during Phase 8 / coach Phase 5 / gym Phase 5 (curated tables)
 > **Read by**: All three skills at Phase 0 (MANDATORY)
-> **Schema version**: 1.0
+> **Schema version**: 1.2
 > **Last updated**: 2026-06-02
 
 ---
@@ -102,9 +102,17 @@
 
 ---
 
-## Session Append Log
+## Raw Session Log
 
-> Entries appended automatically by `knowledge-broker.sh` SessionEnd hook.
+> Raw chronological session entries are written by `knowledge-broker.sh` to
+> `.kimi/knowledge-broker-log.md` in the **build directory** (not in the skill repo).
+> This keeps ephemeral session data with other build artifacts and avoids
+> modifying tracked skill files.
+>
+> To review raw entries for a specific build:
+> ```bash
+> cat ~/vsm-fitness-builds/coach/FB[N]/.kimi/knowledge-broker-log.md
+> ```
 
 ---
 
