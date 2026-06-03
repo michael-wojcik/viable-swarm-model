@@ -2180,3 +2180,30 @@ producing `mutations-applied.md` and filling measured effects.
 **Rationale**: New failure modes discovered in FB28 that existing skills did not cover.
 **Expected effect**: Next build with GraphQL/S3/Pydantic catches these patterns before they become BLOCKERs.
 **Measured effect**: Pending — awaits FB29 validation.
+
+
+---
+
+## Mutation FB28-S3 — 2026-06-03 (Structural — USER APPROVED, post-audit gap-fill)
+
+**Session**: FB28 fitness build follow-up
+**File**: `viable-swarm-model/SKILL.md` Phase 2
+**Type**: structural
+**Target failure mode**: H214 was confirmed in FB28 but existed only in the build prompt draft, not in the skill's formal phase sequence. S5 could skip Check 16 unless the prompt explicitly required it.
+**Rationale**: Hypotheses confirmed by fitness builds must be promoted to structural rules in SKILL.md, not just tracked in hypotheses.md.
+**Change**: Added Phase 2d — Architecture→Implementation Handoff Verification (Check 16) as MANDATORY for Tier 2+ builds. Includes 6-point checklist with explicit failure criteria.
+**Expected effect**: Zero Tier 2+ builds proceed to Phase 3 without handoff verification.
+**Measured effect**: Pending — awaits FB29 validation.
+
+---
+
+## Mutation FB28-S4 — 2026-06-03 (Structural — USER APPROVED, post-audit gap-fill)
+
+**Session**: FB28 fitness build follow-up
+**File**: `viable-swarm-model/SKILL.md` Phase 2
+**Type**: structural
+**Target failure mode**: H217 identified agent timeout as the primary drag on Tier 2+ scores. FB28 had 5 agent timeouts. The "≤500 lines per task" rule was only in the FB29 prompt draft, not in SKILL.md.
+**Rationale**: Prevention rules must live in the skill file, not just in ephemeral prompt drafts.
+**Change**: Added "Agent Task Sizing for Tier 2+ Builds" subsection to Phase 2. Mandates splitting work across multiple focused spawns with ≤500 lines of expected output per agent.
+**Expected effect**: Agent timeout rate drops from 5/10 to ≤1/10.
+**Measured effect**: Pending — awaits FB29 validation.
