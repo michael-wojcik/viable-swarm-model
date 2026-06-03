@@ -232,20 +232,15 @@ PAYLOAD=$(jq -n \
     '{cwd: $cwd, stop_hook_active: $stop_hook_active}')
 
 run_hook "$SCRIPT_DIR/stop-verifier.sh" "$PAYLOAD"
-# Check if mutation-log.md was updated
-if grep -q "Effective (auto-filled from trainer backfill" "$TMPDIR/vsm/viable-swarm-model/references/mutation-log.md" 2>/dev/null; then
-    echo "  ✅ PASSED: Auto-filled measured effect from trainer backfill"
+# Check if backfill file was created (hook does NOT modify tracked mutation-log.md;
+# it writes ephemeral backfill for S5 to apply during Phase 8c-ii)
+if [[ -f "$TMPDIR/.kimi/mutation-backfill.md" ]] && grep -q "FB25-1 | Effective" "$TMPDIR/.kimi/mutation-backfill.md" 2>/dev/null; then
+    echo "  ✅ PASSED: Extracted trainer backfill to ephemeral mutation-backfill.md"
     ((PASSED++))
 else
-    # Check if it was filled at all (sed may have worked differently)
-    if grep -q "Measured effect.*Effective" "$TMPDIR/vsm/viable-swarm-model/references/mutation-log.md" 2>/dev/null; then
-        echo "  ✅ PASSED: Auto-filled measured effect from trainer backfill"
-        ((PASSED++))
-    else
-        echo "  ❌ FAILED: Did not auto-fill measured effect"
-        cat "$TMPDIR/vsm/viable-swarm-model/references/mutation-log.md"
-        ((FAILED++))
-    fi
+    echo "  ❌ FAILED: Did not extract trainer backfill"
+    ls -la "$TMPDIR/.kimi/" 2>/dev/null || echo "No .kimi directory"
+    ((FAILED++))
 fi
 export HOME="$REAL_HOME"
 

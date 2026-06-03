@@ -313,7 +313,7 @@ and proposes mutations. Not spawned during normal build flows — invoked via
 
 ### 4.1 Agent Architecture
 
-All 15 leaf agents inherit from a shared base via a **two-level hierarchy**:
+All 17 leaf agents inherit from a shared base via a **two-level hierarchy**:
 
 **YAML inheritance** (`extend` field): The CLI recursively resolves `extend` by
 overwriting (not appending). Child YAMLs must declare their complete tool lists.
@@ -380,12 +380,12 @@ flowchart TD
     P2A[Phase 2b: Audit<br/>vsm_auditor]
     P2M[Phase 2c: Model + Auth Validation<br/>S5 checks data models file + auth layer file vs data-model.md]
     P2D{<choice>BLOCKERs</choice>?}
-    P3[Phase 3: Implementation Wave (3a–3e)<br/>Backend: parallel routers<br/>Frontend: sequential shared→pages]
+    P3[Phase 3: Implementation Wave (3a–3f)<br/>Backend: parallel routers<br/>Frontend: sequential shared→pages]
     P3S[TaskOutput block=true]
     P3M["Phase 3c: Mid-Wave S2 Check<br/>vsm_coordinator (conditional, Tier 2+)"]
     P3A[Audit + Coordination<br/>vsm_auditor + vsm_coordinator]
     P3D{<choice>BLOCKERs</choice>?}
-    P3E[Phase 3d: Entry-Point Wiring<br/>MANDATORY]
+    P3D_WIRING[Phase 3d: Entry-Point Wiring<br/>MANDATORY]
     P3D2[Phase 3e: Frontend Config Validation<br/>S5 checks frontend config files]
     P4[Phase 4: Testing + Infra Wave<br/>vsm_backend_tester + vsm_frontend_tester + vsm_devops_coder]
     P4S[TaskOutput block=true]
@@ -396,9 +396,6 @@ flowchart TD
     P5L[Document LOW as<br/>known limitation]
     P6[Phase 6: Integration Verification<br/>vsm_coordinator + vsm_auditor]
     P6D{<choice>ANY failure</choice>?}
-    P7[Phase 7: Fix Wave<br/>vsm_backend_fix_agent + vsm_frontend_fix_agent]
-    P7R[Re-audit changed files]
-    P7D{<choice>BLOCKERs remain<br/>iterations < 3</choice>?}
     P7E[Escalate to User<br/>AskUserQuestion]
     P7S[Phase 7c Post-Fix Security Re-Check<br/>vsm_security on modified auth/GraphQL/WebSocket]
     P7F{<choice>regressions found</choice>?}
@@ -420,7 +417,9 @@ flowchart TD
     P0D -->|<choice>no</choice>| P0R
     P0R --> P0X
     P0X --> P0E
-    P0E -->|<choice>pass</choice>| P0P
+    P0E -->|<choice>pass</choice>| P0B
+    P0B[Phase 0b: Stack Detection<br/>Verify SKILL-REGISTRY.md<br/>Verify stack skills exist]
+    P0B --> P0P
     P0E -->|<choice>fail</choice>| P0E_F
     P0E_F --> END
     P0P --> P1
@@ -441,11 +440,13 @@ flowchart TD
     P3M --> P3A
     P3A --> P3D
     P3D -->|<choice>yes</choice>| P7_IMPL
-    P3D -->|<choice>no</choice>| P3E
-    P3E --> P3D2
+    P3D -->|<choice>no</choice>| P3D_WIRING
+    P3D_WIRING --> P3D2
     P3D2 --> P3F
     P3F[Phase 3f: Frontend Cross-File Import Check<br/>S5 verifies all imports resolve]
     P3F --> P4
+    P3D2 -->|<choice>fail</choice>| P3
+    P3F -->|<choice>fail</choice>| P3
     P4 --> P4S
     P4S --> P4R
     P4R --> P4G
@@ -464,7 +465,8 @@ flowchart TD
     P7R_F --> P7D_F{BLOCKERs remain<br/>iterations < 3?}
     P7D_F -->|<choice>yes</choice>| P7_FOUNDATION
     P7D_F -->|<choice>no, max reached</choice>| P7E
-    P7D_F -->|<choice>no, all clear</choice>| P2
+    P7D_F -->|<choice>no, all clear</choice>| P2B
+    P2B[Sub-Wave 2b: Dependent Infrastructure<br/>Re-verify foundation]
     P7_IMPL[Phase 7: Fix Wave<br/>Implementation BLOCKERs]
     P7_IMPL --> P7R_I[Full test suite re-run + re-audit ALL files]
     P7R_I --> P7D_I{BLOCKERs remain<br/>iterations < 3?}
@@ -475,7 +477,9 @@ flowchart TD
     P7F -->|<choice>yes</choice>| P7_IMPL
     P7F -->|<choice>no</choice>| P4
     P7E --> END
-    P8 --> P8M
+    P8 --> P8C2
+    P8C2[Phase 8c-ii: Mutation Verification Checkpoint<br/>Verify mutations-applied.md<br/>Update mutation-state.md]
+    P8C2 --> P8M
     P8M --> P8S
     P8S --> P8V
     P8V -->|<choice>yes</choice>| P8W
@@ -516,7 +520,7 @@ Main agent (S5) performs:
 7. **Read mutation state**: `~/vsm/viable-swarm-model/references/mutation-state.md`
    **MANDATORY**. This tracks which mutations are active, probationary, ineffective,
    or removed. S5 MUST know which rules are currently enforced before starting a build.
-8. **Log active traps and probationary mutations in plan.md** **(NEW — FB26-S4)**:
+9. **Log active traps and probationary mutations in plan.md** **(NEW — FB26-S4)**:
    After reading broker and mutation state, S5 MUST extract and explicitly log:
    - Any broker traps marked `[ACTIVE]` or with build-specific targets
    - Any probationary mutations (status: probation) from mutation-state.md
@@ -553,10 +557,10 @@ Main agent (S5) performs:
 12. **Environment Compatibility Smoke Test** (conditional): If the build declares
     framework dependencies (e.g., `[graphql library]`, `[validation library]`, `[orm library]`, `[backend framework]`,
     `celery`), run a quick import verification in a fresh subprocess BEFORE dispatching
-    implementation agents:
-    ```bash
-    verify imports using language-specific method for declared dependencies
-    ```
+    implementation agents. Use the language-specific import command:
+    - Python: `python3 -c "import strawberry; import pydantic; import sqlalchemy"`
+    - Node: `node -e "require('vite'); require('@apollo/client')"`
+    - Rust: `cargo check --offline` (if Cargo.toml exists)
     If ANY import fails, STOP the build immediately. Report the environment
     incompatibility, do NOT dispatch agents that cannot runtime-verify their code,
     and ask the user to resolve the dependency conflict. Writing code that cannot be
@@ -568,7 +572,7 @@ Main agent (S5) performs:
     `plan.md` as the parallel agent ceiling. NEVER exceed this limit when
     spawning background subagents.
 14. **Variety Assessment** (Ashby's Law): Estimate project complexity and classify tier.
-    Use the `max_running_tasks` value read in step 12 as the agent ceiling.
+    Use the `max_running_tasks` value read in step 13 as the agent ceiling.
    Do not invent artificial sub-limits — if the host allows 8, use up to 8.
    - **Tier 1** (<1000 lines, 1-2 services): Standard flow, no mid-wave gates needed
    - **Tier 2** (1000-3000 lines, 2-3 services): Add Phase 3c mid-wave S2 check,
@@ -594,7 +598,7 @@ If ANY agent has not returned after 5 minutes, S5 MUST inspect its `output.log`
 (via `TaskOutput` or `ReadFile`) before assuming it is stuck. If the agent is
 making progress, let it continue. If it is looping or hung, stop it with
 `TaskStop` and re-spawn.
-12. Write `plan.md`.
+15. Write `plan.md`.
 
 **Comprehension Checkpoint** (universal — apply before declaring ANY phase complete):
 Before proceeding to the next phase, S5 MUST be able to explain:
@@ -608,10 +612,22 @@ If explanation reveals gaps → revisit before proceeding.
 ### Phase 0b: Stack Detection & Skill Verification
 
 Before starting any build:
-1. Detect the stack (user-specified, auto-detected from manifest files, or asked)
-2. Verify `~/vsm/vsm-stack-skills/SKILL-REGISTRY.md` exists
-3. Verify relevant `[language]-pitfalls` and `*-patterns` skills exist
-4. Run `python ~/vsm/vsm-stack-skills/validate-skills.py`
+1. **Detect the stack** (user-specified, auto-detected from manifest files, or asked)
+2. **Verify `~/vsm/vsm-stack-skills/SKILL-REGISTRY.md` exists**
+   - If missing → emit algedonic: "Stack skill registry missing. Build cannot verify prevention rules."
+   - STOP and ask user to verify `extra_skill_dirs` includes `~/vsm`
+3. **Verify relevant `[language]-pitfalls` and `*-patterns` skills exist**
+   - If a required skill is missing → emit algedonic: "Missing stack skill: [language]-pitfalls"
+   - For missing skills, S5 MUST read ALL available pitfall skills and apply generic patterns
+   - Log missing skills in `plan.md` under `## Known Limitations`
+4. **Run `python3 ~/vsm/vsm-stack-skills/validate-skills.py`**
+   - If script fails → emit algedonic: "Stack skill validation failed"
+   - Review validation output; fix any CRITICAL findings before proceeding
+   - Log validation result in `plan.md`
+5. **If stack is unrecognized** (no manifest, no user specification):
+   - Ask user for stack clarification via `AskUserQuestion`
+   - Do NOT assume Python/FastAPI/React defaults
+   - Defaulting to a stack without verification has caused 3+ build failures (FB16, FB19, FB22)
 
 ### Phase 1: Intelligence (S4)
 Spawn `vsm_architect` subagent. Review output. S3/S4 homeostat: max 3
@@ -787,7 +803,11 @@ Before proceeding to Phase 5, verify:
 2. `run frontend tests` / `run frontend tests` reports **zero failures** (frontend)
 3. `run frontend build` / `run type checker` reports **zero errors** (frontend)
 4. **Frontend production build**: `npm run build` (or equivalent) MUST succeed with zero errors. TypeScript compilation (`tsc -b`) and the bundler (Vite/Webpack) must both pass. This is a HARD BLOCK — build failures must not leak to Phase 6.
-5. **Backend subprocess import check**: `verify imports using language-specific method "import app.main; import app.graphql; import app.sio; import app.tasks"` must succeed with zero errors. A NameError or ImportError at module level is a HARD BLOCK even if tests somehow pass. This catches module-level side effects (e.g., `settings = Settings()`, `engine = create_async_engine(...)`) that break imports but may not surface during test discovery.
+5. **Backend subprocess import check**: Run a Python subprocess import verification:
+   ```bash
+   python3 -c "import app.main; import app.graphql; import app.sio; import app.tasks"
+   ```
+   This must succeed with zero errors. A `NameError` or `ImportError` at module level is a HARD BLOCK even if tests somehow pass. This catches module-level side effects (e.g., `settings = Settings()`, `engine = create_async_engine(...)`) that break imports but may not surface during test discovery.
 
 If ANY of the above report failures, **STOP**. Do not proceed to Phase 5 (Security Gate)
 or Phase 6 (Integration). Route to Phase 7 (Fix Wave). Fixing downstream integration
@@ -1267,27 +1287,39 @@ If findings justify architecture changes:
 Append-only and refinement mutations are unlimited.
 `git commit` all changes.
 
-## 8. Gate Artifact Protocol (Self-Enforcement Architecture)
+## 8. Gate Artifact Protocol (Layered Enforcement)
 
 Every phase transition in the VSM workflow MUST have a **verifiable artifact**
-that proves the gate was cleared. S5 CANNOT proceed to the next phase without
-producing or verifying the artifact. This replaces honor-system enforcement
-with evidence-based enforcement.
+that proves the gate was cleared. However, the enforcement mechanism varies by
+layer. S5 MUST understand which layer applies to each transition.
+
+### Enforcement Reality
+
+| Layer | Scope | Coverage |
+|---|---|---|
+| **Layer 1 — Prompt-hardened rules** | ALL agents (S5, foreground, background) | Universal — every agent system prompt embeds structural gate rules |
+| **Layer 2 — kimi-cli hooks** | S5 ONLY (main session agent) | 3 of 10 transitions have PreToolUse/Stop hooks; 7 rely on Layer 1 only |
+| **Layer 3 — Session-end audit** | S5 ONLY | Retroactive scan of `.kimi/` for bypass attempts |
+
+**Critical**: Background subagents bypass ALL hooks (empirically confirmed, H300).
+The primary enforcement for ~90% of implementation work is Layer 1. Hooks are a
+secondary safety net for S5 only. Do not claim "CANNOT proceed" when the actual
+mechanism is "MUST NOT proceed — violation will be caught by retroactive audit."
 
 ### Artifact Map
 
-| Phase Transition | Required Artifact | Verification Command | If Missing |
+| Phase Transition | Required Artifact | Enforcement Layer | If Missing |
 |---|---|---|---|
-| Phase 2b → 2c | `.kimi/foundation-audit.md` | `ls .kimi/foundation-audit.md` | Re-spawn auditor |
-| Phase 3b → 3d | `.kimi/implementation-audit.md` | `ls .kimi/implementation-audit.md` | Re-spawn auditor |
-| Phase 4 → 5 | `.kimi/phase4-gate.md` with `PASS` | `grep PASS .kimi/phase4-gate.md` | Route to Phase 7 |
-| Phase 5 → 6 | `.kimi/security-report.md` | `ls .kimi/security-report.md` | Re-spawn security |
-| Phase 6 → 7 | `.kimi/synthesis-integration.md` | `ls .kimi/synthesis-integration.md` | Re-spawn coordinator + auditor |
-| Phase 7 → 4/8 | `.kimi/re-audit-report.md` | `ls .kimi/re-audit-report.md` | Fix wave NOT complete |
-| Phase 8 → 8b | `.kimi/lessons.md` with structured entry | `grep "Source:" .kimi/lessons.md` | Write missing entries |
-| Phase 8b → 8c | `.kimi/meta-report.md` | `ls .kimi/meta-report.md` | Re-spawn vsm_meta |
-| Phase 8b → 8c | `.kimi/process-audit.md` | `ls .kimi/process-audit.md` | Re-spawn process_auditor |
-| Phase 8c → end | `.kimi/mutations-applied.md` + updated `mutation-state.md` | `ls .kimi/mutations-applied.md` + `grep "probation\|effective\|ineffective" references/mutation-state.md` | STOP — hard gate |
+| Phase 2b → 2c | `.kimi/foundation-audit.md` | Layer 1 (prompt) | Re-spawn auditor |
+| Phase 3b → 3d | `.kimi/implementation-audit.md` | Layer 1 (prompt) | Re-spawn auditor |
+| Phase 4 → 5 | `.kimi/phase4-gate.md` with `PASS` | **Layer 2** (gate-guardian.sh blocks fraudulent PASS writes) + Layer 1 | Route to Phase 7 |
+| Phase 5 → 6 | `.kimi/security-report.md` | Layer 1 (prompt) | Re-spawn security |
+| Phase 6 → 7 | `.kimi/synthesis-integration.md` | **Layer 2** (boundary-guardian.sh blocks inline fixes) + Layer 1 | Re-spawn coordinator + auditor |
+| Phase 7 → 4/8 | `.kimi/re-audit-report.md` | Layer 1 (prompt) | Fix wave NOT complete |
+| Phase 8 → 8b | `.kimi/lessons.md` with structured entry | Layer 1 (prompt) | Write missing entries |
+| Phase 8b → 8c | `.kimi/meta-report.md` | Layer 1 (prompt) | Re-spawn vsm_meta |
+| Phase 8b → 8c | `.kimi/process-audit.md` | Layer 1 (prompt) | Re-spawn process_auditor |
+| Phase 8c → end | `.kimi/mutations-applied.md` + updated `mutation-state.md` | **Layer 2** (stop-verifier.sh blocks session end) + Layer 1 | STOP — hard gate |
 
 ### Override Protocol
 

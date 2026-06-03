@@ -65,6 +65,10 @@ if [[ -f "$CWD/.kimi/phase4-gate.md" ]] && grep -qi "PASS" "$CWD/.kimi/phase4-ga
     if [[ ! -f "$CWD/.kimi/.gate-guardian-verified" ]]; then
         AUDIT_WARNINGS="${AUDIT_WARNINGS}- phase4-gate.md contains PASS but no hook verification marker. Possible background agent bypass.\n"
     fi
+else
+    if [[ -f "$CWD/.kimi/meta-report.md" || -f "$CWD/.kimi/security-report.md" ]]; then
+        AUDIT_WARNINGS="${AUDIT_WARNINGS}- CRITICAL: Build reached Phase 5+ without phase4-gate.md PASS. This is a process violation.\n"
+    fi
 fi
 
 # Check 2: Boundary window violations
@@ -76,6 +80,30 @@ fi
 if [[ ! -f "$CWD/.kimi/.structural-mutation-approved" ]]; then
     if [[ -f "$CWD/SKILL.md" ]] && [[ -f "$TELEMETRY_DIR/sessions.jsonl" ]]; then
         AUDIT_WARNINGS="${AUDIT_WARNINGS}- No structural mutation approval marker. If SKILL.md or agents/ were modified this session, it was unapproved.\n"
+    fi
+fi
+
+# Check 4: Missing mutations-applied.md in completed builds
+if [[ -f "$CWD/.kimi/meta-report.md" || -f "$CWD/.kimi/process-audit.md" ]]; then
+    if [[ ! -f "$CWD/.kimi/mutations-applied.md" ]]; then
+        AUDIT_WARNINGS="${AUDIT_WARNINGS}- CRITICAL: Phase 8b complete but mutations-applied.md missing. Phase 8c-ii bypassed.\n"
+    fi
+fi
+
+# Check 5: Missing lessons.md in completed builds
+if [[ -f "$CWD/.kimi/meta-report.md" && ! -f "$CWD/.kimi/lessons.md" ]]; then
+    AUDIT_WARNINGS="${AUDIT_WARNINGS}- Phase 8b complete but lessons.md missing. Phase 8 reflection bypassed.\n"
+fi
+
+# Check 6: Missing process-audit.md in completed builds
+if [[ -f "$CWD/.kimi/meta-report.md" && ! -f "$CWD/.kimi/process-audit.md" ]]; then
+    AUDIT_WARNINGS="${AUDIT_WARNINGS}- Phase 8b complete but process-audit.md missing. Process auditor not spawned.\n"
+fi
+
+# Check 7: knowledge-broker.md consumption check
+if [[ -f "$CWD/plan.md" ]]; then
+    if ! grep -qi "knowledge-broker\|Active Constraints\|broker trap" "$CWD/plan.md" 2>/dev/null; then
+        AUDIT_WARNINGS="${AUDIT_WARNINGS}- plan.md has no knowledge broker references. Phase 0 broker read likely skipped.\n"
     fi
 fi
 

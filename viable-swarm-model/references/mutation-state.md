@@ -24,15 +24,29 @@
 
 | ID | Source | Type | Target Failure | Status | Builds Tested | Effectiveness Score | Linked Hypothesis | Linked Experiment |
 |---|---|---|---|---|---|---|---|---|
-| FB25-S1 | FB25 Coach | structural | False hook claim | probation | 1 | 5 | H300 | E17 |
-| FB25-S2 | FB25 Coach | structural | Mutation checkpoint bypass | probation | 1 | 1 | H209 | — |
-| FB24-1 | FB24 Build | append-only | Phase 4 gate bypass | probation | 2 | 5 | H154 | — |
-| FB24-2 | FB24 Build | append-only | Enum type safety | probation | 2 | 5 | H203 | — |
-| FB23-4 | FB23 Build | append-only | Frontend build verification | probation | 3 | 5 | H154 | — |
-| FB21-8 | FB21 Build | append-only | Duplicate L-numbers | effective | 4 | 5 | — | — |
-| FB21-24 | FB21 Build | refinement | Process auditor spawn | monitor | 4 | 3 | — | — |
-| R19 | FB23 Build | refinement | Contract repopulation | effective | 2 | 4 | — | — |
-| R20 | FB23 Build | refinement | Validate agent files | effective | 2 | 4 | — | — |
+| FB25-S1 | FB25 Coach | structural | False hook claim | effective | 2 | 5 | H300 | E17 |
+| FB25-S2 | FB25 Coach | structural | Mutation checkpoint bypass | ineffective | 2 | 1 | H209 | — |
+| FB24-1 | FB24 Build | append-only | Phase 4 gate bypass | effective | 3 | 5 | H154 | — |
+| FB24-2 | FB24 Build | append-only | Enum type safety | effective | 3 | 5 | H203 | — |
+| FB23-4 | FB23 Build | append-only | Frontend build verification | effective | 4 | 5 | H154 | — |
+| FB22-2 | FB22 Build | append-only | Frontend stub prevention | effective | 4 | 5 | H157 | — |
+| FB21-8 | FB21 Build | append-only | Duplicate L-numbers | effective | 5 | 5 | — | — |
+| FB21-24 | FB21 Build | refinement | Process auditor spawn | monitor | 5 | 3 | — | — |
+| FB9 / P46 | FB9 Build | append-only | Test-First Exit Gate | effective | 5 | 5 | H154 | — |
+| R19 | FB23 Build | refinement | Contract repopulation | effective | 3 | 4 | — | — |
+| R20 | FB23 Build | refinement | Validate agent files | effective | 3 | 4 | — | — |
+| FB26-1 | FB26 Build | append-only | UploadFile.read() wrong API | probation | 0 | — | — | — |
+| FB26-2 | FB26 Build | append-only | Auth endpoints missing rate limits | probation | 0 | — | — | — |
+| FB26-3 | FB26 Build | append-only | Path traversal in file upload | probation | 0 | — | — | — |
+| FB26-4 | FB26 Build | append-only | Socket.IO arbitrary room access | probation | 0 | — | — | — |
+| FB26-5 | FB26 Build | append-only | Hardcoded config defaults | probation | 0 | — | — | — |
+| FB26-A3 | FB26 Build | append-only | Score trend tracking | probation | 0 | — | — | — |
+| FB26-S1 | FB26 Build | append-only | CORS wildcard severity | probation | 0 | — | H211 | — |
+| FB26-S2 | FB26 Build | append-only | .dockerignore co-creation | probation | 0 | — | H210 | — |
+| FB26-S3 | FB26 Build | structural | H209 hard gate | probation | 0 | — | H209 | — |
+| FB26-S4 | FB26 Build | structural | Phase 0 broker/state read | probation | 0 | — | — | — |
+| FB26-S5 | FB26 Build | structural | Session-start auto-injection | probation | 0 | — | — | — |
+| FB26-S6 | FB26 Build | structural | Process auditor broker scored check | probation | 0 | — | — | — |
 
 ---
 
@@ -40,11 +54,7 @@
 
 | ID | Source | Type | Target Failure | First Ineffective | Builds Failed | Action Required | Deadline Build |
 |---|---|---|---|---|---|---|---|
-| FB23-3 | FB23 Build | refinement | Inline fix prevention | FB23 | FB23, FB24 | **REMOVE** — replace with tool-enforced boundary | FB26 |
-| FB22-2 | FB22 Build | append-only | Frontend stub prevention | FB23 | FB23, FB24 | **KEEP** — Effective in FB26 (score 5/5, zero stub pages) | FB26 |
-| FB19-7 | FB19 Build | append-only | Cross-skill log review | FB19 | FB19–FB25 | **REMOVE** — no longer relevant | FB26 |
-| FB18-10 | FB18 Build | structural | Mutation checkpoint | FB23 | FB23, FB24, FB25 | **REDESIGN** — hard gate in vsm_meta.md | FB26 |
-| FB9 / P46 | FB9 Build | append-only | Test-First Exit Gate | FB20 | FB20, FB21, FB24 | **KEEP** — Effective in FB26 (score 5/5, legitimate gate, 45 tests pass) | FB26 |
+| *(none currently)* | | | | | | | |
 
 ---
 
@@ -52,7 +62,9 @@
 
 | ID | Source | Type | Removal Build | Rationale | Replacement |
 |---|---|---|---|---|---|
-| *(none yet)* | | | | | |
+| R-1 / FB19-7 | FB19 Build | append-only | 2026-06-02 | Cross-skill log separation artificial; skills share git repo | None — remove constraint entirely |
+| R-2 / FB23-3 | FB23 Build | refinement | 2026-06-02 | Redundant with hook + vsm-main.md Layer 1 | Strengthen boundary-guardian.sh |
+| FB18-10 | FB18 Build | structural | 2026-06-03 | Failed FB23, FB24, FB25, FB26 (4 consecutive builds). Redesign to vsm_meta.md did not work. | FB26-S3 (tool-enforced hard gate) |
 
 ---
 
@@ -61,8 +73,8 @@
 | Link | Active Mutations | Ineffective Mutations | Removal Rate |
 |---|---|---|---|
 | Gym experiment → Mutation | 3 | 0 | 0% |
-| Fitness build → Mutation | 6 | 5 | 0% |
-| Hypothesis → Mutation | 4 | 2 | 0% |
+| Fitness build → Mutation | 15 | 1 | 6.7% |
+| Hypothesis → Mutation | 6 | 0 | 0% |
 
 **Target for FB26–FB30**: Removal rate ≥ 20% (at least 1 ineffective mutation removed per 5 builds).
 

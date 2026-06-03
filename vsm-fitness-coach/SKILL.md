@@ -259,7 +259,12 @@ The coach does NOT interfere during the build. It observes and records.
 3. **Integration Verification has zero unfixed HIGH/MEDIUM findings** — same rule as Security Gate.
 4. **All tests pass** — backend pytest green, frontend build green, import checks green.
 5. **`.kimi/lessons.md` exists** in the build directory.
-6. **S5 explicitly states**: "Coach Phase 1 complete. VSM build artifacts collected. Proceeding to Coach Phase 2 (Evaluate Performance)."
+6. **Trainer spawn verified**: S5 MUST verify that `vsm_trainer` was spawned during this build with:
+   - Build directory path
+   - Rubric path
+   - Mutation log path
+   If trainer was NOT spawned, spawn it NOW before proceeding. A fitness build without trainer evaluation is incomplete.
+7. **S5 explicitly states**: "Coach Phase 1 complete. VSM build artifacts collected. Trainer spawned. Proceeding to Coach Phase 2 (Evaluate Performance)."
 
 > **Algedonic signal**: If you find yourself about to declare the fitness build "complete" or ask the user "what next?" before running Coach Phases 2-6, STOP immediately. This is a critical process violation. The coach flow has 6 phases. Phase 1 is only the build execution.
 
@@ -487,7 +492,23 @@ introduce variance. A small delta (±0.2) may be noise, not mutation effect.
 Treat deltas ≥0.5 as significant.
 
 **Is this a regression build?** Check the build ID: if FB[N] where N mod 5 == 0,
-it is a regression build. Skip to "Step R: Write regression build prompt" below.
+it is a regression build. This is NOT optional — it is a hard requirement for
+longitudinal mutation quality measurement. If N mod 5 == 0 and you are NOT doing
+a regression build, STOP. You are violating the coach's core learning protocol.
+
+**Regression Build Hard Block**:
+Before synthesizing a new domain build, verify:
+```bash
+# Extract build number from proposed ID
+echo "$BUILD_ID" | grep -qE "FB[0-9]+" && N=$(echo "$BUILD_ID" | sed 's/FB//') || N=0
+if [ $((N % 5)) -eq 0 ]; then
+  echo "REGRESSION BUILD REQUIRED: $BUILD_ID must re-run gold standard prompt"
+  echo "Proceed to Step R immediately. Do NOT synthesize new domain."
+fi
+```
+
+If this check indicates regression build required but you proceed with new domain
+synthesis, the process auditor will score this as a CRITICAL process violation.
 
 ---
 

@@ -1880,3 +1880,214 @@ effects non-empty, (3) S5 explicitly states completion.
 producing `mutations-applied.md` and filling measured effects.
 
 **Measured effect**: Ineffective (Score: 1) — `mutations-applied.md` missing in FB26 `.kimi/`. Process audit CRITICAL-1 confirms absence. This is the 4th consecutive build bypass (FB23→FB26). Prompt-only instructions are insufficient. Superseded by FB26-S3 structural hard gate (tool-enforced, retroactive creation detection, Phase 8c-ii moved BEFORE Phase 8b).
+
+---
+
+## Mutation FB22-2 — 2026-05-25 (Append-only)
+
+**Session**: FB22 fitness build evaluation
+**File**: `agents/vsm_frontend_coder.md`
+**Type**: append-only
+**Target failure mode**: Frontend stub pages (no live data fetch)
+**Rationale**: FB21–FB24 produced frontend pages with mock data or no data fetching. The prevention rule adds a gotcha requiring live data fetching verification.
+
+**Expected effect**: Frontend pages must fetch live data from backend APIs, GraphQL, or WebSocket. Stub pages are BLOCKERs.
+
+**Measured effect**: **Effective (Score: 5)** — FB26 had zero stub pages. All 5 pages fetched live data. FB25 also had zero stubs. Target failure mode prevented in 2 consecutive builds.
+
+---
+
+## Mutation FB24-1 — 2026-06-02 (Append-only)
+
+**Session**: FB24 fitness build evaluation
+**File**: `viable-swarm-model/SKILL.md` (Phase 4)
+**Type**: append-only
+**Target failure mode**: Phase 4 gate bypass when exactly 1 test fails
+**Rationale**: FB20, FB21, FB24 all proceeded past Phase 4 with failing tests. The gate was advisory, not enforced. Added explicit S5 verification command and hard block language.
+
+**Expected effect**: Zero test failures before Phase 5/6. A single failing test routes to Phase 7.
+
+**Measured effect**: **Effective (Score: 5)** — FB25 had 82+53 tests, 0 failures, legitimate gate. FB26 had 45+17 tests, 0 failures, legitimate gate. No bypasses in 2 consecutive builds.
+
+---
+
+## Mutation FB24-2 — 2026-06-02 (Append-only)
+
+**Session**: FB24 fitness build evaluation
+**File**: `viable-swarm-model/references/anti-patterns.md` + `python-pitfalls/SKILL.md`
+**Type**: append-only
+**Target failure mode**: SQLAlchemy enum type mismatch (`Mapped[Enum] = mapped_column(sa.String)`) causing `.value` AttributeError at runtime
+**Rationale**: FB24 `stock.py:338` crashed with `AttributeError: 'str' object has no attribute 'value'`. All 4 audit agents missed this. Only pytest caught it. Added anti-pattern #47 and enum type-safety check.
+
+**Expected effect**: All enum columns use `sa.Enum(...)` or equivalent. No `mapped_column(sa.String)` for enum types.
+
+**Measured effect**: **Effective (Score: 5)** — FB25 used `sa.Enum(...)` for all enum columns; zero `.value` crashes. FB26 also zero crashes. Auditor now flags enum type mismatches.
+
+---
+
+## Mutation FB26-1 — 2026-06-03 (Append-only)
+
+**Session**: FB26 fitness build (DocuFlow)
+**File**: `~/vsm/vsm-stack-skills/python-pitfalls/SKILL.md`
+**Type**: append-only
+**Target failure mode**: UploadFile.read() wrong API signature causing TypeError
+**Rationale**: FB26 `documents.py` used `await file.read(max_bytes=...)` causing `TypeError: read() takes no keyword arguments`. The correct FastAPI `UploadFile.read()` signature is `await file.read(size)` with a positional argument.
+
+**Expected effect**: Zero instances of `file.read(max_bytes=...)` or `file.read(limit=...)` in new code.
+
+**Measured effect**: **PENDING** — awaiting FB27 validation.
+
+---
+
+## Mutation FB26-2 — 2026-06-03 (Append-only)
+
+**Session**: FB26 fitness build (DocuFlow)
+**File**: `~/vsm/vsm-stack-skills/security-patterns/SKILL.md`
+**Type**: append-only
+**Target failure mode**: Auth endpoints missing rate limits
+**Rationale**: FB26 `auth.py` had no rate limiting on `/login`, `/register`, or `/refresh` endpoints. Brute-force vulnerability.
+
+**Expected effect**: All auth endpoints have `@limiter.limit("...")` decorators or equivalent rate limiting.
+
+**Measured effect**: **PENDING** — awaiting FB27 validation.
+
+---
+
+## Mutation FB26-3 — 2026-06-03 (Append-only)
+
+**Session**: FB26 fitness build (DocuFlow)
+**File**: `~/vsm/vsm-stack-skills/security-patterns/SKILL.md`
+**Type**: append-only
+**Target failure mode**: Path traversal in file upload
+**Rationale**: FB26 `documents.py` used user-provided filenames directly without sanitization. `filename = file.filename` allows `../../etc/passwd` traversal.
+
+**Expected effect**: All file uploads sanitize filenames with `secure_filename()` or equivalent. Upload paths are constrained to designated directories.
+
+**Measured effect**: **PENDING** — awaiting FB27 validation.
+
+---
+
+## Mutation FB26-4 — 2026-06-03 (Append-only)
+
+**Session**: FB26 fitness build (DocuFlow)
+**File**: `~/vsm/vsm-stack-skills/security-patterns/SKILL.md`
+**Type**: append-only
+**Target failure mode**: Socket.IO arbitrary room access
+**Rationale**: FB26 `sio.py` allowed any authenticated user to join any room via `sio.enter_room(sid, room_id)` without verifying room membership.
+
+**Expected effect**: WebSocket room access verifies ownership/membership before `enter_room()`.
+
+**Measured effect**: **PENDING** — awaiting FB27 validation.
+
+---
+
+## Mutation FB26-5 — 2026-06-03 (Append-only)
+
+**Session**: FB26 fitness build (DocuFlow)
+**File**: `~/vsm/vsm-stack-skills/docker-pitfalls/SKILL.md`
+**Type**: append-only
+**Target failure mode**: Hardcoded config defaults in docker-compose or Dockerfile
+**Rationale**: FB26 `.env.example` had `VITE_WS_URL=ws://localhost:8000` but docker-compose realtime service exposes port 8001. Hardcoded defaults create environment mismatches.
+
+**Expected effect**: No hardcoded URLs or ports in Docker configs. All external endpoints sourced from env vars.
+
+**Measured effect**: **PENDING** — awaiting FB27 validation.
+
+---
+
+## Mutation FB26-A3 — 2026-06-03 (Append-only)
+
+**Session**: FB26 fitness build evaluation
+**File**: `~/vsm/vsm-fitness-coach/assets/fitness-report-template.md`
+**Type**: append-only
+**Target failure mode**: Score drops go unnoticed until entrenched
+**Rationale**: FB26 dropped from 4.0 → 3.6 (-0.4) with no regression alarm. Trend tracking makes decay visible.
+
+**Expected effect**: Every fitness report includes Score Trend table. Drops >0.3 trigger bold regression alarm with root-cause hypothesis.
+
+**Measured effect**: **PENDING** — awaiting FB27 validation.
+
+---
+
+## Mutation FB26-S1 — 2026-06-03 (Append-only)
+
+**Session**: FB26 fitness build (DocuFlow)
+**File**: `~/vsm/vsm-stack-skills/security-patterns/SKILL.md`
+**Type**: append-only
+**Target failure mode**: CORS wildcards consistently deferred because rated LOW
+**Rationale**: FB26 security gate rated `allow_methods=["*"]` and `allow_headers=["*"]` as LOW. They were deferred and remain unfixed. Elevating to MEDIUM forces fix.
+
+**Expected effect**: Zero CORS wildcards in final build. All rated MEDIUM or higher.
+
+**Measured effect**: **PENDING** — awaiting FB27 validation.
+
+---
+
+## Mutation FB26-S2 — 2026-06-03 (Append-only)
+
+**Session**: FB26 fitness build (DocuFlow)
+**File**: `~/vsm/vsm-stack-skills/docker-pitfalls/SKILL.md`
+**Type**: append-only
+**Target failure mode**: `.dockerignore` absence despite Dockerfile presence
+**Rationale**: FB26 foundation audit B5 flagged missing `.dockerignore`. DevOps agent created Dockerfiles but not `.dockerignore`. No agent owned its creation.
+
+**Expected effect**: 100% of builds with Dockerfiles also have `.dockerignore`.
+
+**Measured effect**: **PENDING** — awaiting FB27 validation.
+
+---
+
+## Mutation FB26-S3 — 2026-06-03 (Structural — USER APPROVED)
+
+**Session**: FB26 fitness build evaluation
+**File**: `viable-swarm-model/hooks/stop-verifier.sh` + `SKILL.md` Phase 8 sequencing
+**Type**: structural
+**Target failure mode**: H209 confirmed for 4th consecutive build (FB23→FB26). `mutations-applied.md` systematically bypassed.
+**Rationale**: Prompt-only mutations failed. Tool-enforced gate with retroactive creation detection + Phase 8c-ii moved BEFORE 8b.
+
+**Expected effect**: Session end blocked if `mutations-applied.md` missing. Phase 8c-ii runs before vsm_meta spawn.
+
+**Measured effect**: **PENDING** — awaiting FB27 validation. Note: FB26 itself did NOT have this mutation active during the build (applied post-build during evaluation).
+
+---
+
+## Mutation FB26-S4 — 2026-06-03 (Structural — USER APPROVED)
+
+**Session**: FB26 fitness build evaluation
+**File**: `viable-swarm-model/SKILL.md` Phase 0
+**Type**: structural
+**Target failure mode**: Post-mortem confirmed plan.md had zero references to knowledge-broker.md or mutation-state.md despite SKILL.md mandating them.
+**Rationale**: Added explicit Step 8 requiring S5 to log active traps and probationary mutations in plan.md. Process auditor checks this.
+
+**Expected effect**: Every plan.md contains "Active Constraints from Skill State" section.
+
+**Measured effect**: **PENDING** — awaiting FB27 validation. Note: FB26 itself did NOT have this mutation active during the build.
+
+---
+
+## Mutation FB26-S5 — 2026-06-03 (Structural — USER APPROVED)
+
+**Session**: FB26 fitness build evaluation
+**File**: `viable-swarm-model/hooks/session-start.sh`
+**Type**: structural
+**Target failure mode**: FB26-S4 relies on S5 compliance. History shows S5 forgets.
+**Rationale**: Auto-injection makes broker consumption unavoidable by writing `.kimi/session-context.md` before any agent spawns.
+
+**Expected effect**: `.kimi/session-context.md` exists at start of every build with broker traps and active mutations.
+
+**Measured effect**: **PENDING** — awaiting FB27 validation. Note: FB26 itself did NOT have this mutation active during the build.
+
+---
+
+## Mutation FB26-S6 — 2026-06-03 (Structural — USER APPROVED)
+
+**Session**: FB26 fitness build evaluation
+**File**: `viable-swarm-model/agents/vsm_process_auditor.md`
+**Type**: structural
+**Target failure mode**: FB26 process auditor gave broker freshness 5/10 (informational PASS) even though broker wasn't actually read by S5.
+**Rationale**: A 10-point scored check makes Phase 0 broker read a first-class compliance issue.
+
+**Expected effect**: Process auditor scores Phase 0 broker read as 0/10 if plan.md lacks "Active Constraints from Skill State" section.
+
+**Measured effect**: **PENDING** — awaiting FB27 validation. Note: FB26 itself did NOT have this mutation active during the build.
+

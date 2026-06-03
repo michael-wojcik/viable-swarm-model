@@ -178,9 +178,29 @@ flowchart TD
    Check which mutations are on probation or ineffective. Design experiments that
    test probationary mutations. If a mutation is ineffective, design an experiment
    that tests whether a redesigned version would work.
-4. Filter hypotheses for `status: untested`. Present to user (S5) for selection,
-   ordered by: (a) relevance to knowledge-broker gaps, (b) confidence level,
-   (c) time since last test.
+4. **Systematic Hypothesis Backlog Consumption** (MANDATORY):
+   - Count total untested hypotheses: `grep -c "status: untested" ~/vsm/viable-swarm-model/references/hypotheses.md`
+   - If count > 10, emit algedonic: "Hypothesis backlog exceeds 10 untested items. Cross-skill learning stalled."
+   - **Prioritization order** (non-negotiable):
+     1. Hypotheses linked to **Active Gaps** in knowledge-broker.md (G1-G8)
+     2. Hypotheses linked to **probationary mutations** in mutation-state.md
+     3. Hypotheses with **CRITICAL or HIGH** confidence and >14 days since proposal
+     4. Hypotheses with **MEDIUM** confidence and >21 days since proposal
+     5. All remaining untested hypotheses
+   - Select the **top 3** from this ordered list. Do not skip high-priority items.
+   - If a hypothesis has been "untested" for >30 days, mark it for auto-archive
+     (move to `hypotheses-archive.md` with `status: abandoned`)
+   - Present selected hypotheses to S5 with explicit priority justification.
+
+5. **Auto-archive stale hypotheses** (run AFTER selection):
+   ```bash
+   # Find hypotheses >30 days old with status: untested
+   grep -B5 "status: untested" ~/vsm/viable-swarm-model/references/hypotheses.md | \
+     grep -E "Proposed: 2026-0[1-4]-" | wc -l
+   ```
+   If any found, append them to `hypotheses-archive.md` with `status: abandoned`
+   and rationale: "Exceeded 30-day untested window. Auto-archived by gym Phase 0."
+   This prevents backlog bloat.
 
 ### Gym Phase 1: Design Experiments
 For each selected hypothesis, spawn `vsm_experiment_designer` subagent.
