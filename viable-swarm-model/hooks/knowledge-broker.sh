@@ -13,6 +13,7 @@ CWD=$(echo "$PAYLOAD" | jq -r '.cwd // "/tmp"')
 REASON=$(echo "$PAYLOAD" | jq -r '.reason // "unknown"')
 
 BROKER_FILE="$HOME/vsm/viable-swarm-model/references/knowledge-broker.md"
+BROKER_LOG="$HOME/vsm/viable-swarm-model/references/knowledge-broker-log.md"
 TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
 # Determine skill context from CWD — FIXED: match actual directory structures
@@ -84,18 +85,9 @@ EOF
 )
 fi
 
-# Append to Session Append Log section if it exists; otherwise append to file
+# Append to broker log file (untracked, append-only)
 if [[ -n "$DIGEST" ]]; then
-    if grep -q "## Session Append Log" "$BROKER_FILE" 2>/dev/null; then
-        # Append after the marker line
-        sed -i '' "/## Session Append Log/a\\
-$DIGEST" "$BROKER_FILE" 2>/dev/null || echo "$DIGEST" >> "$BROKER_FILE"
-    else
-        echo "" >> "$BROKER_FILE"
-        echo "## Session Append Log" >> "$BROKER_FILE"
-        echo "" >> "$BROKER_FILE"
-        echo "$DIGEST" >> "$BROKER_FILE"
-    fi
+    echo "$TIMESTAMP | $SKILL_CONTEXT | $SESSION_ID | $DIGEST" >> "$BROKER_LOG"
 fi
 
 exit 0

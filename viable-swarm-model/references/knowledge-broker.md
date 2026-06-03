@@ -1,8 +1,9 @@
 # VSM Knowledge Broker — Cross-Skill Digest
 
-> **Updated by**: Session-end hook, fitness coach Phase 5, gym Phase 5
+> **Updated by**: S5 during Phase 8 / coach Phase 5 / gym Phase 5 (curated tables);
+>   `knowledge-broker.sh` appends raw entries to `knowledge-broker-log.md` (untracked)
 > **Read by**: All three skills at Phase 0 (MANDATORY)
-> **Schema version**: 1.0
+> **Schema version**: 1.1
 > **Last updated**: 2026-06-02
 
 ---
@@ -102,9 +103,12 @@
 
 ---
 
-## Session Append Log
+## Session Log
 
-> Entries appended automatically by `knowledge-broker.sh` SessionEnd hook.
+> Raw session entries are append-only and stored in `knowledge-broker-log.md`
+> (untracked, updated by `knowledge-broker.sh` on every session end).
+> Read that file for chronological session history. This file contains the
+> curated digest only.
 
 ---
 
