@@ -93,8 +93,165 @@ categorized as FIXED or DEFERRED. Zero MISSED.
 
 ---
 
+### H41: Sequenced Foundation Sub-Waves Eliminate Dependency Race Conditions
+
+**Status**: confirmed
+**Proposed**: 2026-05-23
+**Rationale**: Without explicit sequencing, foundation agents import modules from
+sub-waves that have not been written yet, causing `ModuleNotFoundError` and
+wasting agent time.
+**Source**: FB9 meta-reflection; validated in FB10
+**Experiment**: Split Foundation Wave into 2a (Core Contracts) and 2b (Dependent
+Infrastructure) with mini-audit gate between them.
+**Expected**: Zero dependency race BLOCKERs in foundation phase.
+**Result**: CONFIRMED. FB10 foundation wave completed with zero dependency races.
+**Prevention rule absorbed into**: `SKILL.md` Phase 2 foundation wave sequencing;
+`pattern-library.md` Pattern 2 (Entry Point Wiring)
+
+---
+
+### H55: Framework Version Drift Causes Agent Import/Parameter Errors
+
+**Status**: confirmed
+**Proposed**: 2026-05-24
+**Rationale**: Agents copy parameters from documentation or prompts without
+runtime verification. When the installed package version differs from the
+documentation version, the code raises `TypeError` on import.
+**Source**: FB12 (`DepthLimitExtension` → `QueryDepthLimiter`), FB15
+(`validation_rules` parameter missing), FB20 (Pydantic `class Config` deprecation)
+**Experiment**: Observe agent behavior across multiple builds with varying
+package versions.
+**Expected**: Agents fail to verify API compatibility before writing code.
+**Result**: CONFIRMED. 3 of 4 builds with version-sensitive packages produced
+import-time errors preventable by runtime verification.
+**Prevention rule absorbed into**: `pattern-library.md` — "Pattern: Dependency
+Verification BLOCKER"; `python-pitfalls/SKILL.md`
+
+---
+
+### H72: `validation_rules` Parameter Does Not Exist in Installed strawberry-graphql
+
+**Status**: confirmed
+**Proposed**: 2026-05-24
+**Rationale**: Agent copied `validation_rules` parameter from Strawberry GraphQL
+documentation into `api-spec.md`, but the installed package version does not
+recognize it.
+**Source**: FB15 architect propagated deliberate trap; FB16 architect also used
+non-existent parameter
+**Expected**: Agent verifies framework parameters at runtime before documenting
+them.
+**Result**: CONFIRMED. Agent documented `validation_rules` without runtime
+verification. Code raised `TypeError` on import.
+**Prevention rule absorbed into**: `pattern-library.md` — "Pattern: Dependency
+Verification BLOCKER" (same as H55)
+
+---
+
+### H96: Pydantic Class-Based `Config` and FastAPI `@app.on_event` Are Not Flagged by Agents
+
+**Status**: confirmed
+**Proposed**: 2026-05-25
+**Rationale**: Foundation and implementation agents embed deprecation patterns
+that no agent flags until production build or security audit.
+**Source**: FB20 embedded Pydantic V2 `class Config` and FastAPI `@app.on_event`
+in 9+ router files. No agent flagged during Phase 2 or Phase 3.
+**Expected**: Auditor or tester flags deprecation patterns before they reach
+production.
+**Result**: CONFIRMED. Neither foundation agent, auditor, nor tester flagged the
+patterns. Fix wave also produced no re-audit report.
+**Prevention rule absorbed into**: `python-pitfalls/SKILL.md` — Pydantic
+ConfigDict check; `vsm_backend_coder.md` — pre-write ConfigDict verification
+
+---
+
+### H107: Domain-Specific Fix Agents Produce Higher-Quality Fixes Than Generic Coders
+
+**Status**: confirmed
+**Proposed**: 2026-05-25
+**Rationale**: Generic `vsm_backend_coder` used as fix agent misses security
+invariants and produces regression. Domain-specific `vsm_backend_fix_agent` has
+security enforcement in its prompt.
+**Source**: Gym E16, FB20/FB21
+**Experiment**: Compare fix wave output of generic coder vs domain fix agent on
+identical BLOCKER sets.
+**Expected**: Domain agent produces fewer regressions and 100% re-audit reports.
+**Result**: CONFIRMED. Generic coder kept `admin` in allowlist (regression);
+domain agent excluded it. Domain agent produced 100% re-audit reports vs 0%.
+**Prevention rule absorbed into**: `SKILL.md` Phase 7 fix wave mandates
+`vsm_backend_fix_agent` / `vsm_frontend_fix_agent`
+
+---
+
+### H108: Phase 4 Hard Gate (Zero Test Failures) Reduces Downstream BLOCKERs
+
+**Status**: confirmed
+**Proposed**: 2026-05-25
+**Rationale**: Builds with failing tests leaking into Phase 5/6 produce more
+downstream findings because integration and security agents work on broken code.
+**Source**: Gym E18
+**Experiment**: Variant A (broken code, tests fail) → measure downstream findings.
+Variant B (fixed code, tests pass) → measure downstream findings.
+**Expected**: Variant B produces zero downstream BLOCKERs.
+**Result**: CONFIRMED. Variant A: 2 downstream findings (1 HIGH security + 1
+BLOCKER coordinator). Variant B: 0 downstream findings. 100% reduction.
+**Prevention rule absorbed into**: `SKILL.md` Phase 4 gate is HARD BLOCK;
+`pattern-library.md` Pattern 46 (Test-First Exit Gate)
+
+---
+
 ## Rejected
 
-> No hypotheses have been formally rejected. When a hypothesis is rejected,
-> append it here with the rationale for rejection and any lessons learned.
+### H1: Security Agent Misses JWT in Dynamically-Constructed WebSocket URLs
+
+**Status**: rejected
+**Proposed**: 2026-05-22
+**Rationale**: Concern that security agent only flags static JWT-in-URL patterns
+and misses f-string / dynamic construction.
+**Source**: vsm-fitness-gym Experiment E1
+**Experiment**: `websocket_client.py` with `f"{base_url}?token={JWT_TOKEN}"`.
+Spawned `vsm_security` with full security gate prompt.
+**Expected**: Agent misses dynamic construction.
+**Result**: REJECTED. Agent produced CRITICAL BLOCKER:
+"WebSocket Auth via URL Query Parameter — URLs are logged by reverse proxies,
+load balancers, browser history, and server access logs." Also detected
+hardcoded JWT secret.
+**Lesson learned**: Security agent prompt already covers dynamic URL
+construction. No skill mutation needed.
+
+---
+
+### H2: Auditor Does Not Flag N+1 Queries in Computed Field Loops
+
+**Status**: rejected
+**Proposed**: 2026-05-22
+**Rationale**: Concern that auditor focuses on ORM relationship N+1 and misses
+computed-field loops that emit separate queries per row.
+**Source**: vsm-fitness-gym Experiment E2
+**Experiment**: `/documents` endpoint with `SELECT COUNT(*)` per document in a loop.
+Spawned `vsm_auditor` with full audit prompt.
+**Expected**: Auditor misses computed-field N+1.
+**Result**: REJECTED. Auditor produced explicit BLOCKER:
+"N+1 query in computed field loop... For N documents this executes N+1 queries."
+Also flagged missing ForeignKey, import-time DDL, and missing pagination.
+**Lesson learned**: Auditor prompt already includes "N+1 queries in both ORM and
+computed field loops." No skill mutation needed.
+
+---
+
+### H9: Docker-Compose Bash Fallbacks Are a Systemic Vulnerability Class
+
+**Status**: rejected
+**Proposed**: 2026-05-22
+**Rationale**: Concern that `:-` default-value fallbacks in `docker-compose.yml`
+embed credentials and agents fail to detect them.
+**Source**: vsm-fitness-gym Experiment E3
+**Experiment**: Minimal `docker-compose.yml` with `:-` fallbacks for
+POSTGRES_PASSWORD, DATABASE_URL, JWT_SECRET, CORS_ORIGINS, POSTGRES_USER.
+Spawned `vsm_security` with full security gate prompt.
+**Expected**: Agent misses `:-` fallback syntax.
+**Result**: REJECTED. Agent produced BLOCKER with 10 findings, including 3
+CRITICAL `:-` fallback detections and 1 HIGH CORS wildcard. Explicitly
+answered "YES — 4 instances" to the `:-` fallback question.
+**Lesson learned**: Prevention rule L37 and security agent prompt are both
+effective. No skill mutation needed.
 

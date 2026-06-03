@@ -668,7 +668,7 @@ main-skill mutations.
 **Expected effect**: Future builds catch frontend config issues earlier. Security vulnerabilities are fixed before integration verification, reducing coordinator rework.
 
 
-## Mutation 34 — 2026-05-24
+## Mutation 53 — 2026-05-24
 **Session**: FB12 fitness build evaluation
 **File**: `~/vsm/viable-swarm-model/references/integration-checklist.md`
 **Type**: append

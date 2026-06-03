@@ -1296,8 +1296,6 @@ If Phase 0 self-test fails because of a bad mutation:
 
 ## 12. Orchestration Guide
 
-See `references/orchestration-guide.md` for:
-- Comprehension Checkpoint (before declaring phase complete)
-- Background Task Management (`TaskList`, `TaskOutput`, concurrency limits)
-- Session Resumption for Learning (`--continue` workflow)
-- Quick Decision Tree (trivial vs non-trivial work routing)
+Content distributed to canonical locations:
+- **Comprehension Checkpoint**, **Background Task Management**, **Quick Decision Tree** → `SKILL.md` Phase 0a
+- **Session Resumption for Learning** (`--continue` workflow) → `references/acquired-wisdom.md` Entry 8

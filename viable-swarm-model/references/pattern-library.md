@@ -217,7 +217,7 @@
 2. If the parameter is not recognized, do NOT use it — find the correct API for the installed version
 3. This applies to Strawberry, FastAPI, SQLAlchemy, Socket.IO, and any library with version drift
 **Source**: FB12 agent assumed `DepthLimitExtension` and `QueryComplexityExtension` existed; installed version only had `QueryDepthLimiter` (H55). FB15 agent used `validation_rules` parameter that doesn't exist in installed strawberry-graphql (H72). FB20 embedded Pydantic class-based `Config` and FastAPI `@app.on_event` that will break on next major version (H96).
-**See also**: `references/hypotheses.md` H55, H72, H96.
+**See also**: `references/hypotheses-archive.md` H55, H72, H96.
 
 ---
 
@@ -344,7 +344,7 @@ Never instantiate at module level. This allows tests to import modules and mock 
 - `.env.example` names are finalized
 
 **Trade-off**: Adds ~5-10 minutes to foundation phase. Eliminates dependency race BLOCKERs.
-**Tested by**: FB9 meta-reflection hypothesis H41 (validated in FB10). See also `references/hypotheses.md` H41.
+**Tested by**: FB9 meta-reflection hypothesis H41 (validated in FB10). See also `references/hypotheses-archive.md` H41.
 **See also**: Anti-Pattern #43 (Parallel Agents Overwriting Shared Entry Points) for the related entry-point conflict problem.
 
 ---
@@ -601,7 +601,7 @@ Known Stack Gotchas — verify these explicitly:
 - Re-audit report production: 100% (3/3) vs generic coder 0% (0/3)
 - Security invariant enforcement: Domain agents excluded `admin` from registration allowlist; generic coder kept `admin` (regression)
 - Full test suite passes: 100% after fix
-**See also**: `references/hypotheses.md` H107.
+**See also**: `references/hypotheses-archive.md` H107.
 
 ### Pattern 46: Test-First Exit Gate
 
@@ -629,7 +629,7 @@ Known Stack Gotchas — verify these explicitly:
 - Fix waves triggered by Phase 4 failures produce `re-audit-report.md`
 
 **Source**: Gym E16 (H106), FB20/FB21 fitness builds.
-**See also**: `references/integration-checklist.md` Check 57, `references/hypotheses.md` H108.
+**See also**: `references/integration-checklist.md` Check 57, `references/hypotheses-archive.md` H108.
 
 ## Pattern: Frontend Page Stub Detection (Discovered FB23)
 
@@ -715,7 +715,7 @@ class Task(Base):
 return {"status": task.status.value}  # OK — SQLAlchemy returns Status enum
 ```
 
-**Source**: FB24 `app/routers/stock.py:338`. See also `references/hypotheses.md` H203.
+**Source**: FB24 `app/routers/stock.py:338`. See also `references/hypotheses-archive.md` H203.
 
 ---
 
@@ -738,4 +738,4 @@ return {"status": task.status.value}  # OK — SQLAlchemy returns Status enum
 - `issue-sweep.md` exists in `.kimi/` with every ISSUE categorized.
 
 **Source**: FB24 fix wave left 6+ ISSUEs open. FB25 Phase 7d produced `issue-sweep.md` with all issues categorized as FIXED or DEFERRED. Zero MISSED.
-**See also**: `references/hypotheses.md` H205.
+**See also**: `references/hypotheses-archive.md` H205.

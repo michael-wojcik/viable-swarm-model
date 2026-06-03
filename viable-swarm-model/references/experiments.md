@@ -58,7 +58,7 @@ hardcoded JWT secret as a second CRITICAL finding.
 **Conclusion**: rejected
 **Proposed mutations**: No skill mutations needed. The agent already detects
 dynamic URL construction. Append rejection note to H1.
-**Mutations applied**: Yes — updated `references/hypotheses.md` H1 status to rejected.
+**Mutations applied**: Yes — archived H1 to `references/hypotheses-archive.md` with rejected status.
 
 ---
 
@@ -84,7 +84,7 @@ missing pagination.
 **Proposed mutations**: No skill mutations needed. Auditor prompt already
 includes "N+1 queries in both ORM and computed field loops" and the agent
 enforces it. Append rejection note to H2.
-**Mutations applied**: Yes — updated `references/hypotheses.md` H2 status to rejected.
+**Mutations applied**: Yes — archived H2 to `references/hypotheses-archive.md` with rejected status.
 
 ---
 
@@ -111,7 +111,7 @@ default-value fallbacks were detected.
 **Conclusion**: rejected
 **Proposed mutations**: No skill mutations needed. Prevention rule L37 and the
 security agent prompt are both effective. Append rejection note to H9.
-**Mutations applied**: Yes — updated `references/hypotheses.md` H9 status to rejected.
+**Mutations applied**: Yes — archived H9 to `references/hypotheses-archive.md` with rejected status.
 
 ---
 
