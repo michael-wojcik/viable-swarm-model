@@ -698,6 +698,27 @@ Correct fallback sequence:
 3. **Last resort** (explore also fails): S5 may manually verify ONE file only.
    Anything larger must be escalated to the user or the build must be scoped down.
 
+**Timeout Budget Ledger (FB28-sourced)**
+S5 MUST track timeout counts per phase in `plan.md`:
+```markdown
+## Timeout Budget Ledger
+| Phase | Agents Spawned | Timeouts | Budget Status |
+|-------|---------------|----------|---------------|
+| Phase 2 | 4 | 0 | OK |
+| Phase 3 | 6 | 2 | WARNING |
+| Phase 4 | 3 | 1 | WARNING |
+```
+
+If **>2 agents timeout in a single phase**, the build BLOCKs for process redesign.
+Do NOT continue with manual S5 work. The task granularity is wrong for the
+background agent timeout ceiling (commonly 15min). Options:
+1. Scope down the build (reduce Tier 2+ → Tier 1)
+2. Split into sub-builds
+3. Further subdivide agent tasks (≤300 lines per spawn)
+
+Continuing with manual S5 completion after 3+ timeouts in one phase is a
+process violation. The process auditor scores each timeout as −5 points.
+
 **Algedonic signal**: If you find yourself writing >50 lines of implementation
 code or auditing >3 files manually, STOP. You are doing agent work. Re-spawn
 with a narrower scope instead.
@@ -1325,6 +1346,26 @@ Before declaring the VSM workflow "complete," S5 MUST verify:
    - `.kimi/mutation-backfill.md` → apply measured effects to `references/mutation-log.md`
    After applying, delete or rename the ephemeral files to prevent duplicate
    application in future builds.
+
+5b. **Update knowledge broker (MANDATORY — FB28-sourced)**:
+   S5 MUST update `~/vsm/viable-swarm-model/references/knowledge-broker.md`
+   BEFORE declaring the build complete. Session-end hooks are unreliable
+   (failed for 2 consecutive builds, now DEPRECATED). Manual update is required.
+
+   Append a dated entry with:
+   ```markdown
+   ## FB[NN] — [YYYY-MM-DD] — [Score]/5.0
+   - **Domain**: [build domain]
+   - **Score**: [trainer score]/5.0 | Process: [process audit score]/100
+   - **Hypotheses validated**: [H IDs confirmed]
+   - **Hypotheses invalidated**: [H IDs rejected]
+   - **New mutations**: [mutation IDs applied]
+   - **Architecture delta**: [one-line summary of skill structural changes]
+   - **Cross-skill findings**: [coach/gym → athlete learnings]
+   ```
+   If the broker file is >7 days old, prepend a staleness warning.
+   Missing knowledge broker update is a process violation scored by the
+   process auditor (−10 points).
 
 6. **Parent flow handoff (conditional)**: If this VSM workflow was invoked BY A
    PARENT FLOW (e.g., `/flow:vsm-fitness-coach`), Phase 8 completion does NOT

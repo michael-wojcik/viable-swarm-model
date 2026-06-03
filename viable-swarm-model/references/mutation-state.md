@@ -288,3 +288,73 @@
 - **Mutation removal rate**: 2 mutations removed in FB26 audit (R-1, R-2). Target ≥2 per 5 builds: ON TRACK.
 - **Measured effect fill rate**: 12/12 FB26 mutations now have measured effects (100%). Target ≥80%: EXCEEDED.
 - **S5 bypassed gates**: 0. Target 0: MET.
+
+---
+
+## FB28 Post-Build Mutations — 2026-06-03
+
+### Additional Mutations Applied (post-trainer evaluation)
+
+| ID | Source | Type | Target Failure | Status | Builds Tested | Effectiveness Score | Linked Hypothesis |
+|---|---|---|---|---|---|---|---|
+| A4 | FB28 Build | append-only | Phase 4 gate weak / bypassable | probation | 0 | — | H214 |
+| A5 | FB28 Build | append-only | Phase 6 skip / coordinator timeout | probation | 0 | — | H217 |
+| S5 | FB28 Build | structural | Agent timeout → S5 manual work | probation | 0 | — | H217 |
+| S6 | FB28 Build | append-only | GraphQL context builder not fail-closed | probation | 0 | — | — |
+| A6 | FB28 Build | structural | Knowledge broker stale (>7 days) | probation | 0 | — | H213 |
+| R3 | FB28 Build | refinement | Process audit score not in fitness bar | probation | 0 | — | — |
+| A7 | FB28 Build | append-only | Timeout avalanche (>2 per phase) | probation | 0 | — | H217 |
+
+### Mutation Details
+
+---
+
+## S6: GraphQL Context Builder Must Never Return Anonymous Context
+**Status**: probation
+**Type**: append-only
+**Target**: `graphql-pitfalls/SKILL.md`
+**Applied**: 2026-06-03
+**Rationale**: FB28 security audit caught `context_getter=lambda` as BLOCKER. The fix
+was a fail-closed `get_context` that raises on ALL failure paths. Existing
+"Context Builder Fail-Closed" rule was too abstract. S6 adds concrete code
+patterns showing correct (raise) vs incorrect (return user=None) behavior,
+plus auditor verification steps.
+**Next review**: FB29
+
+---
+
+## A6: Knowledge Broker Phase 8d Manual Update Requirement
+**Status**: probation
+**Type**: structural
+**Target**: `SKILL.md` Phase 8d
+**Applied**: 2026-06-03
+**Rationale**: Knowledge broker last updated 2026-06-02, stale by FB28 end.
+Session-end hooks failed for 2 consecutive builds (FB26-S5 removed). Making
+knowledge broker update an explicit Phase 8d step removes reliance on automation.
+**Next review**: FB29
+
+---
+
+## R3: Process Auditor Score ≥80 Fitness Bar Threshold
+**Status**: probation
+**Type**: refinement
+**Target**: `vsm-fitness-coach/SKILL.md` + `evaluation-rubric.md`
+**Applied**: 2026-06-03
+**Rationale**: FB28 trainer scored 3.8/5.0 but process auditor scored 70/100.
+Without a process audit threshold, the fitness system produces false positives.
+R3 adds "Process Compliance" criterion to evaluation rubric and hard-checks
+process audit ≥80 in Coach Phase 1c and Phase 2.
+**Next review**: FB29
+
+---
+
+## A7: Timeout Budget Ledger
+**Status**: probation
+**Type**: append-only
+**Target**: `SKILL.md` Phase 2
+**Applied**: 2026-06-03
+**Rationale**: FB28 had 5 agent timeouts across multiple phases. S5's fallback
+protocol (S5) addresses what to do when ONE agent times out, but does not
+prevent the avalanche pattern. A7 adds a timeout budget tracker in plan.md
+and BLOCKs the build if >2 timeouts occur in a single phase.
+**Next review**: FB29

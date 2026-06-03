@@ -223,6 +223,27 @@
 
 ---
 
+## Process Compliance (Phase 8b Supplement)
+
+**Purpose**: Verify process discipline independent of code quality.
+
+| Criterion | Weight | Evidence |
+|---|---|---|
+| Phase 4 gate exists | 25% | `.kimi/phase4-gate.md` with explicit PASS/BLOCK |
+| Re-audit report exists | 25% | `.kimi/re-audit-report.md` with verdict |
+| Integration contract exists | 25% | `.kimi/integration-contract.md` exists |
+| Mutations tracked | 25% | `.kimi/mutations-applied.md` exists and complete |
+
+**Target**: ≥80/100. Below 80 = build does NOT clear the fitness bar, regardless
+of trainer phase scores. A build can produce green tests and still fail fitness
+if process discipline is broken (missing gates, skipped audits, manual S5 work).
+
+**Source**: FB28 trainer scored 3.8/5.0 but process auditor scored 70/100.
+The build "passed" on code quality while having broken process discipline.
+This criterion prevents that false positive.
+
+---
+
 ## Mutation Effectiveness Scoring (Phase 8b Supplement)
 
 **Purpose**: Verify that mutations applied in previous builds actually prevent

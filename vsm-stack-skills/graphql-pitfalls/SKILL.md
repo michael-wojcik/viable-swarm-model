@@ -29,6 +29,70 @@ an anonymous/unauthenticated context. Auth failures MUST result in GraphQL
 errors or `AuthenticationError`, not `user = None`.
 **Source**: `security-lessons.md` L63, FB21.
 
+## Context Builder Must Never Return Anonymous Context (FB28)
+
+**Status**: Active (FB28-sourced)
+**Severity**: BLOCKER
+**Applies to**: vsm_backend_coder, vsm_wiring, vsm_security, vsm_auditor
+
+Even when `GraphQLRouter(context_getter=...)` references a named function (see
+previous rule), that function itself MUST be fail-closed. It must NEVER return
+a context dict containing `user = None`, `user = "anonymous"`, or any
+unauthenticated placeholder.
+
+**Correct pattern** (fail-closed — raises on ANY auth failure):
+```python
+class AuthenticationError(Exception):
+    pass
+
+async def get_context(request: Request) -> dict:
+    auth_header = request.headers.get("authorization", "")
+    if not auth_header:
+        raise AuthenticationError("Authorization header required")
+    parts = auth_header.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        raise AuthenticationError("Invalid authorization header format")
+    token = parts[1]
+    try:
+        payload = decode_token(token)
+    except JWTError as exc:
+        raise AuthenticationError(f"Invalid token: {exc}")
+    user_id_str = payload.get("sub")
+    if user_id_str is None or payload.get("type") != "access":
+        raise AuthenticationError("Invalid token payload")
+    user_id = UUID(user_id_str)
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(select(User).where(User.id == user_id))
+        user = result.scalar_one_or_none()
+    if user is None or not user.is_active:
+        raise AuthenticationError("User not found or inactive")
+    return {"request": request, "user": user}
+```
+
+**Incorrect pattern** (BLOCKER — returns anonymous context on failure):
+```python
+async def get_context(request: Request) -> dict:
+    try:
+        token = request.headers.get("authorization", "").split()[1]
+        payload = decode_token(token)
+        user = await get_user(payload["sub"])
+    except Exception:
+        # NEVER do this — anonymous context bypasses ALL auth checks
+        user = None
+    return {"request": request, "user": user}
+```
+
+**Prevention rules**:
+1. The `get_context` function MUST have ZERO `except` blocks that assign `user = None`.
+2. Every failure path MUST `raise AuthenticationError(...)` — never fall through to a `return` with `user = None`.
+3. Auditor MUST verify: search for `user = None` inside `app/graphql/context.py`. If found, flag as BLOCKER.
+4. Security audit MUST verify the auth chain is complete: header present → Bearer format → token decodes → sub claim exists → type is "access" → user exists → user is active. Missing any step = HIGH.
+
+**Source**: FB28 `main.py` used `context_getter=lambda: {"settings": settings}`.
+Security audit caught it as BLOCKER. The fix implemented a fail-closed
+`get_context` that raises `AuthenticationError` on ALL failure paths.
+All authenticated GraphQL mutations then worked correctly.
+
 ## Ownership Filtering on ALL List Queries
 
 ALL list queries MUST filter by authenticated user. Unscoped list queries that

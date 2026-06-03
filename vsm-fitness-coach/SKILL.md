@@ -264,7 +264,15 @@ The coach does NOT interfere during the build. It observes and records.
    - Rubric path
    - Mutation log path
    If trainer was NOT spawned, spawn it NOW before proceeding. A fitness build without trainer evaluation is incomplete.
-7. **S5 explicitly states**: "Coach Phase 1 complete. VSM build artifacts collected. Trainer spawned. Proceeding to Coach Phase 2 (Evaluate Performance)."
+7. **Process audit score ≥ 80**: S5 MUST verify that `.kimi/process-audit.md`
+   contains a compliance score ≥ 80/100. If the score is < 80, the build has
+   process violations (missing gate files, skipped audits, manual S5 work) that
+   MUST be addressed before the fitness evaluation is complete. Route back to
+   the athlete skill's Phase 8 to fix process gaps. A build with process audit
+   < 80 is NOT a passing fitness build regardless of trainer scores.
+   **Source**: FB28 process auditor scored 70/100 with missing phase4-gate.md
+   and 5 agent timeouts. Trainer score alone (3.8/5.0) masked broken process.
+8. **S5 explicitly states**: "Coach Phase 1 complete. VSM build artifacts collected. Trainer spawned. Process audit ≥ 80 verified. Proceeding to Coach Phase 2 (Evaluate Performance)."
 
 > **Algedonic signal**: If you find yourself about to declare the fitness build "complete" or ask the user "what next?" before running Coach Phases 2-6, STOP immediately. This is a critical process violation. The coach flow has 6 phases. Phase 1 is only the build execution.
 
@@ -285,6 +293,17 @@ recurred in this build. If a mutation was designed to prevent X but X recurred,
 flag the mutation as **ineffective** and recommend removal or redesign.
 
 **Do not score manually.** The trainer handles all evaluation.
+
+**Process audit threshold check**: Before accepting the trainer's overall score,
+S5 MUST verify the process audit score from `.kimi/process-audit.md`. If the
+process audit score is < 80/100, the build does NOT clear the fitness bar —
+even if the trainer's weighted phase score is ≥ 3.6. Log this as a process
+violation and require the athlete skill to fix process gaps before the build
+can be considered complete.
+
+**Source**: FB28 trainer scored 3.8/5.0 but process auditor scored 70/100.
+Without a process audit threshold, the fitness system produces false positives:
+builds that appear to pass while having broken process discipline.
 
 **Context preservation**: The trainer's report begins with an Executive Summary.
 S5 should read only the Executive Summary and the "Gaps Identified" section.
