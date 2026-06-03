@@ -64,7 +64,7 @@ targeted workouts).
    - `structural-guardian`: Blocks unapproved SKILL.md/architecture changes
    - `stop-verifier`: Blocks session end if Phase 8c-ii is incomplete
    - `session-start/end`: Load/skill-state.md and efficiency baselines
-   - `knowledge-broker`: Append raw session entries to `knowledge-broker-log.md` (untracked) on session end
+   - `knowledge-broker`: Write cross-skill digests on session end
    - `decision-enforcer`: Verifies decisions.md D[N] entry exists
    - `context-pressure`: Alerts when compaction >200k tokens imminent
 

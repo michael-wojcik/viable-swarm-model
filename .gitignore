@@ -1,9 +1,15 @@
-# Broker session log is append-only and should not be tracked
-viable-swarm-model/references/knowledge-broker-log.md
-
-# Kimi artifacts
+# Kimi
 .kimi/
-.claude/
 
-# OS files
-.DS_Store
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Node
+node_modules/
+dist/
+
+# IDE
+.vscode/
+.idea/
