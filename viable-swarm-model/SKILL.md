@@ -370,6 +370,7 @@ flowchart TD
     P0E{<choice>env ok</choice>?}
     P0E_F[Report env incompatibility<br/>Stop build]
     P0P[Conditional: Spawn vsm_product<br/>If problem-oriented prompt]
+    P0X[vsm_explore<br/>Read-only exploration<br/>Phase 0 self-test]
     P1[Phase 1: Intelligence<br/>vsm_architect subagent<br/>Uses product brief if present]
     P1H{<choice>S3/S4 deadlock</choice>?}
     P1A[EnterPlanMode<br/>User Approval]
@@ -379,7 +380,7 @@ flowchart TD
     P2A[Phase 2b: Audit<br/>vsm_auditor]
     P2M[Phase 2c: Model + Auth Validation<br/>S5 checks data models file + auth layer file vs data-model.md]
     P2D{<choice>BLOCKERs</choice>?}
-    P3[Phase 3: Implementation Wave<br/>Backend: parallel routers<br/>Frontend: sequential shared→pages]
+    P3[Phase 3: Implementation Wave (3a–3e)<br/>Backend: parallel routers<br/>Frontend: sequential shared→pages]
     P3S[TaskOutput block=true]
     P3M["Phase 3c: Mid-Wave S2 Check<br/>vsm_coordinator (conditional, Tier 2+)"]
     P3A[Audit + Coordination<br/>vsm_auditor + vsm_coordinator]
@@ -403,6 +404,7 @@ flowchart TD
     P7F{<choice>regressions found</choice>?}
     P8[Phase 8: Reflection<br/>Append to .kimi/lessons.md]
     P8M[Phase 8b: Meta-Reflection + Hypothesis Generation<br/>Spawn vsm_meta + vsm_process_auditor<br/>Evaluate performance + process compliance<br/>Write new hypotheses to hypotheses.md<br/>Bucket mutations: append-only vs refinement vs structural]
+    P8S[vsm_synthesizer<br/>Report synthesis]
     P8V{.kimi/meta-report<br/>&& process-audit<br/>valid?}
     P8W[Write append-only mutations<br/>security-lessons.md, pattern-library.md,<br/>anti-patterns.md, integration-checklist.md,<br/>experiments.md, hypotheses.md,<br/>mutation-log.md]
     P8R[Apply refinement mutations<br/>Single file, preserve structure<br/>agents/*.md, references/*.md]
@@ -416,7 +418,8 @@ flowchart TD
     P0 --> P0D
     P0D -->|<choice>yes</choice>| END
     P0D -->|<choice>no</choice>| P0R
-    P0R --> P0E
+    P0R --> P0X
+    P0X --> P0E
     P0E -->|<choice>pass</choice>| P0P
     P0E -->|<choice>fail</choice>| P0E_F
     P0E_F --> END
@@ -473,7 +476,8 @@ flowchart TD
     P7F -->|<choice>no</choice>| P4
     P7E --> END
     P8 --> P8M
-    P8M --> P8V
+    P8M --> P8S
+    P8S --> P8V
     P8V -->|<choice>yes</choice>| P8W
     P8V -->|<choice>no</choice>| P8M_R
     P8M_R[Re-spawn the relevant agent<br/>vsm_meta or vsm_process_auditor]
@@ -511,21 +515,21 @@ Main agent (S5) performs:
    if exists. Note any untested hypotheses that are relevant to this project.
 8. **Read meta-reflection**: `~/vsm/viable-swarm-model/references/meta-reflection.md`
    if exists.
-9. **Self-test**: Verify all referenced files exist and are readable. Verify
-the flow diagram parses. Verify the skill can describe its own phase sequence
-without contradiction. Specifically verify these custom agent definition files exist:
-`vsm-main.yaml`, `vsm_architect.yaml`, `vsm_product.yaml`, `vsm_auditor.yaml`,
-`vsm_coordinator.yaml`, `vsm_wiring.yaml`, `vsm_backend_coder.yaml`,
+9. **Self-test + Agent-File Verification**: Verify all referenced files exist and are
+readable. Verify the flow diagram parses. Verify the skill can describe its own
+phase sequence without contradiction. Specifically verify these custom agent definition
+files exist: `vsm-main.yaml`, `vsm_architect.yaml`, `vsm_product.yaml`,
+`vsm_auditor.yaml`, `vsm_coordinator.yaml`, `vsm_wiring.yaml`, `vsm_backend_coder.yaml`,
 `vsm_frontend_coder.yaml`, `vsm_backend_fix_agent.yaml`, `vsm_frontend_fix_agent.yaml`,
 `vsm_devops_coder.yaml`, `vsm_security.yaml`, `vsm_backend_tester.yaml`,
 `vsm_frontend_tester.yaml`, `vsm_meta.yaml`, `vsm_process_auditor.yaml`, `vsm_explore.yaml`.
 If any check fails → emit algedonic, write diagnosis
 to `~/vsm/viable-swarm-model/references/mutation-log.md`, ask user to review.
-10. **Agent-File Verification**: Spawn a trivial `vsm_meta` subagent with the task
-`"Reply 'ok'"`. If this fails with an unknown subagent type error, **STOP immediately**.
-Emit algedonic: `--agent-file not loaded. Launch with: kimi --agent-file ~/vsm/viable-swarm-model/agents/vsm-main.yaml`.
+Then spawn a trivial `vsm_meta` subagent with the task `"Reply 'ok'"`. If this fails
+with an unknown subagent type error, **STOP immediately**. Emit algedonic:
+`--agent-file not loaded. Launch with: kimi --agent-file ~/vsm/viable-swarm-model/agents/vsm-main.yaml`.
 Do not proceed with the build.
-9. **Environment Compatibility Smoke Test** (conditional): If the build declares
+10. **Environment Compatibility Smoke Test** (conditional): If the build declares
 framework dependencies (e.g., `[graphql library]`, `[validation library]`, `[orm library]`, `[backend framework]`,
 `celery`), run a quick import verification in a fresh subprocess BEFORE dispatching
 implementation agents:
@@ -538,12 +542,12 @@ and ask the user to resolve the dependency conflict. Writing code that cannot be
 imported wastes agent capacity and produces unverifiable artifacts.
 **Source**: FB22 `strawberry-graphql==0.256.0` failed to import with installed
 pydantic; the API layer file agent consumed ~15 minutes before S5 intervened (H152).
-10. **Read runtime capacity**: Read `~/.kimi/config.toml` and extract
+11. **Read runtime capacity**: Read `~/.kimi/config.toml` and extract
    `background.max_running_tasks` (default 4 if absent). Log this value in
    `plan.md` as the parallel agent ceiling. NEVER exceed this limit when
    spawning background subagents.
-11. **Variety Assessment** (Ashby's Law): Estimate project complexity and classify tier.
-   Use the `max_running_tasks` value read in step 10 as the agent ceiling.
+12. **Variety Assessment** (Ashby's Law): Estimate project complexity and classify tier.
+   Use the `max_running_tasks` value read in step 11 as the agent ceiling.
    Do not invent artificial sub-limits — if the host allows 8, use up to 8.
    - **Tier 1** (<1000 lines, 1-2 services): Standard flow, no mid-wave gates needed
    - **Tier 2** (1000-3000 lines, 2-3 services): Add Phase 3c mid-wave S2 check,
