@@ -276,3 +276,39 @@ app.include_router(
 **Source**: FB28 `main.py` used `context_getter=lambda: {"settings": settings}`.
 All authenticated GraphQL mutations failed. Security audit caught it as BLOCKER
 with exact file:line evidence.
+
+
+## Rule: GraphQL Context Getter MUST Return AsyncSession Instance, Not Session Maker
+
+**Status**: Active (FB29-sourced)
+**Severity**: BLOCKER
+**Applies to**: vsm_backend_coder, vsm_wiring, vsm_auditor
+
+The `get_context` function must return an actual `AsyncSession` instance in the
+context dict. Returning an `async_sessionmaker` class causes runtime failures
+when resolvers try to use `db.execute()` or `db.get()`.
+
+**Correct pattern**:
+```python
+async def get_context(request: Request) -> dict:
+    db = async_sessionmaker()()  # Call the maker to get an INSTANCE
+    user = await get_current_user(request, db)
+    return {"request": request, "db": db, "user": user}
+```
+
+**Incorrect pattern** (BLOCKER):
+```python
+async def get_context(request: Request) -> dict:
+    db = async_sessionmaker()  # WRONG — returns the maker class, not a session
+    user = await get_current_user(request, db)
+    return {"request": request, "db": db, "user": user}
+    # Runtime error: 'async_sessionmaker' object has no attribute 'execute'
+```
+
+**Prevention rules**:
+1. Auditor MUST verify the `db` value in context is an `AsyncSession` instance.
+2. Check for double-call pattern: `async_sessionmaker()()` or equivalent.
+3. If `get_db()` is a dependency generator, `get_context` must call `async for session in get_db()` or use the session maker correctly.
+
+**Source**: FB29 `graphql.py` line 59 had `db = get_async_session_maker()` (returned
+maker class). Implementation audit caught it as BLOCKER. Fixed to `db = get_async_session_maker()()`.

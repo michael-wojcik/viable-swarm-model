@@ -516,3 +516,48 @@ except jwt.PyJWTError:  # WRONG — python-jose raises JWTError, not PyJWTError
 
 **Source**: FB29 `auth.py` used `jwt.PyJWTError` but `python-jose` was installed,
 which raises `JWTError`. Invalid token test failed with 500 instead of 401.
+
+
+## Rule: Pydantic `Field()` Alias Attributes in Python 3.14+
+
+**Status**: Active (FB29-sourced)
+**Severity**: LOW (warnings only, but wastes context and confuses developers)
+**Applies to**: vsm_backend_coder, vsm_backend_tester
+
+In Pydantic v2 with Python 3.14, passing `alias=`, `validation_alias=`, or
+`serialization_alias=` to `Field()` in certain contexts produces
+`UnsupportedFieldAttributeWarning`. This floods test output with warnings
+that consume context budget and obscure real issues.
+
+**Correct pattern**:
+```python
+from pydantic import BaseModel, Field
+from typing import Annotated
+
+# Use Annotated for field-level metadata (Pydantic v2 style)
+class ArticleResponse(BaseModel):
+    title: str
+    comments: Annotated[list[str], Field(alias="commentList")]
+    # Or use model_config alias_generator for camelCase conversion
+```
+
+**Incorrect pattern** (LOW):
+```python
+class ArticleResponse(BaseModel):
+    title: str
+    # Field(alias=...) attached to a single union member or type statement — no effect
+    comments: list[str] = Field(alias="commentList")
+    # Warning: "The 'alias' attribute with value 'commentList' was provided to
+    # the Field() function, which has no effect in the context it was used."
+```
+
+**Prevention rules**:
+1. Prefer `alias_generator` on the model config over per-field `Field(alias=...)`.
+2. If per-field aliases are needed, use `typing.Annotated[..., Field(alias=...)]`.
+3. Treat warnings in test output as signals — investigate root cause, don't ignore.
+4. If warnings are expected and harmless, document WHY in a comment near the model.
+
+**Source**: FB29 test output showed 438 warnings, many being
+`UnsupportedFieldAttributeWarning: The 'alias' attribute... has no effect`.
+These warnings originated from Pydantic v2 model definitions and consumed
+context budget during test execution.
