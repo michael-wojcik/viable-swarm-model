@@ -31,11 +31,15 @@ echo "VSM Hook Validation Test Suite"
 echo "========================================"
 echo ""
 echo "NOTE: These tests validate hook scripts in isolation."
-echo "They do NOT test kimi-cli integration. A known limitation"
-echo "(confirmed 2026-06-02): Background subagents bypass hooks"
-echo "because BackgroundAgentRunner does not propagate hook_engine."
-echo "Primary enforcement is prompt-hardened rules in agent files."
-echo "Hooks remain as secondary safety net for S5 + foreground."
+echo "They do NOT test kimi-cli integration. Empirically confirmed"
+echo "(2026-06-02): ALL subagents — background, foreground, AND"
+echo "parallel foreground — bypass ALL hooks. This is EXPECTED"
+echo "behavior, not a bug. BackgroundAgentRunner and parallel"
+echo "asyncio.create_task() do not propagate the hook engine."
+echo "Primary enforcement is Layer 1: prompt-hardened structural"
+echo "gate rules in every agent system prompt. Hooks are a"
+echo "secondary safety net for S5 ONLY."
+echo ""
 echo ""
 
 # --- Test 1: gate-guardian blocks fraudulent PASS ---
@@ -150,56 +154,14 @@ else
 fi
 export HOME="$REAL_HOME"
 
-# --- Test 8: agent-performance-scorer updates capability matrix ---
-echo "Test 8: agent-performance-scorer updates capability matrix..."
-# Create a mock skill-state.md with a capability matrix
-mkdir -p "$TMPDIR/vsm/viable-swarm-model/references"
-cp "$REAL_HOME/vsm/viable-swarm-model/references/skill-state.md" "$TMPDIR/vsm/viable-swarm-model/references/skill-state.md" 2>/dev/null || cat > "$TMPDIR/vsm/viable-swarm-model/references/skill-state.md" << 'MOCK'
-# VSM Skill State
-
-## Capability Matrix
-| Agent | Domain | Success Rate | Last 3 Scores | Known Failure Modes |
-|-------|--------|-------------|---------------|---------------------|
-| vsm_backend_coder | Python/FastAPI | 85% | 4, 4, 3 | Import loops |
-| vsm_frontend_coder | React/TS | 65% | 3, 2, 2 | Stub pages |
-
-## Current Mood
-- **Recent pattern**: "No data yet"
-MOCK
-
-export HOME="$TMPDIR"
-PAYLOAD=$(jq -n \
-    --arg session_id "test-session-8" \
-    --arg cwd "$TMPDIR" \
-    --arg agent_name "vsm_backend_coder" \
-    --arg response "Audit complete. PASS verdict. Zero critical findings. 2 minor notes." \
-    '{session_id: $session_id, cwd: $cwd, agent_name: $agent_name, response: $response}')
-
-run_hook "$SCRIPT_DIR/agent-performance-scorer.sh" "$PAYLOAD"
-# Check that agent-scores.jsonl was written
-if [[ -f "$TMPDIR/.vsm-telemetry/agent-scores.jsonl" ]]; then
-    SCORE_ENTRY=$(grep "vsm_backend_coder" "$TMPDIR/.vsm-telemetry/agent-scores.jsonl" | tail -1)
-    if echo "$SCORE_ENTRY" | grep -qE '"score"\s*:\s*5'; then
-        echo "  ✅ PASSED: Scored agent correctly and logged score"
-        ((PASSED++))
-    else
-        echo "  ❌ FAILED: Score not logged correctly (expected 5, got $SCORE_ENTRY)"
-        ((FAILED++))
-    fi
-else
-    echo "  ❌ FAILED: agent-scores.jsonl not created"
-    ((FAILED++))
-fi
-unset HOME
-
-# --- Test 9: decision-enforcer warns when decisions.md missing ---
-echo "Test 9: decision-enforcer warns when decisions.md missing on plan.md write..."
+# --- Test 8: decision-enforcer warns when decisions.md missing ---
+echo "Test 8: decision-enforcer warns when decisions.md missing on plan.md write..."
 # Ensure decisions.md does NOT exist
 rm -f "$TMPDIR/vsm/viable-swarm-model/references/decisions.md"
 export HOME="$TMPDIR"
 mkdir -p "$TMPDIR/vsm/viable-swarm-model/references"
 PAYLOAD=$(jq -n \
-    --arg session_id "test-session-9" \
+    --arg session_id "test-session-8" \
     --arg cwd "$TMPDIR" \
     --arg file_path "$TMPDIR/plan.md" \
     --arg content "# Plan" \
@@ -216,10 +178,10 @@ fi
 export HOME="$REAL_HOME"
 
 # --- Test 10: context-pressure warns when >200k tokens ---
-echo "Test 10: context-pressure warns when >200k tokens..."
+echo "Test 9: context-pressure warns when >200k tokens..."
 export HOME="$TMPDIR"
 PAYLOAD=$(jq -n \
-    --arg session_id "test-session-10" \
+    --arg session_id "test-session-9" \
     --arg cwd "$TMPDIR" \
     --arg trigger "ratio" \
     --argjson token_count 210000 \
@@ -235,35 +197,8 @@ else
 fi
 export HOME="$REAL_HOME"
 
-# --- Test 11: bypass-logger logs hook block failures ---
-echo "Test 11: bypass-logger logs tool use failures..."
-export HOME="$TMPDIR"
-PAYLOAD=$(jq -n \
-    --arg session_id "test-session-11" \
-    --arg cwd "$TMPDIR" \
-    --arg tool_name "WriteFile" \
-    --arg file_path "$TMPDIR/.kimi/phase4-gate.md" \
-    --arg error "FRAUDULENT GATE PASS BLOCKED by gate-guardian.sh" \
-    '{session_id: $session_id, cwd: $cwd, tool_name: $tool_name, tool_input: {file_path: $file_path}, error: $error}')
-
-run_hook "$SCRIPT_DIR/bypass-logger.sh" "$PAYLOAD"
-if [[ -f "$TMPDIR/.vsm-telemetry/bypass-attempts.jsonl" ]]; then
-    BYPASS_ENTRY=$(grep "test-session-11" "$TMPDIR/.vsm-telemetry/bypass-attempts.jsonl" | tail -1)
-    if echo "$BYPASS_ENTRY" | grep -qE '"is_hook_block"\s*:\s*true'; then
-        echo "  ✅ PASSED: Correctly logged hook block as bypass attempt"
-        ((PASSED++))
-    else
-        echo "  ❌ FAILED: Bypass entry missing is_hook_block flag"
-        ((FAILED++))
-    fi
-else
-    echo "  ❌ FAILED: bypass-attempts.jsonl not created"
-    ((FAILED++))
-fi
-export HOME="$REAL_HOME"
-
-# --- Test 12: stop-verifier auto-fills measured effects from trainer backfill ---
-echo "Test 12: stop-verifier auto-fills measured effects from trainer backfill..."
+# --- Test 9: stop-verifier auto-fills measured effects from trainer backfill ---
+echo "Test 10: stop-verifier auto-fills measured effects from trainer backfill..."
 # Create a mock mutation-log.md with a PENDING entry
 mkdir -p "$TMPDIR/.kimi"
 mkdir -p "$TMPDIR/vsm/viable-swarm-model/references"

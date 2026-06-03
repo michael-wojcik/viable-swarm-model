@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Validate vsm-stack-skills/ directory consistency and content quality."""
 
+import re
 import sys
 from pathlib import Path
 
@@ -78,9 +79,10 @@ def main():
                 errors.append(f"Missing SKILL.md in {item.name}/")
             else:
                 # Content validation
-                lines = skill_md.read_text().splitlines()
+                content = skill_md.read_text()
+                lines = content.splitlines()
                 line_count = len(lines)
-                rules = count_rules(skill_md.read_text())
+                rules = count_rules(content)
 
                 status = registered_skills.get(item.name, {}).get("status", "").lower()
                 if status == "full":
@@ -93,6 +95,16 @@ def main():
                         warnings.append(
                             f"Skill '{item.name}' is Full but has only {rules} "
                             f"empirical rules (min {MIN_RULES})"
+                        )
+                    # Empirical evidence check: Full skills must cite at least one build/experiment
+                    has_build_id = bool(
+                        re.search(r"\b(FB\d+|H\d+|Gym\s+E\d+|E\d+)\b", content)
+                    )
+                    if not has_build_id:
+                        errors.append(
+                            f"Skill '{item.name}' is Full but contains no build/experiment "
+                            f"IDs (e.g., FB24, H150, Gym E15). Full skills must be grounded "
+                            f"in empirical evidence."
                         )
                 elif status == "stub":
                     has_todo = any("TODO" in line or "Awaiting" in line for line in lines)
