@@ -255,3 +255,21 @@ answered "YES — 4 instances" to the `:-` fallback question.
 **Lesson learned**: Prevention rule L37 and security agent prompt are both
 effective. No skill mutation needed.
 
+
+---
+
+### H209: The Mutation Verification Checkpoint (`mutations-applied.md`) is bypassed because `vsm_meta` lacks tool-enforced authority to block Phase 8 completion
+
+**Status**: superseded
+**Proposed**: 2026-06-02
+**Superseded by**: FB26-S3 structural mutation (hook-level enforcement)
+**Rationale**: Prompt-only instructions to `vsm_meta` were empirically proven insufficient across FB23, FB24, and FB25 — zero `mutations-applied.md` files produced despite the rule existing.
+**Source**: Fitness builds FB23, FB24, FB25, Phase 8b; vsm-fitness-gym Experiment E20
+**Experiment**: Direct hook simulation with mock build artifacts.
+**Expected**: Hook would fail to block or produce false positives.
+**Result**: SUPERCEDED. The FB26-S3 structural mutation (`stop-verifier.sh` hook with retroactive creation detection) provides the missing enforcement authority.
+- Missing `mutations-applied.md` → BLOCKED (deny decision) ✅
+- Retroactive creation → BLOCKED (deny decision) ✅
+- Valid order → ALLOWED ✅
+- Anti-loop protection → ALLOWED ✅
+**Lesson learned**: Detection without enforcement is documentation theater. Hooks are the only reliable enforcement layer for session-end checkpoints, but they only fire for the main S5 agent (not background subagents). Phase ordering (8c-ii before 8b) is as critical as the hook itself.

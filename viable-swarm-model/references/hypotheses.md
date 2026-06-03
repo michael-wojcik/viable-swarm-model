@@ -34,7 +34,6 @@
 | H206 | untested |
 | H207 | untested |
 | H208 | untested |
-| H209 | untested |
 
 ---
 
@@ -226,18 +225,6 @@
 **Source**: Fitness build FB25, Phase 7
 **Experiment**: Gym dry-run: inject identical CRITICAL findings into minimal FastAPI app. Fix with `vsm_backend_fix_agent` vs generic `coder` agent. Measure test pass rate post-fix.
 **Expected**: Domain agent: 100% pass rate, 0 regressions. Generic coder: ≤90% pass rate.
-**Tested by**: —
-
----
-
-## H209: The Mutation Verification Checkpoint (`mutations-applied.md`) is bypassed because `vsm_meta` lacks tool-enforced authority to block Phase 8 completion
-
-**Status**: untested
-**Proposed**: 2026-06-02
-**Rationale**: FB18-10 structural mutation mandated `mutations-applied.md` production. FB25 (and FB23, FB24 per meta-reflection.md Entry 2) produced no such file. Prompt-only instructions are insufficient; S5 attention degrades at session end.
-**Source**: Fitness builds FB23, FB24, FB25, Phase 8b
-**Experiment**: Add explicit `mutations-applied.md` presence check to `vsm_meta.md` output template. In next build, verify if the file exists before S5 declares completion.
-**Expected**: If `vsm_meta.md` is updated → file exists in next build. If not → file absent again.
 **Tested by**: —
 
 ---

@@ -265,6 +265,26 @@ with failing test.
 
 ---
 
+## Experiment E20 — 2026-06-03
+
+**Hypothesis**: H209 — The Mutation Verification Checkpoint (`mutations-applied.md`) is bypassed because `vsm_meta` lacks tool-enforced authority to block Phase 8 completion.
+**Designed by**: vsm-fitness-gym (S5 direct execution)
+**Method**: Minimal mock build directory with `.kimi/` containing build artifacts. Directly invoked `stop-verifier.sh` with simulated JSON payloads to test three behavioral paths.
+**Variables**: Presence/absence of `mutations-applied.md`; relative mtime vs other artifacts; `stop_hook_active` flag.
+**Control**: Hook should BLOCK when checkpoint is incomplete, ALLOW when complete.
+**Results**:
+- **Test 1 — Missing file**: `meta-report.md`, `lessons.md`, `process-audit.md` exist; `mutations-applied.md` absent. Hook output: `permissionDecision: deny`. Reason: "Phase 8c-ii incomplete: mutations-applied.md missing or empty." → **BLOCKED** ✅
+- **Test 2 — Retroactive creation**: `mutations-applied.md` created AFTER `meta-report.md` (newer mtime). Hook detected mtime inversion. Output: `permissionDecision: deny`. Reason: "Retroactive mutations-applied.md detected. Write it BEFORE meta-report and process-audit." → **BLOCKED** ✅
+- **Test 3 — Valid order**: `mutations-applied.md` created BEFORE artifacts. Hook output: empty stdout (no deny JSON). → **ALLOWED** ✅
+- **Test 4 — Anti-loop**: `stop_hook_active=true` with missing file. Hook exited 0 with no output. → **ALLOWED** (anti-loop protection works) ✅
+**Conclusion**: **Superseded**. The core claim of H209 was correct: prompt-only instructions to `vsm_meta` were insufficient. However, the FB26-S3 structural mutation (hook-level enforcement via `stop-verifier.sh`) provides the missing authority. The hook correctly blocks in both failure modes (missing + retroactive) and allows in the success case.
+**Proposed mutations**:
+1. Update `SKILL.md` Phase 8c-ii to explicitly reference the hook as the enforcement mechanism (not just prompt instructions).
+2. Integrate `update-mutation-state.sh` into `session-end.sh` to close the automation gap identified in H213.
+**Mutations applied**: No — pending FB27 validation in a real build context.
+
+---
+
 ## Experiment E19 — 2026-05-25
 
 **Hypothesis**: H109 — Auditor cross-file env var parity reduces coordinator BLOCKERs

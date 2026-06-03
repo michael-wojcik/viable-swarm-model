@@ -2091,3 +2091,25 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Measured effect**: **PENDING** — awaiting FB27 validation. Note: FB26 itself did NOT have this mutation active during the build.
 
+
+---
+
+## Mutation FB26-S3-VALIDATION — 2026-06-03 (Gym Experiment E20)
+
+**Session**: vsm-fitness-gym Experiment E20 — H209 hypothesis validation
+**File**: `viable-swarm-model/hooks/stop-verifier.sh`
+**Type**: validation
+**Target failure mode**: H209 — `mutations-applied.md` checkpoint bypassed due to lack of enforcement authority.
+**Rationale**: Direct hook simulation with mock build artifacts to validate FB26-S3 structural mutation before FB27.
+
+**Expected effect**: Hook blocks session end when `mutations-applied.md` is missing or retroactively created.
+
+**Measured effect**: Gym Experiment E20 — 4/4 tests passed:
+- **Missing file test**: BLOCKED — `permissionDecision: deny` with message "Phase 8c-ii incomplete: mutations-applied.md missing or empty." ✅
+- **Retroactive creation test**: BLOCKED — `permissionDecision: deny` with message "Retroactive mutations-applied.md detected. Write it BEFORE meta-report and process-audit." ✅
+- **Valid order test**: ALLOWED — no deny output, exit 0. ✅
+- **Anti-loop test**: ALLOWED — `stop_hook_active=true` bypasses correctly. ✅
+
+**Conclusion**: FB26-S3 hook enforcement is **functionally correct**. The structural mutation closes the enforcement gap identified in H209. Real-build validation in FB27 still required to confirm hook fires in actual kimi-cli session-end context.
+
+**Related mutations**: FB26-S3 (original structural mutation), H209 (superseded hypothesis).
