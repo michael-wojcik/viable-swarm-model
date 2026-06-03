@@ -153,6 +153,56 @@ strawberry-graphql (H72).
 **Source**: FB17 integration found 3 BLOCKERs from cross-layer mismatches: localStorage key
 mismatch, Celery broker hardcoded to localhost, orphaned queries.ts exports (H81).
 
+### Check 16: Architecture→Implementation Handoff Verification (BLOCKER)
+
+> **Purpose**: Close the gap between architecture spec and implementation that
+cost FB27 2 points (Architecture 3/5, Implementation 3/5). This check ensures
+the implementer did not deviate from the architect's spec in ways that create
+silent runtime failures.
+
+- [ ] **API surface completeness**: Every endpoint listed in `api-spec.md` has a
+corresponding implementation in `app/routers/`. No stubs, no "TODO" comments.
+- [ ] **GraphQL resolver completeness**: Every query/mutation declared in the
+architecture docs has a corresponding resolver function. If the architecture
+specifies GraphQL, `queries.ts` MUST have at least one exported query that is
+imported by a page component.
+- [ ] **Casing convention lock**: The casing convention (camelCase vs snake_case)
+is declared EXPLICITLY in `shared-contracts.md` AND enforced consistently:
+  - REST request/response bodies match the declared convention
+  - GraphQL field names match the declared convention
+  - Frontend TypeScript interfaces match the declared convention
+  - If Pydantic `alias_generator` is used, ALL response schemas inherit from the
+    same base model (e.g., `CamelModel`)
+- [ ] **Auth flow contract match**: The return types and status codes of login,
+register, refresh, and logout endpoints match exactly what `api-spec.md` declares.
+Any deviation (e.g., returning `{"token": ...}` instead of `{"accessToken": ...}`)
+is a BLOCKER.
+- [ ] **Architecture component traceability**: Every box in the architecture
+diagram (or component list) has a corresponding file or module. No phantom
+components.
+
+**Verification commands**:
+```bash
+# Count spec endpoints vs implemented endpoints
+grep -cE "^(GET|POST|PUT|DELETE|PATCH)" api-spec.md
+grep -c "@router\." app/routers/*.py
+# These counts should match (within ±1 for health/docs endpoints)
+
+# Verify GraphQL resolvers exist
+grep -c "@strawberry.field" app/graphql/*.py
+# Should be >0 if architecture specifies GraphQL
+
+# Verify casing consistency
+grep -r "alias_generator" app/schemas/*.py
+# Should find exactly one base model with alias_generator; all schemas inherit from it
+```
+
+**Source**: FB27 had 6 handoff BLOCKERs: GraphQL stub (no resolver), camelCase drift
+(REST snake_case vs GraphQL camelCase vs frontend camelCase), auth flow return
+type mismatches (refresh endpoint returned wrong shape). Wiring agent caught all 6
+but only at Phase 3c — after implementation was "complete." Early handoff
+verification would have caught them in Phase 2b.
+
 ---
 
 ## Tier 2: Conditional Checks (Run only if feature exists)
@@ -161,7 +211,7 @@ mismatch, Celery broker hardcoded to localhost, orphaned queries.ts exports (H81
 
 ### 2A: Auth & Authorization (run if auth system exists)
 
-#### Check 16: Auth Middleware & Guards (BLOCKER)
+#### Check 17: Auth Middleware & Guards (BLOCKER)
 - [ ] Auth middleware raises HTTPException on failure, never returns `None` silently
 - [ ] Document ownership filtering on ALL list endpoints
 - [ ] Public DTOs omit answer/solution fields for game/quiz APIs
@@ -169,7 +219,7 @@ mismatch, Celery broker hardcoded to localhost, orphaned queries.ts exports (H81
 - [ ] Unauthenticated REST endpoints do not expose draft/private data
 - [ ] See also: `security-lessons.md` L38 (registration role elevation prevention).
 
-#### Check 17: Auth Response Contract Documentation (BLOCKER)
+#### Check 18: Auth Response Contract Documentation (BLOCKER)
 - [ ] `api-spec.md` MUST include an explicit "Auth Contracts" section with:
   - Login response JSON shape (exact keys: `access_token`, `token_type`, `role?`, `expires_in?`)
   - Register request JSON shape (exact keys: `email`, `password`, `company_name`, `role`)
@@ -182,7 +232,7 @@ mismatch, Celery broker hardcoded to localhost, orphaned queries.ts exports (H81
 `access_token` + `token_type`). RegisterPage sent `name` instead of `company_name`.
 No auth contract existed in api-spec.md (H86).
 
-#### Check 18: Auth Role Parity Between data-model.md and auth.py (BLOCKER)
+#### Check 19: Auth Role Parity Between data-model.md and auth.py (BLOCKER)
 - [ ] Read `data-model.md` and identify the `Role` / `UserRole` enum values
 - [ ] Read `auth.py` and identify `ALLOWED_ROLES` (or equivalent role-based access control list)
 - [ ] Verify EVERY role in `ALLOWED_ROLES` exists in the `data-model.md` enum
@@ -192,7 +242,7 @@ No auth contract existed in api-spec.md (H86).
 **Source**: FB22 `auth.py` had `ALLOWED_ROLES = ["viewer", "editor", "admin"]` but data model
 defined `"viewer"`, `"responder"`, `"admin"`. `"editor"` did not exist; `"responder"` was missing (H151).
 
-#### Check 19: CORS Configuration Validation (HIGH)
+#### Check 20: CORS Configuration Validation (HIGH)
 - [ ] CORS origin is explicit allowlist, never `*` or `true` when `allow_credentials=True`
 - [ ] `Settings.CORS_ORIGINS` has no default wildcard; app refuses to start if CORS_ORIGINS is unset
 - [ ] FastAPI CORS middleware and Socket.io `cors_allowed_origins` use the same explicit allowlist
@@ -204,7 +254,7 @@ defined `"viewer"`, `"responder"`, `"admin"`. `"editor"` did not exist; `"respon
 `allow_credentials=True`. Security gate Check #4 only verified origins, not method/header
 wildcards (CORS coverage gap).
 
-#### Check 20: Rate Limit Exception Handler (BLOCKER)
+#### Check 21: Rate Limit Exception Handler (BLOCKER)
 - [ ] If `SlowAPIMiddleware` is installed, verify `app.add_exception_handler(RateLimitExceeded, handler)`
   or equivalent `@app.exception_handler(RateLimitExceeded)` exists
 - [ ] Without an exception handler, rate-limited requests crash with unhandled exception instead
@@ -220,7 +270,7 @@ RateLimitExceeded (active issue).
 
 ### 2B: WebSocket (run if `sio.py` or Socket.IO exists)
 
-#### Check 21: WebSocket Event Contracts (BLOCKER)
+#### Check 22: WebSocket Event Contracts (BLOCKER)
 - [ ] Every backend `emit` has matching frontend listener (and vice versa)
 - [ ] WebSocket message shape: `kind` field values match exactly between backend and frontend
 - [ ] Shared event constants file exists and is imported by both sides
@@ -233,7 +283,7 @@ RateLimitExceeded (active issue).
   reuses the SAME `sio` instance that event handlers are registered on in `sio.py`.
   Creating a new `AsyncServer` in `realtime.py` breaks all WS handlers.
 
-#### Check 22: WebSocket Authentication & Authorization (BLOCKER)
+#### Check 23: WebSocket Authentication & Authorization (BLOCKER)
 - [ ] WebSocket room subscription handlers (`subscribe_patient`, etc.) verify the socket has
   authenticated BEFORE allowing room access
 - [ ] WebSocket room unsubscription handlers verify the socket session before leaving a room
@@ -259,7 +309,7 @@ ownership before yielding) for the same underlying principle.
 
 ### 2C: GraphQL (run if `graphql.py` or Strawberry exists)
 
-#### Check 23: GraphQL Schema Contracts (BLOCKER)
+#### Check 24: GraphQL Schema Contracts (BLOCKER)
 - [ ] Run `python -c "from app.graphql import schema; print(schema)"` to introspect the actual
   GraphQL schema
 - [ ] GraphQL schema field names (after auto-camelCase from Strawberry) match frontend query
@@ -286,12 +336,12 @@ ownership before yielding) for the same underlying principle.
 **Source**: FB15 coordinator verified field names but missed String vs DateTime input type trap (H68).
 FB17 field-name-only verification missed argument type mismatches.
 
-#### Check 24: GraphQL Enum Runtime Safety (BLOCKER)
+#### Check 25: GraphQL Enum Runtime Safety (BLOCKER)
 - [ ] Python enums used in GraphQL schemas use `str, enum.Enum` (or equivalent) when their
   values are strings
 - [ ] Enum construction from database string values does not raise `ValueError`
 
-#### Check 25: GraphQL-REST RBAC Parity (BLOCKER)
+#### Check 26: GraphQL-REST RBAC Parity (BLOCKER)
 - [ ] `api-spec.md` MUST include an explicit `RBAC: [roles]` array for every endpoint
   (e.g., `RBAC: ["admin", "auditor"]`). NEVER use ambiguous labels like
   "(owner-filtered)" without specifying which roles can access.
@@ -306,7 +356,7 @@ FB17 field-name-only verification missed argument type mismatches.
 **Source**: FB17 api-spec.md "(owner-filtered)" label caused GraphQL RBAC parity gap (H83).
 FB24 GraphQL mutations lacked REST-equivalent role guards.
 
-#### Check 26: Apollo Client Usage Verification (ISSUE)
+#### Check 27: Apollo Client Usage Verification (ISSUE)
 - [ ] If `main.tsx` wraps the app in `ApolloProvider`, verify at least ONE page component uses
   `useQuery` or `useMutation` from `@apollo/client`
 - [ ] If ZERO pages use Apollo Client, either: (a) remove ApolloProvider and graphql dependencies,
@@ -322,7 +372,7 @@ queries.ts was completely orphaned (H84).
 
 ### 2D: Frontend (run if React/Vite/TypeScript frontend exists)
 
-#### Check 27: Frontend Build & Scaffolding (BLOCKER)
+#### Check 28: Frontend Build & Scaffolding (BLOCKER)
 - [ ] `package.json` exists
 - [ ] `vite.config.ts` exists (with path alias)
 - [ ] `tsconfig.json` exists
@@ -341,14 +391,14 @@ queries.ts was completely orphaned (H84).
   reference in the codebase must match an actual field defined in the Settings/Pydantic class.
   Name drift silently breaks functionality.
 
-#### Check 28: Frontend Cross-File Import Resolution (BLOCKER)
+#### Check 29: Frontend Cross-File Import Resolution (BLOCKER)
 - [ ] After all parallel frontend implementation agents complete, run `npx tsc --noEmit`
   (or `vite build`) to verify all cross-file imports resolve
 - [ ] Every export from `queries.ts` MUST be imported by at least one page or component
 - [ ] Every field destructured from Zustand stores MUST exist in the store's type definition
 - [ ] Every type imported from `shared/types.ts` MUST be defined in that file
 
-#### Check 29: Frontend `as any` Anti-Pattern (ISSUE)
+#### Check 30: Frontend `as any` Anti-Pattern (ISSUE)
 - [ ] Scan all `.tsx` and `.ts` files for `as any` casts
 - [ ] Every `as any` must have a comment explaining why type safety is intentionally bypassed
 - [ ] `as any` used to destructure store fields is a BLOCKER — the store schema must be updated
@@ -358,7 +408,7 @@ queries.ts was completely orphaned (H84).
 **Source**: FB15 frontend agent used `useEventStore() as any` to hide missing `salesMetrics`
 field (H71).
 
-#### Check 30: Vite Alias & Proxy Verification (BLOCKER)
+#### Check 31: Vite Alias & Proxy Verification (BLOCKER)
 - [ ] Read `vite.config.ts` and inspect `resolve.alias`
 - [ ] The alias key MUST be `"@"` mapping to `path.resolve(__dirname, "./src")`
 - [ ] The alias key `"@/"` mapping to `./src/` is a BLOCKER — it works in dev but fails in
@@ -372,7 +422,7 @@ field (H71).
 **Source**: FB22 `vite.config.ts` used `"@/"` → `./src/`; `npm run build` failed with Rollup
 resolution error (H153).
 
-#### Check 31: Frontend Page Data Fetching Verification (BLOCKER)
+#### Check 32: Frontend Page Data Fetching Verification (BLOCKER)
 - [ ] Every page component contains at least one live data fetch (GraphQL query, REST fetch,
   or store subscription) that renders actual data
 - [ ] Stub pages (`<div>Label</div>` with void imports) are BLOCKERs
@@ -383,14 +433,14 @@ resolution error (H153).
 
 ### 2E: ORM / Database (run if SQLAlchemy, Prisma, or pgvector exists)
 
-#### Check 32: ORM Engine & Configuration (BLOCKER)
+#### Check 33: ORM Engine & Configuration (BLOCKER)
 - [ ] `models.py` does NOT hardcode database connection strings at module level
 - [ ] Engine is created from `get_settings().DATABASE_URL` or uses a lazy factory pattern
 - [ ] Engine creation does not trigger side effects at import time
 - [ ] Relation names match on both sides (`@relation("Name")` for Prisma)
 - [ ] N+1 queries prevented (selectinload for relationships, batched GROUP BY for computed fields)
 
-#### Check 33: Model-Spec Alignment Check (BLOCKER)
+#### Check 34: Model-Spec Alignment Check (BLOCKER)
 - [ ] SQLAlchemy/model field names match `data-model.md` exactly
 - [ ] SQLAlchemy/model field types match `data-model.md` exactly
 - [ ] All entities in `data-model.md` are represented in the ORM models
@@ -401,12 +451,12 @@ resolution error (H153).
 
 ### 2F: Infrastructure & DevOps (run if Docker, Redis, Celery, or rate limiting exists)
 
-#### Check 34: Docker Compose (BLOCKER)
+#### Check 35: Docker Compose (BLOCKER)
 - [ ] All services have verifiable entry points (CMD/ENTRYPOINT file exists)
 - [ ] Environment variable names match exactly across docker-compose/.env/code
 - [ ] No `||` fallbacks for SECRET/KEY/PASSWORD/TOKEN variables
 
-#### Check 35: Docker-Compose Command Module Verification (BLOCKER)
+#### Check 36: Docker-Compose Command Module Verification (BLOCKER)
 - [ ] For every `command:` or `CMD` in `docker-compose.yml` that references a Python module
   (e.g., `celery -A app.celery_app`), verify the module path matches the actual file layout
   inside the container
@@ -417,7 +467,7 @@ resolution error (H153).
 **Source**: FB23 `docker-compose.yml` referenced `celery -A app.celery_app` but the module was
 `celery_app.py` with no `app/` package.
 
-#### Check 36: Redis Queue (BLOCKER)
+#### Check 37: Redis Queue (BLOCKER)
 - [ ] Queue name consistent between API `lpush` and worker `brpop`
 - [ ] Worker re-enqueues dependents after completion
 - [ ] Redis pub/sub channel names match between producer and consumer
@@ -426,7 +476,7 @@ resolution error (H153).
 
 ### 2G: Backend REST (run if FastAPI, Express, or equivalent exists)
 
-#### Check 37: Router Registration Completeness (BLOCKER)
+#### Check 38: Router Registration Completeness (BLOCKER)
 - [ ] List ALL Python files in `app/routers/` that define an `APIRouter` instance
 - [ ] Verify EVERY router is `include_router`-ed in `main.py` or the ASGI entry point
 - [ ] Verify router prefixes match `api-spec.md` exactly (e.g., `/shipments` not `/shipment`)
@@ -439,7 +489,7 @@ and uploads routers were created but never registered, causing 404 on all core R
 
 ### 2H: Domain-Specific (run if feature exists)
 
-#### Check 38: State Machine & Enum Domain Alignment (BLOCKER)
+#### Check 39: State Machine & Enum Domain Alignment (BLOCKER)
 - [ ] Backend state machine enum values match frontend TypeScript union types exactly
 - [ ] Every state value emitted by backend is handled by frontend switch/case
 - [ ] No frontend-only states that backend never emits (causes unreachable code)
@@ -451,7 +501,7 @@ and uploads routers were created but never registered, causing 404 on all core R
 
 ### 2I: Language-Specific (run if language exists)
 
-#### Check 39: Language-Specific Build Checks (ISSUE)
+#### Check 40: Language-Specific Build Checks (ISSUE)
 - [ ] **Rust**: Workspace `Cargo.toml` includes ALL member crates; no duplicate imports between
   `lib.rs` and local paths in same file; integration tests in `tests/` import from library path,
   not local modules

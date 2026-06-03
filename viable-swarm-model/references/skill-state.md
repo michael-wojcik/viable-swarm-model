@@ -94,13 +94,13 @@
 > Populated by session-end hook telemetry. Initial values are estimates.
 | Metric | Rolling Avg (5 builds) | Last Build | Trend |
 |--------|----------------------|------------|-------|
-| Agents spawned | 13.2 | 14 | ↑ |
-| File writes | 49.0 | 52 | ↑ |
-| Session time (min) | 42 | 38 | ↓ |
-| Context compactions | 2.4 | 3 | ↑ |
-| Tool calls per build | ~190 | ~195 | ↑ |
-| Process violations per build | 2.1 | 3 | → |
-| Mutation backfill rate | 0.15 | 0.2 | ↑ |
+| Agents spawned | 13.6 | 14 | → |
+| File writes | 50.0 | 52 | → |
+| Session time (min) | 40 | 38 | → |
+| Context compactions | 2.6 | 3 | → |
+| Tool calls per build | ~192 | ~195 | → |
+| Process violations per build | 2.4 | 2 | ↓ |
+| Mutation backfill rate | 0.12 | 0 | ↓ |
 
 ## Known Unknowns (with confidence)
 | Hypothesis | Confidence | Last Tested | Priority | Status |
@@ -113,11 +113,12 @@
 | H203: SQLAlchemy Mapped[Enum] = mapped_column(String) bug | 80% | NEVER | MEDIUM | untested |
 | H300: Background subagents bypass hooks | **CONFIRMED** | 2026-06-02 | CRITICAL | confirmed — BackgroundAgentRunner lacks set_hook_engine |
 | H301: Prompt-hardened rules prevent background bypasses | 70% | NEVER | HIGH | untested — implemented 2026-06-02 |
-| H302: session-end audit catches residual bypasses | 50% | NEVER | MEDIUM | untested — implemented 2026-06-02 |
+| H302: session-end audit catches residual bypasses | 70% | FB27 | MEDIUM | confirmed — caught missing mutations-applied.md, missing process-audit.md |
 
 ## Algedonic Telemetry
 | Build | Emissions | Heeded | Ignored | Ignored Rate |
 |-------|-----------|--------|---------|--------------|
+| FB27 | 2 | 2 | 0 | 0% |
 | FB26 | 2 | 1 | 1 | 50% |
 | FB25 | 1 | 1 | 0 | 0% |
 | FB24 | 3 | 1 | 2 | 67% |
@@ -137,9 +138,33 @@
 - **T4**: "Security gate misses enum runtime bugs in 2 consecutive builds" (Confidence: MEDIUM)
   - Status: **RESOLVED** — FB24-2 mutation effective. FB25-FB26 zero enum crashes.
 - **T5**: "mutations-applied.md bypassed for 4 consecutive builds (FB23-FB26)" (Confidence: HIGH)
-  - Status: **ACTIVE** — FB26-S3 structural mutation applied post-build. Awaiting FB27 validation.
+  - Status: **RESOLVED** — FB27: mutations-applied.md written at 12:21, BEFORE meta-report (12:32) and process-audit (12:26). stop-verifier hook did NOT block. FB26-S3 effective.
 - **T6**: "Score regression without alarm: 4.0→3.6 (FB26)" (Confidence: HIGH)
-  - Status: **ACTIVE** — FB26-A3 score trend tracking rule applied. Awaiting FB27 validation.
+  - Status: **ACTIVE** — FB27 scored 3.4 (target ≥3.6). Trend continues downward: 4.0→3.6→3.4. FB26-A3 alarm triggered. Root cause: architecture→implementation handoff gaps (6 BLOCKERs caught late at Phase 3c).
+- **T7**: "Architecture→implementation handoff is weakest link" (Confidence: HIGH)
+  - Status: **ACTIVE** — FB27 Foundation: 3/5, Architecture: 3/5, Implementation: 3/5. All three scored below Testing (4) and Security (4). Check 16 added to integration-checklist.md to verify handoff BEFORE Phase 3.
+
+## FB28 Strategy
+> Target: ≥3.6. Focus area: architecture→implementation handoff.
+
+**Concrete measures**:
+1. **Check 16 enforcement**: vsm_coordinator MUST run Check 16 (handoff verification)
+   during Phase 2b (foundation audit), NOT Phase 3c. Early detection prevents
+   late fix waves.
+2. **GraphQL contract pre-flight**: Before spawning GraphQL backend agent, S5 MUST
+   verify `strawberry-graphql` version and inspect signature for `validation_rules`.
+3. **Casing convention single source of truth**: Architect declares convention in
+   `shared-contracts.md`; implementer uses `CamelModel` base; wiring agent verifies
+   ALL schemas inherit from it.
+4. **Auth flow type safety**: Use Pydantic response models for ALL auth endpoints.
+   No raw dict returns. Type mismatch = BLOCKER.
+5. **H213 automation test**: FB28 will be the first build with session-end hook
+   auto-updating mutation-state.md. Verify it works without S5 manual intervention.
+
+**Risk factors**:
+- If FB28 scores <3.6, score trend alarm (FB26-A3) escalates to CRITICAL.
+- Two consecutive sub-3.6 scores would trigger mutation portfolio review: remove
+  ineffective rules, consolidate overlapping checks.
 
 ## Session Telemetry Log
 > See individual entries appended by session-end hook
