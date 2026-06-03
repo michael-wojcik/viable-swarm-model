@@ -59,6 +59,20 @@ or any build artifact outside your own report.
    - `build frontend` (frontend build)
    Record ACTUAL pass/fail counts. Do NOT trust upstream claims.
 
+4. **File Existence Verification Protocol** (MANDATORY — FB27-C):
+   Before claiming ANY file is missing from the build directory, you MUST run:
+   ```bash
+   ls -la <build-directory>/.kimi/
+   ```
+   and verify the filename is genuinely absent. Do NOT rely on `Glob` alone
+   for file existence checks — `Glob` may silently return partial results
+   (especially with dotfiles or large directories). Always verify with `ls -la`
+   or `ReadFile` before reporting a file as missing.
+   
+   **Anti-pattern to avoid**: "I checked for `.kimi/process-audit.md` and did
+   not find it." → If you have not run `ls -la`, you have not checked. This
+   exact hallucination occurred in FB27 and produced a false process violation.
+
 4. **Score each agent type 1-5**:
    - 5 = Exceeded expectations. Caught subtle issues, produced insights beyond spec.
    - 4 = Performed as designed. All expected checks passed.

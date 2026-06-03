@@ -21,6 +21,27 @@ Universal system design and architecture principles.
 - GraphQL: types first, resolver responsibility clear, mutation naming convention
 - Versioning strategy from day one
 
+## Casing Convention Contract (MANDATORY for multi-interface builds)
+
+When a build involves both REST and GraphQL (or any system with multiple
+serialization boundaries), the architect MUST declare the casing convention
+explicitly in `shared-contracts.md`:
+
+1. **REST request/response bodies**: snake_case OR camelCase (choose one, document it)
+2. **GraphQL field names**: MUST match the REST response casing convention
+3. **Frontend TypeScript interfaces**: MUST match the backend response casing
+4. **Implementation requirement**: If camelCase is chosen for any interface,
+   ALL Pydantic response schemas MUST inherit from a single base model with
+   `alias_generator=to_camel`. No mixed casing within the same API surface.
+
+**Failure to declare this contract is an architecture ISSUE.**
+
+**Source**: FB27 had camelCase↔snake_case drift because REST used snake_case,
+GraphQL expected camelCase, and frontend expected camelCase. Three agents made
+different assumptions. The fix (CamelModel with alias_generator) was applied
+in Fix Wave #2 — after 14 test failures. Early contract declaration would have
+prevented this entirely.
+
 ## Technology Selection
 - Option A (Minimal), B (Balanced), C (Robust) with tradeoffs
 - Estimated build time, operational complexity, scalability ceiling, key risks
