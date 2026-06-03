@@ -270,3 +270,79 @@
 **Source**: Fitness build FB26, Phase 8b
 **Experiment**: Add a concrete shell command or template to SKILL.md Phase 8c-ii that S5 can copy-paste. Run next build and check if mutation-state.md is updated.
 **Expected**: mutation-state.md updated within 5 minutes of mutations-applied.md creation.
+
+
+---
+
+## FB28 Hypothesis Updates
+
+### H213 Update
+**Status**: testing → monitor
+**Tested by**: FB28
+**Result**: S5 did NOT manually update mutation-state.md. Session-end hook status pending. Cannot confirm until session terminates.
+
+---
+
+## H214: Check 16 early handoff verification prevents late BLOCKERs
+**Status**: confirmed
+**Proposed**: 2026-06-03
+**Tested by**: FB28
+**Result**: Check 16 run in Phase 2b caught auth raw-dict returns (BLOCKER). Zero handoff BLOCKERs discovered in Phase 3c. Fix applied before implementation wave completed.
+**Rationale**: Early verification gates are worth the overhead. Should be mandatory in Tier 2+ builds.
+**Source**: Fitness build FB28, Phase 2b
+**Experiment**: Run Check 16 in Phase 2b of next build. Count handoff BLOCKERs in Phase 3c.
+**Expected**: Zero handoff BLOCKERs in Phase 3c.
+
+---
+
+## H215: vsm_meta file verification protocol prevents hallucination
+**Status**: confirmed
+**Proposed**: 2026-06-03
+**Tested by**: FB28
+**Result**: Meta agent verified file existence with `ls -la` before claiming files missing. No hallucinated missing files in meta-report. All file references accurate.
+**Rationale**: File verification protocol prevents false claims about missing artifacts.
+**Source**: Fitness build FB28, Phase 8b
+**Experiment**: Continue requiring `ls -la` verification in meta agent prompt. Monitor for false claims.
+**Expected**: Zero hallucinated missing files.
+
+---
+
+## H216: Casing convention contract prevents camelCase↔snake_case drift
+**Status**: confirmed
+**Proposed**: 2026-06-03
+**Tested by**: FB28
+**Result**: Explicit camelCase declaration in shared-contracts.md ensured all schemas, GraphQL queries, and TypeScript interfaces aligned. Zero casing-related test failures. Frontend build green. GraphQL introspection shows camelCase fields.
+**Rationale**: Explicit architectural contracts prevent cross-layer drift.
+**Source**: Fitness build FB28, Phase 1
+**Experiment**: Continue requiring casing declaration in shared-contracts.md. Monitor for casing failures.
+**Expected**: Zero casing-related test failures.
+
+---
+
+## H217: Agent timeout is the primary drag on Tier 2+ build scores
+**Status**: untested
+**Proposed**: 2026-06-03
+**Rationale**: FB28 had 5 agent timeouts (backend_coder, frontend_coder, backend_tester, frontend_tester, foundation_auditor). S5 had to manually complete foundation audit, write tests, fix auth returns, and wire main.py. This forced S5 into coding tasks that should be agent-owned.
+**Source**: Fitness build FB28, Phase 2/4
+**Experiment**: Split Tier 2+ agent tasks into smaller chunks (<500 lines per spawn). Measure timeout rate.
+**Expected**: Timeout rate drops from 5/10 to ≤1/10.
+
+---
+
+## H218: GraphQL context getter must reference imported function, never lambda/static dict
+**Status**: untested
+**Proposed**: 2026-06-03
+**Rationale**: FB28 main.py used `context_getter=lambda: {"settings": settings}` which broke all authenticated GraphQL. No existing skill rule checks this.
+**Source**: Fitness build FB28, Phase 3
+**Experiment**: Add rule to graphql-pitfalls. Next build with GraphQL — verify no placeholder lambdas.
+**Expected**: Zero GraphQL context getter lambdas.
+
+---
+
+## H219: Pydantic `type` statement + `Field(alias=...)` produces warnings
+**Status**: untested
+**Proposed**: 2026-06-03
+**Rationale**: FB28 pytest output had 100+ `UnsupportedFieldAttributeWarning` about `alias`/`validation_alias`/`serialization_alias` on `Field()` when used with Python 3.12+ `type` statement.
+**Source**: Fitness build FB28, Phase 4
+**Experiment**: Add rule to python-pitfalls. Next build — monitor warning count.
+**Expected**: Zero `UnsupportedFieldAttributeWarning` in test output.

@@ -169,3 +169,46 @@ schema = strawberry.Schema(query=Query)  # No depth protection
 **Source**: FB27 had `depth_limit` in dependencies but it was not wired into
 the Strawberry schema. Security audit caught this as HIGH. Fix agent added a
 custom depth validator extension to the schema configuration.
+
+
+## Rule: GraphQLRouter context_getter MUST Reference Imported Function
+
+**Status**: Active (FB28-sourced)
+**Severity**: BLOCKER
+**Applies to**: vsm_backend_coder, vsm_wiring, vsm_security, vsm_auditor
+
+`GraphQLRouter(context_getter=...)` must reference an actual imported function
+that validates Bearer tokens, decodes JWT, queries the database, and injects
+the authenticated `user` into context. A lambda or static dict breaks ALL
+authenticated GraphQL operations.
+
+**Correct pattern**:
+```python
+from app.graphql.context import get_context
+
+app.include_router(
+    GraphQLRouter(schema, context_getter=get_context),
+    prefix="/graphql",
+)
+```
+
+**Incorrect pattern** (BLOCKER):
+```python
+# Placeholder lambda — no auth, no user injection
+app.include_router(
+    GraphQLRouter(
+        schema,
+        context_getter=lambda: {"settings": settings},
+    ),
+    prefix="/graphql",
+)
+```
+
+**Prevention rules**:
+1. Auditor MUST verify `context_getter` is an imported function name, not a lambda.
+2. Wiring agent MUST verify `app.graphql.context` module exists and has a `get_context` function.
+3. Security audit MUST flag any `lambda` or static dict passed to `context_getter` as BLOCKER.
+
+**Source**: FB28 `main.py` used `context_getter=lambda: {"settings": settings}`.
+All authenticated GraphQL mutations failed. Security audit caught it as BLOCKER
+with exact file:line evidence.

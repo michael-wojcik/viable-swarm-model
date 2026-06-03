@@ -177,3 +177,72 @@ if ext not in ALLOWED_EXTENSIONS:
 
 **Source**: FB27 document upload endpoint accepted any extension. Security audit
 caught it as MEDIUM. Fix agent added extension whitelist validation.
+
+
+## Rule: S3/MinIO Credentials Must Not Have Defaults in Settings
+
+**Status**: Active (FB28-sourced)
+**Severity**: MEDIUM
+**Applies to**: vsm_backend_coder, vsm_security, vsm_devops_coder
+
+S3 access keys and secret keys must use `Field(..., min_length=1)` with NO
+default values. Default credentials like `"minioadmin"` silently weaken
+production security if env vars are omitted.
+
+**Correct pattern**:
+```python
+S3_ACCESS_KEY: str = Field(..., min_length=1)
+S3_SECRET_KEY: str = Field(..., min_length=1)
+S3_BUCKET_NAME: str = Field(..., min_length=1)
+S3_ENDPOINT: str = Field(..., min_length=1)
+```
+
+**Incorrect pattern** (MEDIUM):
+```python
+S3_ACCESS_KEY: str = Field(default="minioadmin")
+S3_SECRET_KEY: str = Field(default="minioadmin")
+```
+
+**Prevention rules**:
+1. Security audit MUST flag any `default=` on S3/MinIO/DB credentials as MEDIUM.
+2. Treat S3 secrets with the same strictness as `JWT_SECRET`.
+
+**Source**: FB28 `config.py` had `S3_ACCESS_KEY: str = Field(default="minioadmin")`.
+Security audit caught it as MEDIUM.
+
+## Rule: Security Dependencies Must Be Wired, Not Just Installed
+
+**Status**: Active (FB28-sourced)
+**Severity**: MEDIUM
+**Applies to**: vsm_backend_coder, vsm_security, vsm_wiring
+
+Installing a security dependency (e.g., `slowapi`) in `pyproject.toml` is
+insufficient. It MUST be wired as middleware or applied via decorators.
+
+**Correct pattern**:
+```python
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+
+@router.post("/login")
+@limiter.limit("10/minute")
+async def login(request: Request, data: UserLogin):
+    ...
+```
+
+**Incorrect pattern** (MEDIUM):
+```python
+# slowapi in pyproject.toml but NEVER wired into app or routers
+# Auth endpoints remain unprotected against brute-force
+```
+
+**Prevention rules**:
+1. Security audit MUST verify that every security dependency in `pyproject.toml`
+   has corresponding middleware, decorator, or router wiring in source code.
+2. Import presence is NOT sufficient.
+
+**Source**: FB28 `slowapi` was in `pyproject.toml` but never added to `main.py`
+or auth endpoints. Security audit caught it as MEDIUM.

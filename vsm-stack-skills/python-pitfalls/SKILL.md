@@ -249,3 +249,93 @@ is raised, and the bug is invisible without test coverage.
 **Source**: FB27 `vehicles.py` called `optimize_waypoints()` without `await`.
 The endpoint returned HTTP 200 with a coroutine object string. Only pytest
 `test_optimize_waypoints` caught it; four audit passes missed it.
+
+
+## Rule: Pydantic `type` Statement + `Field(alias=...)` Produces Warnings
+
+**Status**: Active (FB28-sourced)
+**Severity**: LOW (noise pollution)
+**Applies to**: vsm_backend_coder, vsm_backend_fix
+
+Python 3.12+ `type` statement creates type aliases. Attaching `Field(alias=...)`,
+`Field(validation_alias=...)`, or `Field(serialization_alias=...)` directly to
+a `type` alias produces `UnsupportedFieldAttributeWarning` because the alias
+carries no model field metadata.
+
+**Correct pattern**:
+```python
+from typing import Annotated
+from pydantic import Field
+
+# Use Annotated in a class-based model, not a type alias
+class MySchema(BaseModel):
+    first_name: Annotated[str, Field(alias="firstName")]
+```
+
+**Incorrect pattern** (warning spam):
+```python
+# type alias with Field — warning has no effect
+type FirstName = Annotated[str, Field(alias="firstName")]
+
+class MySchema(BaseModel):
+    first_name: FirstName  # UnsupportedFieldAttributeWarning at runtime
+```
+
+**Prevention rules**:
+1. Never attach `Field(alias=...)` to a `type` alias.
+2. Use `Annotated[..., Field(...)]` directly in model field definitions.
+3. If 100+ `UnsupportedFieldAttributeWarning` appear in pytest output, grep for
+   `type .* = .*Field` and replace with inline `Annotated`.
+
+**Source**: FB28 pytest output had 100+ warnings from `type` aliases with
+`Field(alias=...)` in schema definitions. No functional bug, but extreme
+noise pollution obscures real issues.
+
+## Rule: ORM-Based Schemas Need Field-Level UUID Coercion
+
+**Status**: Active (FB28-sourced)
+**Severity**: BLOCKER
+**Applies to**: vsm_backend_coder, vsm_backend_fix, vsm_auditor
+
+`model_validator(mode="before")` converting UUID→str only works when the input
+is a dict. When `from_attributes=True` reads SQLAlchemy ORM objects directly,
+the model validator is bypassed because the input is an object, not a dict.
+
+**Correct pattern**:
+```python
+from uuid import UUID
+from pydantic import BaseModel, ConfigDict, field_validator
+
+class ORMBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def _coerce_uuids(cls, v):
+        return str(v) if isinstance(v, UUID) else v
+```
+
+**Incorrect pattern** (BLOCKER):
+```python
+class ORMBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_uuids(cls, data):
+        # ONLY works for dict input; ORM objects bypass this!
+        if isinstance(data, dict):
+            return {k: str(v) if isinstance(v, UUID) else v for k, v in data.items()}
+        return data
+```
+
+**Prevention rules**:
+1. ALL ORM-based base models MUST have `@field_validator("*", mode="before")`
+   for UUID→str coercion, not just `@model_validator`.
+2. Auditor MUST verify both model-level and field-level validators exist on
+   schema base classes.
+3. Tests MUST include ORM-object-to-schema serialization (not just dict input).
+
+**Source**: FB28 `CamelModelORM` had `model_validator(mode="before")` only.
+ORM objects bypassed it, causing `ResponseValidationError` on all endpoints
+returning User/Course/etc. objects.

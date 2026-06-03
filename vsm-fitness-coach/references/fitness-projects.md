@@ -913,3 +913,45 @@
 - **Fix iterations**: 1 fix wave + security re-check + re-audit
 - **Key gap**: Hook system non-functional for background agents; foundation Dockerfile/Celery wiring still brittle
 - **Mutations**: python-pitfalls Celery guard rule, docker-pitfalls COPY syntax rule, security-lessons worker defense-in-depth, vsm_meta checkpoint enforcement, H206-H209
+
+
+---
+
+## FB28: EduLearn — E-learning Platform
+
+**Complexity**: High (Tier 2+, 4-5 waves, ~2500+ lines, 5 services)
+**Date**: 2026-06-03
+**Score**: 3.8 / 5.0
+**Services**: FastAPI backend, React frontend, PostgreSQL, Redis, MinIO (S3), Celery, Strawberry GraphQL
+
+### Coverage Map
+
+| Capability | Tested by |
+|---|---|
+| H213 — mutation-state.md auto-update | Pending — session-end hook not yet fired |
+| H214 — Check 16 early handoff verification | **Confirmed** — auth raw-dict caught in Phase 2b, zero Phase 3c handoff BLOCKERs |
+| H215 — vsm_meta file verification protocol | **Confirmed** — all file claims verified with `ls -la`, zero hallucinations |
+| H216 — Casing convention contract | **Confirmed** — camelCase declared in shared-contracts.md, zero casing failures |
+| FB27-1 — UUID coercion | **Ineffective** — ORM path bypassed `model_validator`; needed `field_validator` |
+| FB27-2 — Missing await | **Effective** — zero recurrence |
+| FB27-3 — JWT placeholder | **Effective** — zero recurrence |
+| FB27-4 — GraphQL RBAC parity | **Effective** — zero recurrence |
+| FB26-S5 — Session-start hook | **Ineffective** — hook failed 2nd consecutive build |
+| FB26-S3 — mutations-applied.md hard gate | **Effective** — checkpoint written before meta spawn |
+| FB26-S4 — Phase 0 broker read | **Effective** — plan.md had active constraints section |
+| FB26-S6 — Process auditor scored check | **Effective** — Phase 0 broker read scored 10/10 |
+| GraphQL context getter wiring | BLOCKER found — lambda instead of imported function |
+| Rate limiting | ISSUE found — slowapi installed but unwired |
+| S3 secret defaults | ISSUE found — default="minioadmin" in config |
+| Upload ownership | ISSUE found — confirm_upload missing user_id check |
+| Frontend build / TypeScript | ✅ `npm run build` and `tsc -b` pass with zero errors |
+| Backend tests | 40 passed, 0 failed |
+| Frontend tests | 82 passed, 34 failed (test setup issues, not app bugs) |
+| Security gate | 1 BLOCKER (fixed) + 3 MEDIUM (fixed) + 1 LOW (documented) |
+
+### Result
+- **Score**: 3.8/5.0 (reverses downward trend: 4.0→3.6→3.4→3.8)
+- **BLOCKERs**: 1 code-level (GraphQL context) + 0 process-level
+- **Fix iterations**: 1 fix wave + security re-check
+- **Key gap**: Agent timeout avalanche — 5 agents timed out, forcing heavy S5 manual intervention
+- **Mutations**: graphql-pitfalls context-getter rule, python-pitfalls type-statement warning + ORM UUID coercion, security-patterns S3 defaults + dependency wiring, H217-H219
