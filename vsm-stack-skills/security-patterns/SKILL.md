@@ -300,3 +300,65 @@ async def update_article(id: UUID, data: ArticleUpdateInput, info: Info) -> Arti
 **Source**: FB29 GraphQL `register` accepted passwords < 8 chars (REST enforced
 min_length=8). GraphQL `update_article` allowed editors to modify ANY article
 (REST enforced `_check_owner()`). Security audit caught both as HIGH.
+
+
+## Rule: Registration MUST Exclude Admin/Superuser Roles
+
+**Status**: Active (FB29-sourced)
+**Severity**: BLOCKER
+**Applies to**: vsm_backend_coder, vsm_security, vsm_auditor
+
+The registration endpoint must reject any attempt to create a user with
+`admin`, `superuser`, `root`, or equivalent elevated roles. These roles must
+be created only through a separate, authenticated admin-only endpoint or
+database seeding.
+
+**Correct pattern**:
+```python
+# schemas.py
+ALLOWED_ROLES = {"writer", "editor", "publisher"}  # admin EXCLUDED
+
+class UserRegister(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_length=8)
+    name: str
+    role: str = "writer"
+
+    @field_validator("role")
+    @classmethod
+    def _validate_role(cls, v):
+        if v not in ALLOWED_ROLES:
+            raise ValueError(f"Role must be one of: {ALLOWED_ROLES}")
+        return v
+```
+
+```python
+# auth.py / router
+@router.post("/register", response_model=UserResponse)
+async def register(data: UserRegister, db: AsyncSession = Depends(get_db)):
+    if data.role not in ALLOWED_ROLES:
+        raise HTTPException(400, "Invalid role for registration")
+    # ... create user
+```
+
+**Incorrect pattern** (BLOCKER):
+```python
+# No role validation — any role string accepted
+@router.post("/register")
+async def register(data: UserRegister, db: AsyncSession = Depends(get_db)):
+    user = User(email=data.email, role=data.role)  # Could be "admin"!
+    db.add(user)
+    await db.commit()
+```
+
+**Prevention rules**:
+1. `ALLOWED_ROLES` MUST explicitly exclude `admin`, `superuser`, `root`.
+2. Registration schema MUST validate role against `ALLOWED_ROLES`.
+3. Security audit MUST flag any registration endpoint that accepts unrestricted
+   role strings as BLOCKER.
+4. Admin user creation MUST be a separate, authenticated endpoint with its own
+   RBAC guard.
+
+**Source**: FB29 correctly excluded `admin` from `ALLOWED_ROLES` and validated
+registration role against the allowlist. This prevented privilege escalation at
+the registration boundary. Multiple prior builds had this gap.

@@ -165,6 +165,48 @@ if os.environ.get("_CELERY_SKIP_IMPORT") != "1":
 **Source**: FB25 `celery_app.py` had only a factory; `celery -A app.celery_app worker`
 failed because the CLI could not find `app.celery_app.app`.
 
+
+## Rule: Celery Top-Level Variable MUST Be Named `app`
+
+**Status**: Active (FB29-sourced)
+**Severity**: BLOCKER
+**Applies to**: vsm_backend_coder, vsm_auditor
+
+Celery's `find_app()` utility searches for a variable named `app` in the target
+module. If the variable is named anything else (`celery_app`, `application`,
+`celery`), the worker CLI command `celery -A module worker` fails with
+`AttributeError: module has no attribute 'app'`.
+
+**Correct pattern**:
+```python
+# celery_app.py
+from celery import Celery
+
+app = Celery("tasks")  # MUST be named `app`
+app.conf.update(
+    broker_url="redis://localhost:6379/0",
+    result_backend="redis://localhost:6379/0",
+)
+```
+
+**Incorrect pattern** (BLOCKER):
+```python
+# celery_app.py
+from celery import Celery
+
+celery_app = Celery("tasks")  # WRONG — Celery CLI looks for `app`, not `celery_app`
+celery_app.conf.update(...)
+```
+
+**Prevention rules**:
+1. The top-level Celery instance variable MUST be named `app`.
+2. Auditor MUST verify `grep -q "^app = Celery" celery_app.py` passes.
+3. If the module is imported elsewhere, use `from app.celery_app import app`.
+
+**Source**: FB29 foundation audit caught `celery_app = Celery(...)` in `celery_app.py`.
+`celery -A app.celery_app worker` failed because `find_app()` could not locate
+an `app` attribute. Renamed to `app` fixed the worker startup.
+
 ## Rule: Starlette UploadFile.read() Signature
 
 **Status**: Active (FB26-sourced)
