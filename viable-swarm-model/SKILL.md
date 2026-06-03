@@ -168,6 +168,15 @@ build.
 | **S1-DevOps** | `vsm_devops_coder` subagent | `vsm-coder` | Custom | Phase 4 | Docker, CI/CD |
 | **Algedonic** | Main agent detects/stops | — | — | Any phase | TaskStop, AskUserQuestion |
 
+> **Agent Naming Convention**: The `vsm-main.yaml` registry uses **hyphen** names
+> (`vsm-coder`, `vsm-fixer`, `vsm-reporter`, `vsm-tester`, `vsm-researcher`) for
+> **abstract parent agents** that serve as base classes — they are NOT listed in
+> `subagents:` and are NOT spawned directly. **Underscore** names
+> (`vsm_backend_coder`, `vsm_security`, `vsm_meta`, etc.) identify **concrete leaf
+> agents** that ARE registered in `subagents:` and spawned by S5. Hyphen = abstract
+> parent; underscore = concrete leaf. This prevents false-positive audit findings
+> that incorrectly flag parent agent files as "orphaned" or "unregistered."
+
 **Terminology**: `S5` refers to the main conversation agent (you, the LLM executing
 this skill). The word `user` refers to the human operator. S5 may escalate to the
 user via `AskUserQuestion` or `EnterPlanMode` when human policy input is required.
@@ -316,13 +325,26 @@ chained includes. Only `vsm-main.md` contains legitimate `${...}` template
 variables. All other `.md` files MUST escape shell variables with `{% raw %}`.
 
 ```
-vsm-main
-├── vsm-coder → backend-coder, frontend-coder, devops-coder, wiring
-│   ├── vsm-fixer → backend-fixer, frontend-fixer
-│   └── vsm-tester → backend-tester, frontend-tester
-├── vsm-researcher → architect, product, explore
-└── vsm-reporter → auditor, security, coordinator, meta
+vsm-main                      (S5 root — spawned by CLI, not via Agent tool)
+├── vsm-coder  ──┬─→ vsm_backend_coder    (concrete leaf — registered in YAML)
+│  (abstract)    ├─→ vsm_frontend_coder   (concrete leaf — registered in YAML)
+│  (parent)      ├─→ vsm_devops_coder     (concrete leaf — registered in YAML)
+│                └─→ vsm_wiring            (concrete leaf — registered in YAML)
+│   ├── vsm-fixer ─┬→ vsm_backend_fix_agent  (concrete leaf — registered in YAML)
+│   │   (abstract) └→ vsm_frontend_fix_agent (concrete leaf — registered in YAML)
+│   └── vsm-tester ─┬→ vsm_backend_tester    (concrete leaf — registered in YAML)
+│       (abstract)  └→ vsm_frontend_tester   (concrete leaf — registered in YAML)
+├── vsm-researcher ─┬→ vsm_architect     (concrete leaf — registered in YAML)
+│   (abstract)      ├→ vsm_product       (concrete leaf — registered in YAML)
+│                   └→ vsm_explore       (concrete leaf — registered in YAML)
+└── vsm-reporter ──┬→ vsm_auditor        (concrete leaf — registered in YAML)
+    (abstract)     ├→ vsm_security       (concrete leaf — registered in YAML)
+                   ├→ vsm_coordinator    (concrete leaf — registered in YAML)
+                   ├→ vsm_meta           (concrete leaf — registered in YAML)
+                   └→ vsm_process_auditor (concrete leaf — registered in YAML)
 ```
+> **Naming rule**: Hyphen (`vsm-xxx`) = abstract parent (NOT in `subagents:` list).
+> Underscore (`vsm_xxx_yyy`) = concrete leaf (registered in `subagents:` list).
 
 **Validator**: Run `python3 validate-agent-files.py` from `agents/` before committing
 agent changes. It checks YAML parse, system_prompt_path existence, `${...}`

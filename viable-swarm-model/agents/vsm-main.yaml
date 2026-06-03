@@ -8,6 +8,21 @@ agent:
     VSM_ROLE: S5 Policy / Orchestrator
   tools:
     - "kimi_cli.tools.agent:Agent"
+
+# ── Agent Naming Convention ──
+# Hyphen names  (vsm-coder, vsm-fixer, vsm-reporter, vsm-tester, vsm-researcher)
+#   → Abstract PARENT agents. Extended by leaf agents via YAML `extend`.
+#   → NOT registered in `subagents:` below. NOT spawned directly.
+#   → Used for shared prompt fragments via Jinja `{% include %}`.
+#
+# Underscore names (vsm_backend_coder, vsm_security, vsm_meta, etc.)
+#   → Concrete LEAF agents. Registered in `subagents:` below.
+#   → Spawned directly by S5 during workflow execution.
+#   → Extend a parent agent and add domain-specific behavior.
+#
+# External agents (vsm_trainer, vsm_experiment_designer)
+#   → Live in companion skills (vsm-fitness-coach, vsm-fitness-gym).
+#   → Registered here with relative paths to those skill directories.
     - "kimi_cli.tools.ask_user:AskUserQuestion"
     - "kimi_cli.tools.todo:SetTodoList"
     - "kimi_cli.tools.think:Think"
