@@ -829,9 +829,13 @@ artifacts. This separates metadata from source code:
 | **`.kimi/`** | Agent reports, evaluations, mutation tracking (`lessons.md`, `meta-report.md`, `mutations-applied.md`, `re-audit-report.md`, `security-report.md`, `integration-contract.md`, `process-audit.md`, `explore-findings.md`) |
 | **`references/`** | Persistent skill knowledge (`acquired-wisdom.md`, `hypotheses.md`, `pattern-library.md`, `mutation-log.md`) |
 
-Agents with `WriteFile` MUST restrict usage to their own `.kimi/` artifact or
-`references/` append operations. They MUST NEVER modify source code or build
-configs with `WriteFile`.
+Agents with `WriteFile` MUST restrict usage to their own `.kimi/` artifact.
+They MUST NEVER write to `references/`, `agents/`, or `SKILL.md` — these are
+persistent skill files that S5 updates during Phase 8, not agents during builds.
+They MUST NEVER modify source code or build configs with `WriteFile`.
+
+**Anti-pattern**: Agent appends to tracked reference files → creates uncommitted
+git changes on every build → git noise → merge conflicts → skill drift.
 
 **Agent Notification Truncation Handling (MANDATORY)**
 Agent completion notifications may truncate at ~500 characters. S5 MUST NOT act
@@ -1010,8 +1014,10 @@ explicit instructions to include the missing sections.
 
 > **Algedonic signal**: If S5 is about to write `.kimi/meta-report.md` manually,
 > STOP immediately. This is a process violation. The builder cannot evaluate
-> itself. Spawn `vsm_meta`. S5 MAY synthesize and append to the skill-level
-> `references/meta-reflection.md` after reading the meta-report.
+> itself. Spawn `vsm_meta`. After `vsm_meta` completes, S5 MUST read
+> `.kimi/meta-reflection-proposed.md` (if produced by vsm_meta) and append the
+> contents to `references/meta-reflection.md`. S5 MUST NOT let agents write
+> directly to tracked reference files.
 
 ### Phase 8c-i: Skill Improvement (Conditional)
 
@@ -1135,11 +1141,20 @@ Before declaring the VSM workflow "complete," S5 MUST verify:
    organism's self-model current. If the telemetry file is missing, the hook
    did not fire — log this as a process gap.
 
-5. **Parent flow handoff (conditional)**: If this VSM workflow was invoked BY A
+5. **Apply agent-proposed ephemeral files (MANDATORY)**:
+   Agents MUST NOT write directly to tracked reference files. If any agent
+   produced ephemeral proposal files, S5 MUST apply them during Phase 8:
+   - `.kimi/hypotheses-proposed.md` → append to `references/hypotheses.md`
+   - `.kimi/meta-reflection-proposed.md` → append to `references/meta-reflection.md`
+   - `.kimi/mutation-backfill.md` → apply measured effects to `references/mutation-log.md`
+   After applying, delete or rename the ephemeral files to prevent duplicate
+   application in future builds.
+
+6. **Parent flow handoff (conditional)**: If this VSM workflow was invoked BY A
    PARENT FLOW (e.g., `/flow:vsm-fitness-coach`), Phase 8 completion does NOT
    mean the parent session is over. S5 MUST return control to the parent flow
    for its post-build phases. When VSM is run standalone (`/flow:viable-swarm-model`),
-   this rule does not apply — Phase 8d is complete once rules 1-4 are satisfied.
+   this rule does not apply — Phase 8d is complete once rules 1-5 are satisfied.
 
 > **Algedonic signal**: If you find yourself about to say "all phases complete"
 > while HIGH/MEDIUM findings remain unfixed, STOP immediately. The build is NOT

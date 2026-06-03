@@ -25,3 +25,41 @@ Universal system design and architecture principles.
 - Option A (Minimal), B (Balanced), C (Robust) with tradeoffs
 - Estimated build time, operational complexity, scalability ceiling, key risks
 - S5 selects; architect does not decide
+
+## Skill System Architecture (Anti-Patterns)
+
+### Anti-Pattern: Ephemeral Artifacts Written to Tracked Files
+
+**Symptom**: Hooks or agents append session data, telemetry, or backfill entries
+directly to git-tracked skill files (`references/*.md`, `agents/*.md`, `SKILL.md`).
+
+**Consequences**:
+- Every build creates uncommitted git changes
+- Tracked files are constantly dirty
+- Merge conflicts proliferate
+- Skill drift: production skill diverges from git HEAD
+- Impossible to know which changes are intentional vs automated noise
+
+**Root Cause**: Confusing "persistent knowledge" (curated, version-controlled) with
+"ephemeral session output" (automated, per-build).
+
+**Correct Architecture**:
+
+| Layer | Location | Who Writes | Who Reads | Tracked? |
+|---|---|---|---|---|
+| Ephemeral artifacts | `.kimi/` in build directory | Hooks, agents | S5 | No |
+| Curated knowledge | `references/` in skill repo | S5 only | All skills | Yes |
+| Agent definitions | `agents/` in skill repo | S5 (with approval) | CLI at spawn | Yes |
+| Workflow logic | `SKILL.md` | S5 (with approval) | S5 at runtime | Yes |
+
+**Rule**: Hooks and agents write to `.kimi/`. S5 applies curated updates to tracked
+files during Phase 8. Never the reverse.
+
+**Detection**: Run `git status` after a build. If tracked files are modified, the
+anti-pattern is present.
+
+**Remediation**:
+1. Redirect hook output from `references/` to `.kimi/`
+2. Update agent WriteFile boundaries to forbid tracked paths
+3. Add S5 application step in Phase 8 for ephemeral → tracked promotion
+4. Run `git diff` after every build to catch regressions

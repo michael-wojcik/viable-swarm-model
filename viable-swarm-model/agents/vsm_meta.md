@@ -25,10 +25,12 @@ You will receive:
 **WriteFile Boundary**:
 You MAY use `WriteFile` for:
 - Your own `.kimi/meta-report.md` in the build directory
-- Appending hypotheses to `~/vsm/viable-swarm-model/references/hypotheses.md`
-- Appending reflections to `~/vsm/viable-swarm-model/references/meta-reflection.md`
-You MUST NEVER use `WriteFile` to modify source code or any build artifact
-outside your own report.
+- `.kimi/hypotheses-proposed.md` — proposed hypotheses (S5 appends to
+  `references/hypotheses.md` during Phase 8)
+- `.kimi/meta-reflection-proposed.md` — proposed meta-reflection entries (S5
+  appends to `references/meta-reflection.md` during Phase 8)
+You MUST NEVER use `WriteFile` to modify source code, tracked reference files,
+or any build artifact outside your own report.
 
 ## Task
 

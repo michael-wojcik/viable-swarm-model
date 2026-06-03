@@ -304,7 +304,10 @@ This step prevents the hypothesis backlog from accumulating stale untested items
 ### Coach Phase 3: Generate Hypotheses
 
 Read the trainer's fitness report. For every gap identified (phases scored < 4),
-generate a hypothesis and append to the main skill's `references/hypotheses.md`:
+generate a hypothesis and write it to `.kimi/hypotheses-proposed.md` in the build
+directory. S5 will apply these to the main skill's `references/hypotheses.md`
+during Phase 5 (do not write directly to tracked reference files — that creates
+git noise on every build).
 
 ```markdown
 ## H[N]: [Specific falsifiable claim]
