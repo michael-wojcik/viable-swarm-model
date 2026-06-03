@@ -674,6 +674,15 @@ Wait via `TaskOutput(block=true)`. Then S5 runs a **mini-audit**:
 
 If any check fails → fix BEFORE dispatching Sub-Wave 2b.
 
+**Agent Task Sizing for Tier 2+ Builds (FB28-sourced)**
+To prevent agent timeouts (the primary drag on Tier 2+ build scores per H217),
+NO single agent task may exceed **500 lines of expected output**. Split work
+across multiple focused spawns:
+- Foundation: spawn config → spawn models → spawn schemas → spawn auth (sequential or parallel)
+- Implementation: spawn routers in batches of ≤3 files each
+- Testing: spawn backend tester per domain (auth, courses, uploads)
+- Auditing: ≤5 files per auditor batch (see vsm_auditor.md)
+
 **Sub-Wave 2b — Dependent Infrastructure (parallel, then verify)**:
 Spawn parallel `vsm_backend_coder` and `vsm_frontend_coder` subagents with `run_in_background=true` for:
 - `routers/auth layer file` (MUST include `POST /login`, `POST /register`, `GET /me` endpoints)
@@ -701,6 +710,23 @@ If EITHER check fails, treat as a BLOCKER: send back to foundation agents for
 correction. Model mismatches cascade to GraphQL, frontend queries, and shared types.
 Auth role mismatches cascade to registration, JWT claims, and frontend role guards.
 Both must be correct before Phase 3 begins.
+
+**Phase 2d: Architecture→Implementation Handoff Verification (Check 16) — MANDATORY for Tier 2+**
+After foundation audit passes and model/auth validation is complete, S5 MUST run
+Check 16 BEFORE spawning implementation agents. This prevents late BLOCKERs in
+Phase 3c by verifying every architecture artifact has a planned implementation.
+
+Check 16 checklist:
+1. Every `api-spec.md` endpoint has a corresponding router implementation.
+2. Every GraphQL query/mutation has a corresponding resolver.
+3. Casing convention is locked and enforced via single base model.
+4. Auth flow return types match spec exactly (Pydantic response models, no raw dicts).
+5. Every architecture diagram component has a corresponding file/module.
+6. GraphQL context getter is an imported function, not a lambda or static dict.
+
+If ANY check fails, treat as a BLOCKER. Fix in foundation wave before proceeding
+to Phase 3. **Source**: FB28 validated H214 — Check 16 caught auth raw-dict
+BLOCKER in Phase 2b, preventing a late Phase 3c discovery.
 
 ### Phase 3: Implementation Wave
 Pass Wave 1 outputs as input references. Spawn parallel `vsm_backend_coder` and `vsm_frontend_coder` subagents.
