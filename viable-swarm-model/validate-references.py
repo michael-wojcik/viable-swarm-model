@@ -54,13 +54,14 @@ FILE_CONFIG = {
         "id_pattern": r"^##\s+Mutation\s+(?:\[)?(\d+)(?:\])?",
         "id_type": int,
         "prefix": "M",
-        "sequential": True,
+        "sequential": False,  # Uses [N], [N+1] placeholders; gaps expected
     },
     "experiments.md": {
         "id_pattern": r"^##\s+Experiment\s+(?:E)?(\d+)",
         "id_type": int,
         "prefix": "E",
         "sequential": True,
+        "batch_pattern": r"^##\s+Experiment\s+(?:E)?(\d+)[\–\-](?:E)?(\d+)",  # Detect batch ranges like E6–E14
     },
     "hypotheses-archive.md": {
         "id_pattern": r"^#{2,3}\s+(H\d+):",
@@ -121,6 +122,18 @@ def parse_ids(filepath: Path, config: dict) -> tuple[dict, list]:
             )
         else:
             ids[id_val] = line_num
+
+    # Handle batch ranges (e.g., E6–E14)
+    batch_pattern = config.get("batch_pattern")
+    if batch_pattern:
+        batch_re = re.compile(batch_pattern, re.MULTILINE)
+        for match in batch_re.finditer(content):
+            start_id = int(match.group(1))
+            end_id = int(match.group(2))
+            line_num = content[:match.start()].count("\n") + 1
+            for id_val in range(start_id, end_id + 1):
+                if id_val not in ids:
+                    ids[id_val] = line_num  # All batched IDs point to the batch header line
 
     return ids, errors
 

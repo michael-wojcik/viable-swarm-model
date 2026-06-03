@@ -1213,9 +1213,9 @@ Spawn `vsm_coordinator` + `vsm_auditor`. Full 20+ point checklist (see
 **File**: `~/vsm/viable-swarm-model/references/pattern-library.md`
 **Type**: append-only
 **Rationale**: Three gym experiments produced reproducible evidence for new patterns:
-1. **Auth Response Contract Template** (E8/H20): A/B test showed ambiguous auth specs cause 3-field mismatches; explicit specs prevent them.
-2. **Frontend Build Script Verification** (E13/H48): `vite build` passed while `npm run build` failed due to `tsc -b` type-checking `vite.config.ts` without `@types/node`.
-3. **Domain-Specific Coder Prompts** (E14/H59): Generic coder used CORS wildcard and skipped runtime API verification; domain-specific coder used explicit origins and `inspect.signature` checks.
+1. **Auth Response Contract Template** (E6–E14 batch, finding 3 / H20): A/B test showed ambiguous auth specs cause 3-field mismatches; explicit specs prevent them.
+2. **Frontend Build Script Verification** (E6–E14 batch, finding 2 / H48): `vite build` passed while `npm run build` failed due to `tsc -b` type-checking `vite.config.ts` without `@types/node`.
+3. **Domain-Specific Coder Prompts** (E6–E14 batch, finding 1 / H59): Generic coder used CORS wildcard and skipped runtime API verification; domain-specific coder used explicit origins and `inspect.signature` checks.
 **Expected effect**: Architects include auth contract template in api-spec.md. DevOps agents verify `npm run build`. S5 embeds stack gotchas in coder prompts for complex builds.
 
 ---
@@ -1271,7 +1271,7 @@ Spawn `vsm_coordinator` + `vsm_auditor`. Full 20+ point checklist (see
 **Type**: refinement + append-only
 **Rationale**:
 1. H59 showed BOTH generic and domain-specific coders used `class Config` (Pydantic V2 deprecation). Elevated the rule from a numbered gotcha to a BLOCKER-level check in `vsm_backend_coder.md`.
-2. vsm_meta (Experiment E10) generated 2 new falsifiable hypotheses: H105 (inline fix waves bypass re-audit) and H106 (skipping Phase 8b correlates with process violations). Added both to hypothesis backlog.
+2. vsm_meta (E6–E14 batch, finding 4) generated 2 new falsifiable hypotheses: H105 (inline fix waves bypass re-audit) and H106 (skipping Phase 8b correlates with process violations). Added both to hypothesis backlog.
 3. Gym session E6–E14 distilled into `acquired-wisdom.md` Entry 4: domain-specific prompts, `npm run build` > `vite build`, explicit auth contracts, fix-wave domain split.
 **Expected effect**: Backend coders treat Pydantic V2 deprecation as BLOCKER. Future builds track H105/H106. Cross-session learning accumulates in acquired wisdom.
 
@@ -1488,9 +1488,9 @@ Spawn `vsm_coordinator` + `vsm_auditor`. Full 20+ point checklist (see
 **Rationale**:
 FB22 scored 3.8/5.0 with specific agent failures that all have prevention rules. Rather than letting these failures recur in FB23, we apply a comprehensive mutation batch targeting root causes.
 
-**A1 — Append-only: Anti-Patterns #57 and #58**
-- #57 documents the `strawberry_sqlalchemy_mapper` non-existent package import trap.
-- #58 documents the Vite `"@/"` alias production build failure.
+**A1 — Append-only: Anti-Patterns #54 and #55**
+- #54 documents the `strawberry_sqlalchemy_mapper` non-existent package import trap.
+- #55 documents the Vite `"@/"` alias production build failure.
 Both are now in the canonical anti-pattern registry so future agents read them at startup.
 
 **A2 — Append-only: Acquired Wisdom Entry 7**

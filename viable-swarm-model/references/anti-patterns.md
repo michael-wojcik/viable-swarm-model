@@ -214,7 +214,7 @@
 
 ## Data/Architecture Anti-Patterns
 
-### 39. Frontend components without project scaffolding
+### 38. Frontend components without project scaffolding
 **What**: Config files forgotten when scope split across agents.  
 **When**: Multiple agents each assume another handled config.  
 **Prevention**: Active creation requirement + Phase 4 verification.
@@ -223,50 +223,50 @@
 
 ## Additional Anti-Patterns (Discovered in Field)
 
-### 40. Synchronous file I/O in request handlers
+### 39. Synchronous file I/O in request handlers
 **What**: `fs.readFileSync()` or equivalent blocks the event loop.  
 **When**: Developer uses sync API for convenience.  
 **Prevention**: Use async I/O or worker threads in request handlers.
 
-### 41. Missing request payload validation
+### 40. Missing request payload validation
 **What**: API endpoints accept arbitrary JSON without schema validation.  
 **When**: Developer trusts client input.  
 **Prevention**: Zod/Joi/class-validator on ALL inputs. Fail closed.
 
-### 42. Fix Agent False Positive Claims
+### 41. Fix Agent False Positive Claims
 **What**: Fix agent reports "fixed" but the code change does not actually resolve the issue.  
 **When**: Agent misreads code, applies change to wrong location, or claims success before verification.  
 **Prevention**: Require fix agents to run a verification shell command (e.g., `grep`) before reporting completion. Example: FB1 Fix Wave 2 claimed Yjs token in URL path but token was still passed as `room` parameter.  
 **Affected**: vsm_fix agents, S1 coders in Phase 7.
 
-### 43. Parallel Agents Overwriting Shared Entry Points
+### 42. Parallel Agents Overwriting Shared Entry Points
 **What**: Multiple implementation agents modify the same entry-point file (main.py, App.tsx). Later agent overwrites earlier agent's imports/registrations.  
 **When**: Backend and worker agents both wire routers into `main.py`.  
 **Prevention**: Either (a) serialize entry-point wiring to a single agent, or (b) have a dedicated "wiring" agent run after all implementation agents.  
 **Affected**: S1 coders in Phase 3.
 **See also**: Pattern #22 (Foundation Wave Sequencing) for the broader parallel-agent coordination strategy; Mutation 52 (`agents/vsm_wiring.md`) for the dedicated wiring agent solution.
 
-### 44. Docker-Compose Default-Value Fallbacks Embedding Secrets
+### 43. Docker-Compose Default-Value Fallbacks Embedding Secrets
 **What**: `docker-compose.yml` uses `${DATABASE_URL:-postgresql://user:pass@db/db}` or `POSTGRES_PASSWORD: geoquiz` as defaults.
 **See also**: `security-lessons.md` L37  
 **When**: Developer adds fallbacks to make local dev easier.  
 **Prevention**: Ban `:-` fallbacks in docker-compose entirely. Use `.env` files for local dev. Services must fail to start if required vars are missing. Grep for `:-` in docker-compose as a BLOCKER.  
 **Affected**: S1-DevOps, vsm_security.
 
-### 45. SQLAlchemy Column Names Shadowing Imported Functions
+### 44. SQLAlchemy Column Names Shadowing Imported Functions
 **What**: A model column named `text` shadows `sqlalchemy.text`, causing `TypeError` at import time.  
 **When**: Model designer chooses intuitive column names without checking SQLAlchemy imports.  
 **Prevention**: Alias SQLAlchemy imports in model files (`sa_text`, `sa_select`). Add this to foundation wave checklist for SQLAlchemy projects.  
 **Affected**: S1-Backend, vsm_auditor.
 
-### 46. Module-Level Pydantic Settings Instantiation
+### 45. Module-Level Pydantic Settings Instantiation
 **What**: `settings = Settings()` at module scope crashes on import when env vars are missing.  
 **When**: Developer follows Pydantic docs example without considering testability.  
 **Prevention**: Use lazy factory (`get_settings()`) or dependency injection. Never instantiate at module level. This prevents test discovery, CI execution, and agent-based testing.  
 **Example**: FB3 `backend/app/config.py` had `settings = Settings()` at bottom. Tester agent could not import any backend module for 1800s until timeout.  
 **Affected**: S1-Backend, vsm_tester, vsm_auditor.
 
-### 47. JWT Signature Verification Bypass
+### 46. JWT Signature Verification Bypass
 **What**: A `decode_token` helper or similar function uses `jwt.decode(token, options={"verify_signature": False}, ...)`
 **See also**: `security-lessons.md` L28 (JWT Signature Verification is Non-Negotiable) to "conveniently" read the payload without verifying the signature.  
 **When**: Developer thinks they need to decode the token in a context where the secret is "unavailable" (e.g., WebSocket auth, logging, debugging).  
@@ -274,49 +274,49 @@
 
 ## Implementation Anti-Patterns
 
-### Anti-Pattern #50: Module-Level Engine Instantiation
+### Anti-Pattern #47: Module-Level Engine Instantiation
 **What**: `engine = create_async_engine(get_settings().DATABASE_URL)` at module level in `models.py`.  
 **When**: Agent doesn't know how to create a lazy factory and defaults to the simplest pattern.  
 **Prevention**: models.py MUST use `_get_async_engine()` lazy factory or similar. Auditor must flag module-level engine as BLOCKER.
 
 **Source**: FB15 foundation agent reverted to module-level engine despite FB14 prevention rule (H65)
 
-### Anti-Pattern #51: `as any` Type Safety Bypass
+### Anti-Pattern #48: `as any` Type Safety Bypass
 **What**: Using `as any` to destructure fields that don't exist in the type definition.  
 **When**: Frontend agent needs a field that wasn't created in the store/schema and uses `as any` to silence TypeScript instead of fixing the source.  
 **Prevention**: Frontend import check (`tsc --noEmit`) must be combined with an explicit scan for `as any` casts. Any `as any` that masks a missing field is a BLOCKER.
 
 **Source**: FB15 frontend agent used `useEventStore() as any` to access missing `salesMetrics` (H71)
 
-### Anti-Pattern #52: GraphQL queries.ts Orphaned Exports
+### Anti-Pattern #49: GraphQL queries.ts Orphaned Exports
 **What**: `queries.ts` contains well-formed GraphQL queries with correct camelCase field names, but NO page or component imports them. The queries are dead code.
 **When**: Frontend agent introspects the schema and writes queries correctly, but page components independently use REST `fetch()` instead.
 **Prevention**: Integration checklist must verify every export from `queries.ts` is imported by at least one consumer. If queries are orphaned, either migrate pages to Apollo Client or remove the GraphQL layer.
 **Affected**: S1-Frontend, vsm_coordinator.
 **Source**: FB17 queries.ts had correct introspected field names but was never imported by any page (H84)
 
-### Anti-Pattern #53: Apollo Client Initialized but Unused
+### Anti-Pattern #50: Apollo Client Initialized but Unused
 **What**: `main.tsx` wraps the app in `ApolloProvider` with a configured `apolloClient`, but ALL page components use REST `fetch()` for data fetching. The GraphQL infrastructure is initialized but never exercised.
 **When**: Frontend agents default to REST when both REST and GraphQL are available, or they don't know which data-fetching pattern to prefer.
 **Prevention**: Frontend agent prompt must state: "When GraphQL is available, use Apollo Client `useQuery` / `useMutation` for data fetching. REST `fetch()` is reserved for file uploads and auth endpoints." Integration checklist verifies Apollo Client is actually used.
 **Affected**: S1-Frontend, vsm_coordinator.
 **Source**: FB17 frontend had ApolloProvider but zero Apollo usage across 10 pages (H84)
 
-### Anti-Pattern #54: api-spec.md Ambiguous RBAC Labels
+### Anti-Pattern #51: api-spec.md Ambiguous RBAC Labels
 **What**: api-spec.md uses natural-language labels like "(owner-filtered)" or "(public)" instead of explicit `RBAC: [roles]` arrays. Different agents interpret these labels differently.
 **When**: Architect writes concise endpoint descriptions without formalizing access control. Downstream implementation agents (REST routers, GraphQL resolvers) make inconsistent assumptions.
 **Prevention**: Architect prompt must require explicit `RBAC: [roles]` arrays for every endpoint. Security gate must flag ambiguous labels as HIGH. Integration checklist verifies GraphQL resolvers match the explicit RBAC arrays.
 **Affected**: vsm_architect, S1-Backend, vsm_security, vsm_coordinator.
 **Source**: FB17 "(owner-filtered)" label caused GraphQL RBAC parity gap between REST and GraphQL (H83)
 
-### Anti-Pattern #55: Frontend Import Path Guessing
+### Anti-Pattern #52: Frontend Import Path Guessing
 **What**: Frontend agent writes relative imports (`../shared/types`) without checking `tsconfig.json` `paths` or `vite.config.ts` aliases. The import fails at build time because the alias is different (e.g., `@flux/shared/types`).
 **When**: Agent assumes relative paths work in all project configurations, or copies import patterns from previous builds without verifying the current project's alias setup.
 **Prevention**: Frontend foundation agent MUST read `tsconfig.json` and `vite.config.ts` before writing ANY import statement. Use the project's configured alias, not relative paths, for shared types and cross-package imports.
 **Affected**: S1-Frontend, foundation wave agents.
 **Source**: FB17 frontend agent wrote `../shared/types` but tsconfig.json alias was `@flux/shared/types` (H80)
 
-### Anti-Pattern #56: S5 Inline Fix During Integration Verification
+### Anti-Pattern #53: S5 Inline Fix During Integration Verification
 **What**: S5 fixes coordinator BLOCKERs directly during Phase 6 (Integration Verification) instead of routing to Phase 7 (Fix Wave).
 **See also**: `security-lessons.md` L67 This bypasses: (1) full test suite re-run, (2) `re-audit-report.md` artifact production, (3) Phase 7b post-fix security re-check.
 **When**: Coordinator finds BLOCKERs; S5 interprets them as "quick fixes" and applies them immediately to keep the build moving. The algedonic signal at the Phase 6/7 boundary is advisory, not enforced.
@@ -324,21 +324,21 @@
 **Affected**: S5 (main agent), vsm_coordinator.
 **Source**: Gym E15 (H105), FB20/FB21 fitness builds.
 
-### Anti-Pattern #57: `strawberry_sqlalchemy_mapper` and Other Non-Existent Package Imports
+### Anti-Pattern #54: `strawberry_sqlalchemy_mapper` and Other Non-Existent Package Imports
 **What**: Agent imports a package name that sounds plausible (`strawberry_sqlalchemy_mapper`, `sqlalchemy_strawberry`, `fastapi_graphql_auto`) but is not in `requirements.txt` and may not even exist on PyPI. The agent then enters an infinite loop trying to verify the import in a subprocess.
 **When**: Developer (or agent) assumes a popular framework must have an "official" ORM mapper plugin and imports it without checking. In FB22, this consumed ~15 minutes of agent time before S5 killed the task.
 **Prevention**: Dependency Verification BLOCKER (vsm_backend_coder gotcha #14). Before importing ANY third-party package not already used in the codebase, verify it is listed in `requirements.txt`. If the package is NOT listed, STOP and use standard library/framework types instead.
 **Affected**: `vsm_backend_coder`, S1 backend agents, `vsm_auditor`.
 **Source**: FB22 `graphql.py` agent imported `from strawberry_sqlalchemy_mapper import StrawberrySQLAlchemyMapper` (H150).
 
-### Anti-Pattern #58: Vite Alias Key `"@/"` with Trailing Slash
+### Anti-Pattern #55: Vite Alias Key `"@/"` with Trailing Slash
 **What**: `vite.config.ts` uses `"@/"` as the alias key instead of `"@"`. Development builds work because Vite's dev server is lenient, but production builds fail because Rollup does not match the trailing slash.
 **When**: Developer copies an alias pattern from a different project or tutorial without checking Vite/Rollup resolution semantics.
 **Prevention**: Vite Alias Key BLOCKER (vsm_frontend_coder gotcha #8). The alias key MUST be `"@"` mapping to `path.resolve(__dirname, "./src")`. The alias `"@/"` mapping to `./src/` is a BLOCKER.
 **Affected**: `vsm_frontend_coder`, S1 frontend agents.
 **Source**: FB22 `vite.config.ts` used `"@/"` → `./src/`; `npm run build` failed with Rollup resolution error (H153).
 
-### Anti-Pattern #59: Invoking `/flow:viable-swarm-model` Without `--agent-file`
+### Anti-Pattern #56: Invoking `/flow:viable-swarm-model` Without `--agent-file`
 
 **What**: The user launches Kimi CLI with the default agent and types `/flow:viable-swarm-model`. The skill loads, S5 begins Phase 0, and eventually calls `Agent(subagent_type="vsm_architect")`. The call fails because custom subagent types are only available when `--agent-file agents/vsm-main.yaml` was used at launch.
 **When**: User forgets the `--agent-file` flag, or launches a new session without it, or resumes a session that was started with the default agent.

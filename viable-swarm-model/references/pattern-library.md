@@ -536,7 +536,7 @@ def test_send_notification_delayed(mock_delay):
 ### JWT Payload Claims
 `{"sub": "user-id", "role": "string", "exp": unix_timestamp, "iat": unix_timestamp}`
 ```
-**Source**: Gym-2026-05-25 Experiment E8 (H20). Variant A (ambiguous spec) caused 3-field mismatch. Variant B (explicit spec) matched perfectly.
+**Source**: Gym-2026-05-25 E6–E14 batch, finding 3 (H20). Variant A (ambiguous spec) caused 3-field mismatch. Variant B (explicit spec) matched perfectly.
 
 ### Pattern: Frontend Build Script Verification
 **When**: Verifying frontend infrastructure in any build with a Vite/React frontend.
@@ -549,7 +549,7 @@ npm run build
 # Do NOT rely solely on:
 # npx vite build
 ```
-**Source**: Gym-2026-05-25 Experiment E13 (H48 + H53). `vite build` PASS, `npm run build` FAIL due to `tsc -b` type-checking `vite.config.ts` without `@types/node`.
+**Source**: Gym-2026-05-25 E6–E14 batch, finding 2 (H48 + H53). `vite build` PASS, `npm run build` FAIL due to `tsc -b` type-checking `vite.config.ts` without `@types/node`.
 
 ### Pattern: Domain-Specific Coder Prompts with Known Stack Gotchas
 **When**: Spawning implementation agents for complex stacks (FastAPI + Strawberry + SlowAPI + Celery + React + Apollo).
@@ -565,7 +565,7 @@ Known Stack Gotchas — verify these explicitly:
 5. NEVER use CORS `allow_origins="*"` with `allow_credentials=True`.
 6. NEVER use module-level `engine = create_async_engine(...)` in models.py.
 ```
-**Source**: Gym-2026-05-25 Experiment E14 (H59). Generic coder used `allow_origins=["*"]` and skipped runtime API verification. Domain-specific coder used explicit origins and dynamic signature checks.
+**Source**: Gym-2026-05-25 E6–E14 batch, finding 1 (H59). Generic coder used `allow_origins=["*"]` and skipped runtime API verification. Domain-specific coder used explicit origins and dynamic signature checks.
 
 ### Pattern 45: Fix Agent Dry-Run Validation
 
