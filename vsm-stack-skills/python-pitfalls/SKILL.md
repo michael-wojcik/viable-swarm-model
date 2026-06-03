@@ -184,3 +184,68 @@ if len(contents) > MAX_FILE_SIZE:
 ```python
 contents = await file.read(max_bytes=MAX_FILE_SIZE)  # TypeError!
 ```
+
+## Rule: Pydantic Response Model UUID Coercion
+
+**Status**: Active (FB27-sourced)
+**Severity**: BLOCKER
+**Applies to**: vsm_backend_coder, vsm_backend_fix, vsm_auditor
+
+When SQLAlchemy models use `UUID` primary keys or foreign keys, Pydantic response
+models receive `UUID` objects. FastAPI's default JSON serialization of `UUID`
+objects is inconsistent and may produce non-string representations that break
+frontend parsing or API contract tests.
+
+**Prevention rules**:
+1. Create a base response model with a `model_validator(mode="before")` that
+   recursively converts `UUID` instances to `str`.
+2. ALL response schemas MUST inherit from this base model (or the equivalent
+   camelCase base if one exists).
+3. Do NOT rely on FastAPI's automatic `jsonable_encoder` for UUID fields.
+
+**Pattern**:
+```python
+from uuid import UUID
+from pydantic import BaseModel, model_validator
+
+class ResponseBase(BaseModel):
+    @model_validator(mode="before")
+    @classmethod
+    def coerce_uuids(cls, data):
+        if isinstance(data, dict):
+            return {
+                k: str(v) if isinstance(v, UUID) else v
+                for k, v in data.items()
+            }
+        return data
+```
+
+**Source**: FB27 14 backend test failures were caused by UUID objects not being
+serialized as strings. The fix agent introduced `ResponseBase` with a recursive
+UUID→str validator. Auditor missed it in all four passes; only pytest caught it.
+
+## Rule: Missing `await` on Async Function Calls
+
+**Status**: Active (FB27-sourced)
+**Severity**: BLOCKER
+**Applies to**: vsm_backend_coder, vsm_backend_fix, vsm_auditor, vsm_coordinator
+
+Calling an `async def` function without `await` returns a coroutine object,
+not the result. In FastAPI endpoints this causes silent failures: the response
+may be a serialized coroutine string or `null`, with HTTP 200 — no exception
+is raised, and the bug is invisible without test coverage.
+
+**Prevention rules**:
+1. Wiring agent MUST grep ALL `*.py` files in `app/` for `async def` functions
+   that are called without `await` in endpoint/router bodies.
+2. Audit MUST verify that every async service/repository call in a route handler
+   is awaited.
+3. Pytest catches this ONLY if the test actually asserts on the return value's
+   structure or content.
+
+**Common targets**: `optimize_waypoints()`, `get_current_user()`, repository
+`get_by_id()`, `send_email()`, `upload_file()`, any service-layer async method.
+
+**Source**: FB27 `vehicles.py` called `optimize_waypoints()` without `await`.
+The endpoint returned HTTP 200 with a coroutine object string. Only pytest
+`test_optimize_waypoints` caught it; four audit passes missed it.

@@ -81,3 +81,91 @@ object has no attribute 'value'`.
 **Prevention**: Use `mapped_column(sa.Enum(EnumType))` or convert strings to
 enums in the resolver before returning.
 **Source**: FB24, H203.
+
+## GraphQL RBAC Enforcement in Resolvers (FB27)
+
+GraphQL resolvers WITHOUT explicit role checks are HIGH severity. Strawberry
+does NOT auto-enforce RBAC from FastAPI dependencies. Each resolver MUST
+explicitly verify the authenticated user's role.
+
+**Prevention rules**:
+1. ALL non-public resolvers MUST verify the authenticated user's role.
+2. Use a `require_roles` helper or inline check — NEVER rely on FastAPI's
+   `Depends(get_current_user)` alone for role authorization (it validates the
+token but does not enforce role constraints for GraphQL resolvers).
+3. The GraphQL `get_context` MUST inject the authenticated user object.
+4. Auditor MUST verify RBAC parity: every REST endpoint with role restrictions
+   MUST have a corresponding GraphQL resolver with equivalent checks.
+
+**Pattern**:
+```python
+import strawberry
+from strawberry.types import Info
+
+class PermissionError(Exception):
+    pass
+
+def require_roles(allowed: list[str]):
+    def checker(info: Info):
+        user = info.context.get("user")
+        if not user or user.role not in allowed:
+            raise PermissionError("Access denied")
+        return user
+    return checker
+
+@strawberry.type
+class Query:
+    @strawberry.field
+    def admin_reports(self, info: Info) -> list[Report]:
+        user = require_roles(["admin"])(info)
+        # ... proceed with admin-only query
+```
+
+**Source**: FB27 GraphQL `vehicles` resolver had no RBAC. FastAPI dependency
+`get_current_user` was used for REST but GraphQL resolvers were unprotected.
+Security audit caught this as HIGH. The fix agent added role checks to all
+non-public resolvers and updated the GraphQL context builder to propagate
+auth failures.
+
+## GraphQL Schema Depth Limiting Implementation
+
+**Status**: Active (FB27-sourced)
+**Severity**: HIGH
+**Applies to**: vsm_backend_coder, vsm_security
+
+GraphQL APIs MUST have depth limiting. The rule in `security-lessons.md` states
+this is HIGH severity, but FB27 found that simply importing `graphql-depth-limit`
+is insufficient — it must be wired into the schema correctly.
+
+**Correct pattern** (Strawberry + Starlette):
+```python
+from graphql import GraphQLError
+
+def depth_limiter(max_depth: int):
+    class DepthLimitValidator:
+        def __init__(self, max_depth: int):
+            self.max_depth = max_depth
+
+        def enter(self, node, key, parent, path, ancestors):
+            if len(path) > self.max_depth:
+                raise GraphQLError(f"Query exceeds max depth of {self.max_depth}")
+
+    return DepthLimitValidator
+
+schema = strawberry.Schema(
+    query=Query,
+    extensions=[MyExtension],
+    # Depth limiting via query analysis middleware or extension
+)
+```
+
+**Incorrect pattern** (HIGH):
+```python
+# Depth limit imported but never wired into the schema
+import depth_limit  # noqa: F401 — dead import, no enforcement
+schema = strawberry.Schema(query=Query)  # No depth protection
+```
+
+**Source**: FB27 had `depth_limit` in dependencies but it was not wired into
+the Strawberry schema. Security audit caught this as HIGH. Fix agent added a
+custom depth validator extension to the schema configuration.

@@ -1128,6 +1128,21 @@ before Phase 8c-ii is complete. If empty, fill it now based on this build's
 results: Did the mutation prevent its target failure? Did it have no observable
 effect? Did it cause a new issue?
 
+**Step 8c-5a: Auto-update mutation state (MANDATORY — H213)**
+After `.kimi/mutations-applied.md` is complete, S5 MUST run:
+```bash
+bash ~/vsm/viable-swarm-model/hooks/update-mutation-state.sh .
+```
+This script automatically:
+- Increments `Builds Tested` for each mutation in `references/mutation-state.md`
+- Replaces `[PENDING]` measured effects in `references/mutation-log.md`
+- Updates status fields based on build scores
+
+If the script reports errors, fix them before proceeding. If the script is
+missing, S5 MUST manually update `mutation-state.md` and `mutation-log.md`.
+This step is NOT optional — it has been missed in 3 consecutive builds (FB25,
+FB26, FB27) and is now a compliance check scored by the process auditor.
+
 **Step 8c-5b: Apply hook-extracted backfill (if present)**
 If `.kimi/mutation-backfill.md` exists (written by `stop-verifier.sh` hook), S5
 MUST read it and apply the measured effects to `references/mutation-log.md`.

@@ -118,3 +118,62 @@ CORSMiddleware(
 ```
 
 **Deferral policy**: May be deferred ONLY if the build spec explicitly requires permissive CORS for development. Otherwise, must be fixed.
+
+## Rule: JWT Secret Strict Validation
+
+**Status**: Active (FB27-sourced)
+**Severity**: HIGH
+**Applies to**: vsm_backend_coder, vsm_security
+
+`JWT_SECRET` MUST NOT have a default value, placeholder, or fallback. If the
+environment variable is missing at runtime, the application MUST fail at startup
+with a clear validation error, NOT silently use a weak/known secret.
+
+**Correct pattern**:
+```python
+from pydantic import Field, field_validator
+
+class Settings(BaseSettings):
+    JWT_SECRET: str = Field(..., min_length=16)
+
+    @field_validator("JWT_SECRET")
+    @classmethod
+    def reject_placeholder(cls, v: str) -> str:
+        if not v or v.strip() in ("", "your-secret-key", "change-me",
+                                   "placeholder", "secret", "jwt-secret"):
+            raise ValueError("JWT_SECRET must be a strong secret, not a placeholder")
+        return v
+```
+
+**Incorrect pattern** (HIGH):
+```python
+JWT_SECRET: str = "your-secret-key"  # Silent security gap — works without env
+JWT_SECRET: str = Field(default="change-me", min_length=16)  # Still a fallback
+```
+
+**Source**: FB27 `config.py` had `JWT_SECRET: str = "your-secret-key"` as default.
+Security audit (Phase 5) missed it entirely. Only the meta-evaluator flagged it
+as a process gap during Phase 8b. The fix agent added `Field(..., min_length=16)`
+with a validator that rejects empty strings and common placeholders.
+
+## Rule: File Extension Whitelist for Uploads
+
+**Status**: Active (FB27-sourced)
+**Severity**: MEDIUM
+**Applies to**: vsm_backend_coder, vsm_security
+
+File upload endpoints MUST validate file extensions against an explicit allowlist.
+Accepting arbitrary extensions (e.g., `.exe`, `.sh`, `.php`) enables upload-based
+remote code execution.
+
+**Correct pattern**:
+```python
+ALLOWED_EXTENSIONS = {".pdf", ".png", ".jpg", ".jpeg", ".csv", ".xlsx"}
+
+ext = Path(filename).suffix.lower()
+if ext not in ALLOWED_EXTENSIONS:
+    raise HTTPException(status_code=400, detail=f"File type {ext} not allowed")
+```
+
+**Source**: FB27 document upload endpoint accepted any extension. Security audit
+caught it as MEDIUM. Fix agent added extension whitelist validation.

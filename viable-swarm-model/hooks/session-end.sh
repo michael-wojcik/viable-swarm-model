@@ -107,6 +107,15 @@ if [[ -f "$CWD/plan.md" ]]; then
     fi
 fi
 
+# ── Auto-update mutation state (H213 safety net) ──
+# If mutations-applied.md exists but mutation-state.md was not updated during
+# Phase 8c-ii (S5 forgot to run update-mutation-state.sh), update it now.
+UPDATE_SCRIPT="$HOME/vsm/viable-swarm-model/hooks/update-mutation-state.sh"
+if [[ -f "$CWD/.kimi/mutations-applied.md" && -f "$UPDATE_SCRIPT" ]]; then
+    echo "Auto-updating mutation state from $CWD/.kimi/mutations-applied.md ..."
+    bash "$UPDATE_SCRIPT" "$CWD" >/dev/null 2>&1 || echo "Mutation state auto-update failed (non-fatal)"
+fi
+
 # Build telemetry block — write to EPHEMERAL .kimi/ file, NOT tracked skill-state.md
 SESSION_TELEMETRY_FILE="$CWD/.kimi/session-telemetry.md"
 
