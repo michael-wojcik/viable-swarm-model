@@ -603,3 +603,50 @@ class ArticleResponse(BaseModel):
 `UnsupportedFieldAttributeWarning: The 'alias' attribute... has no effect`.
 These warnings originated from Pydantic v2 model definitions and consumed
 context budget during test execution.
+
+
+## Rule: `@field_validator(mode="before")` for Comma-Separated Env Strings
+
+**Status**: Active (FB29-sourced)
+**Severity**: LOW (productivity pattern)
+**Applies to**: vsm_backend_coder
+
+Environment variables are always strings. When a setting needs a list (e.g.,
+`CORS_ORIGINS`, `CORS_ALLOW_METHODS`, `CORS_ALLOW_HEADERS`), Pydantic v2 will
+not auto-split comma-separated strings. A `mode="before"` validator converts
+the env string to a list before type validation.
+
+**Correct pattern**:
+```python
+from pydantic import BaseSettings, Field, field_validator
+
+class Settings(BaseSettings):
+    cors_origins: list[str] = ["http://localhost:5173"]
+    cors_allow_methods: list[str] = ["GET", "POST", "PUT", "DELETE"]
+
+    @field_validator("cors_origins", "cors_allow_methods", mode="before")
+    @classmethod
+    def _split_comma_separated(cls, v):
+        if isinstance(v, str):
+            return [item.strip() for item in v.split(",") if item.strip()]
+        return v
+```
+
+**Incorrect pattern** (LOW):
+```python
+class Settings(BaseSettings):
+    cors_origins: list[str] = ["http://localhost:5173"]
+    # Env var CORS_ORIGINS="http://a.com,http://b.com" is passed as a single
+    # string. Pydantic tries to validate str as list[str] and fails with:
+    # Input should be a valid list
+```
+
+**Prevention rules**:
+1. Any setting typed as `list[str]` that reads from env MUST have a
+   `mode="before"` validator handling the string case.
+2. The validator MUST handle empty strings gracefully (return `[]` or skip).
+3. Strip whitespace from each item after splitting.
+
+**Source**: FB29 `config.py` initially failed to load `CORS_ORIGINS` from env
+because the comma-separated string was not split. Added `_split_comma_separated`
+validator to handle the env string → list conversion.

@@ -67,3 +67,56 @@ app.include_router(auth_router, prefix="/auth", tags=["auth"])
 **Source**: FB29 `main.py` had `app.include_router(auth_router, prefix="/auth")`
 but `auth_router` already defined `prefix="/auth"`. All auth endpoints were at
 `/auth/auth/*`. Caught by S5 manual validation in Phase 2c.
+
+
+## Rule: Use FastAPI Lifespan Context Manager for DB Initialization
+
+**Status**: Active (FB29-sourced)
+**Severity**: LOW (pattern preference)
+**Applies to**: vsm_backend_coder, vsm_wiring
+
+FastAPI's `@asynccontextmanager` lifespan hook is the cleanest way to initialize
+and tear down database connections, create tables, and dispose of engines. It
+replaces the older `on_event("startup")` / `on_event("shutdown")` pattern which
+is harder to test and reason about.
+
+**Correct pattern**:
+```python
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    engine = create_async_engine(settings.database_url)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    app.state.engine = engine
+    yield
+    # Shutdown
+    await engine.dispose()
+
+app = FastAPI(lifespan=lifespan)
+```
+
+**Incorrect pattern** (deprecated):
+```python
+@app.on_event("startup")
+async def startup():
+    engine = create_async_engine(settings.database_url)
+
+@app.on_event("shutdown")
+async def shutdown():
+    await engine.dispose()
+```
+
+**Prevention rules**:
+1. Prefer `lifespan` over `on_event("startup")` / `on_event("shutdown")`.
+2. Lifespan MUST create the engine, run `create_all`, and store engine in
+   `app.state` for access during requests.
+3. Lifespan MUST dispose the engine on shutdown.
+4. Tests can override the lifespan by creating the app without it.
+
+**Source**: FB29 `main.py` used `@asynccontextmanager lifespan` for engine
+creation, table creation, and disposal. This pattern eliminated module-level
+engine calls and made tests import-safe.
