@@ -554,6 +554,18 @@ Main agent (S5) performs:
     with an unknown subagent type error, **STOP immediately**. Emit algedonic:
     `--agent-file not loaded. Launch with: kimi --agent-file ~/vsm/viable-swarm-model/agents/vsm-main.yaml`.
     Do not proceed with the build.
+    
+    **Step 11a: Run agent file validator (MANDATORY — FB27-C)**
+    Before spawning any agents, run:
+    ```bash
+    cd ~/vsm/viable-swarm-model/agents && python3 validate-agent-files.py > .kimi/validate-agent-files.log 2>&1
+    ```
+    Save the output to `.kimi/validate-agent-files.log` in the build directory.
+    The process auditor scores this as Check #5 (2 points). If the log is missing,
+    Phase 0 broker read score is capped at 8/10.
+    
+    If the validator reports ERRORS, STOP the build and fix the agent files before
+    proceeding. Warnings about bracket placeholders are expected and do not block.
 12. **Environment Compatibility Smoke Test** (conditional): If the build declares
     framework dependencies (e.g., `[graphql library]`, `[validation library]`, `[orm library]`, `[backend framework]`,
     `celery`), run a quick import verification in a fresh subprocess BEFORE dispatching
