@@ -164,3 +164,23 @@ if os.environ.get("_CELERY_SKIP_IMPORT") != "1":
 
 **Source**: FB25 `celery_app.py` had only a factory; `celery -A app.celery_app worker`
 failed because the CLI could not find `app.celery_app.app`.
+
+## Rule: Starlette UploadFile.read() Signature
+
+**Status**: Active (FB26-sourced)
+**Severity**: BLOCKER
+**Applies to**: vsm_backend_coder, vsm_security
+
+Starlette's `UploadFile.read()` signature is `read(size: int = -1)`. NEVER pass `max_bytes=` as a keyword argument — this raises `TypeError` at runtime.
+
+**Correct pattern**:
+```python
+contents = await file.read(MAX_FILE_SIZE + 1)
+if len(contents) > MAX_FILE_SIZE:
+    raise HTTPException(status_code=413, detail="File too large")
+```
+
+**Incorrect pattern** (BLOCKER):
+```python
+contents = await file.read(max_bytes=MAX_FILE_SIZE)  # TypeError!
+```

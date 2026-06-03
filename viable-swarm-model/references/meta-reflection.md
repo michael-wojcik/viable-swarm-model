@@ -204,3 +204,30 @@ trajectory exists despite continuous mutation.
 - Mutations are tracked from birth to death
 - Cross-skill learning flows through the knowledge broker
 - Ineffective rules are removed, not just flagged
+
+---
+
+## FB26-A3: Score Trend Tracking Rule
+
+**Status**: Active (FB26-sourced)
+**Type**: append-only
+**Applies to**: vsm-fitness-coach, vsm_meta
+
+Every fitness report MUST include a **Score Trend** table at the top of the Executive Summary:
+
+```markdown
+## Score Trend
+| Build | Score | Delta | Primary Gap | Process or Code? |
+|-------|-------|-------|-------------|------------------|
+| FB24  | 4.2   | —     | —           | —                |
+| FB25  | 4.0   | -0.2  | H209 bypass | Process          |
+| FB26  | 3.6   | -0.4  | H209 + foundation collapse | Process |
+```
+
+**Regression Alarm**: If score drops > 0.3 from previous build, the report MUST:
+1. Flag the drop in **bold** in the Executive Summary
+2. Identify the root cause hypothesis (e.g., "H209 confirmed — 4th consecutive bypass")
+3. Propose a structural mutation if the gap is process-related
+4. Elevate the severity of any deferred issues that contributed to the drop
+
+**Rationale**: FB26 dropped from 4.0 → 3.6 (-0.4) but this was buried in the phase scores table. No regression alarm fired. Explicit trend tracking makes decay visible before it becomes entrenched.

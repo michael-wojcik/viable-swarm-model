@@ -1859,8 +1859,7 @@ background agents. Users will understand that prompt-hardened rules (Layer 1)
 are the primary defense, with hooks as secondary enforcement for S5/foreground
 only.
 
-**Measured effect**: PENDING — verify in FB26 that no build prompt claims
-"13 active VSM hooks" for background agent enforcement.
+**Measured effect**: Effective (Score: 5) — No build prompt in FB26 claimed "13 active VSM hooks" for background agent enforcement. Meta-report confirms "no background agent bypasses detected." Target failure mode did not recur.
 
 ---
 
@@ -1880,5 +1879,4 @@ effects non-empty, (3) S5 explicitly states completion.
 **Expected effect**: Future builds will not declare Phase 8 complete without
 producing `mutations-applied.md` and filling measured effects.
 
-**Measured effect**: PENDING — verify in FB26 that `mutations-applied.md` exists
-BEFORE `process-audit.md` runs and that all mutations have measured effects.
+**Measured effect**: Ineffective (Score: 1) — `mutations-applied.md` missing in FB26 `.kimi/`. Process audit CRITICAL-1 confirms absence. This is the 4th consecutive build bypass (FB23→FB26). Prompt-only instructions are insufficient. Superseded by FB26-S3 structural hard gate (tool-enforced, retroactive creation detection, Phase 8c-ii moved BEFORE Phase 8b).

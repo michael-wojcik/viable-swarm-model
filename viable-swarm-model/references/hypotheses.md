@@ -239,3 +239,47 @@
 **Experiment**: Add explicit `mutations-applied.md` presence check to `vsm_meta.md` output template. In next build, verify if the file exists before S5 declares completion.
 **Expected**: If `vsm_meta.md` is updated → file exists in next build. If not → file absent again.
 **Tested by**: —
+
+---
+
+## H210: `.dockerignore` absence persists because no agent owns its creation in the current task topology
+
+**Status**: untested
+**Proposed**: 2026-06-03
+**Rationale**: FB26 foundation audit B5 flagged missing `.dockerignore`. DevOps agent created Dockerfiles but not `.dockerignore`. The scaffold checklist in vsm_devops_coder does not include it.
+**Source**: Fitness build FB26, Phase 2
+**Experiment**: Add `.dockerignore` to vsm_devops_coder scaffold checklist. Run next fitness build and verify `.dockerignore` exists in build directory.
+**Expected**: `.dockerignore` present in 100% of builds with Dockerfiles.
+
+---
+
+## H211: CORS wildcards persist because `security-patterns` severity calibration labels them LOW
+
+**Status**: untested
+**Proposed**: 2026-06-03
+**Rationale**: FB26 security gate rated `allow_methods=["*"]` and `allow_headers=["*"]` as LOW. They were deferred and remain unfixed. Elevating to MEDIUM would force fix.
+**Source**: Fitness build FB26, Phase 5
+**Experiment**: Elevate CORS wildcard from LOW → MEDIUM in security-patterns. Run next build and check if CORS wildcards are fixed.
+**Expected**: Zero CORS wildcards in final build.
+
+---
+
+## H212: No automated cross-reference check exists between docker-compose service ports and `.env.example` defaults
+
+**Status**: untested
+**Proposed**: 2026-06-03
+**Rationale**: FB26 `.env.example` had `VITE_WS_URL=ws://localhost:8000` but docker-compose realtime service exposes port 8001. Caught by coordinator but never fixed.
+**Source**: Fitness build FB26, Phase 5/6
+**Experiment**: Add port parity check to vsm_coordinator contract validation. Run next build and verify port matches.
+**Expected**: Zero port mismatches in next build.
+
+---
+
+## H213: `mutation-state.md` is not updated because S5 lacks a concrete, copy-pasteable command/template
+
+**Status**: untested
+**Proposed**: 2026-06-03
+**Rationale**: FB26 meta-report noted mutation-state.md has no measured effects from this build's S5. The backfill table exists in the fitness report but S5 must manually transcribe it. A template or hook would automate this.
+**Source**: Fitness build FB26, Phase 8b
+**Experiment**: Add a concrete shell command or template to SKILL.md Phase 8c-ii that S5 can copy-paste. Run next build and check if mutation-state.md is updated.
+**Expected**: mutation-state.md updated within 5 minutes of mutations-applied.md creation.

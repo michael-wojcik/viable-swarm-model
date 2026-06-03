@@ -55,12 +55,42 @@ if [[ ! -d "$KIMI_DIR" ]]; then
     exit 0
 fi
 
-# Check 1: mutations-applied.md must exist
-if [[ ! -f "$MUTATIONS_FILE" ]]; then
-    # However, don't block if this is a very early session (no build artifacts yet)
-    if [[ -f "$KIMI_DIR/meta-report.md" || -f "$KIMI_DIR/lessons.md" || -f "$KIMI_DIR/security-report.md" ]]; then
-        echo "STOP BLOCKED by stop-verifier.sh: Phase 8c-ii incomplete. .kimi/mutations-applied.md is missing. Every build MUST log applied mutations before completion." >&2
-        echo '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"Phase 8c-ii incomplete: mutations-applied.md missing. Write it before stopping."}}'
+# Check 1: mutations-applied.md must exist AND have content for THIS build
+# A retroactively-created empty file does not satisfy Phase 8c-ii.
+MUTATIONS_VALID=false
+if [[ -f "$MUTATIONS_FILE" ]]; then
+    # Must contain a Build ID entry and at least one mutation block
+    if grep -qE '^## Build |^\*\*Build ID\*\*|^\*\*Mutation\*\*|Applied|Effectiveness' "$MUTATIONS_FILE" 2>/dev/null; then
+        MUTATIONS_VALID=true
+    fi
+fi
+
+if [[ "$MUTATIONS_VALID" != "true" ]]; then
+    # Only enforce if this looks like a completed build (has meta, lessons, or security report)
+    if [[ -f "$KIMI_DIR/meta-report.md" || -f "$KIMI_DIR/lessons.md" || -f "$KIMI_DIR/security-report.md" || -f "$KIMI_DIR/process-audit.md" ]]; then
+        echo "STOP BLOCKED by stop-verifier.sh: Phase 8c-ii incomplete. .kimi/mutations-applied.md is missing or empty. Every build MUST log applied mutations with measured effects before completion." >&2
+        echo '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"Phase 8c-ii incomplete: mutations-applied.md missing or empty. Write it with build ID and measured effects before stopping."}}'
+        exit 0
+    fi
+fi
+
+# Check 1b: Retroactive creation detection
+# If mutations-applied.md was created AFTER meta-report.md or process-audit.md,
+# it was written retroactively and the checkpoint was still bypassed. Block and warn.
+if [[ "$MUTATIONS_VALID" == "true" ]]; then
+    MUT_MTIME=$(stat -f%m "$MUTATIONS_FILE" 2>/dev/null || stat -c%Y "$MUTATIONS_FILE" 2>/dev/null || echo 0)
+    LATEST_ARTIFACT=0
+    for artifact in "$KIMI_DIR/meta-report.md" "$KIMI_DIR/process-audit.md" "$KIMI_DIR/lessons.md"; do
+        if [[ -f "$artifact" ]]; then
+            ART_MTIME=$(stat -f%m "$artifact" 2>/dev/null || stat -c%Y "$artifact" 2>/dev/null || echo 0)
+            if [[ "$ART_MTIME" -gt "$LATEST_ARTIFACT" ]]; then
+                LATEST_ARTIFACT=$ART_MTIME
+            fi
+        fi
+    done
+    if [[ "$LATEST_ARTIFACT" -gt 0 && "$MUT_MTIME" -gt "$LATEST_ARTIFACT" ]]; then
+        echo "STOP BLOCKED by stop-verifier.sh: mutations-applied.md was created AFTER meta-report.md/process-audit.md. Phase 8c-ii must be completed BEFORE Phase 8b, not retroactively. Reorder the workflow." >&2
+        echo '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"Retroactive mutations-applied.md detected. Write it BEFORE meta-report and process-audit."}}'
         exit 0
     fi
 fi

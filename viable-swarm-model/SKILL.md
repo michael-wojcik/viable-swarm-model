@@ -516,45 +516,59 @@ Main agent (S5) performs:
 7. **Read mutation state**: `~/vsm/viable-swarm-model/references/mutation-state.md`
    **MANDATORY**. This tracks which mutations are active, probationary, ineffective,
    or removed. S5 MUST know which rules are currently enforced before starting a build.
-8. **Read hypotheses**: `~/vsm/viable-swarm-model/references/hypotheses.md`
-   if exists. Note any untested hypotheses that are relevant to this project.
-8. **Read meta-reflection**: `~/vsm/viable-swarm-model/references/meta-reflection.md`
-   if exists.
-9. **Read meta-reflection**: `~/vsm/viable-swarm-model/references/meta-reflection.md`
-   if exists.
-10. **Self-test + Agent-File Verification**: Verify all referenced files exist and are
-readable. Verify the flow diagram parses. Verify the skill can describe its own
-phase sequence without contradiction. Specifically verify these custom agent definition
-files exist: `vsm-main.yaml`, `vsm_architect.yaml`, `vsm_product.yaml`,
-`vsm_auditor.yaml`, `vsm_coordinator.yaml`, `vsm_wiring.yaml`, `vsm_backend_coder.yaml`,
-`vsm_frontend_coder.yaml`, `vsm_backend_fix_agent.yaml`, `vsm_frontend_fix_agent.yaml`,
-`vsm_devops_coder.yaml`, `vsm_security.yaml`, `vsm_backend_tester.yaml`,
-`vsm_frontend_tester.yaml`, `vsm_meta.yaml`, `vsm_process_auditor.yaml`, `vsm_explore.yaml`.
-If any check fails → emit algedonic, write diagnosis
-to `~/vsm/viable-swarm-model/references/mutation-log.md`, ask user to review.
-Then spawn a trivial `vsm_meta` subagent with the task `"Reply 'ok'"`. If this fails
-with an unknown subagent type error, **STOP immediately**. Emit algedonic:
-`--agent-file not loaded. Launch with: kimi --agent-file ~/vsm/viable-swarm-model/agents/vsm-main.yaml`.
-Do not proceed with the build.
-11. **Environment Compatibility Smoke Test** (conditional): If the build declares
-framework dependencies (e.g., `[graphql library]`, `[validation library]`, `[orm library]`, `[backend framework]`,
-`celery`), run a quick import verification in a fresh subprocess BEFORE dispatching
-implementation agents:
-```bash
-verify imports using language-specific method for declared dependencies
-```
-If ANY import fails, STOP the build immediately. Report the environment
-incompatibility, do NOT dispatch agents that cannot runtime-verify their code,
-and ask the user to resolve the dependency conflict. Writing code that cannot be
-imported wastes agent capacity and produces unverifiable artifacts.
-**Source**: FB22 `strawberry-graphql==0.256.0` failed to import with installed
-pydantic; the API layer file agent consumed ~15 minutes before S5 intervened (H152).
-12. **Read runtime capacity**: Read `~/.kimi/config.toml` and extract
-   `background.max_running_tasks` (default 4 if absent). Log this value in
-   `plan.md` as the parallel agent ceiling. NEVER exceed this limit when
-   spawning background subagents.
-13. **Variety Assessment** (Ashby's Law): Estimate project complexity and classify tier.
-   Use the `max_running_tasks` value read in step 11 as the agent ceiling.
+8. **Log active traps and probationary mutations in plan.md** **(NEW — FB26-S4)**:
+   After reading broker and mutation state, S5 MUST extract and explicitly log:
+   - Any broker traps marked `[ACTIVE]` or with build-specific targets
+   - Any probationary mutations (status: probation) from mutation-state.md
+   - Any mutations scheduled for removal evaluation this build
+   
+   Write these into `plan.md` under a heading `## Active Constraints from Skill State`.
+   Example:
+   ```markdown
+   ## Active Constraints from Skill State
+   - Broker trap G6: mutations-applied.md checkpoint (FB26)
+   - Probationary mutation FB26-1: UploadFile.read() signature rule
+   - Probationary mutation FB26-S3: H209 hard gate
+   - Mutation FB19-7: Scheduled for removal evaluation
+   ```
+   
+   If this section is missing from plan.md, the process auditor will score Phase 0
+   as a process violation (see vsm_process_auditor check #7).
+10. **Read meta-reflection**: `~/vsm/viable-swarm-model/references/meta-reflection.md`
+    if exists.
+11. **Self-test + Agent-File Verification**: Verify all referenced files exist and are
+    readable. Verify the flow diagram parses. Verify the skill can describe its own
+    phase sequence without contradiction. Specifically verify these custom agent definition
+    files exist: `vsm-main.yaml`, `vsm_architect.yaml`, `vsm_product.yaml`,
+    `vsm_auditor.yaml`, `vsm_coordinator.yaml`, `vsm_wiring.yaml`, `vsm_backend_coder.yaml`,
+    `vsm_frontend_coder.yaml`, `vsm_backend_fix_agent.yaml`, `vsm_frontend_fix_agent.yaml`,
+    `vsm_devops_coder.yaml`, `vsm_security.yaml`, `vsm_backend_tester.yaml`,
+    `vsm_frontend_tester.yaml`, `vsm_meta.yaml`, `vsm_process_auditor.yaml`, `vsm_explore.yaml`.
+    If any check fails → emit algedonic, write diagnosis
+    to `~/vsm/viable-swarm-model/references/mutation-log.md`, ask user to review.
+    Then spawn a trivial `vsm_meta` subagent with the task `"Reply 'ok'"`. If this fails
+    with an unknown subagent type error, **STOP immediately**. Emit algedonic:
+    `--agent-file not loaded. Launch with: kimi --agent-file ~/vsm/viable-swarm-model/agents/vsm-main.yaml`.
+    Do not proceed with the build.
+12. **Environment Compatibility Smoke Test** (conditional): If the build declares
+    framework dependencies (e.g., `[graphql library]`, `[validation library]`, `[orm library]`, `[backend framework]`,
+    `celery`), run a quick import verification in a fresh subprocess BEFORE dispatching
+    implementation agents:
+    ```bash
+    verify imports using language-specific method for declared dependencies
+    ```
+    If ANY import fails, STOP the build immediately. Report the environment
+    incompatibility, do NOT dispatch agents that cannot runtime-verify their code,
+    and ask the user to resolve the dependency conflict. Writing code that cannot be
+    imported wastes agent capacity and produces unverifiable artifacts.
+    **Source**: FB22 `strawberry-graphql==0.256.0` failed to import with installed
+    pydantic; the API layer file agent consumed ~15 minutes before S5 intervened (H152).
+13. **Read runtime capacity**: Read `~/.kimi/config.toml` and extract
+    `background.max_running_tasks` (default 4 if absent). Log this value in
+    `plan.md` as the parallel agent ceiling. NEVER exceed this limit when
+    spawning background subagents.
+14. **Variety Assessment** (Ashby's Law): Estimate project complexity and classify tier.
+    Use the `max_running_tasks` value read in step 12 as the agent ceiling.
    Do not invent artificial sub-limits — if the host allows 8, use up to 8.
    - **Tier 1** (<1000 lines, 1-2 services): Standard flow, no mid-wave gates needed
    - **Tier 2** (1000-3000 lines, 2-3 services): Add Phase 3c mid-wave S2 check,
@@ -977,7 +991,14 @@ Write a standalone `.kimi/lessons.md` in the build directory.
 1. `.kimi/lessons.md` exists in the build directory.
 2. It contains at least one structured entry with Source, Finding, Fix, Verification,
    and Prevention rule.
-If EITHER check fails, Phase 8 is NOT complete. Re-spawn the relevant agents or
+3. **NEW (FB26-sourced structural mutation)**: `.kimi/mutations-applied.md` exists
+   with at least one mutation entry from THIS build. Use this shell command:
+   ```bash
+   test -f .kimi/mutations-applied.md && grep -qE "Build ID:|Build FB[0-9]+|Mutation" .kimi/mutations-applied.md && echo "PASS" || echo "FAIL"
+   ```
+   If the output is "FAIL", STOP. Do NOT spawn `vsm_meta` or `vsm_process_auditor`.
+   Write `.kimi/mutations-applied.md` immediately (see Phase 8c-ii template below).
+If ANY check fails, Phase 8 is NOT complete. Re-spawn the relevant agents or
 write the missing entries before proceeding to `vsm_meta`.
 
 See `references/lessons-template.md` for the full template.
@@ -1007,7 +1028,7 @@ Before declaring Phase 8b complete, verify ALL of the following:
 3. It contains a **Phase Audit** section with process violation analysis.
 4. It contains **Hypotheses Generated** with at least one falsifiable hypothesis.
 5. `.kimi/process-audit.md` exists and contains a compliance score.
-6. ~~`.kimi/mutations-applied.md` exists in the build directory~~ (verified in Phase 8c-ii, not here).
+6. ~~`.kimi/mutations-applied.md` exists in the build directory~~ (verified in Phase 8c-ii, which now runs BEFORE Phase 8b).
 
 If any check fails, Phase 8b is NOT complete. Re-spawn the relevant agent with
 explicit instructions to include the missing sections.
@@ -1027,19 +1048,42 @@ If this build discovered new empirical pitfalls or validated new patterns:
 3. If new skill needed, create it and update registry
 4. `git commit` skill changes
 
-### Phase 8c-ii: Mutation Verification Checkpoint (MANDATORY)
-Before declaring Phase 8 complete, S5 MUST run the Mutation Verification
-Checkpoint. This prevents the recurring failure mode where mutations are
-proposed in `.kimi/meta-report.md` but never applied.
+### Phase 8c-ii: Mutation Verification Checkpoint (MANDATORY — MOVED BEFORE PHASE 8b)
+This checkpoint MUST run BEFORE spawning `vsm_meta` or `vsm_process_auditor`.
+The recurring failure mode (H209, confirmed FB23→FB26) is that S5 defers this
+until session end, then forgets it. Tool-enforced gates in `stop-verifier.sh`
+retroactively catch the omission, but by then Phase 8b has already completed
+with incorrect sequencing.
+
+**Step 8c-0: Verify gate BEFORE Phase 8b**
+```bash
+# S5 MUST run this command before spawning vsm_meta:
+test -f .kimi/mutations-applied.md && grep -qE "Build FB[0-9]+|Mutation" .kimi/mutations-applied.md && echo "PASS" || echo "FAIL: Write .kimi/mutations-applied.md now"
+```
+If FAIL, do not spawn any Phase 8b agents. Write the file.
 
 **Step 8c-1: Produce `.kimi/mutations-applied.md`**
 Create a tracking artifact in the `.kimi/` subdirectory (`mutations-applied.md`)
-with this table:
+with this exact template (copy-pasteable):
 
 ```markdown
-| # | Mutation | Tier | Proposed By | Status | Evidence |
-|---|----------|------|-------------|--------|----------|
+## Build ID: FB[NN]
+**Date**: [YYYY-MM-DD]
+
+| # | Mutation ID | Target Failure | Proposed By | Status | Evidence |
+|---|-------------|----------------|-------------|--------|----------|
+| 1 | [ID] | [What it prevents] | [meta/process/human] | [applied/deferred/rejected/overlooked] | [File changed or rationale] |
+
+## Measured Effects
+
+### [Mutation ID]
+**Measured effect**: [Effective / Ineffective / Partial / N/A]
+**Evidence**: [Build result that proves/disproves it]
+**Score**: [1–5]
+**Proposed action**: [Keep / Remove / Redesign / Monitor]
 ```
+
+Use `StrReplaceFile` or `WriteFile` to create this. Do not rely on memory.
 
 **Step 8c-2: Cross-check against `.kimi/meta-report.md`**
 For every mutation proposed by `vsm_meta`, confirm one of:

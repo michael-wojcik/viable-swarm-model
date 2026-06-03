@@ -110,3 +110,34 @@ syntax ONLY. Never embed shell operators (`||`, `&&`, `>`, `2>/dev/null`,
 **Source**: FB25 `frontend/Dockerfile` contained
 `COPY nginx.conf /etc/nginx/conf.d/default.conf 2>/dev/null || true`,
 which Docker's COPY parser rejected as invalid syntax.
+
+## Rule: Env-Var Port Parity
+
+**Status**: Active (FB26-sourced)
+**Severity**: ISSUE
+**Applies to**: vsm_devops_coder, vsm_coordinator
+
+For every `VITE_*_URL` or `*_URL` in `.env.example`, verify the port matches the corresponding service port in `docker-compose.yml`. Mismatches cause runtime connection failures that are hard to debug.
+
+**Check**:
+```bash
+grep -E "VITE_.*_URL|API_URL|WS_URL" .env.example
+grep "ports:" docker-compose.yml
+```
+
+## Rule: `.dockerignore` Co-Creation with Dockerfile
+
+**Status**: Active (FB26-sourced)
+**Severity**: BLOCKER
+**Applies to**: vsm_devops_coder, vsm_coordinator
+
+Every `Dockerfile` created MUST have a `.dockerignore` in the same directory. The `.dockerignore` MUST at minimum exclude:
+```
+.env
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+```
+
+**Check**: Before completing foundation wave, verify `find . -name Dockerfile | while read f; do dir=$(dirname "$f"); [ -f "$dir/.dockerignore" ] || echo "MISSING: $dir/.dockerignore"; done` returns nothing.
