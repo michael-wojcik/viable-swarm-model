@@ -6,6 +6,9 @@
 >
 > Experiments are designed to be minimal and isolated — they test ONE hypothesis
 > at a time with the smallest possible code surface.
+>
+> **See also**: `references/hypotheses.md` for the backlog of untested,
+> confirmed, and rejected hypotheses.
 
 ---
 

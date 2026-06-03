@@ -3,6 +3,8 @@
 > **Mutation rules**: Append new patterns; mark obsolete patterns with
 > `~~strikethrough~~` and rationale. Never delete — the log of what stopped
 > working is as valuable as what currently works.
+>
+> **See also**: `references/anti-patterns.md` for prevention rules and common traps.
 
 ---
 
@@ -681,3 +683,59 @@ The gate document should reference these artifacts by path.
 
 **Affected**: S5 orchestrator (Phase 4), vsm_process_auditor.
 **Source**: FB25 process audit flagged missing persistent test reports as LOW gap.
+
+## Pattern: SQLAlchemy String-Mapped Enum `.value` Trap (Discovered FB24)
+
+**When**: Backend defines SQLAlchemy models with enum columns mapped to `sa.String`.
+**What**: SQLAlchemy loads the database value as a plain `str`, NOT as the enum instance. Calling `.value` on the attribute crashes with `AttributeError: 'str' object has no attribute 'value'`.
+**Why**: All four audit passes (foundation, implementation, security, re-audit) missed this bug in FB24. Only pytest caught it.
+**How**:
+1. Prefer `sa.Enum(Status)` over `sa.String(N)` for enum columns.
+2. If `sa.String(N)` must be used, NEVER call `.value` on the attribute. Compare directly with string literals or cast explicitly.
+3. Auditor MUST flag any `.value` call on a model attribute whose column is declared with `sa.String` rather than `sa.Enum`.
+
+**Example** (WRONG):
+```python
+class Status(str, enum.Enum):
+    pending = "pending"
+    done = "done"
+
+class Task(Base):
+    status: Mapped[Status] = mapped_column(sa.String(50))
+
+# Endpoint code — crashes at runtime:
+return {"status": task.status.value}  # AttributeError!
+```
+
+**Example** (RIGHT — use `sa.Enum`):
+```python
+class Task(Base):
+    status: Mapped[Status] = mapped_column(sa.Enum(Status))
+
+return {"status": task.status.value}  # OK — SQLAlchemy returns Status enum
+```
+
+**Source**: FB24 `app/routers/stock.py:338`. See also `references/hypotheses.md` H203.
+
+---
+
+## Pattern: Phase 7d ISSUE Sweep (Discovered FB24)
+
+**When**: After a fix wave (Phase 7) completes but before the build is declared done.
+**What**: Produce `issue-sweep.md` categorizing every open ISSUE from all audit reports as FIXED, DEFERRED, or MISSED.
+**Why**: FB24 ended with 6+ unfixed ISSUEs because no systematic sweep was performed. Security, integration, and implementation ISSUEs were left open and forgotten.
+**How**:
+1. Collect all ISSUEs from: foundation audit, implementation audit, security audit, integration report, process audit.
+2. For each ISSUE, determine:
+   - **FIXED**: The fix wave addressed it (verify with `re-audit-report.md` or re-test).
+   - **DEFERRED**: Consciously postponed with documented rationale and follow-up issue.
+   - **MISSED**: No fix was applied and no deferral rationale exists.
+3. If ANY ISSUE is MISSED → STOP. Route back to fix wave or escalate to S5.
+4. Only when zero MISSED ISSUEs remain may Phase 8 (Meta-Reflection) begin.
+
+**Acceptance criteria**:
+- Zero MISSED ISSUEs at build completion.
+- `issue-sweep.md` exists in `.kimi/` with every ISSUE categorized.
+
+**Source**: FB24 fix wave left 6+ ISSUEs open. FB25 Phase 7d produced `issue-sweep.md` with all issues categorized as FIXED or DEFERRED. Zero MISSED.
+**See also**: `references/hypotheses.md` H205.

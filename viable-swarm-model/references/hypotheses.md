@@ -9,6 +9,9 @@
 > Each hypothesis is a falsifiable claim about the skill's knowledge or
 > behavior. It is tested by the vsm-fitness-gym companion skill or
 > during Phase 8b of a real build.
+>
+> **See also**: `references/experiments.md` for empirical test records of
+> confirmed and rejected hypotheses.
 
 ---
 
@@ -24,10 +27,8 @@
 | H154 | untested |
 | H155 | untested |
 | H156 | untested |
-| H157 | untested |
 | H201 | untested |
 | H202 | untested |
-| H203 | untested |
 | H[N+3] | untested |
 | H[N+4] | untested |
 | H206 | untested |
@@ -48,7 +49,7 @@
 **Result**: [to be filled]
 **Tested by**: [fitness build or gym experiment]
 
-
+---
 
 ## H150: Requiring agents to verify dependencies against requirements.txt before importing would prevent 100% of non-existent library usage
 
@@ -62,7 +63,6 @@
 
 ---
 
-
 ## H151: Elevating Pydantic `class Config` deprecation from ISSUE to BLOCKER would eliminate the pattern from all new code
 
 **Status**: untested
@@ -74,7 +74,6 @@
 **Tested by**: —
 
 ---
-
 
 ## H152: Pre-build environment smoke tests would catch package incompatibilities before code writing begins
 
@@ -88,7 +87,6 @@
 
 ---
 
-
 ## H153: Standardizing Vite alias key as `"@"` (not `"@/"`) would prevent production build failures
 
 **Status**: untested
@@ -100,7 +98,6 @@
 **Tested by**: —
 
 ---
-
 
 ## H154: Requiring `npm run build` as a Phase 4 hard gate would prevent TypeScript/build failures from leaking into Phase 6
 
@@ -114,7 +111,6 @@
 
 ---
 
-
 ## H155: Exhaustive module-level settings audit across ALL Python files (not just `main.py`) would catch 100% of import-time env side effects
 
 **Status**: untested
@@ -126,7 +122,6 @@
 **Tested by**: —
 
 ---
-
 
 ## H156: Dependency manifest-environment parity check after Phase 0 fixes would prevent reproducibility failures
 
@@ -140,19 +135,6 @@
 
 ---
 
-
-## H157: Frontend pages generated as stubs (void-referenced imports, no real logic) correlate with missed integration checklist items
-
-**Status**: confirmed
-**Proposed**: 2026-05-26
-**Rationale**: FB23 frontend pages (Dashboard, Jobs, Candidates, etc.) are all `<div>Name</div>` stubs. The integration report still PASSed them because they exist and routes are wired, not because they implement functionality.
-**Source**: Fitness build FB23
-**Experiment**: Add "Verify at least one page contains non-trivial data fetching/rendering" to integration checklist.
-**Expected**: Next build has ≥1 page with actual GraphQL query execution and rendered data.
-**Tested by**: FB25
-**Result**: ALL 5 pages (Dashboard, Budgets, Transactions, Categories, Upload) contain live `useQuery` / `useMutation` calls. Implementation audit verdict: "ALL PAGES LIVE." Four-build streak of stub pages (FB21-FB24) broken.
-
-
 ## H201: Custom agent files reduce per-subagent context usage by >30% vs prompt injection
 
 **Status**: untested
@@ -164,7 +146,6 @@
 **Tested by**: —
 
 ---
-
 
 ## H202: Tool-enforced read-only boundaries prevent auditor "helpfulness" override better than prompt-only instructions
 
@@ -178,25 +159,10 @@
 
 ---
 
-
-## H203: SQLAlchemy `Mapped[Enum] = mapped_column(sa.String)` causes runtime `.value` AttributeErrors that no agent currently detects
-
-**Status**: confirmed
-**Proposed**: 2026-06-02
-**Rationale**: FB24 `app/routers/stock.py:338` crashed with `AttributeError: 'str' object has no attribute 'value'` because `StockTransfer.status` was declared `Mapped[TransferStatus] = mapped_column(sa.String(50))`. SQLAlchemy loads the column as a plain `str` from the database, but the endpoint code called `.value` on it. All four audit agents (foundation, implementation, security, re-audit) missed this bug. The single failing pytest test correctly identified it, but the build proceeded past Phase 4 anyway.
-**Source**: Fitness build FB24, Phase 4/8b
-**Experiment**: Build a minimal FastAPI app with `class Role(str, enum.Enum)` and `Mapped[Role] = mapped_column(sa.String(20))`. Add an endpoint that calls `obj.role.value`. Run vsm_auditor on the codebase. Does it flag the type mismatch?
-**Expected**: If auditor PASSes → confirmed (gap exists). If BLOCKER → rejected.
-**Tested by**: FB24
-**Result**: The enum `.value` crash was the ONLY bug caught by tests that ALL auditors missed. Auditor gap confirmed. Prevention rule should be added to `python-pitfalls`.
-
----
-
-
 ## H[N+3]: Native YAML custom subagents (via --agent-file) would improve agent consistency vs markdown prompts
 
-**Status**: untested  
-**Proposed**: 2026-05-22  
+**Status**: untested
+**Proposed**: 2026-05-22
 **Rationale**: Currently, custom agents (`vsm_architect`, `vsm_auditor`, etc.) are defined as markdown prompt files spawned via the `Agent` tool using built-in `subagent_type` values (`coder`, `explore`, `plan`). Kimi CLI supports native custom subagent definitions in YAML agent files with `--agent-file`, including tool restrictions (`exclude_tools`), inheritance (`extend`), and template variables (`system_prompt_args`). This could reduce prompt drift, enforce tool boundaries at the CLI level, and simplify maintenance. However, this requires session-level agent configuration, making it incompatible with the current skill-loading model (`extra_skill_dirs`). This hypothesis is **low priority** — only test if prompt drift or tool misuse becomes a measurable problem in fitness builds.
 **Source**: CLI docs exploration
 **Experiment**:
@@ -210,7 +176,6 @@
 **Tested by**: [experiment ID or session]
 
 ---
-
 
 ## H[N+4]: A full product swarm (product + UX + research agents) would improve outcomes for problem-oriented prompts
 
@@ -228,7 +193,6 @@
 **Tested by**: [experiment ID or session]
 
 ---
-
 
 ## H206: Auditor batch-size limit (≤10 files) eliminates ≥50% of BLOCKER-level false positives in builds with >15 source files
 
@@ -275,47 +239,3 @@
 **Experiment**: Add explicit `mutations-applied.md` presence check to `vsm_meta.md` output template. In next build, verify if the file exists before S5 declares completion.
 **Expected**: If `vsm_meta.md` is updated → file exists in next build. If not → file absent again.
 **Tested by**: —
-
----
-
-## H204: Phase 4 gate bypass when >=1 test fails
-
-**Status**: confirmed
-**Proposed**: 2026-06-02
-**Rationale**: FB24 build proceeded through Phases 5-8 with 1 failing test
-(enum `.value` AttributeError). The gate was either absent or bypassed.
-**Source**: Fitness build FB24
-**Experiment**: Build a minimal app with a deliberate failing test. Run full VSM
-workflow. Does the build stop at Phase 4?
-**Expected**: Build halts at Phase 4 with explicit BLOCK verdict.
-**Tested by**: FB25
-**Result**: Phase 4 gate was legitimate PASS (82 backend + 53 frontend, 0 failures).
-No bypass occurred. Gate anti-fraud note was present.
-
-## H205: Unfixed ISSUEs accumulate after fix wave unless Phase 7d sweep performed
-
-**Status**: confirmed
-**Proposed**: 2026-06-02
-**Rationale**: FB24 ended with 6+ unfixed ISSUEs because no systematic sweep
-was performed after the fix wave. Security, integration, and implementation ISSUEs
-were left open.
-**Source**: Fitness build FB24
-**Experiment**: After fix wave, produce `issue-sweep.md` categorizing all open
-ISSUEs as FIXED / DEFERRED / MISSED.
-**Expected**: Zero MISSED ISSUEs at build completion.
-**Tested by**: FB25
-**Result**: Phase 7d ISSUE sweep produced `issue-sweep.md` with all issues
-categorized as FIXED or DEFERRED. Zero MISSED.
-
-## H40: GraphQL RBAC parity with REST endpoints
-
-**Status**: confirmed
-**Proposed**: 2026-05-22
-**Rationale**: GraphQL resolvers often lack the same access controls as REST
-endpoints because they are written separately by different agents.
-**Source**: Multiple fitness builds (FB4, FB10, FB21, FB24)
-**Experiment**: Build with both REST and GraphQL. Auditor checks parity table.
-**Expected**: 100% parity on admin-only mutations and ownership-filtered list queries.
-**Tested by**: FB25
-**Result**: GraphQL `delete_budget` admin-only (matches REST). All list queries
-filter by `user_id` unless admin. Parity table: pass.

@@ -1,8 +1,15 @@
-# Integration Checklist — Archive (Pre-Consolidation)
+# Integration Checklist — Archive
 
-> This is the original checklist as of FB24, archived during Phase 1a consolidation.
-> It contained ~70 checks with duplicate numbering, mixed formats, and overlapping concerns.
-> See `integration-checklist.md` for the consolidated version.
+> This file contains checks that have been archived during checklist reorganizations.
+> Checks here are either: obsolete, deprecated, superseded by merged checks, or niche
+> enough that they only apply to very specific project types and are not worth keeping
+> in the active Tier 1 / Tier 2 checklist.
+>
+> **Historical sections preserved below:**
+> - FB24 Pre-Consolidation Archive (Phase 1a)
+> - FB25+ Tiering Reorganization Archive
+>
+> See `integration-checklist.md` for the active checklist.
 
 ---
 
@@ -495,3 +502,46 @@ but the module was `celery_app.py` with no `app/` package.
 - [ ] Every page component contains at least one live data fetch (GraphQL query,
   REST fetch, or store subscription) that renders actual data
 - [ ] Stub pages (`<div>Label</div>` with void imports) are BLOCKERs
+
+
+---
+
+## FB25+ Tiering Reorganization Archive
+
+> The following checks were removed from the active `integration-checklist.md`
+> during the FB25+ tiering reorganization. They were either:
+> - Niche domain checks (pgvector, CRDT, DAG, SSE) already present in the FB24 archive
+> - Low-severity checks with infrequent applicability
+> - Subsumed by merged checks in the new tiered structure
+
+### Frontend Dockerfile Build Args (ISSUE)
+- [ ] `VITE_API_URL` and `VITE_WS_URL` passed as `ARG` in frontend Dockerfile
+- [ ] Runtime env vars are not silently baked as `undefined` into static bundles
+
+### pgvector Pipeline (ISSUE)
+- [ ] PostgreSQL vector extension enabled
+- [ ] VECTOR(N) column matches embedding dimensions
+- [ ] ivfflat index with `vector_cosine_ops` exists
+- [ ] Embeddings generated before INSERT/UPDATE
+
+### Server-Sent Events (SSE) (ISSUE)
+- [ ] Backend uses `StreamingResponse(media_type="text/event-stream")`
+- [ ] Backend yields `data: {json}\n\n` format
+- [ ] Frontend uses `getReader()` + `TextDecoder`, not EventSource
+- [ ] Frontend splits on `"\n\n"` to extract messages
+- [ ] Short-lived SSE token exchange implemented (never long-lived JWT in URL)
+
+### CRDT Persistence (ISSUE)
+- [ ] Yjs PersistenceAdapter connected to doc `update` event
+- [ ] BYTEA column exists in PostgreSQL
+- [ ] Load path SELECTs + applies updates in chronological order (`ORDER BY created_at`)
+
+### DAG Validation (BLOCKER)
+- [ ] `validate()` called on every create/update/execute
+- [ ] 3-color DFS (WHITE/GRAY/BLACK) for cycle detection
+- [ ] Kahn's algorithm for topological sort determines execution order
+
+### Mobile / Game UI (LOW)
+- [ ] 60px minimum button height
+- [ ] Dark theme (#0f172a) for OLED
+- [ ] Tested at 375px viewport

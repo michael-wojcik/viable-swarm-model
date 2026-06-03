@@ -111,3 +111,63 @@ trajectory exists despite continuous mutation.
 - Proposed structural mutation to enforce `mutations-applied.md` as hard block in Phase 8c.
 - Proposed refinement mutation to `vsm_meta.md` to explicitly check for `mutations-applied.md`.
 - Added 4 new hypotheses (H206–H209) to backlog for gym testing.
+
+---
+
+## Entry 5 — 2026-06-02
+
+**Builds**: FB23
+**Pattern**: Append-only mutations to 15+ agent files create structural debt (broken gotcha numbering, tool/role mismatches, missing report paths, YAML inconsistencies) that compounds silently until a comprehensive audit is forced.
+**Evidence**:
+- FB23-2 audit found broken sequential numbering in all 4 coder files (backend, frontend, backend fix, frontend fix).
+- `vsm_product` (researcher role) retained `StrReplaceFile` in its YAML tool list despite "do not write code" instruction.
+- `vsm_wiring.yaml` granted `SetTodoList` in markdown but not in YAML.
+- Coordinator and security agents had `WriteFile` but no explicit `.kimi/` report path guidance.
+- `vsm_explore.yaml` used quoted tool names while all other YAML files used unquoted.
+**Implication**:
+1. **Append-only mutation is necessary but insufficient**. Without periodic hygiene audits, structural inconsistencies proliferate.
+2. **Markdown/YAML parity must be machine-checked**. Human editing of paired files drifts.
+3. **Intermediate templates reduce drift surface**. DRY refactoring (5 templates replacing duplicated blocks in 15 agents) cuts the number of places inconsistencies can hide.
+**Action taken**:
+- Created `validate-agent-files.py` with checks for: sequential numbering, forbidden keywords, tool/markdown parity, Jinja2 include resolution.
+- Added 5 intermediate templates (`vsm-coder`, `vsm-tester`, `vsm-fixer`, `vsm-researcher`, `vsm-reporter`) and rewired all 15 leaf agents.
+- Standardized YAML tool list format to unquoted.
+
+---
+
+## Entry 6 — 2026-06-02
+
+**Builds**: FB25
+**Pattern**: The skill claimed enforcement infrastructure ("13 active VSM hooks") that empirical testing proved false for background subagents, creating a credibility gap between claimed and actual capabilities.
+**Evidence**:
+- FB25 fitness coach evaluation (H300) explicitly tested hook firing on 8 background subagent types.
+- Result: **0 of 8 expected hooks fired**. `BackgroundAgentRunner` does not propagate the hook engine.
+- Background agents perform ~90% of implementation/audit/testing work; foreground agents (S5, occasional meta) are the only ones actually hook-enforced.
+- The claim appeared in build prompts, risking user trust if contradicted by observed behavior.
+**Implication**:
+1. **Detection ≠ Enforcement ≠ Claimed Enforcement**. The skill has three layers: (a) prompt-hardened rules, (b) kimi-cli hooks for foreground agents, (c) claimed hooks for all agents. Only (a) and (b) are real.
+2. **Honesty about capability limits is a meta-system requirement**. False claims undermine the algedonic loop — if S5 believes hooks enforce rules on background agents, it relaxes prompt-level vigilance.
+3. **Process-level mutations need tool-enforced or architectural backing**, not just documentation claims.
+**Action taken**:
+- FB25-S1 structural mutation removed "13 active VSM hooks" claim from build prompts.
+- Updated SKILL.md to distinguish foreground vs background hook enforcement.
+- Added this as a meta-learning case: "verify claimed infrastructure before relying on it."
+
+---
+
+## Entry 7 — 2026-06-02
+
+**Builds**: FB23
+**Pattern**: Cross-file integration contracts (backend↔frontend auth token key, role enum, GraphQL camelCase, CORS origin, error shape, WebSocket events) decay to empty headings after multiple append-only mutations.
+**Evidence**:
+- FB23-3 found `vsm_backend_coder.md` and `vsm_frontend_coder.md` both contained "Contracts" section headings with **zero content** beneath.
+- Six reciprocal contracts were missing entirely. FB23 produced auth response mismatches (`token` vs `access_token`), GraphQL field case errors, and CORS origin gaps — all failure modes these contracts were designed to prevent.
+- Contracts were present in earlier builds (FB21) but were truncated during subsequent refinement mutations (R19) without verification.
+**Implication**:
+1. **Contracts degrade when not actively tested**. Presence of a heading is not presence of content.
+2. **Validator must enforce minimum contract completeness**. Automated check for heading + non-empty body + all 6 required subsections.
+3. **Domain-specific coder prompts are the delivery mechanism for contracts**. If the contract is not in the agent's prompt, the agent will not honor it.
+**Action taken**:
+- R19 repopulated all 6 reciprocal contracts in both coder files.
+- Added contract completeness check to `validate-agent-files.py` (minimum content length under each Contracts heading).
+- Added shared-contract.md as a standalone file referenced by both backend and frontend coder agents.

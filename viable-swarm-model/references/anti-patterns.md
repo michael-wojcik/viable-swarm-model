@@ -3,6 +3,9 @@
 > **Mutation rules**: Append new anti-patterns with full what/when/prevention.
 > Mark false positives with `~~strikethrough~~` and empirical rationale.
 > Never delete — the history of what was tried and rejected is valuable.
+>
+> **See also**: `references/security-lessons.md` for prevention rules by topic,
+> `references/pattern-library.md` for proven solutions.
 
 ---
 
@@ -11,7 +14,8 @@
 ### 1. Hardcoded secrets
 **What**: Default secret values in config files (e.g., `JWT_SECRET = "dev-secret"`).  
 **When**: Developer uses placeholder secrets for local development that survive to production.  
-**Prevention**: Required env vars, min 32 chars, app refuses to start without. No defaults.
+**Prevention**: Required env vars, min 32 chars, app refuses to start without. No defaults.  
+**See also**: `security-lessons.md` L11 (Hardcoded Secrets are the #1 Critical Finding)
 
 ### 2. `||` fallback for secrets
 **What**: `process.env.JWT_SECRET || 'jwt_secret'` silently bypasses required-secret checks.  

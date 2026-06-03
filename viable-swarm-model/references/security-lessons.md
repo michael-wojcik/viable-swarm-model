@@ -111,11 +111,13 @@ sufficient — the user record is the source of truth.
 **Prevention rule**: JWT_SECRET required (no default), minimum 32 chars, app
 refuses to start without it. Ban default secret values in ALL config.
 **Affected**: All S1 agents, vsm_security.
+**See also**: `anti-patterns.md` #1 (Hardcoded secrets)
 
 ### L18: Fake JWT Parsers for Development Are Never Removed
 **Prevention rule**: Complete rewrite with proper library (jsonwebtoken::decode,
 HMAC-SHA256). No bypass path. App panics at startup if JWT_SECRET missing.
 **Affected**: S1-Backend, vsm_security.
+**See also**: `anti-patterns.md` #3 (Fake JWT parsers for development)
 
 ### L28: JWT Signature Verification is Non-Negotiable
 **Prevention rule**: Any code that calls `jwt.decode` with
@@ -125,11 +127,13 @@ bypass verification. All JWT decoding MUST use the secret key and verify the
 signature. If the secret is "unavailable" in a context (e.g., Socket.IO), pass
 `settings.secret_key` explicitly.
 **Affected**: S1-Backend, vsm_security.
+**See also**: `anti-patterns.md` #47 (JWT Signature Verification Bypass)
 
 ### L36: Silent None Returns in Middleware Bypass Security Controls
 **Prevention rule**: Auth middleware raises HTTPException on failure. Never
 return None for auth context.
 **Affected**: S1-Backend, vsm_security.
+**See also**: `anti-patterns.md` #10 (Auth middleware returns None)
 
 ### L50: JWT Payload Must Include Role Claim
 **Prevention rule**: `create_access_token` MUST include `"role": user.role` in
@@ -251,6 +255,7 @@ another tenant's `property_id` and receive cross-tenant data.
 **Prevention rule**: Frontend sends auth as first WS message after connection:
 `{"msg_type":"auth","token":"..."}`. NEVER `?token=...` in WebSocket URL.
 **Affected**: S1-Backend, S1-Frontend, vsm_security.
+**See also**: `anti-patterns.md` #5 (JWT in WebSocket URL)
 
 ### L43: WebSocket Room Handlers Must Verify Course Enrollment
 **Prevention rule**: WebSocket `join_room` / `subscribe_*` handlers must verify
@@ -271,6 +276,7 @@ authenticated user to access any room.
 `allow_headers` are explicit lists, not `"*"`, when `allow_credentials=True`.
 **Affected**: S1-Backend, vsm_security.
 **Related**: Check 58 (integration-checklist.md).
+**See also**: `anti-patterns.md` #4 (CORS wildcard with credentials)
 
 ### L33: SSE JWT in URL is Unavoidable Architectural Vulnerability
 **Prevention rule**: Short-lived SSE token exchange. Client POSTs JWT to
@@ -286,7 +292,7 @@ Also ban hardcoded literal passwords in docker-compose (e.g.,
 `POSTGRES_PASSWORD: devpassword`).
 **Affected**: S1-DevOps, vsm_security.
 **Source**: FB2, FB18 (rule persisted despite prior mutation).
-**See also**: `integration-checklist.md` Check 37 (CORS configuration validation).
+**See also**: `integration-checklist.md` Check 37 (CORS configuration validation), `anti-patterns.md` #44 (Docker-Compose Default-Value Fallbacks Embedding Secrets)
 
 ### L66: Infrastructure Security Is as Critical as Application Security
 **Prevention rule**: Security gate must inspect docker-compose.yml, Dockerfile,
@@ -308,7 +314,7 @@ fields. Never expose answers in public endpoints.
 **Prevention rule**: Fail-fast throw Error if `VITE_API_URL` missing. `||
 'http://localhost:8000'` silently routes API calls to localhost in production.
 **Affected**: S1-Frontend, vsm_security.
-**See also**: `integration-checklist.md` Check 36 (frontend config fallback check).
+**See also**: `integration-checklist.md` Check 36 (frontend config fallback check), `anti-patterns.md` #11 (Frontend API URL localhost fallback)
 
 ### L41: JWT Storage in localStorage is a MEDIUM Security Risk
 **Prevention rule**: Flag JWT persisted to `localStorage` as MEDIUM severity.

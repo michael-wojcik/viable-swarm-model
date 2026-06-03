@@ -121,3 +121,14 @@ for user intervention.
 **Verification**: Observed once in FB22; 3 distinct agent failures prevented by these rules
 **Sessions**: 1 (FB22)
 **Status**: active
+
+---
+
+## Entry 8 — 2026-06-02
+
+**Context**: Multi-session builds using `--continue` (FB16–FB24)
+**Lesson**: Continued sessions can lose sub-agent file writes from prior waves. At the start of any continued session, S5 MUST verify that expected files exist and contain expected content. Do not assume `--continue` preserves file state across agent waves. Key verification targets: `.kimi/phase4-gate.md`, `.kimi/re-audit-report.md`, `.kimi/mutations-applied.md`, and any files written by background agents in the previous session. If expected files are missing, re-run the producing agent wave rather than proceeding with stale assumptions.
+**Verification**: Observed in FB16–FB24 where continued sessions repeatedly lost Phase 4 gate documents, re-audit reports, and fix-wave changes. Anti-pattern #33 (`Session context loss destroys files`) documents the same failure mode from the agent perspective.
+**Sessions**: 9+ (FB16–FB24)
+**Status**: active
+**See also**: `references/anti-patterns.md` #33 (Session context loss destroys files)
