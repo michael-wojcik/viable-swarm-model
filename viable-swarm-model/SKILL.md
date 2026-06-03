@@ -683,6 +683,25 @@ across multiple focused spawns:
 - Testing: spawn backend tester per domain (auth, courses, uploads)
 - Auditing: ≤5 files per auditor batch (see vsm_auditor.md)
 
+**Agent Timeout Fallback Protocol (FB28-sourced — S5 structural mutation)**
+When an agent times out, **S5 MUST NOT complete the agent's work manually**.
+Manual completion by S5 violates the VSM parallelization premise and consumes
+S5 context needed for orchestration.
+
+Correct fallback sequence:
+1. **First timeout**: Re-spawn the SAME agent type with a **narrower scope**.
+   - Auditor on 15 files → 3 auditors on 5 files each
+   - Coder on full backend → 2 coders (models+schemas, then routers)
+   - Tester on entire suite → per-domain testers (auth, courses, uploads)
+2. **Second timeout** (re-spawn also fails): Spawn `vsm_explore` to do read-only
+   file mapping / import verification as a lightweight fallback.
+3. **Last resort** (explore also fails): S5 may manually verify ONE file only.
+   Anything larger must be escalated to the user or the build must be scoped down.
+
+**Algedonic signal**: If you find yourself writing >50 lines of implementation
+code or auditing >3 files manually, STOP. You are doing agent work. Re-spawn
+with a narrower scope instead.
+
 **Sub-Wave 2b — Dependent Infrastructure (parallel, then verify)**:
 Spawn parallel `vsm_backend_coder` and `vsm_frontend_coder` subagents with `run_in_background=true` for:
 - `routers/auth layer file` (MUST include `POST /login`, `POST /register`, `GET /me` endpoints)
@@ -852,26 +871,42 @@ or Phase 6 (Integration). Route to Phase 7 (Fix Wave). Fixing downstream integra
 BLOCKERs on top of failing tests is waste. The Phase 4 exit gate is mandatory —
 never treat test failures as "acceptable for now."
 
-**Phase 4 Gate Declaration (MANDATORY)**
-After aggregating test results, S5 MUST write a one-line gate verdict to
-`.kimi/phase4-gate.md` BEFORE spawning any Phase 5 agent:
-- `PASS: N backend passed, M frontend passed, 0 failures`
-- `BLOCK: X backend failures, Y frontend failures — routing to Phase 7`
+**Phase 4 Gate Declaration (MANDATORY — FB28-sourced strengthening)**
+After aggregating test results, S5 MUST write `.kimi/phase4-gate.md` BEFORE
+spawning any Phase 5 agent. The file MUST contain:
+```markdown
+# Phase 4 Gate Verdict
+
+## Test Results
+- Backend: N passed, X failed
+- Frontend: M passed, Y failed
+- Frontend build: PASS / FAIL
+- Backend import check: PASS / FAIL
+
+## Verdict
+PASS / BLOCK
+
+## Routing
+- PASS → proceed to Phase 5
+- BLOCK → route to Phase 7 (Fix Wave)
+```
 
 A single failing test is a HARD BLOCK. S5 MUST NOT rationalize, categorize,
 or deprioritize test failures (e.g., "just an enum edge case", "only 1 of 85").
 Any non-zero failure count routes to Phase 7. The gate verdict file is evidence
 for the fitness coach's process audit.
 
-**Gate Bypass Prevention (CRITICAL)**
-- S5 MUST verify `.kimi/phase4-gate.md` exists and contains `PASS` before spawning
-  ANY Phase 5 or Phase 6 agent.
-- If the gate file does not exist, is empty, or contains `BLOCK`, STOP immediately.
-- Do NOT proceed to Phase 5 by "checking the tests informally" or "trusting the
-  tester agent's verbal report." The gate file is the single source of truth.
-- **Algedonic signal**: If you find yourself about to spawn a Phase 5 agent
-  without a `PASS` gate file on disk, emit an algedonic: "Phase 4 gate bypass
-  detected. Halting." Then write the gate file with `BLOCK` and route to Phase 7.
+**Gate Bypass Prevention (CRITICAL — HARD BLOCK)**
+1. S5 MUST verify `.kimi/phase4-gate.md` exists AND contains `PASS` before spawning
+   ANY Phase 5 or Phase 6 agent.
+2. If the gate file does not exist, is empty, or contains `BLOCK`, STOP immediately.
+3. Do NOT proceed to Phase 5 by "checking the tests informally" or "trusting the
+   tester agent's verbal report." The gate file is the single source of truth.
+4. **Process auditor penalty**: Missing `phase4-gate.md` is scored as CRITICAL
+   (−20 points). This is not optional documentation.
+5. **Algedonic signal**: If you find yourself about to spawn a Phase 5 agent
+   without a `PASS` gate file on disk, emit an algedonic: "Phase 4 gate bypass
+   detected. Halting." Then write the gate file with `BLOCK` and route to Phase 7.
 
 **Agent Report Artifacts (MANDATORY)**
 All audit/security/coordinator agents now have `WriteFile` restricted to their own
@@ -977,6 +1012,16 @@ parallel with `run_in_background=true`. After both complete, spawn
 S5 reads only the synthesis, not the raw reports.
 If `vsm_coordinator` fails to spawn, errors out, or produces no report, treat
 this as a BLOCKER. Do NOT proceed with manual integration checks as a replacement.
+
+**Phase 6 Skip Prevention (FB28-sourced)**
+Phase 6 is NOT optional. If the coordinator agent times out:
+1. Do NOT skip to Phase 7 or Phase 8.
+2. Re-spawn `vsm_coordinator` with a narrower scope (e.g., just GraphQL+REST
+   contract validation, or just frontend↔backend type alignment).
+3. If re-spawn also times out, spawn `vsm_explore` to do a read-only cross-file
+   import check as a fallback.
+4. `.kimi/integration-contract.md` MUST exist before Phase 7 or Phase 8 begins.
+   Missing file = process violation scored by process auditor.
 
 Full 20+ point checklist (see `references/integration-checklist.md`).
 ANY failure → back to Phase 3.
