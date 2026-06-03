@@ -60,3 +60,53 @@ management, conditional rendering, or interactive elements.
 
 **Source**: FB24 stub pages detected — pages had import statements but no
 actual data fetching (H158).
+
+## Vite Config Must Not Contain `test` Property (FB28)
+
+**Status**: Active (FB28-sourced)
+**Severity**: BLOCKER
+**Applies to**: vsm_frontend_coder, vsm_frontend_tester, vsm_wiring
+
+The `test` property is NOT part of Vite's `UserConfigExport` type. If `vite.config.ts`
+contains a `test` block (for Vitest configuration), `tsc -b` will fail with:
+```
+Object literal may only specify known properties, and 'test' does not exist in type 'UserConfigExport'
+```
+
+**Correct pattern**:
+```typescript
+// vite.config.ts — Vite ONLY
+import { defineConfig } from "vite";
+export default defineConfig({
+  plugins: [react()],
+  resolve: { alias: { "@": path.resolve(__dirname, "./src") } },
+  server: { port: 5173 },
+});
+```
+```typescript
+// vitest.config.ts — Vitest ONLY, imports from vitest/config
+import { defineConfig } from "vitest/config";
+export default defineConfig({
+  test: { globals: true, environment: "jsdom" },
+  resolve: { alias: { "@": path.resolve(__dirname, "./src") } },
+});
+```
+
+**Incorrect pattern** (BLOCKER):
+```typescript
+// vite.config.ts — DO NOT put test here
+import { defineConfig } from "vite";
+export default defineConfig({
+  plugins: [react()],
+  test: { globals: true, environment: "jsdom" },  // TypeScript error!
+});
+```
+
+**Prevention rules**:
+1. `vite.config.ts` MUST import from `"vite"`, NEVER from `"vitest/config"`.
+2. `vitest.config.ts` MUST be a separate file importing from `"vitest/config"`.
+3. Frontend config validation (Phase 3e) MUST verify BOTH files exist and use correct imports.
+4. `tsc -b` MUST pass with zero errors before `npm run build` is attempted.
+
+**Source**: FB28 `vite.config.ts` initially contained a `test` block. `tsc -b` failed
+with a type error. The fix was separating into `vite.config.ts` + `vitest.config.ts`.

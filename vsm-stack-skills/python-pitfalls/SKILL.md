@@ -356,3 +356,64 @@ dict-path UUID failures. FB28 revealed the ORM path bypassed it, causing
 rule requires BOTH validators.
 
 **Mutation history**: FB27-1 (original, scored 2 — ineffective). Redesigned in FB28.
+
+## Rule: Pydantic V2 + SQLAlchemy ORM Test Fixture Pattern (FB28)
+
+**Status**: Active (FB28-sourced)
+**Severity**: MEDIUM (test reliability)
+**Applies to**: vsm_backend_tester, vsm_backend_coder
+
+When using Pydantic V2 schemas with `from_attributes=True` and SQLAlchemy ORM
+models that use `UUID` primary keys, test fixtures may need `BaseModel.model_validate`
+monkeypatching to handle ORM→schema serialization. The production code uses
+`@field_validator("*", mode="before")` on the base model (see ORM-Based Schemas
+rule above), but tests that construct ORM objects directly and then serialize
+them may still hit edge cases.
+
+**Reusable conftest.py pattern**:
+```python
+import os
+from uuid import UUID
+from pydantic import BaseModel
+
+# Set env vars BEFORE app imports
+os.environ["JWT_SECRET"] = "test-secret-key-that-is-32-chars-long-abc"
+os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
+
+# Monkeypatch BaseModel.model_validate for ORM UUID coercion
+_original_model_validate = BaseModel.model_validate
+
+@classmethod
+def _patched_model_validate(cls, obj, *, strict=None, from_attributes=None, context=None):
+    if hasattr(obj, "__mapper__"):
+        data = {}
+        for col in obj.__table__.columns:
+            val = getattr(obj, col.name, None)
+            data[col.name] = str(val) if isinstance(val, UUID) else val
+        return _original_model_validate.__func__(cls, data, strict=strict, from_attributes=from_attributes, context=context)
+    return _original_model_validate.__func__(cls, obj, strict=strict, from_attributes=from_attributes, context=context)
+
+BaseModel.model_validate = _patched_model_validate
+```
+
+**When this pattern is needed**:
+1. SQLAlchemy ORM models use `UUID` primary keys or foreign keys.
+2. Pydantic response schemas inherit from a base with `from_attributes=True`.
+3. Tests return raw ORM objects from endpoints (not dicts).
+4. `ResponseValidationError` occurs in tests but NOT in production.
+
+**When this pattern is NOT needed**:
+- If the base model's `@field_validator("*", mode="before")` handles all ORM paths
+  correctly, monkeypatching is redundant. Prefer fixing the base model over
+  adding test-level workarounds.
+
+**Prevention rules**:
+1. Backend tester MUST verify tests pass WITHOUT monkeypatching first.
+2. If monkeypatching is required, document WHY in `conftest.py` comments.
+3. The monkeypatch MUST be applied BEFORE any app imports that use the models.
+4. Prefer fixing the production base model over permanent test workarounds.
+
+**Source**: FB28 `conftest.py` required ~230 lines of monkeypatching to handle
+ORM UUID coercion in tests. The production `CamelModelORM` had both validators
+but tests still needed the patch due to FastAPI's internal serialization path.
+This pattern prevents each build from reinventing the workaround.

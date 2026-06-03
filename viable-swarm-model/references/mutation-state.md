@@ -304,6 +304,9 @@
 | A6 | FB28 Build | structural | Knowledge broker stale (>7 days) | probation | 0 | — | H213 |
 | R3 | FB28 Build | refinement | Process audit score not in fitness bar | probation | 0 | — | — |
 | A7 | FB28 Build | append-only | Timeout avalanche (>2 per phase) | probation | 0 | — | H217 |
+| A8 | FB28 Build | append-only | Vite config contains `test` property | probation | 0 | — | — |
+| R4 | FB28 Build | refinement | Phase 3c coordinator skipped under pressure | probation | 0 | — | — |
+| A9 | FB28 Build | append-only | Pydantic ORM test fixture reinvention | probation | 0 | — | — |
 
 ### Mutation Details
 
@@ -357,4 +360,43 @@ process audit ≥80 in Coach Phase 1c and Phase 2.
 protocol (S5) addresses what to do when ONE agent times out, but does not
 prevent the avalanche pattern. A7 adds a timeout budget tracker in plan.md
 and BLOCKs the build if >2 timeouts occur in a single phase.
+**Next review**: FB29
+
+---
+
+## A8: Vite Config Must Not Contain `test` Property
+**Status**: probation
+**Type**: append-only
+**Target**: `typescript-pitfalls/SKILL.md`
+**Applied**: 2026-06-03
+**Rationale**: FB28 `vite.config.ts` had a `test` block that caused `tsc -b` to fail
+because `test` is not in `UserConfigExport`. The fix was separating into
+`vite.config.ts` + `vitest.config.ts`. This is a reproducible TypeScript+Vite+Vitest
+trap that will hit every build using this stack.
+**Next review**: FB29
+
+---
+
+## R4: Phase 3c Coordinator MANDATORY for Tier 2+
+**Status**: probation
+**Type**: refinement
+**Target**: `SKILL.md` Phase 3 (flow diagram + text)
+**Applied**: 2026-06-03
+**Rationale**: Phase 3c was "conditional" for Tier 2+. History shows S5 skips
+coordinator checks under time pressure (FB25–FB28). Making it mandatory removes
+the "should I spawn it?" decision point. The coordinator mid-wave check is the
+primary mechanism for catching contract drift before it cascades to Phase 4/5.
+**Next review**: FB29
+
+---
+
+## A9: Pydantic V2 + SQLAlchemy ORM Test Fixture Pattern
+**Status**: probation
+**Type**: append-only
+**Target**: `python-pitfalls/SKILL.md`
+**Applied**: 2026-06-03
+**Rationale**: FB28 `conftest.py` required ~230 lines of monkeypatching for ORM
+UUID coercion in tests. Each build reinvents this workaround differently. Documenting
+the pattern prevents reinvention and provides a reusable template. Also signals
+that this is a known Pydantic V2 + SQLAlchemy sharp edge.
 **Next review**: FB29

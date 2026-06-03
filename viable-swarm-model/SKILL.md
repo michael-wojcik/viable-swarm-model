@@ -382,7 +382,7 @@ flowchart TD
     P2D{<choice>BLOCKERs</choice>?}
     P3[Phase 3: Implementation Wave (3a–3f)<br/>Backend: parallel routers<br/>Frontend: sequential shared→pages]
     P3S[TaskOutput block=true]
-    P3M["Phase 3c: Mid-Wave S2 Check<br/>vsm_coordinator (conditional, Tier 2+)"]
+    P3M["Phase 3c: Mid-Wave S2 Check<br/>vsm_coordinator (MANDATORY Tier 2+)"]
     P3A[Audit + Coordination<br/>vsm_auditor + vsm_coordinator]
     P3D{<choice>BLOCKERs</choice>?}
     P3D_WIRING[Phase 3d: Entry-Point Wiring<br/>MANDATORY]
@@ -805,11 +805,17 @@ Backend routers (`app/routers/*.py`) can run in parallel safely because each
 router is a separate file. The wiring agent (`vsm_wiring`) handles `entry point file`
 registration exclusively.
 
-**Phase 3c: Mid-Wave S2 Check (conditional)** — If project is Tier 2+ and 2+
-parallel coder agents were spawned, spawn a lightweight `vsm_coordinator` check
-on shared contracts after the first agents complete. Flag ONLY critical
-drift that would block incomplete agents. If drift found → emit algedonic,
-halt remaining agents, inject corrections.
+**Phase 3c: Mid-Wave S2 Check (MANDATORY for Tier 2+)** — For ALL Tier 2+
+builds, spawn a lightweight `vsm_coordinator` check on shared contracts after
+the first parallel coder agents complete. This is NOT optional — it is the
+primary mechanism for catching contract drift before it cascades to Phase 4/5.
+
+Flag ONLY critical drift that would block incomplete agents. If drift found →
+emit algedonic, halt remaining agents, inject corrections.
+
+**S5 MUST spawn Phase 3c coordinator for Tier 2+ builds regardless of time
+pressure or apparent stability.** History shows S5 skips conditional checks
+under pressure (FB25–FB28). Making this mandatory removes the decision point.
 
 ### Phase 3d: Entry-Point Wiring (MANDATORY)
 After all implementation agents complete, spawn `vsm_wiring` subagent.
