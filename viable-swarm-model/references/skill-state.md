@@ -23,10 +23,10 @@
 - **Domain struggle**: "Frontend builds: 4 consecutive stub pages (FB21–FB24)"
 - **Agent concern**: "vsm_frontend_coder consistency declining (scores: 3→2→2)"
 - **Risk elevation**: "Time pressure detected — high file-write velocity in FB24"
-- **CRITICAL (2026-06-02)**: Background subagents bypass all PreToolUse/PostToolUse hooks.
-  Primary enforcement shifted to in-prompt mandatory rules. Hooks remain as
-  secondary safety net for S5 + foreground agents. See plan amendment
-  `winter-soldier-aqualad-power-girl-amendment.md`.
+- **CRITICAL (2026-06-02)**: ALL subagents — background, foreground, AND parallel
+  foreground — bypass all PreToolUse/PostToolUse hooks. Primary enforcement is
+  Layer 1 (in-prompt mandatory rules). Hooks are a secondary safety net for S5
+  ONLY. See plan `iron-fist-moon-knight-namor.md`.
 - **Systemic diagnosis**: "Detection ≠ Enforcement. S5 self-discipline degrades under pressure."
 
 ## Hook Enforcement Baseline
@@ -46,9 +46,16 @@
 - S5 + subagent bypassed gates: ≤1 (revised from 0 — prompt rules are strong
   but not absolute; combined with hooks for foreground + session audit)
 - Reference files loaded at Phase 0: 7+
-- Active hooks: 13 (secondary layer for S5 + foreground)
+- Active hooks: 9 (secondary layer for S5 ONLY)
 - Prompt-hardened agents: ALL writing agents (primary layer)
 - Tests per gate: automated + live + prompt-rule verification
+
+## Telemetry Archive Note
+> **2026-06-02**: All pre-2026-06-02 telemetry in `~/.vsm-telemetry-pre-2026-06-02-archive`
+> is INVALID. The 4 measurement hooks (`telemetry-logger`, `subagent-counter`,
+> `bypass-logger`, `agent-performance-scorer`) only captured S5 activity, giving
+> false confidence. They have been removed. New telemetry (if any) must be
+> S5-only and explicitly tagged as such.
 
 ## Active Mutation Portfolio
 | Mutation ID | Target Failure | Applied | Measured Effect | Status |

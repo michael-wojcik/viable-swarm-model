@@ -49,26 +49,24 @@ targeted workouts).
    - Structural Mutation: NEVER modify SKILL.md/agents/ without approval marker
    These rules cover ALL agents including background subagents.
 
-   **Layer 2 — Hooks (SECONDARY, S5 + foreground only)**:
+   **Layer 2 — Hooks (SECONDARY, S5 ONLY)**:
    Hooks configured in `~/.kimi/config.toml` run in the local shell and block
-   tool calls for the main S5 agent and foreground subagents.
-   **13 hooks are configured**, but empirical testing (FB25, H300) confirms
-   **0 of 8 expected hooks fire for background subagents** because
-   `BackgroundAgentRunner` does not propagate the hook engine. This is a
-   kimi-cli architectural constraint.
+   tool calls for the main S5 agent ONLY.
+   **9 hooks are configured**. Empirical testing (FB25, H300) confirms
+   **0 hooks fire for background subagents** AND **0 hooks fire for foreground
+   subagents** because `BackgroundAgentRunner` and parallel foreground
+   `asyncio.create_task()` do not propagate the hook engine. This is a
+   kimi-cli architectural constraint, not a bug.
 
-   Hooks that DO fire for S5 + foreground:
+   Hooks that DO fire for S5 ONLY:
    - `gate-guardian`: Blocks fraudulent Phase 4 gate-pass documents
    - `boundary-guardian`: Blocks inline fixes during Phase 6/7 boundary
    - `structural-guardian`: Blocks unapproved SKILL.md/architecture changes
    - `stop-verifier`: Blocks session end if Phase 8c-ii is incomplete
-   - `telemetry-logger` + `subagent-counter`: Log tool/agent usage
    - `session-start/end`: Load/skill-state.md and efficiency baselines
    - `knowledge-broker`: Write cross-skill digests on session end
-   - `agent-performance-scorer`: Heuristic scores on subagent completion
    - `decision-enforcer`: Verifies decisions.md D[N] entry exists
    - `context-pressure`: Alerts when compaction >200k tokens imminent
-   - `bypass-logger`: Logs tool use failures as potential bypass attempts
 
    **Layer 3 — Session-End Audit (TERTIARY)**:
    `session-end.sh` scans `.kimi/` for writes that bypassed hooks and reports
