@@ -2113,3 +2113,70 @@ producing `mutations-applied.md` and filling measured effects.
 **Conclusion**: FB26-S3 hook enforcement is **functionally correct**. The structural mutation closes the enforcement gap identified in H209. Real-build validation in FB27 still required to confirm hook fires in actual kimi-cli session-end context.
 
 **Related mutations**: FB26-S3 (original structural mutation), H209 (superseded hypothesis).
+
+
+---
+
+## Mutation FB28-S1 — 2026-06-03 (Structural — USER APPROVED)
+
+**Session**: FB28 fitness build evaluation
+**File**: `viable-swarm-model/SKILL.md` Phase 7
+**Type**: structural
+**Target failure mode**: FB28 process audit (70/100) flagged missing `re-audit-report.md` as CRITICAL violation. Phase 7 had re-audit logic but no hard gate preventing Phase 8 from starting without it.
+**Rationale**: Fix agents produce `re-audit-report.md` but it was advisory-only. S5 could proceed to Phase 8 without independent auditor verification of fix-wave changes.
+**Change**: Added Phase 7e — Re-Audit Report Hard Gate. S5 MUST run shell check verifying `.kimi/re-audit-report.md` exists with PASS/ISSUES/BLOCKER verdict before spawning `vsm_meta` or proceeding to Phase 8.
+**Expected effect**: Zero builds proceed to Phase 8 without re-audit report.
+**Measured effect**: Pending — awaits FB29 validation.
+
+---
+
+## Mutation FB28-S2 — 2026-06-03 (Structural — USER APPROVED)
+
+**Session**: FB28 fitness build evaluation
+**File**: `viable-swarm-model/hooks/session-start.sh` → `hooks/session-start.sh.DEPRECATED-FB28`; `SKILL.md` Phase 0
+**Type**: structural
+**Target failure mode**: FB26-S5 session-start hook failed to fire in FB27 and FB28 (2 consecutive builds). S5 had to manually inject broker traps into plan.md.
+**Rationale**: Hook-level auto-injection is not viable in background agent builds. FB26-S6 (process auditor scored check) already enforces broker read compliance. Redundant non-functional infrastructure should be removed.
+**Change**: Renamed hook to `.DEPRECATED-FB28`. Updated SKILL.md line 66 to note deprecation. Replaced with explicit S5 manual checklist in Phase 0 + FB26-S6 process auditor enforcement.
+**Expected effect**: No future build depends on a non-functional hook. S5 explicitly creates session context.
+**Measured effect**: Immediate — hook file removed from active execution path.
+
+---
+
+## Mutation FB28-R1 — 2026-06-03 (Refinement — Autonomous)
+
+**Session**: FB28 fitness build evaluation
+**File**: `vsm-stack-skills/python-pitfalls/SKILL.md`
+**Type**: refinement
+**Target failure mode**: FB27-1 mutation (model_validator for UUID coercion) was ineffective. ORM objects with `from_attributes=True` bypassed model_validator.
+**Rationale**: The original mutation only covered dict input path. ORM path needed field_validator.
+**Change**: Redesigned rule to require BOTH `@model_validator(mode="before")` AND `@field_validator("*", mode="before")` on ORM base models. Updated code examples, prevention rules, and source attribution.
+**Expected effect**: Zero UUID coercion failures on either dict or ORM path.
+**Measured effect**: Pending — awaits FB29 validation.
+
+---
+
+## Mutation FB28-R2 — 2026-06-03 (Refinement — Autonomous)
+
+**Session**: FB28 fitness build evaluation
+**File**: `viable-swarm-model/agents/vsm_auditor.md`
+**Type**: refinement
+**Target failure mode**: FB28 foundation auditor timed out (600s). Large batch sizes (>10 files, >500 lines) correlate with agent timeouts.
+**Rationale**: Smaller batches reduce context pressure and timeout risk.
+**Change**: Reduced batch size limit from ≤10 files to ≤5 files. Added explicit timeout prevention guidance (500 lines per batch max).
+**Expected effect**: Auditor timeout rate drops from 1/5 to ≤1/20.
+**Measured effect**: Pending — awaits FB29 validation.
+
+---
+
+## Mutation FB28-A1 through A3 — 2026-06-03 (Append-Only — Autonomous)
+
+**Session**: FB28 fitness build evaluation
+**Files**: 
+- `vsm-stack-skills/graphql-pitfalls/SKILL.md` — GraphQLRouter context_getter must be imported function
+- `vsm-stack-skills/security-patterns/SKILL.md` — S3 secrets no defaults; security deps must be wired
+- `vsm-stack-skills/python-pitfalls/SKILL.md` — Pydantic `type` statement + Field warning
+**Type**: append-only
+**Rationale**: New failure modes discovered in FB28 that existing skills did not cover.
+**Expected effect**: Next build with GraphQL/S3/Pydantic catches these patterns before they become BLOCKERs.
+**Measured effect**: Pending — awaits FB29 validation.

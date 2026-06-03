@@ -1,0 +1,5 @@
+# DEPRECATED as of FB28
+# This hook failed to fire for 2 consecutive builds (FB27, FB28).
+# Replaced by explicit S5 manual checklist in SKILL.md Phase 0 + process auditor scored check (FB26-S6).
+# See: references/mutation-state.md FB26-S5 status -> removed
+

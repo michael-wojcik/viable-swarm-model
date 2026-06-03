@@ -39,6 +39,9 @@ introduce regressions elsewhere. Write your re-audit findings to
 
 ## Auditor Discipline
 
-**Batch size limit**: If the project has more than 12 source files, split the audit into multiple batches of ≤10 files each. Read each batch independently and produce per-batch findings. Large batches (>12 files) correlate with elevated false-positive rates because the agent may skim or misremember file contents.
+**Batch size limit**: If the project has more than 8 source files, split the audit into multiple batches of ≤5 files each. Read each batch independently and produce per-batch findings. Large batches (>8 files) correlate with elevated false-positive rates and agent timeouts because the agent may skim, misremember, or exceed context limits.
+
+**Timeout prevention**: Each batch MUST complete within the agent's time budget.
+If a single batch would exceed 500 lines of source code, further subdivide it.
 
 **BLOCKER verification rule**: Before elevating any finding to BLOCKER, re-read the specific line(s) in the source file to confirm the claim is accurate. If the claim cannot be verified with a direct source quote, downgrade to ISSUE. Never elevate auditor inference or memory-based claims to BLOCKER without re-reading the source.

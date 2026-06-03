@@ -63,7 +63,7 @@ targeted workouts).
    - `boundary-guardian`: Blocks inline fixes during Phase 6/7 boundary
    - `structural-guardian`: Blocks unapproved SKILL.md/architecture changes
    - `stop-verifier`: Blocks session end if Phase 8c-ii is incomplete; extracts mutation backfill to `.kimi/mutation-backfill.md` (ephemeral)
-   - `session-start/end`: session-start reads skill-state.md; session-end writes telemetry to `.kimi/session-telemetry.md` (ephemeral)
+   - `session-start/end`: session-start reads skill-state.md; session-end writes telemetry to `.kimi/session-telemetry.md` (ephemeral). **NOTE: session-start.sh hook is DEPRECATED as of FB28 — it has failed to fire for 2 consecutive builds. Use explicit S5 manual checklist in Phase 0 instead (see Step 0b below).**
    - `knowledge-broker`: Append raw session entries to `.kimi/knowledge-broker-log.md` in the build directory
    - `decision-enforcer`: Verifies decisions.md D[N] entry exists
    - `context-pressure`: Alerts when compaction >200k tokens imminent
@@ -999,6 +999,20 @@ was NOT fixed during the fix wave. For each unfixed ISSUE, categorize:
 Phase 7d is a MANDATORY gate before Phase 8 (Reflection). Builds with `MISSED`
 ISSUEs score capped at 3.5/5 in fitness evaluation. S5 MUST NOT skip Phase 7d
 by declaring "only BLOCKERs matter."
+
+**Phase 7e — Re-Audit Report Hard Gate (MANDATORY — FB28-sourced structural mutation)**
+Before proceeding to Phase 8 (Reflection), S5 MUST verify:
+1. `.kimi/re-audit-report.md` exists in the build directory.
+2. It contains a PASS/ISSUES/BLOCKER verdict from an independent auditor re-run.
+3. The re-audit covers ALL files modified during the fix wave, not just changed files.
+
+Use this shell command:
+```bash
+test -f .kimi/re-audit-report.md && grep -qE "PASS|ISSUES|BLOCKER" .kimi/re-audit-report.md && echo "PASS" || echo "FAIL"
+```
+If the output is "FAIL", STOP. Do NOT proceed to Phase 8. Spawn `vsm_auditor`
+to re-audit all modified files and write `.kimi/re-audit-report.md` before
+continuing. This prevents fix-wave regressions from leaking into Reflection.
 
 **Return paths differ by BLOCKER source**:
 - **Foundation BLOCKERs** (Phase 2b/2c audit): After fix clears, return to

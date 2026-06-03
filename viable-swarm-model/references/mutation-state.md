@@ -45,7 +45,7 @@
 | FB26-S2 | FB26 Build | append-only | .dockerignore co-creation | effective | 1 | 5 | H210 | — |
 | FB26-S3 | FB26 Build | structural | H209 hard gate | effective | 1 | 5 | H209 | E20 |
 | FB26-S4 | FB26 Build | structural | Phase 0 broker/state read | effective | 1 | 5 | — | — |
-| FB26-S5 | FB26 Build | structural | Session-start auto-injection | monitor | 1 | 3 | — | — |
+| FB26-S5 | FB26 Build | structural | Session-start auto-injection | **removed** | 2 | 2 | — | FB28 |
 | FB26-S6 | FB26 Build | structural | Process auditor broker scored check | effective | 1 | 5 | — | — |
 
 ---
@@ -279,7 +279,7 @@
 ### New Mutations Proposed (from FB27 Lessons)
 | ID | Type | Target | Rationale |
 |---|---|---|---|
-| FB27-1 | append-only | `python-pitfalls` | Pydantic V2 UUID→str coercion does not happen with `from_attributes=True` |
+| FB27-1 | append-only | `python-pitfalls` | Pydantic V2 UUID→str coercion does not happen with `from_attributes=True` | **redesigned** | 2 | 2 | — | FB28 | |
 | FB27-2 | append-only | `backend-patterns` | Missing `await` on async service calls returns coroutine object |
 | FB27-3 | append-only | `security-patterns` | `JWT_SECRET` default fallback allows token forgery |
 | FB27-4 | append-only | `graphql-pitfalls` | GraphQL resolvers must re-implement RBAC; no inheritance from FastAPI deps |

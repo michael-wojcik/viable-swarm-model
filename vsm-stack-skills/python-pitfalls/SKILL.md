@@ -293,7 +293,7 @@ noise pollution obscures real issues.
 
 ## Rule: ORM-Based Schemas Need Field-Level UUID Coercion
 
-**Status**: Active (FB28-sourced)
+**Status**: Active (FB28-sourced, redesign of FB27-1)
 **Severity**: BLOCKER
 **Applies to**: vsm_backend_coder, vsm_backend_fix, vsm_auditor
 
@@ -301,17 +301,30 @@ noise pollution obscures real issues.
 is a dict. When `from_attributes=True` reads SQLAlchemy ORM objects directly,
 the model validator is bypassed because the input is an object, not a dict.
 
+**The base model MUST have BOTH validators**:
+- `@model_validator(mode="before")` for dict input path
+- `@field_validator("*", mode="before")` for ORM object path
+
 **Correct pattern**:
 ```python
 from uuid import UUID
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, model_validator, field_validator
 
 class ORMBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_uuids_dict(cls, data):
+        """Handles dict input path."""
+        if isinstance(data, dict):
+            return {k: str(v) if isinstance(v, UUID) else v for k, v in data.items()}
+        return data
+
     @field_validator("*", mode="before")
     @classmethod
-    def _coerce_uuids(cls, v):
+    def _coerce_uuids_orm(cls, v):
+        """Handles ORM object path (from_attributes=True)."""
         return str(v) if isinstance(v, UUID) else v
 ```
 
@@ -330,12 +343,16 @@ class ORMBase(BaseModel):
 ```
 
 **Prevention rules**:
-1. ALL ORM-based base models MUST have `@field_validator("*", mode="before")`
-   for UUID→str coercion, not just `@model_validator`.
-2. Auditor MUST verify both model-level and field-level validators exist on
-   schema base classes.
+1. ALL ORM-based base models MUST have BOTH `@model_validator(mode="before")`
+   AND `@field_validator("*", mode="before")` for UUID→str coercion.
+2. Auditor MUST verify both validators exist on schema base classes.
 3. Tests MUST include ORM-object-to-schema serialization (not just dict input).
+4. If a schema inherits from a base with `from_attributes=True`, the base MUST
+   have the field_validator.
 
-**Source**: FB28 `CamelModelORM` had `model_validator(mode="before")` only.
-ORM objects bypassed it, causing `ResponseValidationError` on all endpoints
-returning User/Course/etc. objects.
+**Source**: FB27 introduced `model_validator(mode="before")` which prevented
+dict-path UUID failures. FB28 revealed the ORM path bypassed it, causing
+`ResponseValidationError` on all endpoints returning ORM objects. The redesigned
+rule requires BOTH validators.
+
+**Mutation history**: FB27-1 (original, scored 2 — ineffective). Redesigned in FB28.
