@@ -7,7 +7,9 @@
 | backend-patterns | Server architecture, API design, middleware | backend_coder, backend_fix, backend_tester, coordinator | `[language]-pitfalls` |
 | frontend-patterns | Component architecture, state, routing | frontend_coder, frontend_fix, frontend_tester, coordinator | `[language]-pitfalls` |
 | database-patterns | Schema design, migrations, query optimization | backend_coder, backend_tester, coordinator | `[language]-pitfalls` |
+| sqla-patterns | SQLAlchemy async engine management, session lifecycle, model design | backend_coder, backend_tester, auditor | `python-pitfalls` |
 | testing-patterns | Test strategy, fixtures, mocking, coverage | backend_tester, frontend_tester, coordinator | `[language]-pitfalls` |
+| tester-backend | Backend test templates, GraphQL mutation testing, coverage requirements | backend_tester, auditor | `testing-patterns`, `python-pitfalls` |
 | security-patterns | Auth, input validation, secrets, rate limiting, data exposure | security, auditor, coordinator, all coders | — |
 | devops-patterns | Containers, compose, healthchecks, CI/CD | devops_coder, coordinator | — |
 | research-patterns | Investigating unfamiliar technologies | architect, explore, meta | — |

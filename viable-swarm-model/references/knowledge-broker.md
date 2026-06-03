@@ -118,3 +118,33 @@
 
 *Digest populated during comprehensive audit: 2026-06-02*
 *Next update expected: after FB26 fitness build or next gym batch*
+
+---
+
+## Entry: FB29 — 2026-06-03
+
+**Build**: FB29 ContentStream (Tier 2)
+**Score**: 4.2/5.0
+**Stack**: FastAPI + SQLAlchemy 2.0 + Strawberry GraphQL + Celery + Redis + PostgreSQL + MinIO | React 18 + Vite + Apollo Client v3 + Zustand
+
+### Key Learnings
+1. **H217 CONFIRMED**: Task splitting to <500 lines per agent eliminated all timeouts (0 vs FB28's 5)
+2. **Python 3.14 enum breaking change**: `str(Enum.member)` now returns `"Class.member"` — broke role comparisons across 4 files
+3. **GraphQL security parity gap (recurring)**: Mutations lack validation/ownership checks that REST enforces — pattern across FB25-FB29
+4. **Module-level engine trap**: `create_async_engine()` at module level causes import side-effects — recurring across builds
+
+### Metrics
+- Backend tests: 36/36 pass
+- Frontend tests: 30/30 pass
+- Agent timeouts: 0/32
+- BLOCKERs found: 8 (all fixed)
+- HIGH findings: 3 (all fixed)
+
+### Mutations Proposed
+- M1: GraphQL security parity rule (security-patterns)
+- M2: Python 3.14 enum rule (python-pitfalls)
+- M3: Module-level engine rule (sqla-patterns)
+- M4: GraphQL mutation test templates (tester-backend)
+- M5: JWT library confusion rule (python-pitfalls)
+- M6: Split audit into REST/GraphQL passes (process)
+- M7: Enum .value checklist (Phase 2a)

@@ -751,6 +751,17 @@ correction. Model mismatches cascade to GraphQL, frontend queries, and shared ty
 Auth role mismatches cascade to registration, JWT claims, and frontend role guards.
 Both must be correct before Phase 3 begins.
 
+3. **Enum `.value` usage check**: Verify ALL code that extracts values from enums
+   uses `.value`, NOT `str()`. Check: token generation (`auth.py`), role comparisons
+   (`auth.py`, router guards), ownership checks (`articles.py`, `media.py`),
+   GraphQL resolvers (`graphql.py`).
+   
+   **Why**: Python 3.14 changed `str(Enum.member)` from `"member"` to `"Class.member"`.
+   This breaks JWT claims, RBAC, and ownership checks across the entire backend.
+   
+   **Source**: FB29 Python 3.14 enum change broke 4 files. Caught in Phase 4 testing
+   instead of Phase 2a. This checklist prevents the bug from reaching tests.
+
 **Phase 2d: Architecture→Implementation Handoff Verification (Check 16) — MANDATORY for Tier 2+**
 After foundation audit passes and model/auth validation is complete, S5 MUST run
 Check 16 BEFORE spawning implementation agents. This prevents late BLOCKERs in
@@ -816,6 +827,18 @@ emit algedonic, halt remaining agents, inject corrections.
 **S5 MUST spawn Phase 3c coordinator for Tier 2+ builds regardless of time
 pressure or apparent stability.** History shows S5 skips conditional checks
 under pressure (FB25–FB28). Making this mandatory removes the decision point.
+
+**Phase 3c audit MUST have separate REST and GraphQL passes**:
+1. **REST pass**: Verify every endpoint has validation, RBAC, and ownership checks.
+2. **GraphQL query pass**: Verify queries have auth guards and depth protection.
+3. **GraphQL mutation pass**: Cross-reference EVERY mutation against its REST
+   equivalent. Verify: input validation parity, ownership checks parity, RBAC parity.
+   If REST enforces `min_length=8` on passwords, GraphQL MUST too.
+   If REST checks `article.author_id == user.id`, GraphQL MUST too.
+
+**Source**: FB25–FB29 recurring pattern — GraphQL mutations consistently lag REST
+in validation and ownership. FB29 security audit found 2 HIGH findings caused by
+GraphQL parity gaps.
 
 ### Phase 3d: Entry-Point Wiring (MANDATORY)
 After all implementation agents complete, spawn `vsm_wiring` subagent.

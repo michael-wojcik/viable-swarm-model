@@ -417,3 +417,102 @@ BaseModel.model_validate = _patched_model_validate
 ORM UUID coercion in tests. The production `CamelModelORM` had both validators
 but tests still needed the patch due to FastAPI's internal serialization path.
 This pattern prevents each build from reinventing the workaround.
+
+
+## Rule: Python 3.14+ Enum `str()` Breaking Change
+
+**Status**: Active (FB29-sourced)
+**Severity**: BLOCKER (breaks auth, RBAC, ownership checks)
+**Applies to**: vsm_backend_coder, vsm_backend_tester, vsm_auditor
+
+In Python 3.14, `str(Enum.member)` returns `"Class.member"` instead of `"member"`.
+This breaks token claims, role comparisons, and ownership checks across the
+entire backend.
+
+**Correct pattern**:
+```python
+# Token generation — use .value, not str()
+role = user.role.value  # "writer"
+claims = {"sub": str(user.id), "role": role}
+
+# Role comparison — use .value
+if user.role.value not in ("writer", "editor", "publisher", "admin"):
+    raise HTTPException(403, "Invalid role")
+
+# Ownership check — use .value for admin bypass
+if str(article.author_id) != str(user.id) and user.role.value != "admin":
+    raise HTTPException(403, "Not owner")
+```
+
+**Incorrect pattern** (BLOCKER):
+```python
+# str() returns "UserRole.writer" in Python 3.14 — breaks everything
+role = str(user.role)  # "UserRole.writer" — JWT claim is wrong
+token = create_access_token({"sub": str(user.id), "role": role})
+
+# Comparison fails — "UserRole.writer" != "writer"
+if str(user.role) != "writer":
+    ...
+```
+
+**Prevention rules**:
+1. NEVER use `str(enum_member)` for value extraction. Always use `.value`.
+2. Phase 2a code review MUST verify all enum usage uses `.value`.
+3. Token claims MUST store `.value`, not `str()` of enum objects.
+4. Role checks MUST compare against `.value` strings.
+5. Backend tests MUST verify token claims contain plain strings, not
+   "Class.member" format.
+
+**Source**: FB29 Python 3.14 caused `str(UserRole.writer)` to return
+`"UserRole.writer"` instead of `"writer"`. This broke JWT token generation,
+RBAC comparisons in auth decorators, ownership checks in articles/publish_schedules,
+and GraphQL resolver guards. Fixed across 4 files: `auth.py`, `articles.py`,
+`publish_schedules.py`, `graphql.py`.
+
+
+## Rule: JWT Library Exception Class Confusion
+
+**Status**: Active (FB29-sourced)
+**Severity**: MEDIUM (causes uncaught exceptions, 500 errors)
+**Applies to**: vsm_backend_coder, vsm_backend_tester
+
+Different JWT libraries use different exception class names. Using the wrong
+exception class causes `except` clauses to miss errors, leading to 500s instead
+of 401s.
+
+| Library | Install | Exception Class |
+|---|---|---|
+| `python-jose` | `pip install python-jose[cryptography]` | `from jose import JWTError` |
+| `PyJWT` | `pip install PyJWT` | `jwt.ExpiredSignatureError`, `jwt.InvalidTokenError` |
+
+**Correct pattern**:
+```python
+# python-jose
+from jose import JWTError
+
+try:
+    payload = jwt.decode(token, secret, algorithms=[alg])
+except JWTError:
+    raise HTTPException(401, "Invalid token")
+```
+
+**Incorrect pattern** (MEDIUM):
+```python
+# python-jose installed, but using PyJWT exception names
+import jwt  # this IS python-jose, not PyJWT
+
+try:
+    payload = jwt.decode(token, secret, algorithms=[alg])
+except jwt.PyJWTError:  # WRONG — python-jose raises JWTError, not PyJWTError
+    ...  # This except NEVER catches anything
+```
+
+**Prevention rules**:
+1. Check `requirements.txt` or `pyproject.toml` to confirm WHICH JWT library is
+   installed before writing exception handling.
+2. `python-jose` → `from jose import JWTError`.
+3. `PyJWT` → `import jwt` and catch `jwt.ExpiredSignatureError` / `jwt.InvalidTokenError`.
+4. Backend tests MUST verify invalid tokens return 401, not 500.
+
+**Source**: FB29 `auth.py` used `jwt.PyJWTError` but `python-jose` was installed,
+which raises `JWTError`. Invalid token test failed with 500 instead of 401.

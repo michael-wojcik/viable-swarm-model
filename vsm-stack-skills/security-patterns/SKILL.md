@@ -246,3 +246,57 @@ async def login(request: Request, data: UserLogin):
 
 **Source**: FB28 `slowapi` was in `pyproject.toml` but never added to `main.py`
 or auth endpoints. Security audit caught it as MEDIUM.
+
+
+## Rule: GraphQL Mutations MUST Mirror REST Endpoint Validation and Ownership
+
+**Status**: Active (FB29-sourced)
+**Severity**: HIGH
+**Applies to**: vsm_backend_coder, vsm_security, vsm_auditor, vsm_wiring
+
+GraphQL mutations frequently lag equivalent REST endpoints in validation depth
+and ownership checks. This creates security parity gaps where GraphQL is the
+weaker entry point.
+
+**Correct pattern**:
+```python
+# REST endpoint enforces ownership
+@router.put("/articles/{id}")
+async def update_article(id: UUID, data: ArticleUpdate, user: User = Depends(get_current_user)):
+    article = await db.get(Article, id)
+    if str(article.author_id) != str(user.id) and user.role.value != "admin":
+        raise HTTPException(403, "Not owner")
+    # ... update
+
+# GraphQL mutation enforces THE SAME ownership
+@strawberry.mutation
+async def update_article(id: UUID, data: ArticleUpdateInput, info: Info) -> Article:
+    user = info.context["user"]
+    article = await db.get(Article, id)
+    if str(article.author_id) != str(user.id) and user.role.value != "admin":
+        raise PermissionError("Not owner")
+    # ... update
+```
+
+**Incorrect pattern** (HIGH):
+```python
+# GraphQL mutation lacks ownership check — editors can modify ANY article
+@strawberry.mutation
+async def update_article(id: UUID, data: ArticleUpdateInput, info: Info) -> Article:
+    user = info.context["user"]
+    # MISSING: author_id comparison
+    if user.role.value not in ("writer", "editor", "admin"):
+        raise PermissionError("Not allowed")
+    # ... updates ANY article
+```
+
+**Prevention rules**:
+1. For every REST endpoint with validation/ownership, the corresponding GraphQL
+   mutation MUST have equivalent checks.
+2. Security audit MUST cross-reference REST and GraphQL for every mutation.
+3. Implementation audit MUST verify GraphQL mutation parity with REST.
+4. Password policy, upload limits, and ownership guards MUST apply equally.
+
+**Source**: FB29 GraphQL `register` accepted passwords < 8 chars (REST enforced
+min_length=8). GraphQL `update_article` allowed editors to modify ANY article
+(REST enforced `_check_owner()`). Security audit caught both as HIGH.
