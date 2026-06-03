@@ -22,14 +22,16 @@ KIMI_DIR="$CWD/.kimi"
 MUTATIONS_FILE="$KIMI_DIR/mutations-applied.md"
 MUTATION_LOG="$HOME/vsm/viable-swarm-model/references/mutation-log.md"
 
-# --- Auto-parse trainer backfill and fill measured effects ---
-# Look for trainer backfill files in .kimi/ directory
+# --- Auto-parse trainer backfill and write to ephemeral file ---
+# Hooks MUST NOT modify tracked reference files. Extract backfill data and
+# write it to .kimi/mutation-backfill.md for S5 to apply during Phase 8c-ii.
+BACKFILL_FILE="$KIMI_DIR/mutation-backfill.md"
+
 if [[ -d "$KIMI_DIR" && -f "$MUTATION_LOG" ]]; then
-    for backfill_file in "$KIMI_DIR"/*backfill* "$KIMI_DIR"/trainer-output* "$KIMI_DIR"/fitness-report*; do
-        [[ -f "$backfill_file" ]] || continue
+    for source_file in "$KIMI_DIR"/*backfill* "$KIMI_DIR"/trainer-output* "$KIMI_DIR"/fitness-report*; do
+        [[ -f "$source_file" ]] || continue
 
         # Extract mutation effectiveness table lines
-        # Pattern: | M[ID] | [effectiveness] | [notes] |
         while IFS= read -r line; do
             if echo "$line" | grep -qE '^\s*\|\s*(FB[0-9]+-[0-9]+|M[0-9]+|Mutation [0-9]+)'; then
                 MUTATION_ID=$(echo "$line" | awk -F'|' '{print $2}' | tr -d ' ')
@@ -37,24 +39,16 @@ if [[ -d "$KIMI_DIR" && -f "$MUTATION_LOG" ]]; then
                 NOTES=$(echo "$line" | awk -F'|' '{print $4}' | sed 's/^ *//;s/ *$//')
 
                 if [[ -n "$MUTATION_ID" && -n "$EFFECT" && "$EFFECT" != "Effectiveness" ]]; then
-                    # Use awk to find the mutation block and replace PENDING within it
-                    awk -v mut_id="$MUTATION_ID" -v effect="$EFFECT" -v notes="$NOTES" '
-                        BEGIN { found=0 }
-                        $0 ~ ("## Mutation " mut_id) { found=1 }
-                        found && /Measured effect.*\[PENDING\]/ {
-                            sub(/\[PENDING\]/, "[" effect "] (auto-filled from trainer backfill: " notes ")")
-                            found=0
-                        }
-                        { print }
-                    ' "$MUTATION_LOG" > "$MUTATION_LOG.tmp" && mv "$MUTATION_LOG.tmp" "$MUTATION_LOG"
-                    if [[ $? -eq 0 ]]; then
-                        echo "stop-verifier.sh: Auto-filled measured effect for $MUTATION_ID → $EFFECT" >&2
-                    fi
+                    echo "- $MUTATION_ID | $EFFECT | $NOTES" >> "$BACKFILL_FILE"
+                    echo "stop-verifier.sh: Extracted backfill for $MUTATION_ID → $EFFECT" >&2
                 fi
             fi
-        done < "$backfill_file"
+        done < "$source_file"
     done
 fi
+
+# NOTE: S5 applies backfill to references/mutation-log.md during Phase 8c-ii.
+# Hooks MUST NOT modify tracked reference files.
 
 # Only verify if this looks like a VSM build directory
 if [[ ! -d "$KIMI_DIR" ]]; then

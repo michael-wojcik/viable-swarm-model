@@ -62,8 +62,8 @@ targeted workouts).
    - `gate-guardian`: Blocks fraudulent Phase 4 gate-pass documents
    - `boundary-guardian`: Blocks inline fixes during Phase 6/7 boundary
    - `structural-guardian`: Blocks unapproved SKILL.md/architecture changes
-   - `stop-verifier`: Blocks session end if Phase 8c-ii is incomplete
-   - `session-start/end`: Load/skill-state.md and efficiency baselines
+   - `stop-verifier`: Blocks session end if Phase 8c-ii is incomplete; extracts mutation backfill to `.kimi/mutation-backfill.md` (ephemeral)
+   - `session-start/end`: session-start reads skill-state.md; session-end writes telemetry to `.kimi/session-telemetry.md` (ephemeral)
    - `knowledge-broker`: Append raw session entries to `.kimi/knowledge-broker-log.md` in the build directory
    - `decision-enforcer`: Verifies decisions.md D[N] entry exists
    - `context-pressure`: Alerts when compaction >200k tokens imminent
@@ -1058,6 +1058,17 @@ before Phase 8c-ii is complete. If empty, fill it now based on this build's
 results: Did the mutation prevent its target failure? Did it have no observable
 effect? Did it cause a new issue?
 
+**Step 8c-5b: Apply hook-extracted backfill (if present)**
+If `.kimi/mutation-backfill.md` exists (written by `stop-verifier.sh` hook), S5
+MUST read it and apply the measured effects to `references/mutation-log.md`.
+The backfill file contains lines in this format:
+```
+- [Mutation ID] | [Effectiveness] | [Notes]
+```
+For each line, find the matching mutation block in `mutation-log.md` and replace
+`[PENDING]` with the effectiveness score and notes. After applying, delete or
+rename `.kimi/mutation-backfill.md` to prevent duplicate application.
+
 > **Phase 8c-ii hard gate**: Phase 8c-ii is NOT complete until ALL of the
 > following are verified:
 > 1. `.kimi/mutations-applied.md` exists with all mutations tracked
@@ -1118,11 +1129,17 @@ Before declaring the VSM workflow "complete," S5 MUST verify:
    Documenting them as "known limitations" and declaring completion is a
    process violation. LOW findings may be documented.
 
-4. **Parent flow handoff (conditional)**: If this VSM workflow was invoked BY A
+4. **Apply session telemetry to skill-state.md (MANDATORY)**:
+   Read `.kimi/session-telemetry.md` (written by `session-end.sh` hook) and
+   append the telemetry block to `references/skill-state.md`. This keeps the
+   organism's self-model current. If the telemetry file is missing, the hook
+   did not fire — log this as a process gap.
+
+5. **Parent flow handoff (conditional)**: If this VSM workflow was invoked BY A
    PARENT FLOW (e.g., `/flow:vsm-fitness-coach`), Phase 8 completion does NOT
    mean the parent session is over. S5 MUST return control to the parent flow
    for its post-build phases. When VSM is run standalone (`/flow:viable-swarm-model`),
-   this rule does not apply — Phase 8d is complete once rules 1-3 are satisfied.
+   this rule does not apply — Phase 8d is complete once rules 1-4 are satisfied.
 
 > **Algedonic signal**: If you find yourself about to say "all phases complete"
 > while HIGH/MEDIUM findings remain unfixed, STOP immediately. The build is NOT

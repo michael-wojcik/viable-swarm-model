@@ -63,30 +63,28 @@ AUDIT_WARNINGS=""
 # Check 1: Unverified phase4-gate.md with PASS
 if [[ -f "$CWD/.kimi/phase4-gate.md" ]] && grep -qi "PASS" "$CWD/.kimi/phase4-gate.md" 2>/dev/null; then
     if [[ ! -f "$CWD/.kimi/.gate-guardian-verified" ]]; then
-        AUDIT_WARNINGS="${AUDIT_WARNINGS}AUDIT: phase4-gate.md contains PASS but no hook verification marker. Possible background agent bypass.\n"
+        AUDIT_WARNINGS="${AUDIT_WARNINGS}- phase4-gate.md contains PASS but no hook verification marker. Possible background agent bypass.\n"
     fi
 fi
 
 # Check 2: Boundary window violations
 if [[ -f "$CWD/.kimi/synthesis-integration.md" ]] && [[ ! -f "$CWD/.kimi/re-audit-report.md" ]]; then
-    # Note: precise mtime comparison is unreliable cross-platform; flag for manual review
-    AUDIT_WARNINGS="${AUDIT_WARNINGS}AUDIT: Boundary window open (synthesis-integration.md exists, re-audit-report.md missing). Review for inline fixes.\n"
+    AUDIT_WARNINGS="${AUDIT_WARNINGS}- Boundary window open (synthesis-integration.md exists, re-audit-report.md missing). Review for inline fixes.\n"
 fi
 
 # Check 3: Unapproved structural changes
 if [[ ! -f "$CWD/.kimi/.structural-mutation-approved" ]]; then
     if [[ -f "$CWD/SKILL.md" ]] && [[ -f "$TELEMETRY_DIR/sessions.jsonl" ]]; then
-        # Simple heuristic: if SKILL.md mtime is after session start, flag it
-        SESSION_START_FILE="$TELEMETRY_DIR/sessions.jsonl"
-        # This is a coarse check — precise tracking would need session-start marker file
-        AUDIT_WARNINGS="${AUDIT_WARNINGS}AUDIT: No structural mutation approval marker. If SKILL.md or agents/ were modified this session, it was unapproved.\n"
+        AUDIT_WARNINGS="${AUDIT_WARNINGS}- No structural mutation approval marker. If SKILL.md or agents/ were modified this session, it was unapproved.\n"
     fi
 fi
 
-# Build telemetry update block
-UPDATE_BLOCK=$(cat << EOF
+# Build telemetry block — write to EPHEMERAL .kimi/ file, NOT tracked skill-state.md
+SESSION_TELEMETRY_FILE="$CWD/.kimi/session-telemetry.md"
 
-## Session Telemetry — $SESSION_END
+TELEMETRY_BLOCK=$(cat << EOF
+# Session Telemetry — $SESSION_END
+
 | Metric | Value |
 |--------|-------|
 | Session ID | $SESSION_ID |
@@ -100,21 +98,16 @@ EOF
 
 # Append audit warnings if any
 if [[ -n "$AUDIT_WARNINGS" ]]; then
-    UPDATE_BLOCK="${UPDATE_BLOCK}
-| Bypass audit | WARNINGS DETECTED |
+    TELEMETRY_BLOCK="${TELEMETRY_BLOCK}
+
+## Bypass Audit Warnings
 ${AUDIT_WARNINGS}"
 fi
 
-# Append to skill-state.md if it exists
-if [[ -f "$SKILL_STATE" ]]; then
-    # Check if there's a "## Session Telemetry" section; append or create
-    if grep -q "## Session Telemetry" "$SKILL_STATE"; then
-        # Append after the last Session Telemetry entry, before any final marker
-        echo "$UPDATE_BLOCK" >> "$SKILL_STATE"
-    else
-        echo -e "\n## Session Telemetry Log\n$UPDATE_BLOCK" >> "$SKILL_STATE"
-    fi
-fi
+echo "$TELEMETRY_BLOCK" >> "$SESSION_TELEMETRY_FILE"
+
+# NOTE: S5 updates references/skill-state.md during Phase 8 by reading this file.
+# Hooks MUST NOT modify tracked reference files.
 
 # Clean up per-session telemetry files (keep aggregated logs)
 # We keep the jsonl files as they accumulate across sessions for rolling averages
