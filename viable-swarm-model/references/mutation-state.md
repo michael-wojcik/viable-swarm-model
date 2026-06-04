@@ -183,22 +183,22 @@
 > staleness duplication. All self-model data lives in one place.
 
 ### Capability Matrix
-| Agent | Domain | Success Rate | Last 3 Scores | Known Failure Modes |
-|-------|--------|-------------|---------------|---------------------|
-| vsm_backend_coder | Python/FastAPI | 85% | 4, 4, 4 | 2 timeouts in FB30; code quality good when not timed out |
-| vsm_frontend_coder | React/TS/Vite | 75% | 4, 4, 3 | Stub pages resolved; jsdom test environment still broken |
-| vsm_security | Auth/GraphQL | 75% | 4, 3, — | Never spawned in FB30 (bypassed); manual audit used instead |
-| vsm_auditor | Code review | 80% | 4, 4, 4 | Foundation/implementation checks converging |
-| vsm_architect | Design | 70% | 4, 5, 2 | Timeout on 4-doc spawn; needs task splitting (M-FB30-1) |
-| vsm_coordinator | Integration | 80% | 4, 4, 4 | GraphQL routing 307 caught; drift detection reliable |
-| vsm_wiring | Entry-point wiring | 85% | 4, 4, 4 | Router registration accurate; module-level instantiation resolved |
-| vsm_backend_tester | Test writing | 65% | 4, 3, 2 | Timed out in FB30; tests good when completed |
-| vsm_frontend_tester | Test writing | 60% | 4, 3, 2 | jsdom localStorage mocking fails consistently |
-| vsm_devops_coder | Docker/CI | 80% | 4, 4, 4 | Dockerfile and compose reliable |
-| vsm_meta | Meta-evaluation | 60% | 3, 3, 2 | False TBD claims in meta-report (PM2 ineffective) |
-| vsm_process_auditor | Process compliance | 60% | 3, 2, 2 | Timed out in FB30; compliance 85/100 despite timeout |
-| vsm_variety_engineer | Environmental scanning | — | — | New agent — unmeasured |
-| vsm_learning_curator | Portfolio management | — | — | New agent — unmeasured |
+| Agent | Domain | Success Rate | Last 3 Scores | Known Failure Modes | Recommended Max Task Size |
+|-------|--------|-------------|---------------|---------------------|--------------------------|
+| vsm_backend_coder | Python/FastAPI | 85% | 4, 4, 4 | 2 timeouts in FB30; code quality good when not timed out | 500 lines |
+| vsm_frontend_coder | React/TS/Vite | 75% | 4, 4, 3 | Stub pages resolved; jsdom test environment still broken | 400 lines |
+| vsm_security | Auth/GraphQL | 75% | 4, 3, — | Never spawned in FB30 (bypassed); manual audit used instead | 400 lines |
+| vsm_auditor | Code review | 80% | 4, 4, 4 | Foundation/implementation checks converging | 500 lines |
+| vsm_architect | Design | 70% | 4, 5, 2 | Timeout on 4-doc spawn; needs task splitting (M-FB30-1) | 400 lines |
+| vsm_coordinator | Integration | 80% | 4, 4, 4 | GraphQL routing 307 caught; drift detection reliable | 500 lines |
+| vsm_wiring | Entry-point wiring | 85% | 4, 4, 4 | Router registration accurate; module-level instantiation resolved | 500 lines |
+| vsm_backend_tester | Test writing | 65% | 4, 3, 2 | Timed out in FB30; tests good when completed | 300 lines |
+| vsm_frontend_tester | Test writing | 60% | 4, 3, 2 | jsdom localStorage mocking fails consistently | 300 lines |
+| vsm_devops_coder | Docker/CI | 80% | 4, 4, 4 | Dockerfile and compose reliable | 500 lines |
+| vsm_meta | Meta-evaluation | 60% | 3, 3, 2 | False TBD claims in meta-report (PM2 ineffective) | 300 lines |
+| vsm_process_auditor | Process compliance | 60% | 3, 2, 2 | Timed out in FB30; compliance 85/100 despite timeout | 300 lines |
+| vsm_variety_engineer | Environmental scanning | — | — | New agent — unmeasured | 400 lines |
+| vsm_learning_curator | Portfolio management | — | — | New agent — unmeasured | 400 lines |
 
 ### Known Unknowns (with confidence)
 | Hypothesis | Confidence | Last Tested | Priority | Status |

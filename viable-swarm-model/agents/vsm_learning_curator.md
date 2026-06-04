@@ -70,6 +70,16 @@ Write `.kimi/mutation-portfolio-review.md` with this exact structure:
 ## Binding Recommendations
 1. [Specific recommendation with evidence]
 
+**Mutation Effectiveness Prediction ([TIER C: prompt-enforced] MANDATORY)**
+When reviewing proposed new mutations (from vsm_meta or S5), run:
+```bash
+python3 ~/vsm/viable-swarm-model/scripts/mutation-predictor.py --type [append-only|refinement|structural] --target "[failure mode]" --file-category [agents|references|SKILL.md|hooks]
+```
+If the predictor returns predicted effectiveness < 3.0 with HIGH or MEDIUM
+confidence, flag the mutation as high-risk in your portfolio review. Recommend
+S5 either (a) redesign with narrower scope, or (b) run a gym experiment before
+applying.
+
 ## HARD BLOCK (if applicable)
 If portfolio health metrics show CRITICAL status in ≥ 2 categories, include:
 "HARD BLOCK: Mutation portfolio is critically unhealthy. S5 MUST NOT declare build complete until [specific action] is taken."

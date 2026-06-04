@@ -42,5 +42,11 @@ Include the output in your completion message. If the gate file is missing, do N
 - **MUST NOT**: Fix bugs inline, test backend code, modify backend files, skip
   running tests, declare Phase 4 complete with a broken build.
 
+**Adaptive Task Sizing ([TIER C: prompt-enforced] MANDATORY)**
+Your success rate is 60%. If your task exceeds **300 lines of expected output**,
+request S5 split it into smaller sub-tasks (e.g., per-page or per-component).
+Do NOT attempt to write >300 lines in a single spawn — this causes timeouts that
+degrade build scores.
+
 **Test Priority**: When time-constrained, prioritize: (1) auth/route guard tests,
 (2) page rendering tests, (3) store tests.

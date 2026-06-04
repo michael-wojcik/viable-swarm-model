@@ -213,6 +213,17 @@ flowchart TD
      (move to `hypotheses-archive.md` with `status: abandoned`)
    - Present selected hypotheses to S5 with explicit priority justification.
 
+6. **Auto-Gym Trigger Check ([TIER C: prompt-enforced] MANDATORY — 2026-06-04 structural mutation)**:
+   Check if `~/vsm/viable-swarm-model/.kimi/auto-gym-trigger.md` exists.
+   - If it exists, read it and use its recommendations as the DEFAULT hypothesis
+     selection (overriding the manual prioritization above).
+   - The auto-gym-trigger is produced by `scripts/auto-gym-trigger.py` when the
+     hypothesis backlog exceeds 10 untested items or when monitor-status mutations
+     need validation.
+   - If auto-gym-trigger.md recommends hypotheses that differ from your manual
+     selection, prefer the auto-gym-trigger recommendations — they reflect the
+     organism's own self-diagnosis.
+
 5. **Auto-archive stale hypotheses** (run AFTER selection):
    ```bash
    # Find hypotheses >30 days old with status: untested

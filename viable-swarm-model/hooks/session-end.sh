@@ -146,6 +146,15 @@ echo "$TELEMETRY_BLOCK" >> "$SESSION_TELEMETRY_FILE"
 # NOTE: S5 updates references/skill-state.md during Phase 8 by reading this file.
 # Hooks MUST NOT modify tracked reference files.
 
+# ── Self-Healing Hook Diagnostic — verify infrastructure ──
+# Run diagnostic-router in test mode to ensure the self-healing layer is functional.
+DIAGNOSTIC_ROUTER="$HOME/vsm/viable-swarm-model/hooks/diagnostic-router.sh"
+if [[ -f "$DIAGNOSTIC_ROUTER" ]]; then
+    bash "$DIAGNOSTIC_ROUTER" --test >/dev/null 2>&1 || {
+        echo "WARNING: diagnostic-router.sh self-test failed. Self-healing infrastructure may be compromised." >&2
+    }
+fi
+
 # Clean up per-session telemetry files (keep aggregated logs)
 # We keep the jsonl files as they accumulate across sessions for rolling averages
 # But mark session as processed

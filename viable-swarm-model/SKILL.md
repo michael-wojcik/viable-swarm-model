@@ -591,6 +591,17 @@ Main agent (S5) performs:
     
     If the validator reports ERRORS, STOP the build and fix the agent files before
     proceeding. Warnings about bracket placeholders are expected and do not block.
+
+    **Step 11b: Run automation self-test ([TIER C: prompt-enforced] MANDATORY — 2026-06-04 structural mutation)**
+    Run the automation infrastructure test suite:
+    ```bash
+    bash ~/vsm/viable-swarm-model/hooks/test-automation.sh
+    ```
+    If ANY test fails, emit algedonic: "Automation infrastructure compromised.
+    Build may have undetected process gaps." Log the failure in `plan.md`.
+    The organism cannot reliably self-improve if its own automation is broken.
+    **Source**: FB25–FB26 `update-mutation-state.sh` silently failed for 6 builds
+    because `[PENDING]` vs `**PENDING**` format mismatch had no test coverage.
 12. **Environment Compatibility Smoke Test** (conditional): If the build declares
     framework dependencies (e.g., `[graphql library]`, `[validation library]`, `[orm library]`, `[backend framework]`,
     `celery`), run a quick import verification in a fresh subprocess BEFORE dispatching
@@ -635,6 +646,19 @@ Main agent (S5) performs:
     - No fitness build in > 7 days
     **Rationale**: Proactive health checks prevent the "Detection ≠ Enforcement"
     failure mode by surfacing systemic strain before it causes build failures.
+
+16. **Read Capability Matrix & Adaptive Sizing Protocol ([TIER C: prompt-enforced] MANDATORY — 2026-06-04 structural mutation)**:
+    Read the capability matrix from `references/mutation-state.md`.
+    For EACH agent type you plan to spawn, check its `Success Rate` and
+    `Recommended Max Task Size`:
+    - ≥85% success rate → default 500-line task limit
+    - 70–84% → 400-line limit
+    - 60–69% → 300-line limit (split into sub-agents by default)
+    - <60% → 200-line limit (mandatory sub-agent split)
+    Log any agent with success rate < 70% as a **known risk** in `plan.md`
+    under `## Agent Risk Assessment`.
+    **Why**: vsm_backend_tester (65%) and vsm_frontend_tester (60%) timed out
+    repeatedly in FB30. Pre-emptive scope reduction prevents timeout avalanche.
 
 **Agent Timeout Policy: No Arbitrary Limits**
 Do NOT set explicit timeouts on foreground agents. The platform default is
@@ -736,8 +760,20 @@ Wait via `TaskOutput(block=true)`. Then S5 runs a **mini-audit**:
 If any check fails → fix BEFORE dispatching Sub-Wave 2b.
 
 **Agent Task Sizing for Tier 2+ Builds (FB28-sourced)**
+**Adaptive Task Sizing Protocol ([TIER C: prompt-enforced] MANDATORY — 2026-06-04 structural mutation)**
+Before spawning ANY agent, S5 MUST check the capability matrix in
+`references/mutation-state.md`. The default 500-line limit is overridden by
+the agent's `Recommended Max Task Size`:
+- vsm_backend_tester → 300 lines max (split per-domain by default)
+- vsm_frontend_tester → 300 lines max (split per-page by default)
+- vsm_meta → 300 lines max (focus on Executive Summary only)
+- vsm_process_auditor → 300 lines max (check top 5 violations only)
+
+For ALL other agents, the 500-line limit applies unless their success rate
+has dropped below 70% since the last build.
+
 To prevent agent timeouts (the primary drag on Tier 2+ build scores per H217),
-NO single agent task may exceed **500 lines of expected output**. Split work
+NO single agent task may exceed **its Recommended Max Task Size**. Split work
 across multiple focused spawns:
 - Foundation: spawn config → spawn models → spawn schemas → spawn auth (sequential or parallel)
 - Implementation: spawn routers in batches of ≤3 files each
@@ -1285,9 +1321,16 @@ This script computes longitudinal health metrics and writes:
 - `references/build-health-history.md` (longitudinal record)
 
 S5 MUST read `.kimi/health-dashboard.md` and log any WARNING or CRITICAL
-statuses in `plan.md`. If the dashboard shows a declining score trend,
-emit algedonic: "Score trend declining. Consider regression build or
-mutation portfolio review."
+statuses in `plan.md`. The dashboard now includes **Predictive Alerts**:
+- **Predicted Next Score**: If < 3.5, emit WARNING. If < 3.0, emit CRITICAL
+  algedonic: "Predicted score declining. Proactive intervention required."
+- **Process Drift**: If latest process score < rolling avg - 10, emit WARNING.
+- **Mutation Bloat**: If active mutations / removed mutations > 4, emit WARNING.
+- **Agent Risk**: If any agent flagged HIGH or CRITICAL risk, reduce its task
+  scope BEFORE spawning it.
+
+If the dashboard shows a declining score trend, emit algedonic: "Score trend
+declining. Consider regression build or mutation portfolio review."
 
 **Step 8a-2: Update Causal Index ([TIER C: prompt-enforced] MANDATORY — 2026-06-04 structural mutation)**
 Run the causal index updater:

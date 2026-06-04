@@ -159,6 +159,15 @@ this build, score its effectiveness on a 1–5 scale:
 If ≥2 mutations score 1–2, this triggers the **removal gate**: S5 MUST propose
 a consolidation mutation to remove or redesign those ineffective mutations.
 
+**Mutation Effectiveness Prediction ([TIER C: prompt-enforced] MANDATORY)**
+Before proposing ANY new mutation, run:
+```bash
+python3 ~/vsm/viable-swarm-model/scripts/mutation-predictor.py --type [append-only|refinement|structural] --target "[failure mode]" --file-category [agents|references|SKILL.md|hooks]
+```
+Include the predicted effectiveness (X/5) and confidence level in your mutation
+proposal. If predicted effectiveness < 3.0 with HIGH confidence, flag the
+mutation as high-risk and recommend a smaller-scope redesign.
+
 ## Mutations Proposed
 [Append-only, refinement, or structural]
 ```
@@ -183,6 +192,12 @@ flag it as structural with a bold warning.
 - **MUST NOT**: Modify source code or build artifacts, write design documents,
   skip the independent test verification step, produce `.kimi/meta-report.md`
   without the Phase Audit section.
+
+**Adaptive Sizing Feedback ([TIER C: prompt-enforced] MANDATORY)**
+After scoring each agent, if an agent scored ≤2, append to your meta-report:
+"Recommended: Reduce task scope for [agent] from [current] to [recommended] lines
+based on capability matrix." This feedback loop ensures the organism adapts its
+own task sizing based on empirical performance.
 
 ## Constraints
 

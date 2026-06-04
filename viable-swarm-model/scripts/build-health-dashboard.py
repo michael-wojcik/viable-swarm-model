@@ -195,6 +195,115 @@ def compute_trend(values: list[float | None]) -> str:
     return "stable"
 
 
+def predict_next_score(scores: list[float | None]) -> tuple[float | None, str]:
+    """Simple linear regression on last 5 scores. Returns (prediction, alert_level)."""
+    clean = [v for v in scores if v is not None]
+    if len(clean) < 3:
+        return None, "insufficient_data"
+    n = len(clean)
+    x_mean = sum(range(n)) / n
+    y_mean = sum(clean) / n
+    numerator = sum((i - x_mean) * (clean[i] - y_mean) for i in range(n))
+    denominator = sum((i - x_mean) ** 2 for i in range(n))
+    slope = numerator / denominator if denominator != 0 else 0
+    intercept = y_mean - slope * x_mean
+    prediction = intercept + slope * n
+    prediction = max(0.0, min(5.0, prediction))
+    if prediction < 3.0:
+        return round(prediction, 2), "CRITICAL"
+    elif prediction < 3.5:
+        return round(prediction, 2), "WARNING"
+    else:
+        return round(prediction, 2), "OK"
+
+
+def get_agent_risk_assessment() -> list[dict]:
+    """Read capability matrix from mutation-state.md and flag high-risk agents."""
+    mutation_state = REFS_DIR / "mutation-state.md"
+    if not mutation_state.exists():
+        return []
+    text = mutation_state.read_text()
+    risks = []
+    # Find capability matrix section
+    matrix_match = re.search(r"\| Agent \| Domain \| Success Rate \|.*?\n(.*?)(?=\n## |\Z)", text, re.DOTALL)
+    if matrix_match:
+        for line in matrix_match.group(1).strip().split("\n"):
+            if line.startswith("|") and "Success Rate" not in line and "---" not in line:
+                parts = [p.strip() for p in line.split("|")]
+                parts = [p for p in parts if p]
+                if len(parts) >= 4:
+                    agent = parts[0]
+                    rate_str = parts[2].replace("%", "").strip()
+                    try:
+                        rate = float(rate_str)
+                    except ValueError:
+                        continue
+                    if rate < 60:
+                        max_lines = 200
+                        risk_level = "CRITICAL"
+                    elif rate < 70:
+                        max_lines = 300
+                        risk_level = "HIGH"
+                    elif rate < 80:
+                        max_lines = 400
+                        risk_level = "MEDIUM"
+                    else:
+                        max_lines = 500
+                        risk_level = "LOW"
+                    risks.append({
+                        "agent": agent,
+                        "success_rate": rate,
+                        "risk_level": risk_level,
+                        "recommended_max_lines": max_lines,
+                    })
+    return risks
+
+
+def compute_process_drift(builds: list[dict]) -> dict | None:
+    """Compare latest process score to rolling average of last 5."""
+    process_scores = [b["process"] for b in builds if b["process"] is not None]
+    if len(process_scores) < 2:
+        return None
+    latest = process_scores[-1]
+    rolling = process_scores[-5:-1] if len(process_scores) >= 5 else process_scores[:-1]
+    avg = sum(rolling) / len(rolling)
+    delta = avg - latest
+    if delta > 10:
+        alert = "CRITICAL"
+    elif delta > 5:
+        alert = "WARNING"
+    else:
+        alert = "OK"
+    return {"latest": latest, "rolling_avg": round(avg, 1), "delta": round(delta, 1), "alert": alert}
+
+
+def compute_mutation_bloat_velocity() -> dict | None:
+    """Track new mutations vs removals per 5-build window."""
+    mutation_log = REFS_DIR / "mutation-log.md"
+    if not mutation_log.exists():
+        return None
+    text = mutation_log.read_text()
+    # Count mutations added in last 5 builds (rough: mutations with build IDs from last 5 FBs)
+    # This is approximate — we count all un-removed mutations as "active"
+    mutation_state = REFS_DIR / "mutation-state.md"
+    if not mutation_state.exists():
+        return None
+    state_text = mutation_state.read_text()
+    total = len(re.findall(r"\|\s*probation\s*\|", state_text))
+    total += len(re.findall(r"\|\s*effective\s*\|", state_text))
+    total += len(re.findall(r"\|\s*monitor\s*\|", state_text))
+    removed = len(re.findall(r"\|\s*removed\s*\|", state_text))
+    # Approximate velocity: if total growing faster than removed
+    ratio = total / max(removed, 1)
+    if ratio > 4:
+        alert = "CRITICAL"
+    elif ratio > 2:
+        alert = "WARNING"
+    else:
+        alert = "OK"
+    return {"total_active": total, "removed": removed, "ratio": round(ratio, 1), "alert": alert}
+
+
 def generate_dashboard(builds: list[dict], mutation_metrics: dict, hypothesis_metrics: dict, broker_days: int) -> str:
     """Generate the health dashboard markdown."""
     scores = [b["score"] for b in builds if b["score"] is not None]
@@ -229,6 +338,30 @@ def generate_dashboard(builds: list[dict], mutation_metrics: dict, hypothesis_me
         process_str = f"{b['process']}" if b["process"] is not None else "N/A"
         algedonic_str = f"{b['algedonic_heeded']}h/{b['algedonic_ignored']}i"
         lines.append(f"| {b['id']} | {score_str} | {process_str} | {b['timeouts']} | {b['blockers']} | {algedonic_str} |")
+
+    # Predictive sections
+    prediction, pred_alert = predict_next_score(scores)
+    agent_risks = get_agent_risk_assessment()
+    process_drift = compute_process_drift(builds)
+    bloat = compute_mutation_bloat_velocity()
+
+    lines.extend([
+        "",
+        "## Predictive Alerts",
+    ])
+    if prediction is not None:
+        lines.append(f"| Predicted Next Score | {prediction}/5.0 | Alert: {pred_alert} |")
+    if process_drift:
+        lines.append(f"| Process Drift | Latest: {process_drift['latest']}, Rolling Avg: {process_drift['rolling_avg']}, Delta: {process_drift['delta']} | Alert: {process_drift['alert']} |")
+    if bloat:
+        lines.append(f"| Mutation Bloat | Active: {bloat['total_active']}, Removed: {bloat['removed']}, Ratio: {bloat['ratio']} | Alert: {bloat['alert']} |")
+    if agent_risks:
+        lines.append("")
+        lines.append("### Agent Risk Assessment")
+        lines.append("| Agent | Success Rate | Risk | Recommended Max Lines |")
+        lines.append("|-------|-------------|------|----------------------|")
+        for r in agent_risks:
+            lines.append(f"| {r['agent']} | {r['success_rate']}% | {r['risk_level']} | {r['recommended_max_lines']} |")
 
     lines.extend([
         "",

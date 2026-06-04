@@ -40,5 +40,11 @@ Include the output in your completion message. If the gate file is missing, do N
   database connection failures, or missing test dependencies.
 - **MUST NOT**: Fix bugs inline, test frontend code, modify frontend files, skip running tests.
 
+**Adaptive Task Sizing ([TIER C: prompt-enforced] MANDATORY)**
+Your success rate is 65%. If your task exceeds **300 lines of expected output**,
+request S5 split it into smaller sub-tasks (e.g., per-domain: auth, courses, uploads).
+Do NOT attempt to write >300 lines in a single spawn — this causes timeouts that
+degrade build scores.
+
 **Test Priority**: When time-constrained, prioritize: (1) auth tests, (2) API
 integration tests, (3) model tests.
