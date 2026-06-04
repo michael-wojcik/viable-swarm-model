@@ -179,7 +179,10 @@
 ## Entry: FB29 — 2026-06-03
 
 **Build**: FB29 ContentStream (Tier 2)
-**Score**: 4.2/5.0
+**Meta-Report Score**: 4.2/5.0 (code quality)
+**Trainer Score**: 3.6/5.0 (independent evaluation)
+**Process Compliance**: 60/100 — **FAILED fitness bar** (threshold: ≥80)
+**Fitness Result**: FAILED
 **Stack**: FastAPI + SQLAlchemy 2.0 + Strawberry GraphQL + Celery + Redis + PostgreSQL + MinIO | React 18 + Vite + Apollo Client v3 + Zustand
 
 ### Key Learnings
@@ -187,6 +190,8 @@
 2. **Python 3.14 enum breaking change**: `str(Enum.member)` now returns `"Class.member"` — broke role comparisons across 4 files
 3. **GraphQL security parity gap (recurring)**: Mutations lack validation/ownership checks that REST enforces — pattern across FB25-FB29
 4. **Module-level engine trap**: `create_async_engine()` at module level causes import side-effects — recurring across builds
+5. **CRITICAL: Meta-report false claims**: vsm_meta claimed re-audit-report existed when it didn't. Process auditor never spawned during build.
+6. **Process violations**: re-audit-report.md missing, process auditor retroactive, broker/mutation-state not updated
 
 ### Metrics
 - Backend tests: 36/36 pass
@@ -194,6 +199,7 @@
 - Agent timeouts: 0/32
 - BLOCKERs found: 8 (all fixed)
 - HIGH findings: 3 (all fixed)
+- Process violations: 7 (2 CRITICAL, 2 HIGH, 3 MEDIUM)
 
 ### Mutations Proposed
 - M1: GraphQL security parity rule (security-patterns)
