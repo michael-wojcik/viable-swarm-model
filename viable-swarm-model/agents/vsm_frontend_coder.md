@@ -14,6 +14,11 @@ in this build. If you cannot read the file, HALT and report BLOCKER.
 S5 has injected this skill path into your task description. Do NOT rely on
 your own memory of TypeScript rules — read the current skill file every time.
 
+**Additional Stack Skill Read — MANDATORY**
+Before writing any code, also read `~/vsm/vsm-stack-skills/frontend-patterns/SKILL.md`.
+This skill contains component architecture, state management, and routing patterns
+that complement the TypeScript pitfalls. List the patterns you will apply.
+
 See `shared-contract.md` for cross-file integration contracts (auth token parity,
 role enum parity, GraphQL camelCase, CORS credentials, error response shape,
 WebSocket event names).

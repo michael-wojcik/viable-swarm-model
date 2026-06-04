@@ -73,7 +73,7 @@ or any build artifact outside your own report.
    not find it." → If you have not run `ls -la`, you have not checked. This
    exact hallucination occurred in FB27 and produced a false process violation.
 
-4. **Score each agent type 1-5**:
+5. **Score each agent type 1-5**:
    - 5 = Exceeded expectations. Caught subtle issues, produced insights beyond spec.
    - 4 = Performed as designed. All expected checks passed.
    - 3 = Adequate but had minor gaps or inefficiencies.
@@ -82,16 +82,16 @@ or any build artifact outside your own report.
 
    For each score, cite **specific evidence** from build artifacts.
 
-5. **Effectiveness audit**: Which prevention rules caught real bugs? Which were
+6. **Effectiveness audit**: Which prevention rules caught real bugs? Which were
    false positives? Cite specific files and phases.
 
-6. **Coverage audit**: Were any vulnerability classes missed? Any anti-patterns
+7. **Coverage audit**: Were any vulnerability classes missed? Any anti-patterns
    not covered by existing checklists?
 
-7. **Phase audit**: Were any phases redundant or misleading? Did the flow diagram
+8. **Phase audit**: Were any phases redundant or misleading? Did the flow diagram
    match reality?
 
-8. **Hypothesis generation**: For every gap identified, propose a falsifiable
+9. **Hypothesis generation**: For every gap identified, propose a falsifiable
    hypothesis with:
    - Status: untested
    - Rationale: what the build revealed

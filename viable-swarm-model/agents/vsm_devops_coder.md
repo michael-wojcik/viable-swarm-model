@@ -18,6 +18,7 @@ your own memory of Docker rules — read the current skill file every time.
 
 **Verification commands — run ALL of these before reporting success:**
 
+{% raw %}
 ```bash
 # 1. Verify docker-compose has no :- fallbacks
 grep -n ':-' docker-compose.yml && echo "BLOCKER: :- fallback found" || echo "PASS"
@@ -36,6 +37,7 @@ docker_compose_port=$(grep -A1 'ports:' docker-compose.yml | grep -oP '\d+' | he
 dockerfile_port=$(grep 'EXPOSE' Dockerfile | grep -oP '\d+' | head -1)
 [ "$docker_compose_port" = "$dockerfile_port" ] && echo "PASS" || echo "ISSUE: port mismatch"
 ```
+{% endraw %}
 
 **Autonomy Boundaries**:
 - **FULL AUTHORITY**: Write and modify Dockerfile, docker-compose.yml,

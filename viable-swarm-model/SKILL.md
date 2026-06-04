@@ -1546,20 +1546,33 @@ The primary enforcement for ~90% of implementation work is Layer 1. Hooks are a
 secondary safety net for S5 only. Do not claim "CANNOT proceed" when the actual
 mechanism is "MUST NOT proceed — violation will be caught by retroactive audit."
 
+### Enforcement Tier System (NEW — 2026-06-04 audit)
+
+Every MANDATORY directive in this skill is tagged with one of three enforcement tiers:
+
+| Tier | Name | Mechanism | Confidence |
+|---|---|---|---|
+| **A** | **Tool-enforced** | Hook, validator, or script physically blocks the action | HIGH |
+| **B** | **Agent-verified** | S5 MUST run a shell command to verify artifact exists before proceeding | MEDIUM |
+| **C** | **Prompt-only** | Agent is instructed but no verification mechanism exists — honor system | LOW |
+
+**Critical honesty rule**: Do NOT claim a Tier C directive is "enforced." It is advisory.
+If a Tier C directive is repeatedly bypassed, it MUST be upgraded to Tier A or B.
+
 ### Artifact Map
 
-| Phase Transition | Required Artifact | Enforcement Layer | If Missing |
-|---|---|---|---|
-| Phase 2b → 2c | `.kimi/foundation-audit.md` | Layer 1 (prompt) | Re-spawn auditor |
-| Phase 3b → 3d | `.kimi/implementation-audit.md` | Layer 1 (prompt) | Re-spawn auditor |
-| Phase 4 → 5 | `.kimi/phase4-gate.md` with `PASS` | **Layer 2** (gate-guardian.sh blocks fraudulent PASS writes) + Layer 1 | Route to Phase 7 |
-| Phase 5 → 6 | `.kimi/security-report.md` | Layer 1 (prompt) | Re-spawn security |
-| Phase 6 → 7 | `.kimi/synthesis-integration.md` | **Layer 2** (boundary-guardian.sh blocks inline fixes) + Layer 1 | Re-spawn coordinator + auditor |
-| Phase 7 → 4/8 | `.kimi/re-audit-report.md` | Layer 1 (prompt) | Fix wave NOT complete |
-| Phase 8 → 8b | `.kimi/lessons.md` with structured entry | Layer 1 (prompt) | Write missing entries |
-| Phase 8b → 8c | `.kimi/meta-report.md` | Layer 1 (prompt) | Re-spawn vsm_meta |
-| Phase 8b → 8c | `.kimi/process-audit.md` | Layer 1 (prompt) | Re-spawn process_auditor |
-| Phase 8c → end | `.kimi/mutations-applied.md` + updated `mutation-state.md` | **Layer 2** (stop-verifier.sh blocks session end) + Layer 1 | STOP — hard gate |
+| Phase Transition | Required Artifact | Enforcement Layer | Tier | If Missing |
+|---|---|---|---|---|
+| Phase 2b → 2c | `.kimi/foundation-audit.md` | Layer 1 (prompt) | C | Re-spawn auditor |
+| Phase 3b → 3d | `.kimi/implementation-audit.md` | Layer 1 (prompt) | C | Re-spawn auditor |
+| Phase 4 → 5 | `.kimi/phase4-gate.md` with `PASS` | **Layer 2** (gate-guardian.sh) + Layer 1 | **A** | Route to Phase 7 |
+| Phase 5 → 6 | `.kimi/security-report.md` | Layer 1 (prompt) | C | Re-spawn security |
+| Phase 6 → 7 | `.kimi/synthesis-integration.md` | **Layer 2** (boundary-guardian.sh) + Layer 1 | **A** | Re-spawn coordinator + auditor |
+| Phase 7 → 4/8 | `.kimi/re-audit-report.md` | Layer 1 (prompt) + S5 shell verify | **B** | Fix wave NOT complete |
+| Phase 8 → 8b | `.kimi/lessons.md` with structured entry | Layer 1 (prompt) + S5 shell verify | **B** | Write missing entries |
+| Phase 8b → 8c | `.kimi/meta-report.md` | Layer 1 (prompt) | C | Re-spawn vsm_meta |
+| Phase 8b → 8c | `.kimi/process-audit.md` | Layer 1 (prompt) | C | Re-spawn process_auditor |
+| Phase 8c → end | `.kimi/mutations-applied.md` + updated `mutation-state.md` | **Layer 2** (stop-verifier.sh) + Layer 1 | **A** | STOP — hard gate |
 
 ### Override Protocol
 

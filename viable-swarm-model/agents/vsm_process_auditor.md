@@ -78,6 +78,25 @@ was followed correctly.
      blind to known failure modes. This was the root cause of H209 recurring for
      4 consecutive builds (FB23→FB26).
 
+8. **Causal Index Compliance (NEW — 2026-06-04 audit)**
+   - Does `~/vsm/viable-swarm-model/references/causal-index.md` exist?
+   - Does it contain an entry for this build with score, hypotheses tested,
+     and mutations applied?
+   - Are all mutations from `.kimi/mutations-applied.md` traceable in the index?
+   - **Finding**: Missing causal index entry is a MEDIUM process violation.
+     The organism cannot maintain longitudinal learning without causal linkage.
+
+9. **Stack Skill Read Compliance (NEW — 2026-06-04 audit)**
+   - For each agent spawned, does its output or completion response contain
+     evidence that it read its assigned stack skill(s)?
+   - Check: `vsm_backend_coder` → python-pitfalls, sqla-patterns, backend-patterns
+   - Check: `vsm_frontend_coder` → typescript-pitfalls, frontend-patterns
+   - Check: `vsm_backend_tester` → testing-patterns, tester-backend
+   - Check: `vsm_security` → security-patterns, graphql-pitfalls (if GraphQL)
+   - Check: `vsm_devops_coder` → docker-pitfalls
+   - **Finding**: Agent spawn without skill-read evidence is a MEDIUM violation.
+     Unread skills are wasted organizational knowledge.
+
 **Output**:
 Write findings to `.kimi/process-audit.md` using this structure:
 
@@ -95,6 +114,8 @@ Write findings to `.kimi/process-audit.md` using this structure:
 | Phase 8b Mutations | [PASS/FAIL] | [CRITICAL/HIGH/MEDIUM] | [evidence] |
 | Knowledge Broker | [PASS/FAIL] | [MEDIUM] | [evidence] |
 | Phase 0 Broker Read | [PASS/FAIL/SCORE] | [CRITICAL] | [score 0-10] |
+| Causal Index | [PASS/FAIL] | [MEDIUM] | [evidence] |
+| Stack Skill Reads | [PASS/FAIL] | [MEDIUM] | [evidence] |
 
 ## Process Violations
 

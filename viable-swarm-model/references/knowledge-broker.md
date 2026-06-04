@@ -3,7 +3,7 @@
 > **Updated by**: S5 during Phase 8 / coach Phase 5 / gym Phase 5 (curated tables)
 > **Read by**: All three skills at Phase 0 (MANDATORY)
 > **Schema version**: 1.2
-> **Last updated**: 2026-06-02
+> **Last updated**: 2026-06-04
 
 ---
 
@@ -26,13 +26,15 @@
 | ID | Gap | First Seen | Last Seen | Mutations Attempted | Status |
 |---|---|---|---|---|---|
 | G1 | Foundation BLOCKERs in every build | FB1 | FB25 | R19, R20, FB21-8 | Partially effective — still recurring |
-| G2 | Phase 4 gate bypass when 1 test fails | FB20 | FB24 | FB24-1, FB25-S1 | PENDING — FB25 did not bypass |
-| G3 | Frontend stub pages (no live data fetch) | FB21 | FB24 | FB22-2, H157 | Ineffective — recurred FB23, FB24 |
-| G4 | Inline fixes during Phase 6/7 boundary | FB20 | FB23 | FB23-3, FB25-S2 | Ineffective — recurred FB23 |
-| G5 | Integration ISSUEs orphaned (not fixed or documented) | FB21 | FB25 | FB24-2, Phase 7d | PENDING — FB25 had ISSUE sweep |
-| G6 | `mutations-applied.md` checkpoint bypassed | FB23 | FB25 | FB18-10, FB25-S2 | Ineffective — recurred FB24, FB25 |
-| G7 | Module-level Celery instantiation | FB23 | FB25 | H155 | PENDING — FB25 wiring audit caught it |
-| G8 | Socket.IO non-functional | FB21 | FB24 | H66 | PENDING — not tested recently |
+| G2 | Phase 4 gate bypass when 1 test fails | FB20 | FB24 | FB24-1, FB25-S1 | **RESOLVED** — FB25-FB29 zero bypasses |
+| G3 | Frontend stub pages (no live data fetch) | FB21 | FB24 | FB22-2, H157 | **RESOLVED** — zero stubs in FB25-FB29 |
+| G4 | Inline fixes during Phase 6/7 boundary | FB20 | FB23 | FB23-3, FB25-S2 | **RESOLVED** — zero inline fixes FB25-FB29 |
+| G5 | Integration ISSUEs orphaned (not fixed or documented) | FB21 | FB25 | FB24-2, Phase 7d | **RESOLVED** — FB28-FB29 systematic ISSUE sweep |
+| G6 | `mutations-applied.md` checkpoint bypassed | FB23 | FB25 | FB18-10, FB25-S2, FB26-S3 | **RESOLVED** — FB26-S3 effective; FB27-FB29 all produced file |
+| G7 | Module-level Celery instantiation | FB23 | FB25 | H155 | **RESOLVED** — FB28 wiring audit caught it |
+| G8 | Socket.IO non-functional | FB21 | FB24 | H66 | PENDING — not tested since FB24 |
+| G9 | Agent timeout avalanche on Tier 2+ | FB28 | FB28 | H217 | **ACTIVE** — FB28 had 5 timeouts; FB29 had 0 after task sizing |
+| G10 | GraphQL security parity gap | FB25 | FB29 | M1 | **ACTIVE** — mutations lack validation/ownership that REST enforces |
 
 ---
 
@@ -48,6 +50,9 @@
 | P4 | Phase 3c mid-wave S2 check on Tier 2+ | FB25 | MEDIUM — correlation suggestive |
 | P5 | Domain-specific fix agents (vsm_backend_fix_agent) | FB25 | HIGH — 0 regressions on 6 modified files |
 | P6 | Prompt-hardened structural gate rules (Layer 1) | FB25 | HIGH — no background agent bypasses detected |
+| P7 | Agent task sizing ≤500 lines per spawn (H217) | FB29 | HIGH — 0 timeouts in FB29 vs 5 in FB28 |
+| P8 | vsm_meta file verification protocol (H215) | FB28 | HIGH — zero file hallucinations |
+| P9 | Early handoff verification Check 16 (H214) | FB28 | HIGH — caught auth raw-dict in Phase 2b |
 
 ---
 
@@ -57,11 +62,11 @@
 
 | Mutation ID | Target Failure | First Ineffective | Builds Where It Failed | Action |
 |---|---|---|---|---|
-| FB23-3 | Inline fix prevention | FB23 | FB23, FB24 | **REMOVE** — replace with tool-enforced boundary |
 | FB22-2 | Frontend stub prevention | FB23 | FB23, FB24 | **REDESIGN** — needs live-data-fetch verification in agent prompt |
-| FB19-7 | Cross-skill mutation log review | FB19 | FB19–FB25 | **REMOVE** — main log still records gym/coach mutations; no longer relevant |
 | FB18-10 | Mutation tracking checkpoint | FB23 | FB23, FB24, FB25 | **REDESIGN** — needs `vsm_meta` output template change + hard gate |
 | FB9 / P46 | Test-First Exit Gate | FB20 | FB20, FB21, FB24 | **REDESIGN** — needs explicit S5 verification command, not just pattern |
+| FB25-S2 | Mutation checkpoint hard gate (prompt-only) | FB26 | FB26 | **REMOVED** — R-3 in cemetery; superseded by FB26-S3 |
+| FB27-1 | UUID coercion via `model_validator` | FB28 | FB28 | **REDESIGNED** — ORM path needed `field_validator`; new rule applied FB28 |
 
 ---
 
@@ -71,9 +76,9 @@
 
 | Build | Target Gap | Trap Description | Expected Agent Catch |
 |---|---|---|---|
-| FB26 | G3 (stub prevention) | Require a dashboard page with real-time WebSocket data; stub page = BLOCKER | vsm_frontend_coder must fetch live data |
-| FB26 | G6 (mutation checkpoint) | Build must produce `mutations-applied.md`; if absent, process auditor flags it | vsm_process_auditor checks for file |
-| FB26 | G1 (foundation BLOCKERs) | Introduce subtle auth role enum mismatch in data models | Phase 2c S5 validation must catch it |
+| FB30 | G9 (agent timeout) | Tier 2+ build with >15 source files; all agents must complete without timeout | Task splitting + timeout fallback protocol |
+| FB30 | G10 (GraphQL parity) | GraphQL mutation must enforce same validation/ownership as REST equivalent | vsm_security checks parity; vsm_auditor cross-references |
+| FB30 | G1 (foundation BLOCKERs) | Introduce subtle auth role enum mismatch in data models | Phase 2c S5 validation + Phase 2d Check 16 |
 
 ---
 
@@ -86,6 +91,8 @@
 | E15 | H105: Generic coder bypasses re-audit | CONFIRMED | vsm_backend_fix_agent prompt hardened |
 | E16 | H106: vsm_meta catches process violations | CONFIRMED | No mutation needed — skill works |
 | E17 | H107: Domain fix agents outperform generic | CONFIRMED | No mutation needed — skill works |
+| E18 | H108: Stack skill reference validation | CONFIRMED | validate-agent-files.py updated |
+| E19 | H109: Knowledge broker auto-update | INCONCLUSIVE | Hook failed; manual update required |
 
 ---
 
@@ -96,7 +103,7 @@
 | Gym → Main | ✅ Functional | E15–E17 produced mutations applied to main skill |
 | Coach → Main | ⚠️ Partial | Trainer scores builds; mutation effectiveness unmeasured |
 | Main → Coach | ⚠️ Partial | Meta-reports rarely referenced in coach Phase 0 |
-| All → Broker | ❌ Broken | This file was empty until 2026-06-02 audit forced population |
+| All → Broker | ✅ Functional | Updated 2026-06-04 with FB27-FB29 entries and curated tables |
 
 ---
 
@@ -118,6 +125,54 @@
 
 *Digest populated during comprehensive audit: 2026-06-02*
 *Next update expected: after FB26 fitness build or next gym batch*
+
+---
+
+## Entry: FB27 — 2026-06-02
+
+**Build**: FB27 (Tier 2, domain unknown)
+**Score**: 3.4/5.0
+**Stack**: FastAPI + SQLAlchemy 2.0 + Strawberry GraphQL + Celery + Redis + PostgreSQL | React 18 + Vite + Apollo Client v3 + Zustand
+
+### Key Learnings
+1. **H302 CONFIRMED**: Session-end audit catches residual bypasses (missing mutations-applied.md, missing process-audit.md)
+2. **Score trend alarm T6 triggered**: 4.0→3.6→3.4 downward trend continues
+3. **Architecture→implementation handoff weakest link**: Foundation, Architecture, Implementation all scored 3/5
+
+### Mutations Applied
+- FB27-1: UUID coercion via `model_validator` — **INEFFECTIVE** (ORM path bypassed)
+- FB27-2: Missing `await` guard — **EFFECTIVE**
+- FB27-3: JWT placeholder prevention — **EFFECTIVE**
+- FB27-4: GraphQL RBAC parity — **EFFECTIVE**
+
+---
+
+## Entry: FB28 — 2026-06-03
+
+**Build**: FB28 EduLearn (Tier 2+)
+**Score**: 3.8/5.0
+**Stack**: FastAPI + SQLAlchemy 2.0 + Strawberry GraphQL + Celery + Redis + PostgreSQL + MinIO | React 18 + Vite + Apollo Client v3 + Zustand
+
+### Key Learnings
+1. **H214 CONFIRMED**: Check 16 early handoff verification caught auth raw-dict in Phase 2b, zero Phase 3c handoff BLOCKERs
+2. **H217 CONFIRMED**: Agent timeout is primary drag on Tier 2+ scores — 5 timeouts forced heavy S5 manual intervention
+3. **H215 CONFIRMED**: vsm_meta file verification protocol works — zero hallucinations
+4. **Downward trend reversed**: 3.4→3.8 (first improvement after 3-build decline)
+
+### Metrics
+- Backend tests: 40 passed, 0 failed
+- Frontend tests: 82 passed, 34 failed (test setup issues, not app bugs)
+- Agent timeouts: 5/10 (CRITICAL — primary score drag)
+- BLOCKERs: 1 code-level (GraphQL context getter lambda)
+- Fix iterations: 1 fix wave + security re-check
+
+### Mutations Applied
+- H217: Agent task sizing ≤500 lines per spawn (SKILL.md Phase 2)
+- H218: GraphQL context getter must be imported function (graphql-pitfalls)
+- H219: Pydantic `type` statement + `Field(alias=...)` warning (python-pitfalls)
+- FB28-S3: Phase 2d Check 16 mandatory for Tier 2+ (structural)
+- FB28-S4: Agent task sizing for Tier 2+ (structural)
+- FB28-S5: Agent timeout fallback protocol (structural)
 
 ---
 

@@ -41,6 +41,18 @@ re-adding the same broken rules.
 **Builds since removal**: 0
 **Recurrence since removal**: —
 
+### R-3 — FB25-S2: Mutation checkpoint hard gate (prompt-only)
+**Removed**: 2026-06-04 (comprehensive audit)
+**Type**: structural
+**Target failure**: Mutation Verification Checkpoint (`mutations-applied.md`) bypassed
+**Applied**: 2026-06-02
+**Ineffective in builds**: FB26 (1 build — 4th consecutive bypass overall)
+**Original rule text**: "Phase 8c-ii completion explicitly depends on three verifiable criteria: (1) file exists, (2) all measured effects non-empty, (3) S5 explicitly states completion."
+**Rationale for removal**: Prompt-only instructions are insufficient to prevent S5 from bypassing checkpoints under session-end time pressure. The mutation was empirically ineffective (Score: 1) — `mutations-applied.md` was still missing in FB26. Superseded by FB26-S3 structural hard gate (tool-enforced, retroactive creation detection, Phase 8c-ii moved BEFORE Phase 8b).
+**Replacement**: FB26-S3 — `stop-verifier.sh` hook blocks session end if checkpoint missing; Phase 8c-ii runs BEFORE Phase 8b.
+**Builds since removal**: 0
+**Recurrence since removal**: —
+
 > **Previous state**: No entries. This organism had never removed a mutation before the 2026-06-02 audit. The removal gate (Phase 8c-ii, Step 8c-6) had never triggered despite 5 ineffective mutations sitting in the Active Mutation Portfolio.
 > **Audit action**: Pre-emptively moved 2 clearly obsolete mutations to cemetery. Remaining 3 ineffective mutations (FB22-2, FB18-10, FB9/P46) await redesign in FB26.
 

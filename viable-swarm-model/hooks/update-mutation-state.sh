@@ -36,7 +36,7 @@ while IFS= read -r line; do
       # Update mutation-log.md: replace [PENDING] with measured effect
       if grep -q "^## Mutation $MUTATION_ID" "$MUTATION_LOG"; then
         # Check if measured effect is already filled
-        if grep -A20 "^## Mutation $MUTATION_ID" "$MUTATION_LOG" | grep -q "Measured effect: \[PENDING\]"; then
+        if grep -A20 "^## Mutation $MUTATION_ID" "$MUTATION_LOG" | grep -qE "Measured effect: \*?\[?PENDING\]?\*?"; then
           # Extract the score from evidence or default to Effective
           if echo "$EVIDENCE" | grep -qi "ineffective"; then
             EFFECT="Ineffective (Score: 1-2) — $EVIDENCE"
@@ -55,7 +55,7 @@ with open('$MUTATION_LOG', 'r') as f:
     content = f.read()
 
 # Find the mutation block and replace [PENDING] in measured effect
-pattern = r'(## Mutation $MUTATION_ID.*?Measured effect: )\[PENDING\]'
+pattern = r'(## Mutation $MUTATION_ID.*?Measured effect: )\\*?\[?PENDING\]?\\*?'
 replacement = r'\1$EFFECT'
 content = re.sub(pattern, replacement, content, flags=re.DOTALL)
 
