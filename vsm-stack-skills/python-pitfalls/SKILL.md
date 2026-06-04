@@ -504,6 +504,9 @@ if str(user.role) != "writer":
 4. Role checks MUST compare against `.value` strings.
 5. Backend tests MUST verify token claims contain plain strings, not
    "Class.member" format.
+6. **NEW (FB29-sourced)**: Foundation audit MUST search `conftest.py` and all test
+   fixtures for `str(role)` or `str(enum)` patterns. The enum bug affects tests
+   too — `conftest.py` auth header fixtures are a common hiding place.
 
 **Source**: FB29 Python 3.14 caused `str(UserRole.writer)` to return
 `"UserRole.writer"` instead of `"writer"`. This broke JWT token generation,

@@ -63,7 +63,7 @@ targeted workouts).
    - `boundary-guardian`: Blocks inline fixes during Phase 6/7 boundary
    - `structural-guardian`: Blocks unapproved SKILL.md/architecture changes
    - `stop-verifier`: Blocks session end if Phase 8c-ii is incomplete; extracts mutation backfill to `.kimi/mutation-backfill.md` (ephemeral)
-   - `session-start/end`: session-start reads skill-state.md; session-end writes telemetry to `.kimi/session-telemetry.md` (ephemeral). **NOTE: session-start.sh hook is DEPRECATED as of FB28 — it has failed to fire for 2 consecutive builds. Use explicit S5 manual checklist in Phase 0 instead (see Step 0b below).**
+   - `session-start/end`: session-start reads skill-state.md; session-end writes telemetry to `.kimi/session-telemetry.md` (ephemeral). **NOTE: session-start.sh hook is DEPRECATED as of FB28 and REMOVED as of FB29 — it has failed to fire in 3 consecutive builds. Use explicit S5 manual checklist in Phase 0 instead (see Step 0b below). The auto-injection mutation (FB26-S5) is INEFFECTIVE and has been removed from the mutation state.**
    - `knowledge-broker`: Append raw session entries to `.kimi/knowledge-broker-log.md` in the build directory
    - `decision-enforcer`: Verifies decisions.md D[N] entry exists
    - `context-pressure`: Alerts when compaction >200k tokens imminent
@@ -698,6 +698,20 @@ Correct fallback sequence:
 3. **Last resort** (explore also fails): S5 may manually verify ONE file only.
    Anything larger must be escalated to the user or the build must be scoped down.
 
+**S5 Manual Work Cap (FB29-sourced)**
+S5 may manually fix at most **ONE file per build**. Any additional manual fixes
+MUST be routed to fix agents (`vsm_backend_fix_agent`, `vsm_frontend_fix_agent`).
+Manual S5 work on implementation details:
+- Consumes S5 context needed for orchestration
+- Bypasses agent learning loops (fix agents don't learn from S5's fixes)
+- Creates process audit violations (scored as "S5 completed agent work")
+
+**Correct pattern**: FB29 double `/auth/auth/` prefix fix should have been routed
+to `vsm_backend_fix_agent`, not fixed by S5 manually.
+
+**Process audit penalty**: Each manual S5 fix beyond the first caps process
+compliance score at 3/5 for that phase.
+
 **Timeout Budget Ledger (FB28-sourced)**
 S5 MUST track timeout counts per phase in `plan.md`:
 ```markdown
@@ -1181,12 +1195,24 @@ S5 MUST spawn `vsm_meta` before proceeding. `vsm_meta` produces the per-build
 `.kimi/meta-report.md`. S5 then synthesizes cross-build insights and appends them to
 `~/vsm/viable-swarm-model/references/meta-reflection.md`.
 
-**Step 8b-2: Spawn `vsm_process_auditor` (MANDATORY)**
+**Step 8b-2: Spawn `vsm_process_auditor` (MANDATORY — HARD BLOCK)**
 After `vsm_meta` completes, spawn `vsm_process_auditor` to audit process
 compliance. This agent reads `.kimi/` artifacts and produces
 `.kimi/process-audit.md` with a compliance score and any process violations
 found. Process violations are separate from code quality issues — they indicate
 that the build workflow itself was not followed correctly.
+
+**CRITICAL (FB29-sourced)**: The process auditor MUST be spawned during the
+original build, not retroactively after the build is "complete." If the process
+auditor is spawned after session compaction or after other Phase 8 artifacts
+exist, its findings are tainted — it evaluates a build that has already been
+"approved" by S5.
+
+**Verification command**: Before declaring Phase 8b complete, S5 MUST run:
+```bash
+ls -la .kimi/process-audit.md && grep -q "vsm_process_auditor\|Process Audit\|Compliance Score" .kimi/process-audit.md && echo "PASS" || echo "FAIL"
+```
+If FAIL, STOP. Spawn `vsm_process_auditor` now.
 
 **Step 8b-3: Verify `.kimi/meta-report.md` and `.kimi/process-audit.md` exist and are valid**
 Before declaring Phase 8b complete, verify ALL of the following:
@@ -1196,6 +1222,21 @@ Before declaring Phase 8b complete, verify ALL of the following:
 4. It contains **Hypotheses Generated** with at least one falsifiable hypothesis.
 5. `.kimi/process-audit.md` exists and contains a compliance score.
 6. ~~`.kimi/mutations-applied.md` exists in the build directory~~ (verified in Phase 8c-ii, which now runs BEFORE Phase 8b).
+
+**NEW (FB29-sourced)**: 8b-3a: Meta-report artifact verification
+`vsm_meta` MUST verify artifact existence on disk before claiming existence
+in the report. For EVERY artifact claimed (re-audit-report, process-audit,
+mutations-applied, etc.), `vsm_meta` MUST run:
+```bash
+ls -la .kimi/[artifact-name].md
+```
+and attach the output to the meta-report. This prevents false claims like
+FB29's "Re-audit report artifact produced" when the file was absent.
+
+**NEW (FB29-sourced)**: 8b-3b: Process auditor retroactive detection
+Check `.kimi/process-audit.md` header/timestamp. If the file was produced
+AFTER `.kimi/meta-report.md` or `.kimi/lessons.md`, flag as retroactive and
+cap compliance score at 2/5.
 
 If any check fails, Phase 8b is NOT complete. Re-spawn the relevant agent with
 explicit instructions to include the missing sections.
@@ -1228,6 +1269,12 @@ with incorrect sequencing.
 test -f .kimi/mutations-applied.md && grep -qE "Build FB[0-9]+|Mutation" .kimi/mutations-applied.md && echo "PASS" || echo "FAIL: Write .kimi/mutations-applied.md now"
 ```
 If FAIL, do not spawn any Phase 8b agents. Write the file.
+
+**FB25-S2 REDESIGN NOTE**: The mutation checkpoint (FB25-S2) was INEFFECTIVE
+because prompt-only enforcement fails when agents rush. The `stop-verifier.sh`
+hook now provides tool-enforced blocking at session end. S5 MUST NOT rely on
+willpower — the hook will physically block session completion if the checkpoint
+is bypassed.
 
 **Step 8c-1: Produce `.kimi/mutations-applied.md`**
 Create a tracking artifact in the `.kimi/` subdirectory (`mutations-applied.md`)
@@ -1285,6 +1332,14 @@ This script automatically:
 - Replaces `[PENDING]` measured effects in `references/mutation-log.md`
 - Updates status fields based on build scores
 
+**NEW (FB29-sourced)**: After running the script, S5 MUST verify the current
+build ID appears in `references/mutation-state.md`:
+```bash
+grep -q "FB[0-9]\+" ~/vsm/viable-swarm-model/references/mutation-state.md && echo "PASS" || echo "FAIL"
+```
+If FAIL, the script did not work. Manually update `mutation-state.md` before
+proceeding. The process auditor scores this as Check #8 (10 points).
+
 If the script reports errors, fix them before proceeding. If the script is
 missing, S5 MUST manually update `mutation-state.md` and `mutation-log.md`.
 This step is NOT optional — it has been missed in 3 consecutive builds (FB25,
@@ -1311,6 +1366,9 @@ rename `.kimi/mutation-backfill.md` to prevent duplicate application.
 >    or explicitly deferred with rationale
 > 5. S5 explicitly states: "Phase 8c-ii complete. All mutations measured.
 >    [N] new probationary, [M] effective, [O] ineffective removed."
+> 6. **NEW (FB29-sourced)**: The `stop-verifier.sh` hook will verify checks 1-3
+>    at session end. If any check fails, the hook BLOCKS session completion.
+>    S5 cannot bypass this by stopping early or using `/exit`.
 >
 > **Self-enforcement mechanism**: Before spawning `vsm_process_auditor`, S5 MUST
 > verify `.kimi/mutations-applied.md` exists. If it does not exist, STOP — do not

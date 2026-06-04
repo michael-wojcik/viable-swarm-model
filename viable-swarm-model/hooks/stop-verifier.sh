@@ -111,4 +111,42 @@ if [[ -f "$MUTATION_LOG" ]]; then
     fi
 fi
 
+# Check 3: Process auditor MUST exist and be non-retroactive (FB29-sourced PM1)
+# Detect if process-audit.md was produced during the build or retroactively
+if [[ -f "$KIMI_DIR/process-audit.md" ]]; then
+    PA_MTIME=$(stat -f%m "$KIMI_DIR/process-audit.md" 2>/dev/null || stat -c%Y "$KIMI_DIR/process-audit.md" 2>/dev/null || echo 0)
+    # If process-audit.md is newer than lessons.md or meta-report.md, it's retroactive
+    for artifact in "$KIMI_DIR/lessons.md" "$KIMI_DIR/meta-report.md"; do
+        if [[ -f "$artifact" ]]; then
+            ART_MTIME=$(stat -f%m "$artifact" 2>/dev/null || stat -c%Y "$artifact" 2>/dev/null || echo 0)
+            if [[ "$ART_MTIME" -gt 0 && "$PA_MTIME" -gt "$ART_MTIME" ]]; then
+                echo "STOP BLOCKED by stop-verifier.sh: process-audit.md was created AFTER other Phase 8 artifacts. Process auditor must be spawned DURING the build, not retroactively." >&2
+                echo '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"Retroactive process-audit.md detected. Spawn vsm_process_auditor during Phase 8b, not after."}}'
+                exit 0
+            fi
+        fi
+    done
+else
+    # process-audit.md is missing entirely — block if this looks like a completed build
+    if [[ -f "$KIMI_DIR/meta-report.md" || -f "$KIMI_DIR/lessons.md" ]]; then
+        echo "STOP BLOCKED by stop-verifier.sh: process-audit.md is missing. Spawn vsm_process_auditor during Phase 8b before completing the build." >&2
+        echo '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"process-audit.md missing. Spawn vsm_process_auditor during Phase 8b."}}'
+        exit 0
+    fi
+fi
+
+# Check 4: mutation-state.md MUST contain current build ID (FB29-sourced PM3)
+# Extract build ID from mutations-applied.md
+BUILD_ID=""
+if [[ -f "$MUTATIONS_FILE" ]]; then
+    BUILD_ID=$(grep -oE 'FB[0-9]+' "$MUTATIONS_FILE" | head -1)
+fi
+if [[ -n "$BUILD_ID" && -f "$HOME/vsm/viable-swarm-model/references/mutation-state.md" ]]; then
+    if ! grep -q "$BUILD_ID" "$HOME/vsm/viable-swarm-model/references/mutation-state.md"; then
+        echo "STOP BLOCKED by stop-verifier.sh: mutation-state.md does not contain build ID $BUILD_ID. Run update-mutation-state.sh before stopping." >&2
+        echo '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"mutation-state.md missing build ID. Run update-mutation-state.sh ."}}'
+        exit 0
+    fi
+fi
+
 exit 0

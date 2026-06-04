@@ -293,9 +293,12 @@ async def update_article(id: UUID, data: ArticleUpdateInput, info: Info) -> Arti
 **Prevention rules**:
 1. For every REST endpoint with validation/ownership, the corresponding GraphQL
    mutation MUST have equivalent checks.
-2. Security audit MUST cross-reference REST and GraphQL for every mutation.
-3. Implementation audit MUST verify GraphQL mutation parity with REST.
-4. Password policy, upload limits, and ownership guards MUST apply equally.
+2. **CRITICAL (FB29-sourced)**: If REST `_check_owner()` blocks ALL non-authors
+   (including admin), GraphQL MUST NOT add an admin override. The parity must be
+   exact — same roles, same exceptions, same bypass conditions.
+3. Security audit MUST cross-reference REST and GraphQL for every mutation.
+4. Implementation audit MUST verify GraphQL mutation parity with REST line-by-line.
+5. Password policy, upload limits, and ownership guards MUST apply equally.
 
 **Source**: FB29 GraphQL `register` accepted passwords < 8 chars (REST enforced
 min_length=8). GraphQL `update_article` allowed editors to modify ANY article

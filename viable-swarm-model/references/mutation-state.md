@@ -25,7 +25,7 @@
 | ID | Source | Type | Target Failure | Status | Builds Tested | Effectiveness Score | Linked Hypothesis | Linked Experiment |
 |---|---|---|---|---|---|---|---|---|
 | FB25-S1 | FB25 Coach | structural | False hook claim | effective | 2 | 5 | H300 | E17 |
-| FB25-S2 | FB25 Coach | structural | Mutation checkpoint bypass | ineffective | 2 | 1 | H209 | — |
+| FB25-S2 | FB25 Coach | structural | Mutation checkpoint bypass | **redesign** | 3 | 1 | H209 | — |
 | FB24-1 | FB24 Build | append-only | Phase 4 gate bypass | effective | 3 | 5 | H154 | — |
 | FB24-2 | FB24 Build | append-only | Enum type safety | effective | 3 | 5 | H203 | — |
 | FB23-4 | FB23 Build | append-only | Frontend build verification | effective | 4 | 5 | H154 | — |
@@ -45,8 +45,8 @@
 | FB26-S2 | FB26 Build | append-only | .dockerignore co-creation | effective | 1 | 5 | H210 | — |
 | FB26-S3 | FB26 Build | structural | H209 hard gate | effective | 1 | 5 | H209 | E20 |
 | FB26-S4 | FB26 Build | structural | Phase 0 broker/state read | effective | 1 | 5 | — | — |
-| FB26-S5 | FB26 Build | structural | Session-start auto-injection | **removed** | 2 | 2 | — | FB28 |
-| FB26-S6 | FB26 Build | structural | Process auditor broker scored check | effective | 1 | 5 | — | — |
+| FB26-S5 | FB26 Build | structural | Session-start auto-injection | **removed** | 3 | 2 | — | FB29 |
+| FB26-S6 | FB26 Build | structural | Process auditor broker scored check | **redesign** | 2 | 2 | — | — |
 
 ---
 
@@ -54,7 +54,9 @@
 
 | ID | Source | Type | Target Failure | First Ineffective | Builds Failed | Action Required | Deadline Build |
 |---|---|---|---|---|---|---|---|
-| *(none currently)* | | | | | | | |
+| FB25-S2 | FB25 Coach | structural | Mutation checkpoint bypass | FB26 | 3 | Redesign with tool-enforced gate (stop-verifier.sh) | FB30 |
+| FB26-S5 | FB26 Build | structural | Session-start auto-injection | FB28 | 3 | Remove — hook fails in build contexts | FB29 (removed) |
+| FB26-S6 | FB26 Build | structural | Process auditor broker scored check | FB29 | 1 | Redesign with hook-enforced spawn | FB30 |
 
 ---
 
