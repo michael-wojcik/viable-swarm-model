@@ -13,6 +13,7 @@
 | security-patterns | Auth, input validation, secrets, rate limiting, data exposure | security, auditor, coordinator, all coders | — |
 | devops-patterns | Containers, compose, healthchecks, CI/CD | devops_coder, coordinator | — |
 | research-patterns | Investigating unfamiliar technologies | architect, explore, meta | — |
+| kimi-code-migration | Port VSM skills to kimi-code CLI (no custom agents) | coordinator, meta | — |
 
 ## Pitfall Skills
 | Skill | Language | Status | Description |

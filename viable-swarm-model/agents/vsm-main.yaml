@@ -105,6 +105,12 @@ agent:
     vsm_synthesizer:
       path: ./vsm_synthesizer.yaml
       description: S2 Synthesis
+    vsm_variety_engineer:
+      path: ./vsm_variety_engineer.yaml
+      description: S4* Variety Engineer — environmental scanning
+    vsm_learning_curator:
+      path: ./vsm_learning_curator.yaml
+      description: S5* Learning Curator — mutation portfolio management
     vsm_trainer:
       path: ../../vsm-fitness-coach/agents/vsm_trainer.yaml
       description: S3* Evaluator — Fitness Trainer

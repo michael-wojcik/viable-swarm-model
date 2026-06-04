@@ -1,0 +1,12 @@
+version: 1
+agent:
+  extend: vsm-reporter
+  name: vsm_learning_curator
+  system_prompt_path: ./vsm_learning_curator.md
+  description: S5* Learning Curator — mutation portfolio management and lifecycle oversight
+  tools:
+    - "kimi_cli.tools.shell:Shell"
+    - "kimi_cli.tools.file:ReadFile"
+    - "kimi_cli.tools.file:Glob"
+    - "kimi_cli.tools.file:Grep"
+    - "kimi_cli.tools.file:WriteFile"

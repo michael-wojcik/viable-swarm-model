@@ -175,3 +175,67 @@
 ---
 
 *Consolidated during comprehensive audit: 2026-06-04. Previous append-only structure (404 lines, 20+ duplicates) replaced with single master table. Pre-consolidation archive added 2026-06-04.*
+
+---
+
+## Skill State Sections (Merged from skill-state.md — 2026-06-04)
+
+> **Note**: `references/skill-state.md` has been merged into this file to eliminate
+> staleness duplication. All self-model data lives in one place.
+
+### Capability Matrix
+| Agent | Domain | Success Rate | Last 3 Scores | Known Failure Modes |
+|-------|--------|-------------|---------------|---------------------|
+| vsm_backend_coder | Python/FastAPI | 85% | 4, 4, 4 | Import loops, missing deps |
+| vsm_frontend_coder | React/TS/Vite | 70% | 4, 3, 2 | Stub pages (improving), void-referenced imports |
+| vsm_security | Auth/GraphQL | 80% | 4, 4, 3 | Misses enum runtime bugs, CORS wildcard severity |
+| vsm_auditor | Code review | 80% | 4, 4, 3 | Duplicates checks across foundation/implementation |
+| vsm_architect | Design | 85% | 4, 4, 5 | Scope creep without product brief guardrails |
+| vsm_coordinator | Integration | 75% | 4, 3, 4 | Drift detection only active on Tier 2+ builds |
+| vsm_wiring | Entry-point wiring | 80% | 4, 4, 3 | Router registration misses, module-level instantiation |
+| vsm_backend_tester | Test writing | 75% | 4, 3, 4 | Incomplete coverage, missing edge cases |
+| vsm_frontend_tester | Test writing | 70% | 4, 3, 3 | Build verification gaps |
+| vsm_devops_coder | Docker/CI | 75% | 4, 3, 4 | Health check omissions, .dockerignore absence |
+| vsm_meta | Meta-evaluation | 70% | 3, 3, 3 | Cannot enforce mutations-applied.md |
+| vsm_process_auditor | Process compliance | 65% | 3, 3, 2 | Broker freshness scored as informational |
+| vsm_variety_engineer | Environmental scanning | — | — | New agent — unmeasured |
+| vsm_learning_curator | Portfolio management | — | — | New agent — unmeasured |
+
+### Known Unknowns (with confidence)
+| Hypothesis | Confidence | Last Tested | Priority | Status |
+|------------|-----------|-------------|----------|--------|
+| H150: Dependency verification prevents 100% of bad imports | 75% | FB21 | HIGH | untested |
+| H154: `npm run build` as Phase 4 hard gate prevents TS leaks | 80% | FB24 | CRITICAL | partially confirmed |
+| H157: Frontend stubs correlate with missed checklist items | 70% | FB24 | HIGH | confirmed |
+| H201: Custom agent files reduce tokens by >30% | 60% | NEVER | HIGH | untested |
+| H202: Tool-enforced read-only boundaries > prompt-only | 85% | NEVER | CRITICAL | untested |
+| H203: SQLAlchemy Mapped[Enum] = mapped_column(String) bug | 80% | NEVER | MEDIUM | untested |
+| H300: Background subagents bypass hooks | **CONFIRMED** | 2026-06-02 | CRITICAL | confirmed |
+| H301: Prompt-hardened rules prevent background bypasses | 70% | NEVER | HIGH | untested |
+| H302: session-end audit catches residual bypasses | 70% | FB27 | MEDIUM | confirmed |
+
+### Temporal Patterns
+- **T1**: Frontend stubs — RESOLVED (0 in FB25-FB29)
+- **T2**: Phase 4 gate bypass — RESOLVED (FB24-1 effective)
+- **T3**: Inline fixes during Phase 6/7 — IMPROVED (0 in FB25-FB29)
+- **T4**: Security gate misses enum runtime — RESOLVED (FB24-2 effective)
+- **T5**: mutations-applied.md bypass — RESOLVED (FB26-S3 effective)
+- **T6**: Score regression alarm — ACTIVE (4.0→3.6→3.4, reversed to 4.2 in FB29)
+- **T7**: Architecture→implementation handoff weakest link — ACTIVE (Check 16 added)
+- **T8**: Mutation bloat without removal — ACTIVE (51 active, 18 probationary — new structural mutation SM9 addresses)
+- **T9**: Knowledge broker manual update failure — ACTIVE (auto-broker-update.sh addresses)
+
+### Efficiency Baselines
+| Metric | Rolling Avg (5 builds) | Last Build | Trend |
+|--------|----------------------|------------|-------|
+| Agents spawned | 13.6 | 14 | → |
+| File writes | 50.0 | 52 | → |
+| Session time (min) | 40 | 38 | → |
+| Context compactions | 2.6 | 3 | → |
+| Tool calls per build | ~192 | ~195 | → |
+| Process violations per build | 2.4 | 2 | ↓ |
+| Mutation backfill rate | 0.12 | 0 | ↓ |
+
+---
+
+*Skill state merged during comprehensive audit: 2026-06-04*

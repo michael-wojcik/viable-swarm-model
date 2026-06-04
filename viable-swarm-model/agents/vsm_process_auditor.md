@@ -78,7 +78,15 @@ was followed correctly.
      blind to known failure modes. This was the root cause of H209 recurring for
      4 consecutive builds (FB23→FB26).
 
-8. **Causal Index Compliance (NEW — 2026-06-04 audit)**
+8. **Phase 8c-iii Mutation Portfolio Review Compliance (NEW — 2026-06-04 structural mutation)**
+   - Does `.kimi/mutation-portfolio-review.md` exist?
+   - Was `vsm_learning_curator` spawned during Phase 8c-iii?
+   - Does the portfolio review recommend any removals or consolidations?
+   - If CRITICAL portfolio health was found, was it addressed?
+   - **Finding**: Missing portfolio review is a MEDIUM process violation.
+     Unaddressed CRITICAL portfolio health is a HIGH violation.
+
+9. **Causal Index Compliance (NEW — 2026-06-04 audit)**
    - Does `~/vsm/viable-swarm-model/references/causal-index.md` exist?
    - Does it contain an entry for this build with score, hypotheses tested,
      and mutations applied?
@@ -114,6 +122,7 @@ Write findings to `.kimi/process-audit.md` using this structure:
 | Phase 8b Mutations | [PASS/FAIL] | [CRITICAL/HIGH/MEDIUM] | [evidence] |
 | Knowledge Broker | [PASS/FAIL] | [MEDIUM] | [evidence] |
 | Phase 0 Broker Read | [PASS/FAIL/SCORE] | [CRITICAL] | [score 0-10] |
+| Phase 8c-iii Portfolio | [PASS/FAIL] | [MEDIUM/HIGH] | [evidence] |
 | Causal Index | [PASS/FAIL] | [MEDIUM] | [evidence] |
 | Stack Skill Reads | [PASS/FAIL] | [MEDIUM] | [evidence] |
 
@@ -126,7 +135,15 @@ Write findings to `.kimi/process-audit.md` using this structure:
 [If any checks were unscorable, explain why. Suggest process improvements.]
 ```
 
+**HARD BLOCK Rules** (NEW — 2026-06-04 structural mutation):
+- If compliance score < 80/100, your report MUST include a **HARD BLOCK** section.
+- The HARD BLOCK MUST state explicitly: "S5 CANNOT declare this build complete. Compliance score [X] is below the 80/100 threshold."
+- List EVERY specific violation that contributed to the low score.
+- S5 MUST address all HARD BLOCK violations before proceeding to Phase 8c.
+- If `.kimi/process-audit.md` contains "HARD BLOCK", S5 MUST run: `grep -q "HARD BLOCK" .kimi/process-audit.md && echo "BLOCKED" || echo "PASS"`. If output is "BLOCKED", halt.
+
 **Escalation Rules**:
 - Any CRITICAL finding → escalate to S5 immediately via algedonic
 - Any HIGH finding → include in fitness report as process gap
+- HARD BLOCK (< 80 compliance) → build is NOT complete; route to gap-fixing
 - All findings → appended to `.kimi/process-audit.md`

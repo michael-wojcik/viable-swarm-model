@@ -183,6 +183,23 @@ by the next build.
    design build traps that target recently identified weaknesses. If the broker is
    empty or >7 days old, emit algedonic: "Knowledge broker stale."
 6. Check for `~/vsm-fitness-builds/coach/FB[N+1]-prompt-draft.md` (from Phase 6 of previous build)
+7. **Heartbeat Check (MANDATORY — 2026-06-04 structural mutation)**:
+   Compute days since last fitness build:
+   ```bash
+   LAST_BUILD_DIR=$(ls -td ~/vsm-fitness-builds/coach/FB*/ 2>/dev/null | head -1)
+   LAST_BUILD_DATE=$(stat -f "%Sm" -t "%Y-%m-%d" "$LAST_BUILD_DIR" 2>/dev/null || echo "unknown")
+   ```
+   If days since last build > 7, emit algedonic:
+   "Fitness build overdue. Last build: [FB-N] on [date]. Invoke `/flow:vsm-fitness-coach` to maintain learning velocity."
+   
+8. **Gym Trigger Check (MANDATORY — 2026-06-04 structural mutation)**:
+   Count untested hypotheses:
+   ```bash
+   grep -c "status: untested" ~/vsm/viable-swarm-model/references/hypotheses.md
+   ```
+   If count > 10, emit algedonic:
+   "Hypothesis backlog exceeds 10 untested items. Before designing next fitness build, run `/flow:vsm-fitness-gym` to clear backlog."
+   This is NOT optional — gym experiments validate hypotheses before fitness builds test them at scale.
 
 **Step 0b: Consume or synthesize**
 - **If a prompt draft exists**: Use it directly as the build specification.
@@ -536,13 +553,31 @@ synthesis, the process auditor will score this as a CRITICAL process violation.
 
 Follow this synthesis protocol **exactly**. Do not skip steps.
 
+#### Step 0: Score Trend & Regression Detection (MANDATORY — 2026-06-04 structural mutation)
+Before synthesizing the next build, compute the score trend:
+```bash
+python3 ~/vsm/viable-swarm-model/scripts/build-health-dashboard.py ~/vsm-fitness-builds/coach/
+```
+Read `.kimi/health-dashboard.md` (produced by the script).
+
+**Regression Build Auto-Trigger**:
+If the health dashboard shows a declining trend (last 3 builds each lower than previous):
+1. Select the highest-scoring previous build that scored ≥ 4.0 as "gold standard"
+2. If no build scored ≥ 4.0, select the highest-scoring build
+3. Emit algedonic: "Score trend declining. Regression build REQUIRED to validate mutation effectiveness."
+4. Proceed to Step R (regression build prompt) instead of Step 1
+
+**Downward trend example**: FB27=3.4, FB28=3.8, FB29=4.2 → NOT declining (improving)
+**Downward trend example**: FB27=4.0, FB28=3.6, FB29=3.4 → DECLINING → regression build
+
 #### Step 1: Read all source material
 Read these files in order:
-1. `assets/fitness-report-template.md` — current build's fitness report
-2. `~/vsm/viable-swarm-model/references/hypotheses.md` — updated statuses from Phase 2b
-3. `~/vsm/viable-swarm-model/references/mutation-log.md` — mutations applied in Phase 5
-4. `references/fitness-projects.md` — coverage ledger: previous build domains and results (do not repeat domains)
-5. `assets/prompt-template.md` — the template to fill
+1. `.kimi/health-dashboard.md` — computed score trend and metrics
+2. `assets/fitness-report-template.md` — current build's fitness report
+3. `~/vsm/viable-swarm-model/references/hypotheses.md` — updated statuses from Phase 2b
+4. `~/vsm/viable-swarm-model/references/mutation-log.md` — mutations applied in Phase 5
+5. `references/fitness-projects.md` — coverage ledger: previous build domains and results (do not repeat domains)
+6. `assets/prompt-template.md` — the template to fill
 
 #### Step 2: Extract synthesis inputs
 From the fitness report, extract:

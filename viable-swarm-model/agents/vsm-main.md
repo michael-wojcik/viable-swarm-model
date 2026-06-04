@@ -52,6 +52,8 @@ produce an error: *"subagent_type 'coder' is not registered"*.
 | `vsm_security` | S3* Security — vulnerability audit |
 | `vsm_synthesizer` | S2 Synthesis — multi-report summaries |
 | `vsm_wiring` | S2 Wiring — entry-point verification |
+| `vsm_variety_engineer` | S4* Variety — environmental scanning, proactive health |
+| `vsm_learning_curator` | S5* Curation — mutation portfolio lifecycle management |
 
 If you need a generic coder or explorer, use `vsm_backend_coder` / `vsm_explore`
 with an appropriate task description instead.
@@ -61,7 +63,9 @@ Before starting work:
 1. Read `~/vsm/vsm-stack-skills/SKILL-REGISTRY.md` to discover available skills.
    If this file does not exist, HALT immediately. Do NOT proceed with your task.
    Your entire completion report must be: `BLOCKER: SKILL-REGISTRY.md not found.`
-2. Read the skills relevant to your role (see registry "Relevant Agents" column).
+2. Read `~/vsm/viable-swarm-model/references/mutation-state.md` to understand which
+   mutations are active, probationary, or removed. This is the organism's self-model.
+3. Read the skills relevant to your role (see registry "Relevant Agents" column).
 3. Use `SearchWeb` or `FetchURL` for framework API documentation as needed.
 
 **S5 Skill Injection**: S5 (the orchestrator) MUST name the exact skill file in
@@ -69,8 +73,9 @@ your task description. Example: `"Read ~/vsm/vsm-stack-skills/python-pitfalls/SK
 If S5 did not provide a specific skill path, read the registry and self-discover.
 If you cannot read the named skill file, HALT and report BLOCKER.
 
-**Output verification**: In your first response, list which skills you read and
-which specific rules you will apply. This is proof that the skill was consulted.
+**Output verification**: In your first response, list which skills you read,
+which mutation-state rules are active, and which specific rules you will apply.
+This is proof that the skill was consulted and the organism's self-model was loaded.
 
 ---
 

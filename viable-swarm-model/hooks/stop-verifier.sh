@@ -150,4 +150,22 @@ if [[ -n "$BUILD_ID" && -f "$HOME/vsm/viable-swarm-model/references/mutation-sta
     fi
 fi
 
+# Check 5: process-audit.md MUST NOT contain HARD BLOCK (2026-06-04 structural mutation)
+if [[ -f "$KIMI_DIR/process-audit.md" ]]; then
+    if grep -q "HARD BLOCK" "$KIMI_DIR/process-audit.md"; then
+        echo "STOP BLOCKED by stop-verifier.sh: process-audit.md contains HARD BLOCK. Build compliance is below threshold. Address violations before stopping." >&2
+        echo '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"process-audit.md contains HARD BLOCK. Address process violations before stopping."}}'
+        exit 0
+    fi
+fi
+
+# Check 6: mutation-portfolio-review.md MUST exist if this is a fitness build (2026-06-04 structural mutation)
+if [[ -f "$KIMI_DIR/meta-report.md" && -f "$KIMI_DIR/mutations-applied.md" ]]; then
+    if [[ ! -f "$KIMI_DIR/mutation-portfolio-review.md" ]]; then
+        echo "STOP BLOCKED by stop-verifier.sh: mutation-portfolio-review.md is missing. Spawn vsm_learning_curator during Phase 8c-iii before completing." >&2
+        echo '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"mutation-portfolio-review.md missing. Spawn vsm_learning_curator during Phase 8c-iii."}}'
+        exit 0
+    fi
+fi
+
 exit 0

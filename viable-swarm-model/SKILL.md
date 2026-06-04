@@ -178,6 +178,8 @@ build.
 | **Security** | `vsm_security` subagent | `vsm-reporter` | Custom | Phase 5 | Security findings |
 | **S5-Meta** | `vsm_meta` subagent | `vsm-reporter` | Custom | Phase 8b | Performance evaluation, hypothesis generation |
 | **S5-Process** | `vsm_process_auditor` subagent | `vsm-reporter` | Custom | Phase 8b | Process compliance audit (gate files, re-audit reports) |
+| **S5* (Curation)** | `vsm_learning_curator` subagent | `vsm-reporter` | Custom | Phase 8c-iii | Mutation portfolio review, lifecycle management |
+| **S4* (Variety)** | `vsm_variety_engineer` subagent | `vsm-researcher` | Custom | Phase 0a-15 | Environmental scanning, proactive health assessment |
 | **S1-DevOps** | `vsm_devops_coder` subagent | `vsm-coder` | Custom | Phase 4 | Docker, CI/CD |
 | **Algedonic** | Main agent detects/stops | — | — | Any phase | TaskStop, AskUserQuestion |
 
@@ -616,6 +618,23 @@ Main agent (S5) performs:
      single-session coverage will be partial. Do not pretend the metasystem has
      requisite variety it lacks.
    Log the tier and the agent ceiling in `plan.md`.
+15. **Variety Engineer Spawn (MANDATORY — 2026-06-04 structural mutation)**:
+    Spawn `vsm_variety_engineer` subagent. This S4* agent performs proactive
+    environmental scanning BEFORE the build begins. It reads:
+    - `references/mutation-state.md` — mutation portfolio health
+    - `references/knowledge-broker.md` — cross-skill staleness
+    - `references/hypotheses.md` — backlog age and size
+    - `references/build-health-history.md` — score trends
+    The engineer writes `.kimi/variety-assessment.md` with health metrics and
+    algedonic signals. If any CRITICAL signals are emitted, S5 MUST address them
+    before proceeding. CRITICAL signals include:
+    - Probationary mutations > 18
+    - Untested hypotheses > 10
+    - Score dropped > 0.3 from previous build
+    - Knowledge broker > 7 days stale
+    - No fitness build in > 7 days
+    **Rationale**: Proactive health checks prevent the "Detection ≠ Enforcement"
+    failure mode by surfacing systemic strain before it causes build failures.
 
 **Agent Timeout Policy: No Arbitrary Limits**
 Do NOT set explicit timeouts on foreground agents. The platform default is
@@ -1207,6 +1226,31 @@ write the missing entries before proceeding to `vsm_meta`.
 
 See `references/lessons-template.md` for the full template.
 
+**Step 8a-1: Build Health Dashboard (MANDATORY — 2026-06-04 structural mutation)**
+Before spawning `vsm_meta`, run the build health dashboard:
+```bash
+python3 ~/vsm/viable-swarm-model/scripts/build-health-dashboard.py .
+```
+This script computes longitudinal health metrics and writes:
+- `.kimi/health-dashboard.md` (per-build snapshot)
+- `references/build-health-history.md` (longitudinal record)
+
+S5 MUST read `.kimi/health-dashboard.md` and log any WARNING or CRITICAL
+statuses in `plan.md`. If the dashboard shows a declining score trend,
+emit algedonic: "Score trend declining. Consider regression build or
+mutation portfolio review."
+
+**Step 8a-2: Update Causal Index (MANDATORY — 2026-06-04 structural mutation)**
+Run the causal index updater:
+```bash
+bash ~/vsm/viable-swarm-model/hooks/update-causal-index.sh .
+```
+This links hypotheses, experiments, mutations, and builds in a queryable
+graph. Verify the update:
+```bash
+grep -q "$(date +%Y-%m-%d)" ~/vsm/viable-swarm-model/references/causal-index.md && echo "PASS" || echo "FAIL"
+```
+
 ### Phase 8b: Meta-Reflection + Hypothesis Generation
 After project reflection, spawn `vsm_meta` subagent to evaluate the skill's own
 performance. This agent produces a standalone `.kimi/meta-report.md` with independent
@@ -1412,6 +1456,40 @@ a **consolidation mutation** to REMOVE or REDESIGN those ineffective mutations.
 The skill must prune bloat, not just accumulate rules. Append-only does not
 mean immortal.
 
+### Phase 8c-iii: Mutation Portfolio Review (MANDATORY — 2026-06-04 structural mutation)
+
+After Phase 8c-ii is complete, spawn `vsm_learning_curator` subagent. This S5*
+agent manages the mutation portfolio lifecycle — promoting effective mutations,
+flagging ineffective ones for removal, and proposing consolidations.
+
+**Why this is mandatory**: The organism has 51 active mutations (18 probationary),
+exceeding the healthy threshold of 15 probationary. Without active portfolio
+management, mutation bloat degrades agent performance and obscures effective
+rules under ineffective ones.
+
+**Steps**:
+1. Curator reads `references/mutation-state.md` master table
+2. Curator computes portfolio health metrics (bloat ratio, fill rate, removal velocity)
+3. Curator identifies:
+   - **Promotions**: probation → effective (builds ≥3, score ≥4)
+   - **Promotions**: probation → monitor (builds ≥3, score = 3)
+   - **Removals**: probation → ineffective → removed (builds ≥3, score ≤2)
+   - **Consolidations**: overlapping rules targeting same failure mode
+4. Curator writes `.kimi/mutation-portfolio-review.md`
+5. S5 applies promotions autonomously (updates mutation-state.md in place)
+6. S5 presents removals to user via `AskUserQuestion` (structural mutation protocol)
+7. If curator issues **HARD BLOCK** (CRITICAL portfolio health in ≥2 categories),
+   S5 MUST NOT declare build complete until addressed
+
+**HARD BLOCK check**:
+```bash
+grep -q "HARD BLOCK" .kimi/mutation-portfolio-review.md && echo "BLOCKED" || echo "PASS"
+```
+If BLOCKED, address curator recommendations before proceeding.
+
+**Integration with Phase 8c-ii**: The curator's recommendations may identify
+mutations from Step 8c-6 that should be removed. Apply those removals now.
+
 The main agent (S5) reads the `.kimi/meta-report.md` **Executive Summary**
 section only (first 20 lines). If the report exceeds 100 lines, spawn
 `vsm_synthesizer` with the meta-report path and read `.kimi/synthesis-meta.md`
@@ -1457,23 +1535,24 @@ Before declaring the VSM workflow "complete," S5 MUST verify:
    After applying, delete or rename the ephemeral files to prevent duplicate
    application in future builds.
 
-5b. **Update knowledge broker (MANDATORY — FB28-sourced)**:
-   S5 MUST update `~/vsm/viable-swarm-model/references/knowledge-broker.md`
-   BEFORE declaring the build complete. Session-end hooks are unreliable
-   (failed for 2 consecutive builds, now DEPRECATED). Manual update is required.
-
-   Append a dated entry with:
-   ```markdown
-   ## FB[NN] — [YYYY-MM-DD] — [Score]/5.0
-   - **Domain**: [build domain]
-   - **Score**: [trainer score]/5.0 | Process: [process audit score]/100
-   - **Hypotheses validated**: [H IDs confirmed]
-   - **Hypotheses invalidated**: [H IDs rejected]
-   - **New mutations**: [mutation IDs applied]
-   - **Architecture delta**: [one-line summary of skill structural changes]
-   - **Cross-skill findings**: [coach/gym → athlete learnings]
+5b. **Auto-update knowledge broker (MANDATORY — 2026-06-04 structural mutation)**:
+   S5 MUST run the auto-broker-update hook BEFORE declaring the build complete:
+   ```bash
+   bash ~/vsm/viable-swarm-model/hooks/auto-broker-update.sh .
    ```
-   If the broker file is >7 days old, prepend a staleness warning.
+   This script automatically extracts build metadata from `.kimi/` artifacts and
+   appends a structured entry to `references/knowledge-broker.md`.
+
+   **Verification**:
+   ```bash
+   grep -q "$(date +%Y-%m-%d)" ~/vsm/viable-swarm-model/references/knowledge-broker.md && echo "PASS" || echo "FAIL"
+   ```
+   If FAIL, the hook did not run. Run it manually or update the broker manually
+   using the template from the previous version of this rule.
+
+   **Rationale**: Manual broker updates were the #1 process violation across
+   FB23–FB29. Automation removes the human failure point.
+
    Missing knowledge broker update is a process violation scored by the
    process auditor (−10 points).
 
