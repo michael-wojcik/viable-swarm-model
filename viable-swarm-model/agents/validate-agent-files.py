@@ -15,6 +15,8 @@ Checks:
 8. No orphaned .md files (no matching .yaml, not included by any chain).
 9. No unfilled bracket placeholders ([...]) in leaf agent prompts.
 10. External file references (~/vsm/...) resolve to real paths.
+11. Every skill referenced in agent prompts is listed in SKILL-REGISTRY.md.
+12. Every skill listed in SKILL-REGISTRY.md has a SKILL.md file on disk.
 
 Run from the agents/ directory:
     python3 validate-agent-files.py
@@ -190,6 +192,61 @@ def main():
             full_path = os.path.expanduser(f"~/vsm/{ref}")
             if not os.path.exists(full_path):
                 errors.append(f"{yaml_name} ({sp_path}): external file not found: ~/vsm/{ref}")
+
+    # --- Post-yaml validation: SKILL-REGISTRY completeness ---
+
+    # 11. Verify every skill referenced in agent prompts exists in registry and on disk
+    registry_path = os.path.expanduser("~/vsm/vsm-stack-skills/SKILL-REGISTRY.md")
+    registered_skills = set()
+    if os.path.exists(registry_path):
+        with open(registry_path) as f:
+            registry_content = f.read()
+        # Extract skill names from registry tables
+        for line in registry_content.split('\n'):
+            if line.startswith('|') and not line.startswith('|---'):
+                parts = [p.strip() for p in line.split('|')]
+                parts = [p for p in parts if p]
+                if len(parts) >= 3 and parts[0] not in ('Skill', 'Pattern Skills', 'Pitfall Skills'):
+                    registered_skills.add(parts[0])
+
+    for yaml_name in yaml_files:
+        agent_name = yaml_name.replace(".yaml", "")
+        if agent_name in ("vsm-main",):
+            continue  # Base template references skills generically
+        yaml_path = os.path.join(AGENTS_DIR, yaml_name)
+        data = load_yaml(yaml_path)
+        agent_cfg = data.get("agent", {})
+        sp_path = agent_cfg.get("system_prompt_path")
+        if not sp_path:
+            continue
+        md_path = os.path.join(os.path.dirname(yaml_path), sp_path)
+        if not os.path.exists(md_path):
+            continue
+        with open(md_path) as f:
+            md_content = f.read()
+
+        # Find all skill references: ~/vsm/vsm-stack-skills/NAME/SKILL.md
+        skill_refs = re.findall(r"~/vsm/vsm-stack-skills/([A-Za-z0-9_\-]+)/SKILL\.md", md_content)
+        for skill_name in skill_refs:
+            if skill_name not in registered_skills:
+                errors.append(
+                    f"{yaml_name}: references skill '{skill_name}' NOT in SKILL-REGISTRY.md"
+                )
+            skill_dir = os.path.expanduser(f"~/vsm/vsm-stack-skills/{skill_name}")
+            skill_file = os.path.join(skill_dir, "SKILL.md")
+            if not os.path.exists(skill_file):
+                errors.append(
+                    f"{yaml_name}: references skill '{skill_name}' but ~/vsm/vsm-stack-skills/{skill_name}/SKILL.md does not exist"
+                )
+
+    # 12. Verify every skill in SKILL-REGISTRY.md has a SKILL.md file
+    if registered_skills:
+        for skill_name in registered_skills:
+            skill_file = os.path.expanduser(f"~/vsm/vsm-stack-skills/{skill_name}/SKILL.md")
+            if not os.path.exists(skill_file):
+                errors.append(
+                    f"SKILL-REGISTRY.md lists skill '{skill_name}' but ~/vsm/vsm-stack-skills/{skill_name}/SKILL.md does not exist"
+                )
 
         vars_in_md = extract_vars(md_content)
         defined_args = collect_system_prompt_args(yaml_path)

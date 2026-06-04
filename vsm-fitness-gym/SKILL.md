@@ -56,6 +56,27 @@ symlinks or update absolute paths.
   selects untested items, designs experiments, runs them, and records results.
 - **`/skill:vsm-fitness-gym`** — Load as knowledge reference.
 
+### Coach → Gym Trigger Points
+
+The fitness coach (`vsm-fitness-coach`) MUST invoke the gym in these scenarios:
+
+1. **Hypothesis backlog has ≥3 untested hypotheses** — Before designing the next
+   fitness build, the coach MUST ask the gym to test the oldest untested hypotheses.
+2. **Fitness build reveals a surprising failure** — If a build failure contradicts
+   an existing skill rule (e.g., the skill claims "X prevents Y" but Y occurred anyway),
+   the coach MUST ask the gym to design an experiment isolating X.
+3. **Mutation effectiveness is unclear** — If a mutation has been in `monitor`
+   status for 3+ builds without clear evidence, the coach MUST ask the gym to design
+   a minimal experiment testing the mutation's target failure mode.
+4. **Before proposing structural mutations** — If the coach wants to change
+   agent architecture or workflow logic, the gym MUST first run an experiment
+   verifying the current architecture actually has the claimed flaw.
+
+**Why this matters**: The coach designs training programs; the gym validates them.
+Without gym experiments, the coach proposes mutations based on intuition rather
+than evidence. This was the root cause of FB25-S2 (ineffective mutation that
+passed 4 builds before being caught).
+
 ## 3. Agent Architecture
 
 The fitness gym is a **flow skill** with no internal subagent hierarchy of its own.
@@ -267,6 +288,9 @@ If rejected, log rationale to `references/mutation-log.md`.
 Write all applied mutations to:
 - Main skill: `references/*.md`, `agents/*.md`, `references/hypotheses.md`, `references/experiments.md`, `references/mutation-log.md`
 - Gym self: `references/*.md`, `agents/*.md`, `assets/*.md`, `references/mutation-log.md`
+- **Knowledge broker: `~/vsm/viable-swarm-model/references/knowledge-broker.md` — MANDATORY**
+  - Append a new entry with experiment ID, hypothesis tested, result (confirmed/rejected/inconclusive), and any cross-skill findings
+  - This is the heartbeat of the ecosystem — without it, the organism cannot learn
 - `git commit` all changes with descriptive message
 
 ### Skill-Focused Experiments

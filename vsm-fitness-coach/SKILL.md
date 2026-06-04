@@ -417,6 +417,9 @@ Write all applied mutations to:
 - Main skill: `references/*.md`, `agents/*.md`, `references/hypotheses.md`, `references/experiments.md`, `references/mutation-log.md`
 - Coach self: `references/*.md`, `agents/*.md`, `assets/*.md`, `references/mutation-log.md`
 - Fitness report using `assets/fitness-report-template.md`
+- **Knowledge broker: `~/vsm/viable-swarm-model/references/knowledge-broker.md` — MANDATORY**
+  - Append a new entry with build ID, score, key gaps found, and any cross-skill findings
+  - This is the heartbeat of the ecosystem — without it, the organism cannot learn
 - `git commit` all changes with descriptive message
 
 ### Coach Phase 5b: Structural Mutation Approval Gate (MANDATORY — HARD BLOCK)

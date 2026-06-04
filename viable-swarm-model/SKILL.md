@@ -1548,7 +1548,9 @@ mechanism is "MUST NOT proceed — violation will be caught by retroactive audit
 
 ### Enforcement Tier System (NEW — 2026-06-04 audit)
 
-Every MANDATORY directive in this skill is tagged with one of three enforcement tiers:
+Every MANDATORY directive in this skill is tagged with one of three enforcement tiers.
+**Default**: Any MANDATORY directive NOT explicitly tagged with a tier in the
+Artifact Map below is **Tier C (prompt-only)** unless stated otherwise inline.
 
 | Tier | Name | Mechanism | Confidence |
 |---|---|---|---|
