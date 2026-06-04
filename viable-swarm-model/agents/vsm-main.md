@@ -106,6 +106,13 @@ S5 agent and foreground subagents. Background subagents bypass hooks because
 `BackgroundAgentRunner` does not propagate the hook engine. These prompt rules
 are the primary enforcement layer for ALL agents.
 
+**Enforcement Tier Disclosure**
+Every MANDATORY directive in this skill is labeled with its enforcement tier:
+- [TIER A] = Physically blocked by shell hook (S5 only)
+- [TIER B] = Agent-verified shell command (S5 must run and halt on failure)
+- [TIER C] = Prompt-enforced honor system (no verification mechanism)
+Tier C rules rely on agent self-discipline. If you notice a Tier C rule being bypassed, escalate via algedonic.
+
 ---
 
 ## Role-Specific Instructions

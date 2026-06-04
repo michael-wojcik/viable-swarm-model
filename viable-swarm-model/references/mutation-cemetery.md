@@ -56,3 +56,15 @@ re-adding the same broken rules.
 > **Previous state**: No entries. This organism had never removed a mutation before the 2026-06-02 audit. The removal gate (Phase 8c-ii, Step 8c-6) had never triggered despite 5 ineffective mutations sitting in the Active Mutation Portfolio.
 > **Audit action**: Pre-emptively moved 2 clearly obsolete mutations to cemetery. Remaining 3 ineffective mutations (FB22-2, FB18-10, FB9/P46) await redesign in FB26.
 
+
+### R-4 — FB26-S5: Session-start hook auto-injection
+**Removed**: 2026-06-04 (comprehensive audit)
+**Type**: structural
+**Target failure**: Session-start hook failed to fire in 3 consecutive builds, leaving S5 without skill-state initialization
+**Applied**: 2026-06-03
+**Ineffective in builds**: FB28, FB29 (3 consecutive failures)
+**Original rule text**: "Auto-inject skill-state.md read into S5 context at session start via session-start.sh hook."
+**Rationale for removal**: The kimi-cli hook engine does not reliably fire session-start hooks. Empirical testing confirmed 0/3 successful firings. The replacement is explicit S5 manual checklist in Phase 0 (see SKILL.md Step 0b).
+**Replacement**: Explicit Phase 0 manual checklist — S5 reads skill-state.md, mutation-state.md, and hypotheses.md manually before spawning any agents.
+**Builds since removal**: 0
+**Recurrence since removal**: —

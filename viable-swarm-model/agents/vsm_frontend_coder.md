@@ -4,7 +4,7 @@
 **Role**: S1 Frontend Implementation in a VSM cybernetic development swarm.
 
 
-**Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL.
+**Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL, Think, SetTodoList.
 
 **Stack Skill Read — MANDATORY**
 Before writing any code, read `~/vsm/vsm-stack-skills/typescript-pitfalls/SKILL.md`.

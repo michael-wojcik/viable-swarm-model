@@ -244,3 +244,154 @@ python -m pytest -v  # May fail with OperationalError
 **Alternative**: Use in-memory SQLite (`sqlite+aiosqlite:///:memory:`) for true isolation. However, this requires each test to create its own engine, which is slower. File-based SQLite with cleanup is the pragmatic choice for most builds.
 
 **Source**: FB32 Phase 4 testing wave — 133 tests passed after deleting stale `test.db`, failed with `OperationalError` when run against a corrupted file from a previous interrupted run.
+
+---
+
+## Rule: Fixture Mocking Patterns for Celery, S3, and Email
+
+**Status**: Active (FB26, FB29 empirical)
+**Severity**: MEDIUM
+**Applies to**: vsm_backend_tester, vsm_backend_coder
+
+Async backends frequently call external services (Celery tasks, S3 uploads, SMTP email). Tests that invoke the real services are slow, flaky, or impossible in CI. Incorrect mocking of async functions is a common trap.
+
+**Trap 1: Mocking an async function with a sync return value** (FB26)
+```python
+# WRONG — .delay() returns an AsyncResult, not a dict
+mocker.patch("app.tasks.send_email.delay", return_value={"id": "abc"})
+# Test passes but Celery integration is not actually verified
+
+# CORRECT — mock the Celery task with a proper result mock
+from unittest.mock import MagicMock
+mock_result = MagicMock()
+mock_result.id = "abc"
+mocker.patch("app.tasks.send_email.delay", return_value=mock_result)
+```
+
+**Trap 2: Forgetting to mock S3 client methods in async context** (FB29)
+```python
+# WRONG — mocks the class, not the instance method
+mocker.patch("boto3.client")  # Too broad; may miss actual S3 calls inside the endpoint
+
+# CORRECT — mock the specific S3 method used by the endpoint
+mocker.patch("app.services.media.s3_client.upload_fileobj", return_value=None)
+```
+
+**Trap 3: Email sending in tests** (FB29)
+```python
+# CORRECT — use pytest fixture to capture sent emails
+import pytest
+from unittest.mock import patch
+
+@pytest.fixture
+def mock_smtp():
+    with patch("app.services.email.smtplib.SMTP") as smtp_mock:
+        instance = smtp_mock.return_value.__enter__.return_value
+        yield instance
+
+async def test_registration_sends_email(client, mock_smtp):
+    await client.post("/auth/register", json={...})
+    assert mock_smtp.send_message.called
+```
+
+**Prevention rules**:
+1. **Backend tester MUST mock external service boundaries**, not internal business logic.
+2. **Async functions MUST be mocked with awaitable return values** when called with `await`:
+   ```python
+   mocker.patch("app.services.external.fetch_data", return_value=asyncio.Future())
+   ```
+3. **Verify the mock was called** with correct arguments — a test that mocks but never asserts the call is incomplete.
+4. **Celery tasks**: mock `.delay()` or `.apply_async()`; verify the task name and arguments match the expected enqueue.
+
+**Source**: FB26 mocked Celery incorrectly; task appeared to pass but real worker would have crashed with wrong arguments. FB29 S3 upload tests failed in CI because `boto3` tried to connect to real AWS.
+
+---
+
+## Rule: Frontend Test Environment Setup — jsdom localStorage Mocking
+
+**Status**: Active (FB28-sourced, FB29 confirmed)
+**Severity**: MEDIUM
+**Applies to**: vsm_frontend_tester, vsm_frontend_coder
+
+Vitest with `jsdom` environment does not automatically provide a persistent `localStorage` implementation. Components that read/write `localStorage` on mount crash during test rendering with `TypeError: localStorage is not defined` or `QuotaExceededError`.
+
+**Correct pattern**:
+```ts
+// vitest.config.ts
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+    test: {
+        environment: 'jsdom',
+        setupFiles: ['./src/test/setup.ts'],
+    },
+});
+
+// src/test/setup.ts
+import { vi } from 'vitest';
+
+// Provide a mock localStorage before any component imports
+const localStorageMock = (() => {
+    let store: Record<string, string> = {};
+    return {
+        getItem: (key: string) => store[key] || null,
+        setItem: (key: string, value: string) => { store[key] = value; },
+        removeItem: (key: string) => { delete store[key]; },
+        clear: () => { store = {}; },
+    };
+})();
+
+Object.defineProperty(window, 'localStorage', {
+    value: localStorageMock,
+});
+```
+
+**Incorrect pattern** (MEDIUM):
+```ts
+// No setup file — component crashes on mount when accessing localStorage
+// OR: relying on jsdom's default localStorage which may not reset between tests
+```
+
+**Prevention rules**:
+1. **Frontend tester MUST provide a `localStorage` mock** in the vitest setup file if ANY component touches `localStorage`.
+2. The mock MUST reset between tests (re-initialize store in `beforeEach`).
+3. **Coordinator MUST verify** `vitest.config.ts` includes `environment: 'jsdom'` and a `setupFiles` entry.
+4. If `window.matchMedia` is also used (common with theme toggles), mock it in the same setup file.
+
+**Source**: FB28 frontend tests crashed with `localStorage is not defined` during Zustand store initialization. FB29 theme toggle tests failed because `matchMedia` was also missing from jsdom.
+
+---
+
+## Rule: GraphQL camelCase Test Query Verification (Expanded)
+
+**Applies to**: GraphQL test suites with Strawberry schema
+**Severity**: BLOCKER
+**Source**: FB30, M-FB30-5
+
+Strawberry's `auto_camel_case` defaults to `True`. This means backend model fields defined in `snake_case` are exposed as `camelCase` in the GraphQL schema. Test queries MUST match the schema exactly.
+
+**Automated verification**:
+```bash
+# 1. Export the schema
+strawberry export-schema app.graphql:schema > schema.graphql
+
+# 2. Grep for snake_case in test files — any match is a potential failure
+grep -rn "[a-z]_[a-z]" backend/tests/test_graphql*.py | grep -v "# snake_case OK"
+
+# 3. Better: lint test queries against the schema using a static checker
+# (if available in the project)
+```
+
+**Prevention rules** (expanded from earlier rule):
+1. Backend tester MUST verify ALL GraphQL test queries use camelCase field names.
+2. Backend tester MUST verify mutation input field names are also camelCase:
+   ```graphql
+   # WRONG
+   mutation { createBudget(name: "X", start_date: "2024-01-01") { id } }
+   # CORRECT
+   mutation { createBudget(name: "X", startDate: "2024-01-01") { id } }
+   ```
+3. If `auto_camel_case` is explicitly disabled in the schema, document this in `api-spec.md` and use snake_case consistently.
+4. **Auditor MUST check** that test query files contain zero snake_case field names (excluding comments and string literals).
+
+**Source**: FB30 had 14 GraphQL test failures due to snake_case queries against camelCase schema. M-FB30-5 introduced this explicit verification step. See also `graphql-pitfalls` for resolver-side camelCase traps.

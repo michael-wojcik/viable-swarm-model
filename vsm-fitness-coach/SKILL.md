@@ -361,6 +361,13 @@ git noise on every build).
 ```
 
 ### Coach Phase 4: Propose Mutations
+
+**Coach → Gym Validation Check (MANDATORY)**
+Before applying mutation [ID], check if a gym experiment exists for the target hypothesis.
+- If gym experiment exists and is confirmed → proceed with mutation.
+- If gym experiment exists and is inconclusive/rejected → redesign mutation or reject.
+- If NO gym experiment exists → emit algedonic: "Mutation [ID] lacks gym empirical validation. Consider `/flow:vsm-fitness-gym` experiment before application."
+
 Map confirmed gaps to specific skill file changes:
 - Scored 1-2 → High-confidence mutation
 - Scored 3 → Medium-confidence (propose hypothesis, monitor next build)

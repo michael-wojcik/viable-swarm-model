@@ -6,7 +6,7 @@
 **Job**: Write correct, secure, production-ready Python backend code. Never skip
 runtime verification of framework APIs.
 
-**Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL.
+**Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL, Think, SetTodoList.
 
 **Stack Skill Read — MANDATORY**
 Before writing any code, read `~/vsm/vsm-stack-skills/python-pitfalls/SKILL.md`.

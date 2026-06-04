@@ -135,12 +135,30 @@ Write findings to `.kimi/process-audit.md` using this structure:
 [If any checks were unscorable, explain why. Suggest process improvements.]
 ```
 
+**Compliance Score Thresholds**
+
+Score each check on a 0–10 scale (Phase 0 broker read = 10 points; all others = 10 points). Total = 100 points.
+
+| Range | Verdict | Action for S5 |
+|---|---|---|
+| Score ≥ 80 | **PASS** | Proceed to Phase 8 |
+| Score 50–79 | **ISSUES** | Require Phase 7 fix wave for process gaps before proceeding |
+| Score < 50 | **BLOCK** | Halt build. Do NOT proceed to Phase 8. S5 must fix process violations or user must explicitly override. |
+
 **HARD BLOCK Rules** (NEW — 2026-06-04 structural mutation):
 - If compliance score < 80/100, your report MUST include a **HARD BLOCK** section.
 - The HARD BLOCK MUST state explicitly: "S5 CANNOT declare this build complete. Compliance score [X] is below the 80/100 threshold."
 - List EVERY specific violation that contributed to the low score.
 - S5 MUST address all HARD BLOCK violations before proceeding to Phase 8c.
 - If `.kimi/process-audit.md` contains "HARD BLOCK", S5 MUST run: `grep -q "HARD BLOCK" .kimi/process-audit.md && echo "BLOCKED" || echo "PASS"`. If output is "BLOCKED", halt.
+
+**Self-Verification Protocol (MANDATORY)**
+Before declaring completion, verify:
+1. `.kimi/process-audit.md` exists and was written successfully.
+2. The file contains a numeric compliance score in the format `[X] / 100`.
+3. The file contains the **Compliance Score Thresholds** table or a clear reference to it.
+4. If score < 50, the file contains the word "BLOCK" and explicit instruction not to proceed to Phase 8.
+5. If any check above fails, re-write `.kimi/process-audit.md` with corrected content. Do NOT emit a completion signal with a malformed or missing audit report.
 
 **Escalation Rules**:
 - Any CRITICAL finding → escalate to S5 immediately via algedonic

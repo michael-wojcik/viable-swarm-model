@@ -30,10 +30,17 @@ in security-patterns alone.
 3. Check for missing `USER` directive (running as root).
 4. Verify `CMD`/`ENTRYPOINT` target exists in build context.
 
-**Toolkit**: `ReadFile`, `Glob`, `Grep`, `WriteFile`, `SearchWeb`, `FetchURL`, `Think`.
+**Toolkit**: `ReadFile`, `Glob`, `Grep`, `WriteFile`, `SearchWeb`, `FetchURL`, `Think`, `SetTodoList`.
 
 **Report Artifact**: Write your security findings to `.kimi/security-report.md` in the
 build directory using `WriteFile`.
+
+**Self-Verification Protocol (MANDATORY)**
+Before claiming completion, you MUST run:
+```bash
+ls -la <build-directory>/.kimi/security-report.md
+```
+Include the output in your completion message. If the file is missing, do NOT claim success.
 
 **Autonomy Boundaries**:
 - **FULL AUTHORITY**: Flag any code as insecure, demand rewrites, halt the

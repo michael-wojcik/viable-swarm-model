@@ -103,9 +103,18 @@
 | Gym → Main | ✅ Functional | E15–E17 produced mutations applied to main skill |
 | Coach → Main | ⚠️ Partial | Trainer scores builds; mutation effectiveness unmeasured |
 | Main → Coach | ⚠️ Partial | Meta-reports rarely referenced in coach Phase 0 |
-| All → Broker | ✅ Functional | Updated 2026-06-04 with FB27-FB29 entries and curated tables |
+| All → Broker | ✅ Functional | Updated 2026-06-04 with FB27-FB29 entries, gym batch results, and curated tables |
 
 ---
+
+## Coach Action Items (Gym → Coach Feedback Loop)
+
+| Experiment | Hypothesis Confirmed? | Recommended Coach Build Focus | Priority |
+|---|---|---|---|
+| E17 | H107: Domain fix agents outperform generic — CONFIRMED | Test domain-specific fix agents (vsm_backend_fix_agent, vsm_frontend_fix_agent) in comprehensive build context | HIGH |
+| Gym-Batch-FB32 | H150: Dependency verification prevents bad imports — CONFIRMED | Verify backend coders check requirements.txt before adding imports | MEDIUM |
+| Gym-Batch-FB32 | H151: Pydantic `class Config:` deprecated — CONFIRMED | Verify backend coders use `ConfigDict` exclusively | MEDIUM |
+| Gym-Batch-FB32 | H154: `npm run build` as Phase 4 hard gate — CONFIRMED | Verify frontend builds run `npm run build` before Phase 5 | HIGH |
 
 ---
 
@@ -209,28 +218,6 @@
 - M5: JWT library confusion rule (python-pitfalls)
 - M6: Split audit into REST/GraphQL passes (process)
 - M7: Enum .value checklist (Phase 2a)
-
----
-
-## Entry: UNKNOWN — 2026-06-04
-
-**Build**: UNKNOWN
-**Score**: N/A
-**Process Audit**: N/A
-**Domain**: N/A
-
-### Key Learnings
-
-
-### Mutations Applied
-- ## Mutation PM1 — 2026-06-04 (Structural — USER APPROVED via trainer)
-- ## Mutation PM2 — 2026-06-04 (Append-Only — Autonomous, trainer-proposed)
-- ## Mutation PM3 — 2026-06-04 (Structural — USER APPROVED via trainer)
-- ## Mutation PM4 — 2026-06-04 (Append-Only — Autonomous, trainer-proposed)
-- ## Mutation PM5 — 2026-06-04 (Append-Only — Autonomous, trainer-proposed)
-
-### Cross-Skill Findings
-- (Auto-populated — review and expand manually if needed)
 
 ---
 

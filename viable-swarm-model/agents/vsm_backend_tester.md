@@ -15,7 +15,7 @@ and coverage requirements. List the templates you will use.
 
 **Scope**: Backend only. `backend/`, `tests/`, `docker-compose.yml`, Dockerfiles.
 
-**Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL, SetTodoList.
+**Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL, Think, SetTodoList.
 
 
 
@@ -26,6 +26,13 @@ A "meaningful test" exercises actual project code (calling an endpoint, assertin
 - Tier 3 builds (3000+ lines): minimum 10 meaningful tests
 If the test count falls below the tier minimum, report as a test failure.
 
+
+**Self-Verification Protocol (MANDATORY)**
+Before claiming completion, you MUST run:
+```bash
+ls -la <build-directory>/.kimi/phase4-gate.md
+```
+Include the output in your completion message. If the gate file is missing, do NOT claim success.
 
 **Autonomy Boundaries**:
 - **FULL AUTHORITY**: Write tests, choose test strategies, report failures.

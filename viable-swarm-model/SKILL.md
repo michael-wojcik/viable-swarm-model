@@ -93,7 +93,7 @@ Must be embedded in a message (e.g., `Let's build something. /flow:viable-swarm-
 absolute paths from this root. If installed elsewhere (e.g. via `extra_skill_dirs`),
 use symlinks or update paths in mutation commands.
 
-## 2. Context Budget Rule (MANDATORY)
+## 2. Context Budget Rule ([TIER C: prompt-enforced] MANDATORY)
 
 S5 has a finite context window. Every line consumed by file reads is a line
 unavailable for reasoning. Apply these rules **before every `ReadFile`**:
@@ -149,7 +149,7 @@ will fail with: *"subagent_type 'coder' is not registered"*.
 > If you need a generic coder, use `vsm_backend_coder` or `vsm_frontend_coder`
 > with an explicit task. If you need an explorer, use `vsm_explore`.
 
-**Agent Spawn Hygiene — Context Isolation (MANDATORY)**
+**Agent Spawn Hygiene — Context Isolation ([TIER C: prompt-enforced] MANDATORY)**
 Report-producing agents (all `vsm-reporter` descendants: `vsm_auditor`,
 `vsm_security`, `vsm_coordinator`, `vsm_meta`) MUST always be spawned as
 **new instances** (`subagent_type="..."`) — never via `resume`. Cross-build
@@ -237,7 +237,7 @@ and security gotchas. Replaces generic `coder` for all backend waves. Performs
 runtime framework API verification, subprocess import checks, and test validation.
 Launched via `Agent(subagent_type="vsm_backend_coder")`.
 
-**Stack Skill Injection (MANDATORY)**: When spawning `vsm_backend_coder`, S5 MUST
+**Stack Skill Injection ([TIER C: prompt-enforced] MANDATORY)**: When spawning `vsm_backend_coder`, S5 MUST
 include the stack skill path in the agent's task description:
 `"Read ~/vsm/vsm-stack-skills/python-pitfalls/SKILL.md before writing code."`
 The agent prompt strips embedded gotchas and relies on this file. Do not rely on
@@ -249,7 +249,7 @@ frontend code with embedded domain knowledge of [build tool], [API client], [sta
 frontend waves. Verifies schema introspection before writing GraphQL queries and
 runs `run frontend build` before completion. Launched via `Agent(subagent_type="vsm_frontend_coder")`.
 
-**Stack Skill Injection (MANDATORY)**: When spawning `vsm_frontend_coder`, S5 MUST
+**Stack Skill Injection ([TIER C: prompt-enforced] MANDATORY)**: When spawning `vsm_frontend_coder`, S5 MUST
 include the stack skill path in the agent's task description:
 `"Read ~/vsm/vsm-stack-skills/typescript-pitfalls/SKILL.md before writing code."`
 
@@ -270,7 +270,7 @@ gotchas. Replaces generic `coder` for all infrastructure waves. Verifies Dockerf
 CMD files exist, docker-compose has no `:-` fallbacks, ports match across configs,
 and `.dockerignore` excludes secrets. Launched via `Agent(subagent_type="vsm_devops_coder")`.
 
-**Stack Skill Injection (MANDATORY)**: When spawning `vsm_devops_coder`, S5 MUST
+**Stack Skill Injection ([TIER C: prompt-enforced] MANDATORY)**: When spawning `vsm_devops_coder`, S5 MUST
 include the stack skill path in the agent's task description:
 `"Read ~/vsm/vsm-stack-skills/docker-pitfalls/SKILL.md before writing code."`
 
@@ -399,10 +399,10 @@ flowchart TD
     P2D{<choice>BLOCKERs</choice>?}
     P3[Phase 3: Implementation Wave (3a–3f)<br/>Backend: parallel routers<br/>Frontend: sequential shared→pages]
     P3S[TaskOutput block=true]
-    P3M["Phase 3c: Mid-Wave S2 Check<br/>vsm_coordinator (MANDATORY Tier 2+)"]
+    P3M["Phase 3c: Mid-Wave S2 Check<br/>vsm_coordinator ([TIER C: prompt-enforced] MANDATORY Tier 2+)"]
     P3A[Audit + Coordination<br/>vsm_auditor + vsm_coordinator]
     P3D{<choice>BLOCKERs</choice>?}
-    P3D_WIRING[Phase 3d: Entry-Point Wiring<br/>MANDATORY]
+    P3D_WIRING[Phase 3d: Entry-Point Wiring<br/>[TIER C: prompt-enforced] MANDATORY]
     P3D2[Phase 3e: Frontend Config Validation<br/>S5 checks frontend config files]
     P4[Phase 4: Testing + Infra Wave<br/>vsm_backend_tester + vsm_frontend_tester + vsm_devops_coder]
     P4S[TaskOutput block=true]
@@ -519,7 +519,7 @@ trigger Phase 7 (max 3 iterations), then loop back to the originating phase.
 
 ### Phase 0a: Viability Check + Self-Test
 Main agent (S5) performs:
-0. **Subagent Type Verification — MANDATORY (prevents spawn failures)**:
+0. **Subagent Type Verification — [TIER C: prompt-enforced] MANDATORY (prevents spawn failures)**:
    Confirm you are using **custom VSM agent types ONLY**.
    - ✅ `vsm_backend_coder`, `vsm_frontend_coder`, `vsm_explore`, `vsm_auditor`, etc.
    - ❌ `coder`, `explore`, `plan` — these built-in types are **UNAVAILABLE**
@@ -538,12 +538,12 @@ Main agent (S5) performs:
    if exists. This is the organism's self-model — it knows what it is good/bad at,
    what its current "mood" is, and which mutations are pending measurement.
 6. **Read knowledge broker**: `~/vsm/viable-swarm-model/references/knowledge-broker.md`
-   **MANDATORY**. This contains cross-skill digests from coach and gym — recent gaps,
+   **[TIER C: prompt-enforced] MANDATORY**. This contains cross-skill digests from coach and gym — recent gaps,
    confirmed hypotheses, and suggested experiments. If the broker is empty or
    >7 days old, emit algedonic: "Knowledge broker stale. Cross-skill learning
    may be impaired."
 7. **Read mutation state**: `~/vsm/viable-swarm-model/references/mutation-state.md`
-   **MANDATORY**. This tracks which mutations are active, probationary, ineffective,
+   **[TIER C: prompt-enforced] MANDATORY**. This tracks which mutations are active, probationary, ineffective,
    or removed. S5 MUST know which rules are currently enforced before starting a build.
 9. **Log active traps and probationary mutations in plan.md** **(NEW — FB26-S4)**:
    After reading broker and mutation state, S5 MUST extract and explicitly log:
@@ -580,7 +580,7 @@ Main agent (S5) performs:
     `--agent-file not loaded. Launch with: kimi --agent-file ~/vsm/viable-swarm-model/agents/vsm-main.yaml`.
     Do not proceed with the build.
     
-    **Step 11a: Run agent file validator (MANDATORY — FB27-C)**
+    **Step 11a: Run agent file validator ([TIER C: prompt-enforced] MANDATORY — FB27-C)**
     Before spawning any agents, run:
     ```bash
     cd ~/vsm/viable-swarm-model/agents && python3 validate-agent-files.py > .kimi/validate-agent-files.log 2>&1
@@ -618,7 +618,7 @@ Main agent (S5) performs:
      single-session coverage will be partial. Do not pretend the metasystem has
      requisite variety it lacks.
    Log the tier and the agent ceiling in `plan.md`.
-15. **Variety Engineer Spawn (MANDATORY — 2026-06-04 structural mutation)**:
+15. **Variety Engineer Spawn ([TIER C: prompt-enforced] MANDATORY — 2026-06-04 structural mutation)**:
     Spawn `vsm_variety_engineer` subagent. This S4* agent performs proactive
     environmental scanning BEFORE the build begins. It reads:
     - `references/mutation-state.md` — mutation portfolio health
@@ -837,7 +837,7 @@ Both must be correct before Phase 3 begins.
    **Source**: FB29 Python 3.14 enum change broke 4 files. Caught in Phase 4 testing
    instead of Phase 2a. This checklist prevents the bug from reaching tests.
 
-**Phase 2d: Architecture→Implementation Handoff Verification (Check 16) — MANDATORY for Tier 2+**
+**Phase 2d: Architecture→Implementation Handoff Verification (Check 16) — [TIER C: prompt-enforced] MANDATORY for Tier 2+**
 After foundation audit passes and model/auth validation is complete, S5 MUST run
 Check 16 BEFORE spawning implementation agents. This prevents late BLOCKERs in
 Phase 3c by verifying every architecture artifact has a planned implementation.
@@ -856,7 +856,7 @@ BLOCKER in Phase 2b, preventing a late Phase 3c discovery.
 
 ### Phase 3: Implementation Wave
 Pass Wave 1 outputs as input references. Spawn parallel `vsm_backend_coder` and `vsm_frontend_coder` subagents.
-Entry point wiring MANDATORY after this wave. Audit + coordination check.
+Entry point wiring [TIER C: prompt-enforced] MANDATORY after this wave. Audit + coordination check.
 BLOCKERs trigger Phase 7.
 
 **Frontend Implementation Sub-Wave 3a — Shared Files (sequential, BEFORE pages)**:
@@ -871,7 +871,7 @@ owns these files:
 No other frontend agent may modify these files. The shared-files agent reads
 `data-model.md` and `api-spec.md` to produce complete, correct exports.
 
-**Sub-Wave Sequencing Enforcement (MANDATORY)**:
+**Sub-Wave Sequencing Enforcement ([TIER C: prompt-enforced] MANDATORY)**:
 S5 MUST spawn the shared-files agent for Sub-Wave 3a, wait via `TaskOutput(block=true)`
 for it to complete, verify the shared files exist and contain valid exports, THEN
 spawn Sub-Wave 3b page agents. Parallelizing shared-files and page agents causes
@@ -891,7 +891,7 @@ Backend routers (`app/routers/*.py`) can run in parallel safely because each
 router is a separate file. The wiring agent (`vsm_wiring`) handles `entry point file`
 registration exclusively.
 
-**Phase 3c: Mid-Wave S2 Check (MANDATORY for Tier 2+)** — For ALL Tier 2+
+**Phase 3c: Mid-Wave S2 Check ([TIER C: prompt-enforced] MANDATORY for Tier 2+)** — For ALL Tier 2+
 builds, spawn a lightweight `vsm_coordinator` check on shared contracts after
 the first parallel coder agents complete. This is NOT optional — it is the
 primary mechanism for catching contract drift before it cascades to Phase 4/5.
@@ -915,7 +915,7 @@ under pressure (FB25–FB28). Making this mandatory removes the decision point.
 in validation and ownership. FB29 security audit found 2 HIGH findings caused by
 GraphQL parity gaps.
 
-### Phase 3d: Entry-Point Wiring (MANDATORY)
+### Phase 3d: Entry-Point Wiring ([TIER C: prompt-enforced] MANDATORY)
 After all implementation agents complete, spawn `vsm_wiring` subagent.
 This agent exclusively owns `entry point file`, `realtime.py`, `root component file`, and `main.tsx`.
 It verifies:
@@ -1016,7 +1016,7 @@ or Phase 6 (Integration). Route to Phase 7 (Fix Wave). Fixing downstream integra
 BLOCKERs on top of failing tests is waste. The Phase 4 exit gate is mandatory —
 never treat test failures as "acceptable for now."
 
-**Phase 4 Gate Declaration (MANDATORY — FB28-sourced strengthening, FB31-refined)**
+**Phase 4 Gate Declaration ([TIER A: hook-enforced] MANDATORY — FB28-sourced strengthening, FB31-refined)**
 After aggregating test results, S5 MUST write `.kimi/phase4-gate.md` BEFORE
 spawning any Phase 5 agent. The file MUST contain:
 ```markdown
@@ -1063,7 +1063,7 @@ for the fitness coach's process audit.
    without a `PASS` gate file on disk, emit an algedonic: "Phase 4 gate bypass
    detected. Halting." Then write the gate file with `BLOCK` and route to Phase 7.
 
-**Agent Report Artifacts (MANDATORY)**
+**Agent Report Artifacts ([TIER C: prompt-enforced] MANDATORY)**
 All audit/security/coordinator agents now have `WriteFile` restricted to their own
 report artifacts. They MUST write their reports to the `.kimi/` subdirectory in
 the build directory. S5 MUST verify the report files exist before proceeding.
@@ -1099,7 +1099,7 @@ They MUST NEVER modify source code or build configs with `WriteFile`.
 **Anti-pattern**: Agent appends to tracked reference files → creates uncommitted
 git changes on every build → git noise → merge conflicts → skill drift.
 
-**Agent Notification Truncation Handling (MANDATORY)**
+**Agent Notification Truncation Handling ([TIER C: prompt-enforced] MANDATORY)**
 Agent completion notifications may truncate at ~500 characters. S5 MUST NOT act
 on a partial summary. After every agent returns:
 1. Check if the notification contains a clear PASS/FAIL/BLOCKER verdict and
@@ -1120,7 +1120,7 @@ exceeds 50 lines, spawn `vsm_synthesizer` with the report path and read
 CRITICAL/HIGH → stop, fix, re-audit. LOW → document.
 Gather vs. Stop: planned wave → gather; mid-build → emergency stop.
 
-**Tier 2+ builds (≥ 1000 lines, 2+ services)**: `vsm_security` is MANDATORY.
+**Tier 2+ builds (≥ 1000 lines, 2+ services)**: `vsm_security` is [TIER C: prompt-enforced] MANDATORY.
 If `vsm_security` fails to spawn, errors out, or produces no report, treat this
 as a BLOCKER. Do NOT proceed to Step 5b as a replacement. Investigate the agent
 failure, fix the underlying issue, and re-spawn `vsm_security`. Manual fallback
@@ -1161,7 +1161,7 @@ Spawn `vsm_auditor`. `vsm_coordinator` is optional; S5 may run the integration
 checklist manually if the build surface is small.
 
 **Tier 2+ builds** (≥ 1000 lines, 2+ services):
-`vsm_coordinator` is MANDATORY. Spawn `vsm_coordinator` + `vsm_auditor` in
+`vsm_coordinator` is [TIER C: prompt-enforced] MANDATORY. Spawn `vsm_coordinator` + `vsm_auditor` in
 parallel with `run_in_background=true`. After both complete, spawn
 `vsm_synthesizer` with both report paths to produce `.kimi/synthesis-integration.md`.
 S5 reads only the synthesis, not the raw reports.
@@ -1198,14 +1198,14 @@ spawn both agents in parallel with `run_in_background=true`.
 **Phase 7a — Fix Execution**: Fix agents apply surgical changes and produce
 `.kimi/re-audit-report.md` (advisory only).
 
-**Phase 7b — Binding Re-Audit + Full Test Suite (MANDATORY)**: S5 MUST spawn
+**Phase 7b — Binding Re-Audit + Full Test Suite ([TIER C: prompt-enforced] MANDATORY)**: S5 MUST spawn
 `vsm_auditor` to independently verify ALL modified files. Fix agent self-reports
 are **not** sufficient — the auditor's PASS/ISSUES/BLOCKER verdict is binding.
 Then run `run backend tests` and `run frontend tests` / `run frontend tests`. Re-auditing changed
 files alone misses regressions in unrelated tests. Any remaining BLOCKERs route
 back to Phase 7a. Max 3 iterations across 7a→7b. Still blocked? Escalate to user.
 
-**Phase 7c — Post-Fix Security Re-Check (MANDATORY)**: After fix wave clears
+**Phase 7c — Post-Fix Security Re-Check ([TIER C: prompt-enforced] MANDATORY)**: After fix wave clears
 all BLOCKERs and BEFORE returning to the main flow, S5 MUST spawn `vsm_security`
 with a focused scope (modified files only) to run a lightweight security re-check
 on any file that touches auth, GraphQL, or WebSocket code. If the re-check finds
@@ -1213,7 +1213,7 @@ CRITICAL/HIGH regressions (e.g., a fix agent weakened auth), loop back to Phase 
 This prevents fix/test agents from introducing vulnerabilities after the main
 security gate.
 
-**Phase 7d — Post-Test ISSUE Sweep (MANDATORY)**
+**Phase 7d — Post-Test ISSUE Sweep ([TIER C: prompt-enforced] MANDATORY)**
 After re-audit passes (0 BLOCKERs) and security re-check passes, S5 MUST read
 ALL audit reports (original + re-audit) and compile a list of every ISSUE that
 was NOT fixed during the fix wave. For each unfixed ISSUE, categorize:
@@ -1222,11 +1222,11 @@ was NOT fixed during the fix wave. For each unfixed ISSUE, categorize:
   `[ISSUE-DEFERRED]` tag and rationale
 - `MISSED` — not addressed at all; document with `[ISSUE-MISSED]` tag
 
-Phase 7d is a MANDATORY gate before Phase 8 (Reflection). Builds with `MISSED`
+Phase 7d is a [TIER C: prompt-enforced] MANDATORY gate before Phase 8 (Reflection). Builds with `MISSED`
 ISSUEs score capped at 3.5/5 in fitness evaluation. S5 MUST NOT skip Phase 7d
 by declaring "only BLOCKERs matter."
 
-**Phase 7e — Re-Audit Report Hard Gate (MANDATORY — FB28-sourced structural mutation)**
+**Phase 7e — Re-Audit Report Hard Gate ([TIER A: hook-enforced] MANDATORY — FB28-sourced structural mutation)**
 Before proceeding to Phase 8 (Reflection), S5 MUST verify:
 1. `.kimi/re-audit-report.md` exists in the build directory.
 2. It contains a PASS/ISSUES/BLOCKER verdict from an independent auditor re-run.
@@ -1259,7 +1259,7 @@ Write a standalone `.kimi/lessons.md` in the build directory.
 
 **Minimum entries**: At least one entry for each phase that scored < 4 or produced a BLOCKER.
 
-**Phase 8 Hard Gate — MANDATORY**: Before proceeding to Phase 8b, S5 MUST verify:
+**Phase 8 Hard Gate — [TIER B: shell-verified] MANDATORY**: Before proceeding to Phase 8b, S5 MUST verify:
 1. `.kimi/lessons.md` exists in the build directory.
 2. It contains at least one structured entry with Source, Finding, Fix, Verification,
    and Prevention rule.
@@ -1275,7 +1275,7 @@ write the missing entries before proceeding to `vsm_meta`.
 
 See `references/lessons-template.md` for the full template.
 
-**Step 8a-1: Build Health Dashboard (MANDATORY — 2026-06-04 structural mutation)**
+**Step 8a-1: Build Health Dashboard ([TIER C: prompt-enforced] MANDATORY — 2026-06-04 structural mutation)**
 Before spawning `vsm_meta`, run the build health dashboard:
 ```bash
 python3 ~/vsm/viable-swarm-model/scripts/build-health-dashboard.py .
@@ -1289,7 +1289,7 @@ statuses in `plan.md`. If the dashboard shows a declining score trend,
 emit algedonic: "Score trend declining. Consider regression build or
 mutation portfolio review."
 
-**Step 8a-2: Update Causal Index (MANDATORY — 2026-06-04 structural mutation)**
+**Step 8a-2: Update Causal Index ([TIER C: prompt-enforced] MANDATORY — 2026-06-04 structural mutation)**
 Run the causal index updater:
 ```bash
 bash ~/vsm/viable-swarm-model/hooks/update-causal-index.sh .
@@ -1306,12 +1306,12 @@ performance. This agent produces a standalone `.kimi/meta-report.md` with indepe
 test verification, agent performance scores, rule effectiveness ratings, and
 process bottleneck analysis.
 
-**Step 8b-1: Spawn `vsm_meta` (MANDATORY — HARD BLOCK)**
+**Step 8b-1: Spawn `vsm_meta` ([TIER C: prompt-enforced] MANDATORY — HARD BLOCK)**
 S5 MUST spawn `vsm_meta` before proceeding. `vsm_meta` produces the per-build
 `.kimi/meta-report.md`. S5 then synthesizes cross-build insights and appends them to
 `~/vsm/viable-swarm-model/references/meta-reflection.md`.
 
-**Step 8b-2: Spawn `vsm_process_auditor` (MANDATORY — HARD BLOCK)**
+**Step 8b-2: Spawn `vsm_process_auditor` ([TIER B: shell-verified] MANDATORY — HARD BLOCK)**
 After `vsm_meta` completes, spawn `vsm_process_auditor` to audit process
 compliance. This agent reads `.kimi/` artifacts and produces
 `.kimi/process-audit.md` with a compliance score and any process violations
@@ -1372,7 +1372,7 @@ If this build discovered new empirical pitfalls or validated new patterns:
 3. If new skill needed, create it and update registry
 4. `git commit` skill changes
 
-### Phase 8c-ii: Mutation Verification Checkpoint (MANDATORY — MOVED BEFORE PHASE 8b)
+### Phase 8c-ii: Mutation Verification Checkpoint ([TIER A: hook-enforced] MANDATORY — MOVED BEFORE PHASE 8b)
 This checkpoint MUST run BEFORE spawning `vsm_meta` or `vsm_process_auditor`.
 The recurring failure mode (H209, confirmed FB23→FB26) is that S5 defers this
 until session end, then forgets it. Tool-enforced gates in `stop-verifier.sh`
@@ -1438,7 +1438,7 @@ before Phase 8c-ii is complete. If empty, fill it now based on this build's
 results: Did the mutation prevent its target failure? Did it have no observable
 effect? Did it cause a new issue?
 
-**Step 8c-5a: Auto-update mutation state (MANDATORY — H213)**
+**Step 8c-5a: Auto-update mutation state ([TIER B: shell-verified] MANDATORY — H213)**
 After `.kimi/mutations-applied.md` is complete, S5 MUST run:
 ```bash
 bash ~/vsm/viable-swarm-model/hooks/update-mutation-state.sh .
@@ -1505,7 +1505,7 @@ a **consolidation mutation** to REMOVE or REDESIGN those ineffective mutations.
 The skill must prune bloat, not just accumulate rules. Append-only does not
 mean immortal.
 
-### Phase 8c-iii: Mutation Portfolio Review (MANDATORY — 2026-06-04 structural mutation)
+### Phase 8c-iii: Mutation Portfolio Review ([TIER C: prompt-enforced] MANDATORY — 2026-06-04 structural mutation)
 
 After Phase 8c-ii is complete, spawn `vsm_learning_curator` subagent. This S5*
 agent manages the mutation portfolio lifecycle — promoting effective mutations,
@@ -1550,7 +1550,7 @@ S5 MUST independently run the full test suite (`run backend tests` and `run fron
 upstream phases without verification. If tests fail, the meta-reflection must
 acknowledge the failure and propose a root-cause hypothesis.
 
-### Phase 8d: Build Completion Rules (MANDATORY)
+### Phase 8d: Build Completion Rules ([TIER C: prompt-enforced] MANDATORY)
 
 Before declaring the VSM workflow "complete," S5 MUST verify:
 
@@ -1569,13 +1569,13 @@ Before declaring the VSM workflow "complete," S5 MUST verify:
    Documenting them as "known limitations" and declaring completion is a
    process violation. LOW findings may be documented.
 
-4. **Apply session telemetry to skill-state.md (MANDATORY)**:
+4. **Apply session telemetry to skill-state.md ([TIER C: prompt-enforced] MANDATORY)**:
    Read `.kimi/session-telemetry.md` (written by `session-end.sh` hook) and
    append the telemetry block to `references/skill-state.md`. This keeps the
    organism's self-model current. If the telemetry file is missing, the hook
    did not fire — log this as a process gap.
 
-5. **Apply agent-proposed ephemeral files (MANDATORY)**:
+5. **Apply agent-proposed ephemeral files ([TIER C: prompt-enforced] MANDATORY)**:
    Agents MUST NOT write directly to tracked reference files. If any agent
    produced ephemeral proposal files, S5 MUST apply them during Phase 8:
    - `.kimi/hypotheses-proposed.md` → append to `references/hypotheses.md`
@@ -1584,7 +1584,7 @@ Before declaring the VSM workflow "complete," S5 MUST verify:
    After applying, delete or rename the ephemeral files to prevent duplicate
    application in future builds.
 
-5b. **Auto-update knowledge broker (MANDATORY — 2026-06-04 structural mutation)**:
+5b. **Auto-update knowledge broker ([TIER B: shell-verified] MANDATORY — 2026-06-04 structural mutation)**:
    S5 MUST run the auto-broker-update hook BEFORE declaring the build complete:
    ```bash
    bash ~/vsm/viable-swarm-model/hooks/auto-broker-update.sh .
@@ -1598,6 +1598,15 @@ Before declaring the VSM workflow "complete," S5 MUST verify:
    ```
    If FAIL, the hook did not run. Run it manually or update the broker manually
    using the template from the previous version of this rule.
+
+   **Broker Auto-Update Verification ([TIER B: shell-verified] MANDATORY)**
+   After writing cross-skill findings to knowledge-broker.md, run:
+   ```bash
+   wc -l ~/vsm/viable-swarm-model/references/knowledge-broker.md && \
+   grep -c "Entry:" ~/vsm/viable-swarm-model/references/knowledge-broker.md
+   ```
+   Verify the file has grown by at least 5 lines and contains at least one new "Entry:" tag.
+   If not, emit algedonic: "Broker update failed — file not modified."
 
    **Rationale**: Manual broker updates were the #1 process violation across
    FB23–FB29. Automation removes the human failure point.
@@ -1717,11 +1726,16 @@ If a Tier C directive is repeatedly bypassed, it MUST be upgraded to Tier A or B
 | Phase Transition | Required Artifact | Enforcement Layer | Tier | If Missing |
 |---|---|---|---|---|
 | Phase 2b → 2c | `.kimi/foundation-audit.md` | Layer 1 (prompt) | C | Re-spawn auditor |
+| Phase 2d | Architecture→Implementation Handoff Verification (Check 16) | Layer 1 (prompt) | C | Re-run Check 16 before Phase 3 |
 | Phase 3b → 3d | `.kimi/implementation-audit.md` | Layer 1 (prompt) | C | Re-spawn auditor |
+| Phase 3e | Frontend Config Validation | Layer 1 (prompt) | C | Back to Phase 3 (frontend fixes) |
+| Phase 3f | Frontend Cross-File Import Check | Layer 1 (prompt) | C | Back to Phase 3 (frontend fixes) |
 | Phase 4 → 5 | `.kimi/phase4-gate.md` with `PASS` | **Layer 2** (gate-guardian.sh) + Layer 1 | **A** | Route to Phase 7 |
 | Phase 5 → 6 | `.kimi/security-report.md` | Layer 1 (prompt) | C | Re-spawn security |
 | Phase 6 → 7 | `.kimi/synthesis-integration.md` | **Layer 2** (boundary-guardian.sh) + Layer 1 | **A** | Re-spawn coordinator + auditor |
 | Phase 7 → 4/8 | `.kimi/re-audit-report.md` | Layer 1 (prompt) + S5 shell verify | **B** | Fix wave NOT complete |
+| Phase 7c | Post-Fix Security Re-Check | Layer 1 (prompt) | C | Loop back to Phase 7a |
+| Phase 7d | Post-Test ISSUE Sweep | Layer 1 (prompt) | C | Document in `lessons.md`; cap fitness score |
 | Phase 8 → 8b | `.kimi/lessons.md` with structured entry | Layer 1 (prompt) + S5 shell verify | **B** | Write missing entries |
 | Phase 8b → 8c | `.kimi/meta-report.md` | Layer 1 (prompt) | C | Re-spawn vsm_meta |
 | Phase 8b → 8c | `.kimi/process-audit.md` | Layer 1 (prompt) | C | Re-spawn process_auditor |

@@ -75,6 +75,26 @@ If portfolio health metrics show CRITICAL status in ≥ 2 categories, include:
 "HARD BLOCK: Mutation portfolio is critically unhealthy. S5 MUST NOT declare build complete until [specific action] is taken."
 ```
 
+## Data Integrity Verification (MANDATORY)
+
+Before computing portfolio metrics, run the validation script:
+
+```bash
+bash ~/vsm/viable-swarm-model/hooks/validate-mutation-state.sh
+```
+
+This script checks:
+1. No duplicate mutation IDs in the master table
+2. Table row column counts are consistent
+3. All tracked mutations have log entries
+4. Removed mutations are in the cemetery
+5. No stale probation mutations (>3 builds without scoring)
+
+**Report data integrity issues in your output**:
+- If the script reports **Errors**: Include a CRITICAL algedonic in `.kimi/mutation-portfolio-review.md` stating "CRITICAL: Mutation state has data integrity errors. S5 MUST run validate-mutation-state.sh and fix errors before proceeding."
+- If the script reports **Warnings**: Include them in the portfolio review under a "Data Integrity Warnings" section.
+- If the script passes: State "✅ Mutation state validation passed" in your report.
+
 ## Rules
 
 1. **You are read-only** regarding source code and skill files. You may ONLY write to `.kimi/mutation-portfolio-review.md`.

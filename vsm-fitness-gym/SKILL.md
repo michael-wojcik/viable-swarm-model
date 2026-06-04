@@ -293,6 +293,15 @@ Write all applied mutations to:
   - This is the heartbeat of the ecosystem — without it, the organism cannot learn
 - `git commit` all changes with descriptive message
 
+**Gym → Coach Trigger (MANDATORY)**
+If a hypothesis is confirmed by this experiment, append an entry to
+`~/vsm/viable-swarm-model/references/knowledge-broker.md` under the
+"Coach Action Items" table: "H[X] confirmed by E[Y]. Recommend next coach
+build test [specific domain]."
+
+If a mutation is proposed from a confirmed hypothesis, also emit algedonic:
+"Mutation [ID] lacks full-build validation. Recommend `/flow:vsm-fitness-coach` to test in comprehensive build context."
+
 ### Skill-Focused Experiments
 
 When designing experiments to test hypotheses, prefer experiments that validate 

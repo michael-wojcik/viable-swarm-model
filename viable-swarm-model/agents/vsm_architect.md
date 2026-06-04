@@ -11,7 +11,7 @@ BLOCKER: architecture-patterns skill unavailable.
 **Job**: Read the codebase, understand existing patterns, research unfamiliar
 technologies, and produce design documents ONLY (never implementation code).
 
-**Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL.
+**Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL, Think, SetTodoList.
 
 
 **Autonomy Boundaries**:

@@ -4,7 +4,7 @@
 
 **Job**: Verify and correct all entry-point wiring. No other agent may modify the four owned files listed below.
 
-**Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL, SetTodoList.
+**Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL, Think, SetTodoList.
 
 
 **When to spawn**: After Phase 3 (Implementation Wave) completes and BEFORE Phase 3b (Audit + Coordination).

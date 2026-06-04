@@ -201,9 +201,56 @@ For large builds, consider:
 2. Using shared base persona + role-specific suffix
 3. Spawning fewer parallel agents
 
+## Risk Assessment
+
+| Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|
+| Token bloat from persona prepending | High | Medium | Shorten personas to 3–4 lines; use shared base + suffix |
+| Read-only agent bypass (no YAML enforcement) | High | High | S5 MUST manually verify no source code writes after read-only agents return |
+| Fitness score regression (>0.2) | Medium | High | A/B test protocol (see below) — rollback if regression exceeds threshold |
+| Context window exhaustion | Medium | High | Spawn fewer parallel agents; use synthesizer more aggressively |
+| Hook loss (session-start/end, gate-guardian) | Certain | Medium | Replace hooks with explicit S5 manual checks in Phase 0/8 |
+| Agent type count mismatch (18→fewer effective) | Low | Medium | Map all 18 VSM roles to personas; none may be dropped |
+
+## A/B Test Protocol
+
+Before declaring migration successful, run this controlled comparison:
+
+1. **Select a baseline build**: Use the most recent fitness build (e.g., FB29) as the control.
+2. **Re-run the SAME build spec** with the kimi-code-migration skill:
+   - Same prompt, same domain, same tier
+   - Different CLI: `kimi-code` instead of `kimi-cli v1.x`
+3. **Measure these metrics**:
+   | Metric | Control (old CLI) | Treatment (kimi-code) | Δ Allowed |
+   |---|---|---|---|
+   | Fitness score | [X]/5.0 | [Y]/5.0 | ±0.2 |
+   | Agents spawned | [N] | [M] | ±3 |
+   | File writes | [N] | [M] | ±10 |
+   | Session time (min) | [T] | [U] | ±15 min |
+   | Process violations | [N] | [M] | ≤ control |
+   | Unauthorized source writes | 0 | 0 | 0 (hard block) |
+4. **Acceptance rule**: Treatment must meet ALL Δ thresholds AND have zero unauthorized writes.
+5. **Rollback trigger**: If ANY metric exceeds Δ or any unauthorized write occurs, halt migration and redesign the failing persona/tool boundary.
+
+> **Full migration plan**: See `~/vsm/vsm-kimi-code-plan.md` for step-by-step fork, replace, and validate instructions.
+
+## Success Criteria
+
+Migration is **COMPLETE** when:
+1. All 18 agent types spawn successfully as `coder` + persona on kimi-code v0.3.0+.
+2. At least one full fitness build completes with score ≥ 3.5/5.0.
+3. A/B test shows ≤ 0.2 score regression vs old CLI baseline.
+4. Zero unauthorized WriteFile/StrReplaceFile calls from read-only agents (verified by S5 manual spot-check).
+5. All structural gate rules (Phase 4, Phase 6/7, Structural Mutation) function without YAML enforcement.
+6. The skill loads and executes via `/flow:viable-swarm-model` without `--agent-file`.
+
 ## Migration Checklist
 
+- [ ] Fork repo per `~/vsm/vsm-kimi-code-plan.md` Phase 1
+- [ ] Replace all `Agent(subagent_type="vsm_...")` with `Agent(subagent_type="coder")` + persona injection
+- [ ] Remove `--agent-file` prerequisite section from SKILL.md
 - [ ] All 18 agent types spawn successfully as `coder` + persona
 - [ ] Fitness build scores equivalent to old architecture (±0.2)
 - [ ] No unauthorized tool calls from read-only agents
 - [ ] Works on kimi-code v0.3.0+ without `--agent-file`
+- [ ] A/B test completed and passed

@@ -15,6 +15,27 @@ You embody Stafford Beer's **System 4*** — the forward-looking, variety-amplif
 3. **Emit algedonic signals** when thresholds are crossed
 4. **Write `.kimi/variety-assessment.md`** with structured findings and recommendations
 
+## Variety Metrics (Ashby's Law)
+
+Per Stafford Beer's **Law of Requisite Variety**: the control system must have at least as much variety as the system it controls. Apply this to the swarm:
+
+| Variety Dimension | Measured As | Target | Rationale |
+|---|---|---|---|
+| **Mutation variety** | Count of active mutations / count of distinct failure modes | ≤ 1.5 mutations per failure mode | Excess variety = bloat; insufficient variety = gaps |
+| **Agent variety** | Unique agent types spawned / agent types available | ≥ 70% | Unused agent types = untapped control capacity |
+| **Hypothesis variety** | Tested hypotheses / total hypotheses | ≥ 60% | Low coverage = unverified assumptions |
+| **Skill variety** | Stack skills read / skills relevant to build | 100% | Unread skills = missed failure modes |
+| **Temporal variety** | Unique build domains (last 5 builds) | ≥ 3 | Single-domain repetition = blind spots |
+
+**Variety Gap Calculation**:
+```
+Variety Score = (agent_variety * 0.25) + (hypothesis_variety * 0.25) + (skill_variety * 0.30) + (temporal_variety * 0.20)
+```
+
+- **Score ≥ 0.70**: Requisite variety met. System can absorb expected environmental disturbance.
+- **Score 0.50–0.69**: Variety deficit. S5 should spawn additional agent types or run gym experiments before build.
+- **Score < 0.50**: Critical variety deficit. **ALGEDONIC**: Build is under-powered for its environment. Halt and add variety (more agents, more skills, gym batch) before proceeding.
+
 ## Algedonic Thresholds (CRITICAL = must halt build until addressed)
 
 | Metric | WARNING Threshold | CRITICAL Threshold | Required Action |
@@ -26,6 +47,7 @@ You embody Stafford Beer's **System 4*** — the forward-looking, variety-amplif
 | Days since last fitness build | > 5 days | > 7 days | Emit coach heartbeat algedonic |
 | Measured effect fill rate | < 75% | < 60% | Trigger portfolio review |
 | Agent timeout rate (last build) | > 10% | > 25% | Trigger task sizing audit |
+| **Variety Score** | < 0.70 | < 0.50 | Add variety (agents/skills/gym) before build |
 
 ## Output Format
 

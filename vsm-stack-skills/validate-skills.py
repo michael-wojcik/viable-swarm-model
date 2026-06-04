@@ -15,7 +15,7 @@ MIN_RULES = 5
 
 
 def parse_registry_tables(content):
-    """Extract skill names and dependencies from markdown tables."""
+    """Extract skill names, dependencies, status, and relevant agents from markdown tables."""
     skills = {}
     in_table = False
     header_idx = {}
@@ -41,7 +41,16 @@ def parse_registry_tables(content):
                     idx = header_idx["Depends On"]
                     if idx < len(parts):
                         depends_on = parts[idx]
-                skills[name] = {"depends_on": depends_on, "status": status}
+                relevant_agents = ""
+                if "Relevant Agents" in header_idx:
+                    idx = header_idx["Relevant Agents"]
+                    if idx < len(parts):
+                        relevant_agents = parts[idx]
+                skills[name] = {
+                    "depends_on": depends_on,
+                    "status": status,
+                    "relevant_agents": relevant_agents,
+                }
         elif in_table and not line.startswith("|"):
             in_table = False
     return skills
@@ -57,6 +66,35 @@ def count_rules(skill_md_content):
         elif stripped.startswith("- ") and len(stripped) > 10:
             rules += 1
     return rules
+
+
+def check_agent_references(skill_name, content, relevant_agents):
+    """Verify that relevant agent types are referenced in the skill content."""
+    missing = []
+    if not relevant_agents or relevant_agents == "—":
+        return missing
+    # Extract agent names from the relevant_agents cell
+    # Agent names may be comma-separated, possibly with "all coders" shorthand
+    agent_names = [a.strip() for a in relevant_agents.split(",")]
+    for agent in agent_names:
+        if agent == "all coders":
+            # Expand to common coder agent names
+            expanded = [
+                "vsm_backend_coder",
+                "vsm_frontend_coder",
+                "vsm_devops_coder",
+            ]
+            for expanded_agent in expanded:
+                if expanded_agent not in content:
+                    missing.append(expanded_agent)
+        elif agent:
+            # Map shorthand registry names to full agent names if needed
+            full_name = agent
+            if not agent.startswith("vsm_"):
+                full_name = f"vsm_{agent}"
+            if full_name not in content and agent not in content:
+                missing.append(agent)
+    return missing
 
 
 def main():
@@ -84,7 +122,9 @@ def main():
                 line_count = len(lines)
                 rules = count_rules(content)
 
-                status = registered_skills.get(item.name, {}).get("status", "").lower()
+                skill_info = registered_skills.get(item.name, {})
+                status = skill_info.get("status", "").lower()
+
                 if status == "full":
                     if line_count < MIN_LINES_FULL:
                         errors.append(
@@ -106,13 +146,34 @@ def main():
                             f"IDs (e.g., FB24, H150, Gym E15). Full skills must be grounded "
                             f"in empirical evidence."
                         )
-                elif status == "stub":
-                    has_todo = any("TODO" in line or "Awaiting" in line for line in lines)
+
+                    # Agent prompt reference check
+                    missing_agents = check_agent_references(
+                        item.name, content, skill_info.get("relevant_agents", "")
+                    )
+                    if missing_agents:
+                        warnings.append(
+                            f"Skill '{item.name}' lists agents {missing_agents} in registry "
+                            f"but does not reference them in SKILL.md"
+                        )
+
+                elif status in ("stub", "planned", "icebox"):
+                    has_todo = any(
+                        "TODO" in line or "Awaiting" in line or "Placeholder" in line
+                        for line in lines
+                    )
                     if line_count < MIN_LINES_STUB and not has_todo:
                         warnings.append(
-                            f"Skill '{item.name}' is Stub with only {line_count} lines "
+                            f"Skill '{item.name}' is {status} with only {line_count} lines "
                             f"and no TODO marker (min {MIN_LINES_STUB} or TODO)"
                         )
+                elif status == "deprecated":
+                    # Deprecated skills are pointers; minimal validation
+                    pass
+                elif not status:
+                    warnings.append(
+                        f"Skill '{item.name}' has no status in registry"
+                    )
 
             actual_skills.add(item.name)
 

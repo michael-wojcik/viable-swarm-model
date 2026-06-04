@@ -58,9 +58,9 @@
 | H218 | FB28 Build | append-only | GraphQL context getter imported function | effective | 1 | 5 | H218 | — | — |
 | H219 | FB28 Build | append-only | Pydantic `type` statement + Field warning | effective | 1 | 5 | H219 | — | — |
 | **PROBATION (Awaiting Measurement)** |
-| A4 | FB28 Build | append-only | Phase 4 gate strengthening | effective | 1 | 5 | H214 | — | FB31 |
-| A5 | FB28 Build | append-only | Phase 6 skip prevention | effective | 2 | 4 | H217 | — | FB32 |
-| ~~S5~~ | FB28 Build | structural | Agent timeout fallback protocol | **monitor** | 1 | 2 | H217 | — | 5 timeouts in FB30; fallback protocol insufficient |
+| FB28-A4 | FB28 Build | append-only | Phase 4 gate strengthening | effective | 1 | 5 | H214 | — | FB31 |
+| FB28-A5 | FB28 Build | append-only | Phase 6 skip prevention | effective | 2 | 4 | H217 | — | FB32 |
+| ~~FB28-S5~~ | FB28 Build | structural | Agent timeout fallback protocol | **monitor** | 1 | 2 | H217 | — | 5 timeouts in FB30; fallback protocol insufficient |
 | S6 | FB28 Build | append-only | GraphQL context builder fail-closed | effective | 1 | 5 | — | — | FB31 |
 | A6 | FB28 Build | structural | Knowledge broker manual update requirement | effective | 1 | 4 | H213 | — | FB31 |
 | R3 | FB28 Build | refinement | Process audit ≥80 fitness bar threshold | effective | 1 | 5 | — | — | FB31 |

@@ -248,6 +248,83 @@ def main():
                     f"SKILL-REGISTRY.md lists skill '{skill_name}' but ~/vsm/vsm-stack-skills/{skill_name}/SKILL.md does not exist"
                 )
 
+    # 13. Verify every skill's 'Relevant Agents' has at least one agent that references it
+    skill_to_agents = {}  # skill_name -> set of agent type names from registry
+    if os.path.exists(registry_path):
+        with open(registry_path) as f:
+            registry_content = f.read()
+        in_pattern_table = False
+        for line in registry_content.split('\n'):
+            if '## Pattern Skills' in line:
+                in_pattern_table = True
+                continue
+            if '## Pitfall Skills' in line:
+                in_pattern_table = False
+                continue
+            if in_pattern_table and line.startswith('|') and not line.startswith('|---'):
+                parts = [p.strip() for p in line.split('|')]
+                parts = [p for p in parts if p]
+                if len(parts) >= 4 and parts[0] not in ('Skill', 'Pattern Skills', 'Pitfall Skills'):
+                    skill_name = parts[0]
+                    agents_str = parts[2] if len(parts) >= 3 else ''
+                    agent_types = {a.strip().lower() for a in agents_str.split(',') if a.strip() and a.strip() != '—'}
+                    if agent_types:
+                        skill_to_agents[skill_name] = agent_types
+
+    # Build map: skill_name -> set of agent files that reference it
+    skill_referenced_by = {skill: set() for skill in skill_to_agents}
+    for yaml_name in yaml_files:
+        agent_name = yaml_name.replace(".yaml", "")
+        if agent_name in ("vsm-main",):
+            continue
+        yaml_path = os.path.join(AGENTS_DIR, yaml_name)
+        data = load_yaml(yaml_path)
+        agent_cfg = data.get("agent", {})
+        sp_path = agent_cfg.get("system_prompt_path")
+        if not sp_path:
+            continue
+        md_path = os.path.join(os.path.dirname(yaml_path), sp_path)
+        if not os.path.exists(md_path):
+            continue
+        with open(md_path) as f:
+            md_content = f.read()
+        skill_refs = re.findall(r"~/vsm/vsm-stack-skills/([A-Za-z0-9_\-]+)/SKILL\.md", md_content)
+        for skill_name in skill_refs:
+            if skill_name in skill_referenced_by:
+                skill_referenced_by[skill_name].add(agent_name)
+
+    for skill_name, expected_agents in skill_to_agents.items():
+        referenced_by = skill_referenced_by.get(skill_name, set())
+        # Map expected agent types to actual file prefixes
+        found = False
+        for exp_agent in expected_agents:
+            # e.g., "backend_coder" -> "vsm_backend_coder"
+            possible_names = {f"vsm_{exp_agent}", f"vsm-{exp_agent}", exp_agent}
+            if any(name in referenced_by for name in possible_names):
+                found = True
+                break
+        if not found:
+            warnings.append(
+                f"SKILL-REGISTRY.md: skill '{skill_name}' lists relevant agents {expected_agents} but none reference it in their prompt"
+            )
+
+    # --- Per-yaml variable validation (fixes indentation bug) ---
+    for yaml_name in yaml_files:
+        yaml_path = os.path.join(AGENTS_DIR, yaml_name)
+        try:
+            data = load_yaml(yaml_path)
+        except yaml.YAMLError:
+            continue
+        agent_cfg = data.get("agent", {})
+        sp_path = agent_cfg.get("system_prompt_path")
+        if not sp_path:
+            continue
+        md_path = os.path.join(os.path.dirname(yaml_path), sp_path)
+        if not os.path.exists(md_path):
+            continue
+        with open(md_path) as f:
+            md_content = f.read()
+
         vars_in_md = extract_vars(md_content)
         defined_args = collect_system_prompt_args(yaml_path)
         undefined = vars_in_md - set(defined_args.keys()) - BUILT_IN_VARS
