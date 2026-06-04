@@ -141,3 +141,50 @@ __pycache__/
 ```
 
 **Check**: Before completing foundation wave, verify `find . -name Dockerfile | while read f; do dir=$(dirname "$f"); [ -f "$dir/.dockerignore" ] || echo "MISSING: $dir/.dockerignore"; done` returns nothing.
+
+---
+
+## Pattern: Dockerfile Non-Root USER (FB32-H3)
+
+**When**: Any build producing a production Dockerfile.
+**What**: The Dockerfile MUST create and switch to a non-root user before the final `CMD`.
+**Why**: FB32's Dockerfile ran as root, flagged as HIGH by security audit. Container escape risks are mitigated by running as an unprivileged user. This is a recurring gap across builds.
+**How**:
+
+**Correct pattern**:
+```dockerfile
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install dependencies as root (needed for apt/pip)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Create non-root user
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+USER appuser
+
+COPY --chown=appuser:appuser . .
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+**Incorrect pattern** (HIGH severity):
+```dockerfile
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# NO USER directive — container runs as root
+```
+
+**Prevention rules**:
+1. **DevOps coder MUST** include `RUN useradd ...` and `USER appuser` (or similar) in every production Dockerfile.
+2. **Security auditor MUST flag** any Dockerfile without a `USER` directive as HIGH.
+3. **Coordinator MUST verify** `docker build` succeeds with the non-root user (some apps fail due to file permissions).
+4. **UID SHOULD be 1000** (standard unprivileged UID) to avoid conflicts with host user IDs.
+
+**Source**: FB32 security audit H3 (Dockerfile runs as root). FB26-S2 (docker-pitfalls) exists but only covers `.dockerignore` co-creation, not USER directive.

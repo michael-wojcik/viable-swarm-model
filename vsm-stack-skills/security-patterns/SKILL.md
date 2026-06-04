@@ -417,3 +417,65 @@ class Settings(BaseSettings):
 
 **Source**: FB32 security audit found H1 (empty JWT_SECRET/SECRET_KEY), M4 (GRAPHQL_INTROSPECTION=True), M9 (DEBUG=True). All were HIGH or MEDIUM findings that should have been caught earlier.
 **See also**: FB27-3 (Placeholder Secret Detection) — this rule extends FB27-3 to treat empty defaults as HIGH, not just placeholders.
+
+---
+
+## Pattern: User Deactivation (`is_active`) Gate (FB32-H5)
+
+**When**: Any application with user authentication and role-based access control.
+**What**: The `User` model MUST include an `is_active` field, and auth dependencies MUST reject tokens for deactivated users.
+**Why**: FB32's `User` model lacked `is_active`, and `get_current_user` did not check it. Deactivated or banned users could continue using existing JWTs indefinitely. This is a standard auth hardening that prevents stale tokens from being exploited after account suspension.
+**How**:
+
+**Correct pattern**:
+```python
+# models.py
+class User(Base):
+    __tablename__ = "users"
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    email: Mapped[str] = mapped_column(unique=True, index=True)
+    hashed_password: Mapped[str]
+    role: Mapped[Role] = mapped_column(sa.Enum(Role, name="role"))
+    is_active: Mapped[bool] = mapped_column(default=True)  # REQUIRED
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc))
+
+# auth.py
+async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)) -> User:
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        user_id = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    user = await db.get(User, uuid.UUID(user_id))
+    if user is None or not user.is_active:  # FAIL-CLOSED
+        raise HTTPException(status_code=401, detail="User inactive or not found")
+    return user
+```
+
+**Incorrect pattern** (MEDIUM severity):
+```python
+# Missing is_active field entirely
+class User(Base):
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True)
+    email: Mapped[str]
+    hashed_password: Mapped[str]
+    role: Mapped[Role]
+
+# get_current_user only checks user is not None
+async def get_current_user(...) -> User:
+    user = await db.get(User, uuid.UUID(user_id))
+    if user is None:
+        raise HTTPException(status_code=401, detail="Not found")
+    return user  # Deactivated users pass through!
+```
+
+**Prevention rules**:
+1. **Backend coder MUST** include `is_active: Mapped[bool] = mapped_column(default=True)` on the `User` model.
+2. **Backend coder MUST** check `not user.is_active` in `get_current_user` AND `get_graphql_context` and raise 401 if inactive.
+3. **Security auditor MUST flag** any auth dependency that checks `user is None` but NOT `user.is_active` as MEDIUM.
+4. **GraphQL context builder MUST** propagate the `is_active` check — fail-closed for both REST and GraphQL.
+
+**Source**: FB32 security audit H5 (missing `is_active` field). No existing rule in security-patterns or python-pitfalls covers user deactivation.

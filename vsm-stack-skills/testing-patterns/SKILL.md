@@ -198,3 +198,49 @@ is a **process violation** — the Phase 4 gate was bypassed.
 
 **Source**: FB23 frontend build failed in Phase 6 because `tsc -b` errors were
 not caught in Phase 4. Gym experiment H154 reproduced the exact failure mode.
+
+---
+
+## Pattern: SQLite Test Database Cleanup (FB32-Test Flakiness)
+
+**When**: Using SQLite file-based databases (`sqlite+aiosqlite:///./test.db`) for pytest with async SQLAlchemy.
+**What**: Remove stale `test.db` and `test.db-journal` files before running the full test suite.
+**Why**: FB32's 133 backend tests passed when run individually but failed with `sqlalchemy.exc.OperationalError` (database locked / table already exists) when run as a full suite. The stale `test.db` file from a previous run was left in a corrupted state. This is a recurring flakiness pattern with file-based SQLite in async test environments.
+**How**:
+
+**Correct pattern** (in conftest.py or CI script):
+```python
+# conftest.py — at module level, before any imports that touch the DB
+import os
+
+# Clean stale test artifacts before importing app code
+for stale in ("test.db", "test.db-journal", "test.db-shm", "test.db-wal"):
+    if os.path.exists(stale):
+        os.remove(stale)
+
+# NOW import app code
+from app.main import app
+```
+
+**CI/script approach**:
+```bash
+# Run this before pytest in CI or local full-suite runs
+rm -f test.db test.db-journal test.db-shm test.db-wal
+python -m pytest -v
+```
+
+**Incorrect pattern** (causes flakiness):
+```bash
+# No cleanup — stale DB from previous run causes locking errors
+python -m pytest -v  # May fail with OperationalError
+```
+
+**Prevention rules**:
+1. **Backend tester MUST** clean stale `test.db*` files before full suite runs.
+2. **conftest.py SHOULD** remove stale DB files at import time (before app imports).
+3. **CI pipeline MUST** include `rm -f test.db*` before the pytest step.
+4. **If tests fail with `OperationalError`**, FIRST check for stale `test.db` before debugging SQL.
+
+**Alternative**: Use in-memory SQLite (`sqlite+aiosqlite:///:memory:`) for true isolation. However, this requires each test to create its own engine, which is slower. File-based SQLite with cleanup is the pragmatic choice for most builds.
+
+**Source**: FB32 Phase 4 testing wave — 133 tests passed after deleting stale `test.db`, failed with `OperationalError` when run against a corrupted file from a previous interrupted run.
