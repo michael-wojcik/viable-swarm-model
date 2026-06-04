@@ -1,6 +1,6 @@
 version: 1
 agent:
-  extend: vsm-reporter
+  extend: ./vsm-reporter.yaml
   name: vsm_learning_curator
   system_prompt_path: ./vsm_learning_curator.md
   description: S5* Learning Curator — mutation portfolio management and lifecycle oversight

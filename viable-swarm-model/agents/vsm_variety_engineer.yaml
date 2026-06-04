@@ -1,6 +1,6 @@
 version: 1
 agent:
-  extend: vsm-researcher
+  extend: ./vsm-researcher.yaml
   name: vsm_variety_engineer
   system_prompt_path: ./vsm_variety_engineer.md
   description: S4* Variety Engineer — environmental scanning and proactive health assessment
