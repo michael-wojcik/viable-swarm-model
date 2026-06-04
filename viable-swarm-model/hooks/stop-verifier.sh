@@ -99,7 +99,8 @@ fi
 if [[ -f "$MUTATION_LOG" ]]; then
     # Count "Measured effect: [PENDING]" or "Measured effect: [pending]" entries
     # Also catch empty measured effect fields from recent sessions
-    PENDING_COUNT=$(grep -ciE '\*\*Measured effect\*\*:\s*\[PENDING\]|\*\*Measured effect\*\*:\s*\[pending\]|\*\*Measured effect\*\*:\s*$|\*\*Measured effect\*\*:\s*\[.*fill.*\]' "$MUTATION_LOG" 2>/dev/null || true)
+    # Match: [PENDING], **PENDING**, [pending], **Pending**, plain PENDING/Pending
+    PENDING_COUNT=$(grep -ciE '\*\*Measured effect\*\*:\s*(\*\*|\[)?PENDING(\*\*|\])?|\*\*Measured effect\*\*:\s*(\*\*|\[)?pending(\*\*|\])?|Measured effect:\s*(\*\*|\[)?PENDING(\*\*|\])?|Measured effect:\s*(\*\*|\[)?pending(\*\*|\])?' "$MUTATION_LOG" 2>/dev/null || true)
     PENDING_COUNT=${PENDING_COUNT:-0}
 
     # Only block if there are actual pending entries (not just template placeholders)

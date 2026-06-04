@@ -28,7 +28,7 @@
 
 | ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
 |---|---|---|---|---|---|---|---|---|---|
-| **EFFECTIVE (Score 4–5)** |
+| **HISTORICAL EFFECTIVE (Score 4–5, ≥5 builds — proven, no longer monitored)** |
 | FB25-S1 | FB25 Coach | structural | False hook claim removal | effective | 5 | 5 | H300 | E17 | — |
 | FB24-1 | FB24 Build | append-only | Phase 4 gate bypass when 1 test fails | effective | 6 | 5 | H154 | — | — |
 | FB24-2 | FB24 Build | append-only | Enum type safety audit | effective | 6 | 5 | H203 | — | — |
@@ -39,6 +39,8 @@
 | FB9 / P46 | FB9 Build | append-only | Test-First Exit Gate | effective | 9 | 5 | H154 | — | — |
 | R19 | FB23 Build | refinement | Contract repopulation | effective | 7 | 4 | — | — | — |
 | R20 | FB23 Build | refinement | Validate agent files script | effective | 7 | 4 | — | — | — |
+
+| **EFFECTIVE (Score 4–5, <5 builds — recently proven, still monitored)** |
 | FB26-1 | FB26 Build | append-only | UploadFile.read() wrong API | effective | 2 | 5 | — | — | — |
 | FB26-2 | FB26 Build | append-only | Auth endpoints missing rate limits | effective | 2 | 5 | — | — | — |
 | FB26-3 | FB26 Build | append-only | Path traversal in file upload | effective | 2 | 5 | — | — | — |
@@ -48,7 +50,6 @@
 | FB26-S2 | FB26 Build | append-only | .dockerignore co-creation with Dockerfile | effective | 2 | 5 | H210 | — | — |
 | FB26-S3 | FB26 Build | structural | H209 hard gate (tool-enforced) | effective | 2 | 5 | H209 | E20 | — |
 | FB26-S4 | FB26 Build | structural | Phase 0 broker/state read verification | effective | 2 | 5 | — | — | — |
-| FB26-S6 | FB26 Build | structural | Process auditor broker scored check | **redesigned** | 2 | 5→redesign | — | — | PM1 replaces |
 | FB26-A3 | FB26 Build | append-only | Score trend tracking rule | effective | 2 | 4 | — | — | — |
 | FB27-2 | FB27 Build | append-only | Missing `await` on async calls | effective | 1 | 5 | — | — | — |
 | FB27-3 | FB27 Build | append-only | JWT_SECRET default fallback | effective | 1 | 5 | — | — | — |
@@ -82,6 +83,7 @@
 | ~~FB18-10~~ | FB18 Build | structural | Mutation tracking checkpoint | **REMOVED** | 4 | 1 | — | — | Superseded by FB26-S3 |
 | ~~FB23-3~~ | FB23 Build | refinement | Inline fix prevention (prompt-only) | **REMOVED** | 2 | 1 | — | — | R-2 in cemetery |
 | ~~FB19-7~~ | FB19 Build | append-only | Cross-skill mutation log review | **REMOVED** | 7 | 1 | — | — | R-1 in cemetery |
+| FB26-S6 | FB26 Build | structural | Process auditor broker scored check | **REDESIGNED** | 2 | 5→redesign | — | — | PM1 replaces |
 | FB27-1 | FB27 Build | append-only | UUID coercion `model_validator` | **REDESIGNED** | 1 | 2 | — | — | New rule applied FB28 |
 
 ---
@@ -91,11 +93,12 @@
 | Metric | Current | Target | Status |
 |---|---|---|---|
 | Active mutations | 51 | — | — |
-| Effective mutations | 26 | >50% of active | ✅ 51% |
+| Historical effective (≥5 builds) | 10 | >15% of active | ✅ 20% |
+| Effective (<5 builds, monitored) | 16 | >30% of active | ✅ 31% |
 | Probationary mutations | 18 | <15 at any time | ⚠️ 18 (exceeds target) |
 | Removed / redesigned | 7 | ≥2 per 5 builds | ✅ 7 (exceeds target) |
-| Measured effect fill rate (scored) | 26/51 | ≥80% | ❌ 51% (18 pending, 7 missing) |
-| Measured effect fill rate (any entry) | 44/51 | ≥80% | ✅ 86% |
+| Measured effect fill rate (scored) | 33/51 | ≥80% | ⚠️ 65% (18 pending) |
+| Measured effect fill rate (any entry) | 51/51 | ≥80% | ✅ 100% |
 | Removal rate (last 5 builds) | 6/5 = 120% | ≥20% | ✅ Exceeds |
 
 ---
@@ -112,6 +115,7 @@
 1. Increment `Builds Tested` for all probation/monitor mutations
 2. Score effectiveness 1–5 based on whether target failure recurred
 3. Update Status and Score in the SAME row (do NOT add a new row)
+4. If a mutation reaches ≥5 builds tested with score ≥4, move it to "HISTORICAL EFFECTIVE"
 
 **When removing a mutation**:
 1. Update Status to `removed` in the SAME row
@@ -120,8 +124,9 @@
 
 **When redesigning a mutation**:
 1. Update Status to `redesigned` in the SAME row
-2. Create NEW mutation row with new ID
-3. Link old ID in "Next Review" column
+2. Move row to "REMOVED / REDESIGNED" section
+3. Create NEW mutation row with new ID
+4. Link old ID in "Next Review" column
 
 ---
 

@@ -953,6 +953,8 @@ main-skill mutations.
 **Before**: Phase 8b ended with "git commit all changes" but no verification that all proposed mutations were actually applied.
 **After**: Phase 8b has a mandatory Step 8c (Mutation Verification Checkpoint) that hard-blocks completion if any mutation was overlooked.
 
+**Measured effect**: **Ineffective (Score: 1)** — Bypassed in 4 consecutive builds (FB23–FB26). The prompt-only hard block had no enforcement mechanism. S5 simply skipped Step 8c. Removed in FB26 audit. Superseded by FB26-S3 (tool-enforced stop-verifier.sh hook). See mutation-cemetery.md R-3.
+
 ## Mutation FB19-1 — 2026-05-25 (Refinement — APPLIED)
 
 **Session**: FB19 KitchenSync fitness build — backend test suite fixes
@@ -1026,6 +1028,8 @@ main-skill mutations.
 A mandatory review of the committed skill mutation log is more effective than an ephemeral build scratchpad. The skill log is durable, versioned, and already contains the proposed/approved/applied status of every mutation.
 
 **Expected effect**: Future builds will perform a systematic review of the skill-level mutation log (not a new build-level file) before declaring Phase 8 complete. This reduces redundancy and leverages the existing tracking system.
+
+**Measured effect**: **Ineffective (Score: 1)** — The replacement rule (skill-level log review) was itself bypassed in FB23–FB26. The real failure mode was not "wrong file location" but "no enforcement authority." Removed in FB26 audit. Superseded by FB26-S3 (tool-enforced hard gate in stop-verifier.sh). See mutation-cemetery.md R-1.
 
 **Applied change to Phase 8b**:
 Replace Step 8c (build-level `mutations-applied.md`) with:
@@ -1205,6 +1209,8 @@ Spawn `vsm_coordinator` + `vsm_auditor`. Full 20+ point checklist (see
 **Before**: Chronological by build discovery — "FB3 Discoveries", "FB10 Discoveries", "FB14 Discoveries", "FB17 Discoveries", "FB18 Discoveries", "FB20 Discoveries", "FB21 Discoveries". Multiple duplicate L numbers.
 
 **After**: Organized by topic — Core Workflow, Auth & Registration, JWT & Token Security, Rate Limiting, GraphQL Security, WebSocket Security, CORS & Infrastructure, Data Exposure & Frontend Security, N+1 & Performance, Integration & Cross-Service, Testing & Verification, Meta-Learning, Security Operations, Severity Calibration. Duplicate rules merged (e.g., L40 + L52 on rate-limit exception handlers; L38-FB10 + L47 + L60 on registration role validation).
+
+**Measured effect**: **Effective (Score: 5)** — Zero duplicate L-number proposals since reorganization. FB22–FB29 meta-agents consistently reference correct topic sections. No L38/L39/L40 collisions in 9 consecutive builds. Target failure mode eliminated.
 
 
 ## Mutation FB21-9 — 2026-05-25
@@ -1394,6 +1400,8 @@ Spawn `vsm_coordinator` + `vsm_auditor`. Full 20+ point checklist (see
 - acquired-wisdom.md: added Entry 6 with E18–E19 distillate
 
 **Expected effect**: All 109 hypotheses now have statuses. 107 confirmed, 2 rejected. Zero untested hypotheses remain in the backlog. The skill has complete empirical coverage of its knowledge claims.
+
+**Measured effect**: **Effective (Score: 4)** — H108 and H109 both confirmed with 100% reduction in downstream BLOCKERs. E18–E19 experiment records are complete and reproducible. Pattern 46 now carries empirical validation badge. All 109 hypotheses have statuses; zero untested remain.
 
 
 ---
@@ -1763,6 +1771,8 @@ Documented FB23 coverage map, score (3.2/5.0), gaps, and mutations.
 - Frontend coder cannot declare completion with stub pages.
 - Phase 8 cannot be skipped.
 - Fitness coach cycle is complete with FB24 prompt draft ready.
+
+**Measured effect**: **Mixed** — R19 (contract repopulation): Effective (Score: 4) — bilateral contracts present in all builds since FB24. R20 (autonomy boundaries): Effective (Score: 4) — boundary structures adopted by all agents. R21 (wiring report path): Effective (Score: 4). S14–S16 (structural): Effective (Score: 5) — lessons.md hard gate prevents reflection skip. A5–A6 (append-only): Effective (Score: 4). Overall: FB24 prompt did target FB23 gaps. No stub pages in FB24–FB29.
 
 ---
 
@@ -2586,4 +2596,21 @@ producing `mutations-applied.md` and filling measured effects.
 **Expected effect**: Any setting typed as `list[str]` that reads from env MUST have a `mode="before"` validator handling the string case. The validator handles empty strings gracefully and strips whitespace.
 
 **Measured effect**: **Pending** — awaits FB30 validation.
+
+
+---
+
+## Mutation FB23-3 — 2026-06-02 (Removed — No Original Log Entry)
+
+**Session**: Comprehensive audit gap-closing pass
+**File**: `viable-swarm-model/SKILL.md` (Phase 6/7 boundary)
+**Type**: refinement
+**Target failure mode**: S5 performing inline fixes during Phase 6/7 boundary
+**Rationale**: This mutation was tracked in `skill-state.md` as "Inline fix prevention (prompt-only)" but was never given a dedicated log entry. It existed as a prompt rule requiring S5 to route integration BLOCKERs to Phase 7 fix agents rather than fixing inline. The rule was prompt-only with no tool enforcement.
+
+**Expected effect**: Zero inline fixes during Phase 6/7 boundary.
+
+**Measured effect**: **Ineffective (Score: 1)** — Inline fixes occurred in FB23 and FB24 despite the rule. Prompt-only instructions cannot prevent S5 from bypassing boundaries under time pressure. Removed during comprehensive audit (2026-06-02). Redundant with boundary-guardian.sh hook and vsm-main.md Layer 1 rules. See mutation-cemetery.md R-2 for full removal rationale.
+
+**Note**: This entry backfills a tracking gap. The mutation was applied on 2026-06-01 and removed on 2026-06-02 before a standalone log entry could be created.
 

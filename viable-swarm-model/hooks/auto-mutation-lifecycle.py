@@ -68,18 +68,39 @@ def update_mutation_log(log_path: str, mutations: list[dict]) -> tuple[str, list
         if effect == "PENDING":
             continue
 
-        # Pattern: match mutation header block and Measured effect line
-        # Handles: [PENDING], **PENDING**, plain PENDING
-        pattern = rf'(## Mutation {re.escape(mut_id)}.*?Measured effect:\s*)\\*?\[?PENDING\]?\\*?'
+        # Scoped search: find ALL mutation blocks matching this ID, then pick the one with PENDING
+        # This handles short IDs (e.g., "S5") that appear in multiple mutations (FB26-S5, FB28-S5)
+        block_pattern = rf'## Mutation [^\n]*?{re.escape(mut_id)}[^\n]*?\n(.*?)(?=\n## Mutation |\n---|\Z)'
+        block_matches = list(re.finditer(block_pattern, content, re.DOTALL))
 
-        match = re.search(pattern, content, re.DOTALL)
-        if match:
-            replacement = match.group(1) + effect
-            content = content[:match.start()] + replacement + content[match.end():]
-            changed = True
-            updates.append(f"  mutation-log.md: {mut_id} ← {effect[:60]}...")
-        elif re.search(rf'## Mutation {re.escape(mut_id)}', content):
-            updates.append(f"  mutation-log.md: {mut_id} already has measured effect")
+        if block_matches:
+            # Handles: **Measured effect**: **PENDING**, Measured effect: [PENDING], Measured effect: PENDING
+            pending_patterns = [
+                r'(\*\*Measured effect\*\*:\s*)(?:\*\*|\[)?PENDING(?:\*\*|\])?',
+                r'(Measured effect:\s*)(?:\*\*|\[)?PENDING(?:\*\*|\])?',
+            ]
+
+            best_match = None
+            best_pending = None
+            for bm in block_matches:
+                block = bm.group(0)
+                for pp in pending_patterns:
+                    pm = re.search(pp, block, re.IGNORECASE)
+                    if pm:
+                        best_match = bm
+                        best_pending = pm
+                        break
+                if best_match:
+                    break
+
+            if best_match and best_pending:
+                block = best_match.group(0)
+                new_block = block[:best_pending.start()] + best_pending.group(1) + effect + block[best_pending.end():]
+                content = content[:best_match.start()] + new_block + content[best_match.end():]
+                changed = True
+                updates.append(f"  mutation-log.md: {mut_id} ← {effect[:60]}...")
+            else:
+                updates.append(f"  mutation-log.md: {mut_id} already has measured effect")
         else:
             errors.append(f"  WARNING: {mut_id} not found in mutation-log.md")
 
