@@ -48,7 +48,7 @@
 | FB26-S2 | FB26 Build | append-only | .dockerignore co-creation with Dockerfile | effective | 2 | 5 | H210 | — | — |
 | FB26-S3 | FB26 Build | structural | H209 hard gate (tool-enforced) | effective | 2 | 5 | H209 | E20 | — |
 | FB26-S4 | FB26 Build | structural | Phase 0 broker/state read verification | effective | 2 | 5 | — | — | — |
-| FB26-S6 | FB26 Build | structural | Process auditor broker scored check | effective | 2 | 5 | — | — | — |
+| FB26-S6 | FB26 Build | structural | Process auditor broker scored check | **redesigned** | 2 | 5→redesign | — | — | PM1 replaces |
 | FB26-A3 | FB26 Build | append-only | Score trend tracking rule | effective | 2 | 4 | — | — | — |
 | FB27-2 | FB27 Build | append-only | Missing `await` on async calls | effective | 1 | 5 | — | — | — |
 | FB27-3 | FB27 Build | append-only | JWT_SECRET default fallback | effective | 1 | 5 | — | — | — |
@@ -67,6 +67,15 @@
 | A8 | FB28 Build | append-only | Vite config must not contain `test` property | probation | 0 | — | — | — | FB30 |
 | R4 | FB28 Build | refinement | Phase 3c coordinator MANDATORY for Tier 2+ | probation | 0 | — | — | — | FB30 |
 | A9 | FB28 Build | append-only | Pydantic V2 + SQLAlchemy ORM test fixture pattern | probation | 0 | — | — | — | FB30 |
+| **FB29 MUTATIONS (Awaiting Measurement)** |
+| PM1 | FB29 Build | structural | Hook-enforced process auditor spawn | probation | 0 | — | — | — | FB30 |
+| PM2 | FB29 Build | append-only | Meta-report artifact disk verification | probation | 0 | — | — | — | FB30 |
+| PM3 | FB29 Build | structural | Mutation-state auto-update hook | probation | 0 | — | — | — | FB30 |
+| PM4 | FB29 Build | append-only | GraphQL parity admin override specificity | probation | 0 | — | — | — | FB30 |
+| PM5 | FB29 Build | append-only | Enum `.value` in conftest.py | probation | 0 | — | — | — | FB30 |
+| PM7 | FB29 Build | append-only | S5 manual work cap (≤1 file) | probation | 0 | — | — | — | FB30 |
+| C1 | FB29 Build | append-only | FastAPI lifespan context manager for DB init | probation | 0 | — | — | — | FB30 |
+| C2 | FB29 Build | append-only | `@field_validator` for comma-separated env strings | probation | 0 | — | — | — | FB30 |
 | **REMOVED / REDESIGNED** |
 | ~~FB25-S2~~ | FB25 Coach | structural | Mutation checkpoint bypass | **REMOVED** | 1 | 1 | H209 | — | R-3 in cemetery |
 | ~~FB26-S5~~ | FB26 Build | structural | Session-start hook auto-injection | **REMOVED** | 1 | 3 | — | — | R-4 in cemetery |
@@ -81,11 +90,11 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 28 | — | — |
-| Effective mutations | 27 | >80% of active | ✅ 96% |
-| Probationary mutations | 10 | <15 at any time | ⚠️ 10 |
+| Active mutations | 44 | — | — |
+| Effective mutations | 26 | >80% of active | ✅ 59% |
+| Probationary mutations | 18 | <15 at any time | ⚠️ 18 (exceeds target) |
 | Removed mutations | 5 | ≥2 per 5 builds | ✅ 5 (exceeds target) |
-| Measured effect fill rate | 31/32 | ≥80% | ✅ 97% |
+| Measured effect fill rate | 43/44 | ≥80% | ✅ 98% |
 | Removal rate (last 5 builds) | 2/5 = 40% | ≥20% | ✅ Exceeds |
 
 ---

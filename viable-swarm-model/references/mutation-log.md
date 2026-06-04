@@ -1935,7 +1935,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: Zero instances of `file.read(max_bytes=...)` or `file.read(limit=...)` in new code.
 
-**Measured effect**: **PENDING** — awaiting FB27 validation.
+**Measured effect**: Effective (Score: 5) — FB27: UploadFile.read() API signature caught in foundation audit. No `TypeError: read() takes no keyword arguments` occurrences.
 
 ---
 
@@ -1949,7 +1949,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: All auth endpoints have `@limiter.limit("...")` decorators or equivalent rate limiting.
 
-**Measured effect**: **PENDING** — awaiting FB27 validation.
+**Measured effect**: Effective (Score: 5) — FB27: Rate limits present on all auth endpoints. No brute-force vulnerability.
 
 ---
 
@@ -1963,7 +1963,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: All file uploads sanitize filenames with `secure_filename()` or equivalent. Upload paths are constrained to designated directories.
 
-**Measured effect**: **PENDING** — awaiting FB27 validation.
+**Measured effect**: Effective (Score: 5) — FB27: File upload sanitization verified. No path traversal in documents.py.
 
 ---
 
@@ -1977,7 +1977,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: WebSocket room access verifies ownership/membership before `enter_room()`.
 
-**Measured effect**: **PENDING** — awaiting FB27 validation.
+**Measured effect**: Effective (Score: 5) — FB27: Socket.IO room membership verified. No arbitrary room access.
 
 ---
 
@@ -1991,7 +1991,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: No hardcoded URLs or ports in Docker configs. All external endpoints sourced from env vars.
 
-**Measured effect**: **PENDING** — awaiting FB27 validation.
+**Measured effect**: Effective (Score: 5) — FB27: No hardcoded config defaults. Environment parity verified via docker-compose port checks.
 
 ---
 
@@ -2005,7 +2005,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: Every fitness report includes Score Trend table. Drops >0.3 trigger bold regression alarm with root-cause hypothesis.
 
-**Measured effect**: **PENDING** — awaiting FB27 validation.
+**Measured effect**: Effective (Score: 4) — FB27: Score trend table included in meta-report. Alarm triggered on 3.4 < 3.6 target. Regression visibility improved.
 
 ---
 
@@ -2019,7 +2019,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: Zero CORS wildcards in final build. All rated MEDIUM or higher.
 
-**Measured effect**: **PENDING** — awaiting FB27 validation.
+**Measured effect**: Effective (Score: 5) — FB27: CORS wildcard rated MEDIUM and fixed during security gate. No deferrals.
 
 ---
 
@@ -2033,7 +2033,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: 100% of builds with Dockerfiles also have `.dockerignore`.
 
-**Measured effect**: **PENDING** — awaiting FB27 validation.
+**Measured effect**: Effective (Score: 5) — FB27: .dockerignore created alongside Dockerfile. No missing exclusions.
 
 ---
 
@@ -2047,7 +2047,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: Session end blocked if `mutations-applied.md` missing. Phase 8c-ii runs before vsm_meta spawn.
 
-**Measured effect**: **PENDING** — awaiting FB27 validation. Note: FB26 itself did NOT have this mutation active during the build (applied post-build during evaluation).
+**Measured effect**: Effective (Score: 5) — FB27: H209 hard gate active. Phase 8c-ii completed before Phase 8b. No mutation checkpoint bypass. Tool-enforced blocking verified.
 
 ---
 
@@ -2061,7 +2061,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: Every plan.md contains "Active Constraints from Skill State" section.
 
-**Measured effect**: **PENDING** — awaiting FB27 validation. Note: FB26 itself did NOT have this mutation active during the build.
+**Measured effect**: Effective (Score: 5) — FB27: Active Constraints section present in plan.md. Broker traps loaded. Process auditor scored 8/10.
 
 ---
 
@@ -2075,7 +2075,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: `.kimi/session-context.md` exists at start of every build with broker traps and active mutations.
 
-**Measured effect**: **PENDING** — awaiting FB27 validation. Note: FB26 itself did NOT have this mutation active during the build.
+**Measured effect**: Ineffective (Score: 3) — FB27: Hook failed to fire for 3rd consecutive build. FB29: REMOVED from mutation state. Replaced by explicit S5 manual checklist in Phase 0. See mutation-cemetery.md R-4.
 
 ---
 
@@ -2089,7 +2089,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: Process auditor scores Phase 0 broker read as 0/10 if plan.md lacks "Active Constraints from Skill State" section.
 
-**Measured effect**: **PENDING** — awaiting FB27 validation. Note: FB26 itself did NOT have this mutation active during the build.
+**Measured effect**: Effective (Score: 5) in FB27 — broker scored check worked (8/10). FB29: REDESIGNED — prompt-only scored check insufficient under time pressure. Replaced by PM1 (hook-enforced process auditor spawn + retroactive detection in stop-verifier.sh).
 
 
 ---
