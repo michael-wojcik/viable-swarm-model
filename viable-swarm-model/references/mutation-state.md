@@ -59,17 +59,17 @@
 | H219 | FB28 Build | append-only | Pydantic `type` statement + Field warning | effective | 1 | 5 | H219 | — | — |
 | **PROBATION (Awaiting Measurement)** |
 | A4 | FB28 Build | append-only | Phase 4 gate strengthening | effective | 1 | 5 | H214 | — | FB31 |
-| A5 | FB28 Build | append-only | Phase 6 skip prevention | probation | 1 | — | H217 | — | FB31 |
+| A5 | FB28 Build | append-only | Phase 6 skip prevention | effective | 2 | 4 | H217 | — | FB32 |
 | ~~S5~~ | FB28 Build | structural | Agent timeout fallback protocol | **monitor** | 1 | 2 | H217 | — | 5 timeouts in FB30; fallback protocol insufficient |
 | S6 | FB28 Build | append-only | GraphQL context builder fail-closed | effective | 1 | 5 | — | — | FB31 |
 | A6 | FB28 Build | structural | Knowledge broker manual update requirement | effective | 1 | 4 | H213 | — | FB31 |
 | R3 | FB28 Build | refinement | Process audit ≥80 fitness bar threshold | effective | 1 | 5 | — | — | FB31 |
-| A7 | FB28 Build | append-only | Timeout budget ledger (>2 per phase = BLOCK) | monitor | 2 | 2 | H217 | — | FB31 |
+| A7 | FB28 Build | append-only | Timeout budget ledger (>2 per phase = BLOCK) | monitor | 3 | 2 | H217 | — | FB32 |
 | A8 | FB28 Build | append-only | Vite config must not contain `test` property | effective | 2 | 5 | — | — | FB31 |
 | R4 | FB28 Build | refinement | Phase 3c coordinator MANDATORY for Tier 2+ | effective | 1 | 5 | — | — | FB31 |
 | A9 | FB28 Build | append-only | Pydantic V2 + SQLAlchemy ORM test fixture pattern | effective | 1 | 5 | — | — | FB31 |
 | **FB29 MUTATIONS (Measured in FB30)** |
-| PM3 | FB29 Build | structural | Mutation-state auto-update hook | probation | 1 | — | — | — | FB31 |
+| PM3 | FB29 Build | structural | Mutation-state auto-update hook | monitor | 2 | 2 | — | — | FB32 |
 | PM4 | FB29 Build | append-only | GraphQL parity admin override specificity | effective | 1 | 5 | — | — | FB31 |
 | PM5 | FB29 Build | append-only | Enum `.value` in conftest.py | effective | 1 | 5 | — | — | FB31 |
 | C1 | FB29 Build | append-only | FastAPI lifespan context manager for DB init | effective | 1 | 5 | — | — | FB31 |
@@ -252,8 +252,15 @@
 
 
 | **FB30 MUTATIONS (Created during FB30, await FB31 measurement)** |
-| M-FB30-1 | FB30 Build | structural | Architect task splitting (3 spawns) | probation | 0 | — | — | — | FB31 |
-| M-FB30-2 | FB30 Build | append-only | GraphQLRouter recommendation over ASGI mount | probation | 0 | — | — | — | FB31 |
-| M-FB30-3 | FB30 Build | append-only | Settings attribute UPPERCASE rule | probation | 0 | — | — | — | FB31 |
-| M-FB30-4 | FB30 Build | append-only | Test DB compatibility checklist (SQLite/PostgreSQL) | probation | 0 | — | — | — | FB31 |
-| M-FB30-5 | FB30 Build | append-only | GraphQL camelCase test reminder | probation | 0 | — | — | — | FB31 |
+| M-FB30-1 | FB30 Build | structural | Architect task splitting (3 spawns) | monitor | 1 | 3 | — | — | FB32 |
+| M-FB30-2 | FB30 Build | append-only | GraphQLRouter recommendation over ASGI mount | effective | 1 | 5 | — | — | FB32 |
+| M-FB30-3 | FB30 Build | append-only | Settings attribute UPPERCASE rule | effective | 1 | 5 | — | — | FB32 |
+| M-FB30-4 | FB30 Build | append-only | Test DB compatibility checklist (SQLite/PostgreSQL) | effective | 1 | 5 | — | — | FB32 |
+| M-FB30-5 | FB30 Build | append-only | GraphQL camelCase test reminder | effective | 1 | 5 | — | — | FB32 |
+
+| **FB31 MUTATIONS (Measured in FB31, await FB32 measurement)** |
+| FB31-1 | FB31 Build | structural | Architect 4-spawn split (redesign of M-FB30-1) | probation | 0 | — | H301 | — | FB32 |
+| FB31-2 | FB31 Build | structural | Tester 3-sub-wave split (redesign of H223) | probation | 0 | — | H304 | — | FB32 |
+| FB31-3 | FB31 Build | append-only | Coordinator GraphQL schema introspection check | probation | 0 | — | H302 | — | FB32 |
+| FB31-4 | FB31 Build | append-only | Phase 4 gate persistent pytest report | probation | 0 | — | H303 | — | FB32 |
+| FB31-5 | FB31 Build | append-only | Knowledge broker auto-update reminder | probation | 0 | — | — | — | FB32 |

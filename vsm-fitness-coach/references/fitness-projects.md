@@ -1027,3 +1027,36 @@
 - **Key gap**: **5 agent timeouts** forced excessive S5 manual intervention. Code quality improved (architecture, security, GraphQL parity) but agent reliability regressed.
 - **Mutations Applied**: M-FB30-1 (architect 3-spawn split), M-FB30-2 (GraphQLRouter validation), M-FB30-3 (settings UPPERCASE convention), M-FB30-4 (test DB SQLite compat), M-FB30-5 (GraphQL camelCase test queries), H223 (tester sub-waves)
 - **Ineffective Mutations Flagged**: PM1 (hook-enforced process auditor — hooks don't handle timeouts), PM7 (S5 manual work cap ≤1 file — failed under pressure, S5 wrote 5+ files)
+
+---
+
+## FB31: RecipeHub — Recipe Sharing & Meal Planning Platform
+
+**Complexity**: High (Tier 2, 4-5 waves, ~2000+ lines, 4 services)
+**Date**: 2026-06-04
+**Score**: 3.8 / 5.0
+**Services**: FastAPI backend, React frontend, PostgreSQL, Redis, Celery, Strawberry GraphQL, Socket.io
+
+### Coverage Map
+
+| Capability | Tested by |
+|---|---|
+| M-FB30-1 Architect 3-spawn split | **Partially effective** — 1/3 clean, 2/3 timed out |
+| M-FB30-2 GraphQLRouter over mount | **Effective** — 5/5, zero 307 redirects |
+| M-FB30-3 Settings UPPERCASE | **Effective** — 5/5, zero lowercase violations |
+| M-FB30-4 UUID default=uuid.uuid4 | **Effective** — 5/5, SQLite tests pass |
+| M-FB30-5 GraphQL camelCase tests | **Effective** — 5/5, zero casing errors |
+| H223 Tester 2-sub-wave split | **Partially effective** — split 1 clean, split 2 timed out |
+| Security traps (deleteRecipe, admin reg) | **All passed** — 0 BLOCKERs, 0 CRITICAL, 0 HIGH |
+| Frontend build / TypeScript | ✅ `npm run build` and `tsc -b` pass |
+| Backend tests | 46 passed, 0 failed |
+| Frontend tests | 48 passed, 0 failed |
+| Process compliance | 42/100 (plan.md initially missing, 4 timeouts) |
+
+### Result
+- **Score**: 3.8/5.0 (improvement from FB30 3.6)
+- **BLOCKERs**: 3 code-level (all fixed) + 0 process-level
+- **Fix iterations**: 1
+- **Key gap**: GraphQL schema ↔ frontend query contract mismatch (coordinator missed)
+- **Key surprise**: Meta-report independently caught phase4-gate inflation
+- **Mutations**: M-FB30-1 redesign (5 spawns), H223 redesign (3 sub-waves), coordinator Check 24 strengthening, gate discipline rule

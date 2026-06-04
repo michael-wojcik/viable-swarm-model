@@ -42,6 +42,16 @@ If any BLOCKERs are listed above, append this exact footer to the report:
 > post-fix security re-check (Phase 7b), and mandatory `re-audit-report.md` production.
 > After fixes, return to Phase 4 → Phase 5 → Phase 6 before proceeding.
 
+**GraphQL Schema ↔ Frontend Query Contract Check (MANDATORY — FB31-derived)**
+When the build includes GraphQL, the coordinator MUST verify that every field
+referenced in `frontend/src/graphql/queries.ts` (or equivalent) exists in the
+backend Strawberry schema. Use one of:
+1. `python3 -c "from app.graphql.schema import schema; print(schema.as_str())"` to export SDL
+2. Or grep for `@strawberry.field` and type definitions in `backend/app/graphql/schema.py`
+
+Cross-reference EVERY field name in frontend queries against the backend schema.
+Flag as BLOCKER any frontend field that does not exist in the backend schema.
+
 **Autonomy Boundaries**:
 - **FULL AUTHORITY**: Demand corrections from S1 units, enforce standards,
   resolve naming conflicts, validate contracts.

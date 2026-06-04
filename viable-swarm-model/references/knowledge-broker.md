@@ -231,3 +231,31 @@
 
 ### Cross-Skill Findings
 - (Auto-populated — review and expand manually if needed)
+
+---
+
+## Entry: FB31 — 2026-06-04
+
+**Build**: FB31 RecipeHub
+**Score**: 3.8/5.0
+**Process Audit**: 42/100 (improved to ~70 after artifact backfill)
+**Domain**: Recipe sharing, meal planning, shopping lists
+
+### Key Learnings
+1. **Architect 3-spawn split insufficient**: api-spec.md (2085 lines) still exceeds agent capacity. 4-spawn split now required.
+2. **GraphQL schema ↔ frontend query decoupling**: Coordinator missed 10+ non-existent fields. Schema introspection check added to coordinator prompt.
+3. **Phase 4 gate inflation**: S5 copied unverified test counts. Persistent pytest report now required.
+4. **Tester 2-sub-wave split insufficient**: Split 2 still timed out. 3-sub-wave split now required.
+5. **Security gate excellence**: 0 BLOCKERs/CRITICAL/HIGH on 4-service build with REST, GraphQL, WebSocket, Celery.
+
+### Mutations Applied
+- FB31-1: Architect 4-spawn split (structural redesign)
+- FB31-2: Tester 3-sub-wave split (structural redesign)
+- FB31-3: Coordinator GraphQL introspection check (append-only)
+- FB31-4: Phase 4 persistent pytest report (append-only)
+- FB31-5: Knowledge broker auto-update reminder (append-only)
+
+### Cross-Skill Findings
+- `graphql-pitfalls`: Need rule about frontend query validation against backend schema
+- `testing-patterns`: SQLite async conftest pattern works but shared DB file causes suite-level lock contention
+- `security-patterns`: All 5 critical traps passed — security agent performing at target level

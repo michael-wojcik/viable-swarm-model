@@ -2780,3 +2780,48 @@ producing `mutations-applied.md` and filling measured effects.
 **Rationale**: FB30 tester was asked to write ~21 tests across auth, budgets, transactions, categories, uploads, GraphQL. Agent timed out. Splitting into 2 sequential sub-waves (auth+recipes+ingredients, then meal_plans+shopping_lists+GraphQL) keeps each spawn under timeout.
 **Expected effect**: Each tester spawn completes within 900s. All test files written without S5 manual intervention.
 **Measured effect**: AWAITING_BUILD — awaits FB31 for measurement
+
+## Mutation FB31-1 — 2026-06-04 (Structural — USER PRE-APPROVED)
+**Session**: FB31 fitness build evaluation
+**File**: ~/vsm/viable-swarm-model/SKILL.md (Phase 1 architect splitting)
+**Type**: structural (redesign)
+**Target failure mode**: M-FB30-1 ineffective — architect 3-spawn split still caused 2/3 timeouts
+**Rationale**: FB31 showed api-spec.md (2085 lines) and combined data-model+shared-contracts exceeded agent capacity. 4 separate spawns (architecture, api-spec, data-model, shared-contracts) provides finer granularity.
+**Expected effect**: All 4 architect spawns complete within timeout ceiling
+**Measured effect**: (To be measured in FB32)
+
+## Mutation FB31-2 — 2026-06-04 (Structural — USER PRE-APPROVED)
+**Session**: FB31 fitness build evaluation
+**File**: ~/vsm/viable-swarm-model/SKILL.md (Phase 4 tester sub-waves)
+**Type**: structural (redesign)
+**Target failure mode**: H223 partially effective — 2-sub-wave split still had split 2 timeout
+**Rationale**: FB31 tester split 2 (meal_plans + shopping_lists + graphql) timed out. 3 sub-waves (auth/recipes/ingredients, meal_plans/shopping_lists/social, graphql) provides narrower scope per spawn.
+**Expected effect**: All 3 tester spawns complete within timeout ceiling
+**Measured effect**: (To be measured in FB32)
+
+## Mutation FB31-3 — 2026-06-04 (Append-Only — Autonomous)
+**Session**: FB31 fitness build evaluation
+**File**: ~/vsm/viable-swarm-model/agents/vsm_coordinator.md
+**Type**: append-only
+**Target failure mode**: Coordinator missed GraphQL schema ↔ frontend query contract mismatch
+**Rationale**: FB31 coordinator only verified imports, not field existence. Frontend queries.ts referenced 10+ non-existent backend fields.
+**Expected effect**: Coordinator catches schema/query mismatches before implementation phase ends
+**Measured effect**: (To be measured in FB32)
+
+## Mutation FB31-4 — 2026-06-04 (Append-Only — Autonomous)
+**Session**: FB31 fitness build evaluation
+**File**: ~/vsm/viable-swarm-model/SKILL.md (Phase 4 gate discipline)
+**Type**: append-only
+**Target failure mode**: Phase 4 gate test-count inflation (46 actual vs 50 claimed)
+**Rationale**: S5 copied unverified counts from agent reports. Gate document must cite persistent pytest output.
+**Expected effect**: Zero inflated test counts in gate documents
+**Measured effect**: (To be measured in FB32)
+
+## Mutation FB31-5 — 2026-06-04 (Append-Only — Autonomous)
+**Session**: FB31 fitness build evaluation
+**File**: ~/vsm/viable-swarm-model/references/knowledge-broker.md
+**Type**: append-only
+**Target failure mode**: Mutation state stale — probationary mutations not scored after build
+**Rationale**: FB31 mutation-state.md was not updated with build scores until S5 manual backfill. Auto-update hook (PM3) is also probationary.
+**Expected effect**: Mutation scores backfilled within 1 hour of build completion
+**Measured effect**: (To be measured in FB32)

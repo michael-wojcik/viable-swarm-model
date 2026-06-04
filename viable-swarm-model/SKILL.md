@@ -685,19 +685,21 @@ Before starting any build:
 
 ### Phase 1: Intelligence (S4)
 
-**Architect Task Splitting for Tier 2+ Builds (M-FB30-1 — Structural)**
+**Architect Task Splitting for Tier 2+ Builds (M-FB30-1 — Structural, REDESIGNED FB31)**
 For builds with ≥4 architecture documents, S5 MUST split `vsm_architect` into
-**3 separate spawns** to prevent timeout:
+**4 separate spawns** to prevent timeout:
 1. **Spawn 1**: `architecture.md` only
 2. **Spawn 2**: `api-spec.md` only
-3. **Spawn 3**: `shared-contracts.md` + `data-model.md`
+3. **Spawn 3**: `data-model.md` only
+4. **Spawn 4**: `shared-contracts.md` only
 
 Wait via `TaskOutput(block=true)` for EACH spawn to complete before starting
 the next. Do NOT parallelize architect spawns — they build on each other.
 
-**Rationale**: FB30 architect timed out writing 4 documents (~1600 lines) in a
-single spawn. S5 then wrote 5+ files manually. Three focused spawns of ~400-600
-lines each stay under the background agent timeout ceiling.
+**Rationale**: FB30-FB31 architect timed out writing large documents in a
+single spawn. FB31 3-spawn split still had 2/3 timeouts (api-spec.md 2085 lines,
+data-model+shared-contracts combined). Four focused spawns of ~400-600 lines each
+stay under the background agent timeout ceiling.
 
 **S5 Policy Check** (before approval): Explicitly weigh:
 - **S3 concern**: Can the metasystem regulate this complexity? (Check Variety Assessment tier. Do we have enough agents, time, and context?)
@@ -969,13 +971,14 @@ spawn both testers + devops_coder. Run tests via Shell.
 
 **Tier 2+ builds** (≥ 1000 lines, 2+ services):
 
-**Tester Sub-Waves for Backend (H223 — Structural)**
+**Tester Sub-Waves for Backend (H223 — Structural, REDESIGNED FB31)**
 Do NOT spawn a single `vsm_backend_tester` for the full suite. Split into
-**2 sequential tester spawns**:
-1. **Spawn 1**: `test_auth.py` + core domain tests (e.g., `test_recipes.py`, `test_ingredients.py`)
-2. **Spawn 2**: remaining domain tests + `test_graphql.py`
+**3 sequential tester spawns**:
+1. **Spawn 1**: `test_auth.py` + `test_recipes.py` + `test_ingredients.py`
+2. **Spawn 2**: `test_meal_plans.py` + `test_shopping_lists.py` + `test_social.py`
+3. **Spawn 3**: `test_graphql.py` + any remaining tests
 
-Wait via `TaskOutput(block=true)` for Spawn 1 to complete before spawning Spawn 2.
+Wait via `TaskOutput(block=true)` for each spawn to complete before spawning the next.
 Each spawn gets a narrower scope (< 500 lines expected output) to stay under
 the timeout ceiling.
 
@@ -1013,7 +1016,7 @@ or Phase 6 (Integration). Route to Phase 7 (Fix Wave). Fixing downstream integra
 BLOCKERs on top of failing tests is waste. The Phase 4 exit gate is mandatory —
 never treat test failures as "acceptable for now."
 
-**Phase 4 Gate Declaration (MANDATORY — FB28-sourced strengthening)**
+**Phase 4 Gate Declaration (MANDATORY — FB28-sourced strengthening, FB31-refined)**
 After aggregating test results, S5 MUST write `.kimi/phase4-gate.md` BEFORE
 spawning any Phase 5 agent. The file MUST contain:
 ```markdown
@@ -1032,6 +1035,16 @@ PASS / BLOCK
 - PASS → proceed to Phase 5
 - BLOCK → route to Phase 7 (Fix Wave)
 ```
+
+**Persistent Test Report Requirement (FB31-derived)**
+Before writing `phase4-gate.md`, S5 MUST generate a persistent test report:
+```bash
+cd backend && python3 -m pytest tests/ -v > .kimi/pytest-report.md 2>&1
+cd frontend && npm test > .kimi/vitest-report.md 2>&1
+```
+The gate document MUST cite `.kimi/pytest-report.md` and `.kimi/vitest-report.md`
+as the source of truth for test counts. Do NOT copy counts from agent summaries
+or memory — agent reports may contain inflation or phantom test files.
 
 A single failing test is a HARD BLOCK. S5 MUST NOT rationalize, categorize,
 or deprioritize test failures (e.g., "just an enum edge case", "only 1 of 85").

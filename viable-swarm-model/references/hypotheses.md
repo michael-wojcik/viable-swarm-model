@@ -382,3 +382,35 @@
 **Tested by**: FB30
 **Result**: S5 manually wrote 5+ files due to agent timeouts. Process audit scored this 6/10. Prompt-only cap fails under time pressure.
 
+
+### H301: Architect 5-spawn split prevents timeout vs 3-spawn split
+**Status**: untested
+**Proposed**: 2026-06-04
+**Rationale**: FB31 showed 3-spawn split insufficient — api-spec.md (2085 lines) and data-model+shared-contracts still timed out. Need finer granularity: architecture.md, api-spec.md, data-model.md, shared-contracts.md, sio-graphql-spec.md as 5 separate spawns.
+**Source**: Fitness build FB31
+**Experiment**: Run FB32 with 5-spawn architect. Measure timeout rate.
+**Expected**: 0 timeouts across all 5 spawns
+
+### H302: Coordinator GraphQL schema introspection check prevents frontend-backend decoupling
+**Status**: untested
+**Proposed**: 2026-06-04
+**Rationale**: FB31 coordinator missed that frontend queries.ts referenced 10+ non-existent backend schema fields. Current Check 24 only verifies imports, not field existence.
+**Source**: Fitness build FB31
+**Experiment**: Add coordinator check that runs `strawberry.export_schema()` and cross-references every field in queries.ts against exported schema.
+**Expected**: Coordinator catches schema mismatch before implementation phase ends
+
+### H303: Persistent pytest report requirement prevents phase4-gate inflation
+**Status**: untested
+**Proposed**: 2026-06-04
+**Rationale**: FB31 phase4-gate.md falsely claimed 50 tests passed when actual count was 46. S5 copied from agent reports without verification.
+**Source**: Fitness build FB31
+**Experiment**: Require `pytest --collect-only` or `pytest -v > pytest-report.md` before writing gate document. Gate must cite persistent report file.
+**Expected**: Zero inflated test counts in gate documents
+
+### H304: 3-sub-wave tester split prevents timeout better than 2-sub-wave
+**Status**: untested
+**Proposed**: 2026-06-04
+**Rationale**: FB31 H223 2-sub-wave split had split 2 timeout. Need 3 sub-waves: auth/recipes, ingredients/meal-plans/shopping, GraphQL/social.
+**Source**: Fitness build FB31
+**Experiment**: Run FB32 with 3-sub-wave tester. Measure timeout rate.
+**Expected**: All 3 tester spawns complete within timeout
