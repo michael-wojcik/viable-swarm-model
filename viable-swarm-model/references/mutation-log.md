@@ -2714,3 +2714,69 @@ producing `mutations-applied.md` and filling measured effects.
 **Expected effect**: Mutation count stays < 50. Probationary ratio stays < 30%. Removal rate ≥ 2 per 5 builds.
 **Measured effect**: AWAITING_BUILD — applied this session; awaits FB30 for measurement
 
+
+---
+
+## Mutation M-FB30-1 — 2026-06-04 (Structural — USER APPROVED)
+**Session**: FB30 regression build coach Phase 5
+**File**: `SKILL.md` Phase 1
+**Type**: structural
+**Target failure mode**: vsm_architect times out writing 4 large documents (architecture.md, api-spec.md, shared-contracts.md, data-model.md) in a single spawn
+**Rationale**: FB30 architect timed out at ~600s writing 4 documents totaling ~1600 lines. S5 then wrote 5+ files manually, violating VSM parallelization. Splitting into 3 focused spawns keeps each under the background agent timeout ceiling.
+**Expected effect**: Architect completes within timeout. Zero manual S5 document writing in Phase 1.
+**Measured effect**: AWAITING_BUILD — awaits FB31 for measurement
+
+---
+
+## Mutation M-FB30-2 — 2026-06-04 (Append-Only — Autonomous)
+**Session**: FB30 regression build coach Phase 5
+**File**: `SKILL.md` Phase 3d, `references/integration-checklist.md`
+**Type**: append-only
+**Target failure mode**: GraphQL mounted via `app.mount("/graphql", GraphQL(...))` causes 307 redirect on POST; must use `strawberry.fastapi.GraphQLRouter` with `app.include_router(..., prefix="/graphql")`
+**Rationale**: FB30 had a GraphQL routing bug where POST to `/graphql` returned 307 because ASGI mount doesn't handle POST correctly. GraphQLRouter is the FastAPI-native way. This is a known Strawberry pattern that coders occasionally miss.
+**Expected effect**: All future builds use GraphQLRouter. Coordinator verifies POST /graphql returns 200.
+**Measured effect**: AWAITING_BUILD — awaits FB31 for measurement
+
+---
+
+## Mutation M-FB30-3 — 2026-06-04 (Append-Only — Autonomous)
+**Session**: FB30 regression build coach Phase 5
+**File**: `SKILL.md` Phase 2a mini-audit, `references/python-pitfalls.md`
+**Type**: append-only
+**Target failure mode**: Settings accessed with lowercase attribute names (`settings.jwt_secret`, `settings.access_token_expire_minutes`) when Pydantic Settings fields are UPPERCASE (`JWT_SECRET`, `ACCESS_TOKEN_EXPIRE_MINUTES`)
+**Rationale**: FB30 had 2 auth.py bugs where lowercase settings attributes were used. Pydantic BaseSettings fields are case-sensitive. This is a silent failure that only surfaces at runtime during JWT encoding.
+**Expected effect**: Auditor catches lowercase settings access in Phase 2b/3b. Zero runtime AttributeError from settings access.
+**Measured effect**: AWAITING_BUILD — awaits FB31 for measurement
+
+---
+
+## Mutation M-FB30-4 — 2026-06-04 (Append-Only — Autonomous)
+**Session**: FB30 regression build coach Phase 5
+**File**: `SKILL.md` Phase 4 testing section, `references/python-pitfalls.md`
+**Type**: append-only
+**Target failure mode**: Models use `server_default=sa.text("gen_random_uuid()")` which fails on SQLite test databases; or `sa.UUID` without bind processor patch in conftest.py
+**Rationale**: FB30 required a fix wave patch to change `server_default` to `default=uuid.uuid4` and add UUID bind processor in conftest.py. This is a recurring pattern when PostgreSQL-targeted models are tested with SQLite.
+**Expected effect**: Foundation auditor flags `server_default` with `gen_random_uuid()` in models. Tester conftest.py includes UUID bind processor. Tests pass on first run.
+**Measured effect**: AWAITING_BUILD — awaits FB31 for measurement
+
+---
+
+## Mutation M-FB30-5 — 2026-06-04 (Append-Only — Autonomous)
+**Session**: FB30 regression build coach Phase 5
+**File**: `SKILL.md` Phase 4 testing section, `references/graphql-pitfalls.md`
+**Type**: append-only
+**Target failure mode**: GraphQL test queries use snake_case field names (`create_budget`, `access_token`) when Strawberry schema uses camelCase (`createBudget`, `accessToken`)
+**Rationale**: FB30 had multiple GraphQL tests fail with "Cannot query field" because test queries used snake_case. Strawberry auto-camelCases Python field names. This is a consistent mismatch pattern across builds.
+**Expected effect**: Backend tester writes camelCase GraphQL test queries. Zero "Cannot query field" errors in test output.
+**Measured effect**: AWAITING_BUILD — awaits FB31 for measurement
+
+---
+
+## Mutation H223 — 2026-06-04 (Structural — USER APPROVED)
+**Session**: FB30 regression build coach Phase 5
+**File**: `SKILL.md` Phase 4
+**Type**: structural
+**Target failure mode**: vsm_backend_tester times out writing full test suite in single spawn; FB30 tester timed out before completing all test files
+**Rationale**: FB30 tester was asked to write ~21 tests across auth, budgets, transactions, categories, uploads, GraphQL. Agent timed out. Splitting into 2 sequential sub-waves (auth+recipes+ingredients, then meal_plans+shopping_lists+GraphQL) keeps each spawn under timeout.
+**Expected effect**: Each tester spawn completes within 900s. All test files written without S5 manual intervention.
+**Measured effect**: AWAITING_BUILD — awaits FB31 for measurement

@@ -653,3 +653,33 @@ class Settings(BaseSettings):
 **Source**: FB29 `config.py` initially failed to load `CORS_ORIGINS` from env
 because the comma-separated string was not split. Added `_split_comma_separated`
 validator to handle the env string → list conversion.
+
+---
+
+## Rule: Pydantic Settings Attribute Names Are UPPERCASE
+
+**Applies to**: All Pydantic Settings usage
+**Severity**: BLOCKER
+**Source**: FB30
+
+**Problem**: Accessing settings with lowercase attribute names fails silently at runtime because Pydantic Settings fields are declared in UPPERCASE but code may use lowercase.
+
+**Example failure**:
+```python
+# config.py
+class Settings(BaseSettings):
+    SECRET_KEY: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
+
+# auth.py — WRONG
+token = jwt.encode(payload, settings.jwt_secret, algorithm="HS256")
+# AttributeError: 'Settings' object has no attribute 'jwt_secret'
+
+# auth.py — CORRECT
+token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
+```
+
+**Prevention rules**:
+1. Backend coder MUST grep for `settings\.[a-z_]+` (lowercase after dot) and verify against the Settings class definition.
+2. Auditor MUST flag any lowercase settings access as BLOCKER.
+

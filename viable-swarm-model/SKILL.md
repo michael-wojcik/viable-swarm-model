@@ -684,8 +684,20 @@ Before starting any build:
    - Defaulting to a stack without verification has caused 3+ build failures (FB16, FB19, FB22)
 
 ### Phase 1: Intelligence (S4)
-Spawn `vsm_architect` subagent. Review output. S3/S4 homeostat: max 3
-iterations before escalating to S5.
+
+**Architect Task Splitting for Tier 2+ Builds (M-FB30-1 — Structural)**
+For builds with ≥4 architecture documents, S5 MUST split `vsm_architect` into
+**3 separate spawns** to prevent timeout:
+1. **Spawn 1**: `architecture.md` only
+2. **Spawn 2**: `api-spec.md` only
+3. **Spawn 3**: `shared-contracts.md` + `data-model.md`
+
+Wait via `TaskOutput(block=true)` for EACH spawn to complete before starting
+the next. Do NOT parallelize architect spawns — they build on each other.
+
+**Rationale**: FB30 architect timed out writing 4 documents (~1600 lines) in a
+single spawn. S5 then wrote 5+ files manually. Three focused spawns of ~400-600
+lines each stay under the background agent timeout ceiling.
 
 **S5 Policy Check** (before approval): Explicitly weigh:
 - **S3 concern**: Can the metasystem regulate this complexity? (Check Variety Assessment tier. Do we have enough agents, time, and context?)
@@ -713,6 +725,11 @@ Wait via `TaskOutput(block=true)`. Then S5 runs a **mini-audit**:
 - Does `auth layer file` have stable `get_current_user` / `require_role` signatures?
 - Are `.env.example` names finalized and consistent?
 - Do all 2a files compile/import cleanly?
+- **Settings attribute UPPERCASE check (M-FB30-3)**: Verify `auth.py` and ALL files
+  that access settings use UPPERCASE attribute names matching the Pydantic model
+  exactly (`settings.JWT_SECRET`, `settings.ACCESS_TOKEN_EXPIRE_MINUTES`).
+  Lowercase access (`settings.jwt_secret`) is a BLOCKER — it causes runtime
+  AttributeError when Pydantic Settings fields are UPPERCASE.
 
 If any check fails → fix BEFORE dispatching Sub-Wave 2b.
 
@@ -901,7 +918,7 @@ After all implementation agents complete, spawn `vsm_wiring` subagent.
 This agent exclusively owns `entry point file`, `realtime.py`, `root component file`, and `main.tsx`.
 It verifies:
 - All routers registered in `entry point file`
-- GraphQLRouter mounted with `context_getter=get_context`
+- GraphQLRouter mounted with `context_getter=get_context` via `strawberry.fastapi.GraphQLRouter` + `app.include_router(..., prefix="/graphql")`. NEVER use `app.mount("/graphql", GraphQL(...))` — this causes 307 redirect on POST (M-FB30-2).
 - `realtime.py` reuses `sio` from `app.sio` (never creates new AsyncServer)
 - `main.tsx` wraps app in `[API client]Provider`
 - `root component file` includes all routes with role guards
@@ -951,14 +968,24 @@ for frontend) + `vsm_devops_coder` in parallel. If the project is full-stack,
 spawn both testers + devops_coder. Run tests via Shell.
 
 **Tier 2+ builds** (≥ 1000 lines, 2+ services):
-Spawn `vsm_backend_tester` + `vsm_frontend_tester` + `vsm_devops_coder` in parallel
-with `run_in_background=true`. Both testers run simultaneously:
-- `vsm_backend_tester`: framework test runner, database fixtures, API integration, [task queue] mocks
-- `vsm_frontend_tester`: framework test runner, component rendering, TypeScript compilation, build verification
 
-Wait via `TaskOutput(block=true)` for ALL testers to complete, then aggregate
-results. If either tester times out, treat as a BLOCKER: the build surface
-exceeds single-agent capacity and must be further subdivided or scoped down.
+**Tester Sub-Waves for Backend (H223 — Structural)**
+Do NOT spawn a single `vsm_backend_tester` for the full suite. Split into
+**2 sequential tester spawns**:
+1. **Spawn 1**: `test_auth.py` + core domain tests (e.g., `test_recipes.py`, `test_ingredients.py`)
+2. **Spawn 2**: remaining domain tests + `test_graphql.py`
+
+Wait via `TaskOutput(block=true)` for Spawn 1 to complete before spawning Spawn 2.
+Each spawn gets a narrower scope (< 500 lines expected output) to stay under
+the timeout ceiling.
+
+**Parallel testers** (run simultaneously):
+- `vsm_frontend_tester`: framework test runner, component rendering, TypeScript compilation, build verification
+- `vsm_devops_coder`: Docker, CI/CD
+
+Wait via `TaskOutput(block=true)` for ALL to complete, then aggregate results.
+If either tester times out, treat as a BLOCKER: further subdivide into smaller
+sub-waves or scope down the build.
 
 **Phase 4 Exit Gate (HARD BLOCK)**
 Before proceeding to Phase 5, verify:
@@ -971,6 +998,15 @@ Before proceeding to Phase 5, verify:
    python3 -c "import app.main; import app.graphql; import app.sio; import app.tasks"
    ```
    This must succeed with zero errors. A `NameError` or `ImportError` at module level is a HARD BLOCK even if tests somehow pass. This catches module-level side effects (e.g., `settings = Settings()`, `engine = create_async_engine(...)`) that break imports but may not surface during test discovery.
+
+6. **Test DB compatibility check (M-FB30-4)**: If tests run on SQLite (common for
+   pytest-asyncio), verify `models.py` uses `default=uuid.uuid4` (not
+   `server_default=sa.text("gen_random_uuid()")`) for UUID primary keys.
+   Verify `conftest.py` patches UUID bind processor for SQLite compatibility.
+7. **GraphQL test casing check (M-FB30-5)**: If GraphQL tests exist, verify ALL
+   test query field names use camelCase matching the Strawberry schema
+   (`createBudget`, `accessToken`, `tokenType`). Snake_case (`create_budget`) in
+   test queries causes "Cannot query field" errors.
 
 If ANY of the above report failures, **STOP**. Do not proceed to Phase 5 (Security Gate)
 or Phase 6 (Integration). Route to Phase 7 (Fix Wave). Fixing downstream integration

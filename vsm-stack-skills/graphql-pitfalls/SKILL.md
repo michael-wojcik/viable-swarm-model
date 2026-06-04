@@ -312,3 +312,33 @@ async def get_context(request: Request) -> dict:
 
 **Source**: FB29 `graphql.py` line 59 had `db = get_async_session_maker()` (returned
 maker class). Implementation audit caught it as BLOCKER. Fixed to `db = get_async_session_maker()()`.
+
+---
+
+## Rule: Use GraphQLRouter for FastAPI, Not ASGI Mount
+
+**Applies to**: FastAPI + Strawberry GraphQL apps
+**Severity**: BLOCKER
+**Source**: FB30
+
+**Problem**: `app.mount("/graphql", GraphQL(...))` causes 307 redirects on POST requests because Starlette's mount handling redirects `/graphql/` → `/graphql` (or vice versa), losing the POST body.
+
+**Correct pattern**:
+```python
+from strawberry.fastapi import GraphQLRouter
+from app.graphql import schema, get_graphql_context
+
+graphql_router = GraphQLRouter(schema, context_getter=get_graphql_context)
+app.include_router(graphql_router, prefix="/graphql")
+```
+
+**Incorrect pattern** (BLOCKER):
+```python
+from strawberry.asgi import GraphQL
+app.mount("/graphql", GraphQL(schema, context_getter=get_graphql_context))
+```
+
+**Prevention rules**:
+1. DevOps coder MUST use `GraphQLRouter` for FastAPI apps.
+2. Coordinator MUST verify `/graphql` endpoint returns 200 for POST, not 307.
+

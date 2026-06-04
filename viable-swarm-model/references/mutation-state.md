@@ -58,32 +58,31 @@
 | H218 | FB28 Build | append-only | GraphQL context getter imported function | effective | 1 | 5 | H218 | — | — |
 | H219 | FB28 Build | append-only | Pydantic `type` statement + Field warning | effective | 1 | 5 | H219 | — | — |
 | **PROBATION (Awaiting Measurement)** |
-| A4 | FB28 Build | append-only | Phase 4 gate strengthening | probation | 0 | — | H214 | — | FB30 |
-| A5 | FB28 Build | append-only | Phase 6 skip prevention | probation | 0 | — | H217 | — | FB30 |
-| S5 | FB28 Build | structural | Agent timeout fallback protocol | probation | 0 | — | H217 | — | FB30 |
-| S6 | FB28 Build | append-only | GraphQL context builder fail-closed | probation | 0 | — | — | — | FB30 |
-| A6 | FB28 Build | structural | Knowledge broker manual update requirement | probation | 0 | — | H213 | — | FB30 |
-| R3 | FB28 Build | refinement | Process audit ≥80 fitness bar threshold | probation | 0 | — | — | — | FB30 |
-| A7 | FB28 Build | append-only | Timeout budget ledger (>2 per phase = BLOCK) | probation | 0 | — | H217 | — | FB30 |
-| A8 | FB28 Build | append-only | Vite config must not contain `test` property | probation | 0 | — | — | — | FB30 |
-| R4 | FB28 Build | refinement | Phase 3c coordinator MANDATORY for Tier 2+ | probation | 0 | — | — | — | FB30 |
-| A9 | FB28 Build | append-only | Pydantic V2 + SQLAlchemy ORM test fixture pattern | probation | 0 | — | — | — | FB30 |
-| **FB29 MUTATIONS (Awaiting Measurement)** |
-| PM1 | FB29 Build | structural | Hook-enforced process auditor spawn | probation | 0 | — | — | — | FB30 |
-| PM2 | FB29 Build | append-only | Meta-report artifact disk verification | probation | 0 | — | — | — | FB30 |
-| PM3 | FB29 Build | structural | Mutation-state auto-update hook | probation | 0 | — | — | — | FB30 |
-| PM4 | FB29 Build | append-only | GraphQL parity admin override specificity | probation | 0 | — | — | — | FB30 |
-| PM5 | FB29 Build | append-only | Enum `.value` in conftest.py | probation | 0 | — | — | — | FB30 |
-| PM7 | FB29 Build | append-only | S5 manual work cap (≤1 file) | probation | 0 | — | — | — | FB30 |
-| C1 | FB29 Build | append-only | FastAPI lifespan context manager for DB init | probation | 0 | — | — | — | FB30 |
-| C2 | FB29 Build | append-only | `@field_validator` for comma-separated env strings | probation | 0 | — | — | — | FB30 |
+| A4 | FB28 Build | append-only | Phase 4 gate strengthening | effective | 1 | 5 | H214 | — | FB31 |
+| A5 | FB28 Build | append-only | Phase 6 skip prevention | probation | 1 | — | H217 | — | FB31 |
+| ~~S5~~ | FB28 Build | structural | Agent timeout fallback protocol | **monitor** | 1 | 2 | H217 | — | 5 timeouts in FB30; fallback protocol insufficient |
+| S6 | FB28 Build | append-only | GraphQL context builder fail-closed | effective | 1 | 5 | — | — | FB31 |
+| A6 | FB28 Build | structural | Knowledge broker manual update requirement | effective | 1 | 4 | H213 | — | FB31 |
+| R3 | FB28 Build | refinement | Process audit ≥80 fitness bar threshold | effective | 1 | 5 | — | — | FB31 |
+| A7 | FB28 Build | append-only | Timeout budget ledger (>2 per phase = BLOCK) | monitor | 2 | 2 | H217 | — | FB31 |
+| A8 | FB28 Build | append-only | Vite config must not contain `test` property | effective | 2 | 5 | — | — | FB31 |
+| R4 | FB28 Build | refinement | Phase 3c coordinator MANDATORY for Tier 2+ | effective | 1 | 5 | — | — | FB31 |
+| A9 | FB28 Build | append-only | Pydantic V2 + SQLAlchemy ORM test fixture pattern | effective | 1 | 5 | — | — | FB31 |
+| **FB29 MUTATIONS (Measured in FB30)** |
+| PM3 | FB29 Build | structural | Mutation-state auto-update hook | probation | 1 | — | — | — | FB31 |
+| PM4 | FB29 Build | append-only | GraphQL parity admin override specificity | effective | 1 | 5 | — | — | FB31 |
+| PM5 | FB29 Build | append-only | Enum `.value` in conftest.py | effective | 1 | 5 | — | — | FB31 |
+| C1 | FB29 Build | append-only | FastAPI lifespan context manager for DB init | effective | 1 | 5 | — | — | FB31 |
+| C2 | FB29 Build | append-only | `@field_validator` for comma-separated env strings | effective | 1 | 5 | — | — | FB31 |
 | **REMOVED / REDESIGNED** |
 | ~~FB25-S2~~ | FB25 Coach | structural | Mutation checkpoint bypass | **REMOVED** | 1 | 1 | H209 | — | R-3 in cemetery |
 | ~~FB26-S5~~ | FB26 Build | structural | Session-start hook auto-injection | **REMOVED** | 1 | 3 | — | — | R-4 in cemetery |
 | ~~FB18-10~~ | FB18 Build | structural | Mutation tracking checkpoint | **REMOVED** | 4 | 1 | — | — | Superseded by FB26-S3 |
 | ~~FB23-3~~ | FB23 Build | refinement | Inline fix prevention (prompt-only) | **REMOVED** | 2 | 1 | — | — | R-2 in cemetery |
 | ~~FB19-7~~ | FB19 Build | append-only | Cross-skill mutation log review | **REMOVED** | 7 | 1 | — | — | R-1 in cemetery |
-| FB26-S6 | FB26 Build | structural | Process auditor broker scored check | **REDESIGNED** | 2 | 5→redesign | — | — | PM1 replaces |
+| ~~PM1~~ | FB29 Build | structural | Hook-enforced process auditor spawn | **REMOVED** | 1 | 1 | H300 | — | Hooks don't fire for background agents; superseded by M-FB30-1 |
+| ~~PM7~~ | FB29 Build | append-only | S5 manual work cap (≤1 file) | **REMOVED** | 1 | 1 | — | — | Prompt-only rules cannot prevent boundary violations under pressure |
+| FB26-S6 | FB26 Build | structural | Process auditor broker scored check | **REDESIGNED** | 2 | 5→redesign | — | — | PM1 attempted, PM1 removed; M-FB30-1 replaces |
 | FB27-1 | FB27 Build | append-only | UUID coercion `model_validator` | **REDESIGNED** | 1 | 2 | — | — | New rule applied FB28 |
 
 ---
@@ -92,13 +91,13 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 51 | — | — |
+| Active mutations | 48 | — | — |
 | Historical effective (≥5 builds) | 10 | >15% of active | ✅ 20% |
-| Effective (<5 builds, monitored) | 16 | >30% of active | ✅ 31% |
-| Probationary mutations | 18 | <15 at any time | ⚠️ 18 (exceeds target) |
-| Removed / redesigned | 7 | ≥2 per 5 builds | ✅ 7 (exceeds target) |
-| Measured effect fill rate (scored) | 33/51 | ≥80% | ⚠️ 65% (18 pending) |
-| Measured effect fill rate (any entry) | 51/51 | ≥80% | ✅ 100% |
+| Effective (<5 builds, monitored) | 20 | >30% of active | ✅ 42% |
+| Probationary mutations | 14 | <15 at any time | ✅ 14 (within target) |
+| Removed / redesigned | 10 | ≥2 per 5 builds | ✅ 10 (exceeds target) |
+| Measured effect fill rate (scored) | 38/48 | ≥80% | ✅ 79% (10 pending) |
+| Measured effect fill rate (any entry) | 48/48 | ≥80% | ✅ 100% |
 | Removal rate (last 5 builds) | 6/5 = 120% | ≥20% | ✅ Exceeds |
 
 ---
@@ -186,18 +185,18 @@
 ### Capability Matrix
 | Agent | Domain | Success Rate | Last 3 Scores | Known Failure Modes |
 |-------|--------|-------------|---------------|---------------------|
-| vsm_backend_coder | Python/FastAPI | 85% | 4, 4, 4 | Import loops, missing deps |
-| vsm_frontend_coder | React/TS/Vite | 70% | 4, 3, 2 | Stub pages (improving), void-referenced imports |
-| vsm_security | Auth/GraphQL | 80% | 4, 4, 3 | Misses enum runtime bugs, CORS wildcard severity |
-| vsm_auditor | Code review | 80% | 4, 4, 3 | Duplicates checks across foundation/implementation |
-| vsm_architect | Design | 85% | 4, 4, 5 | Scope creep without product brief guardrails |
-| vsm_coordinator | Integration | 75% | 4, 3, 4 | Drift detection only active on Tier 2+ builds |
-| vsm_wiring | Entry-point wiring | 80% | 4, 4, 3 | Router registration misses, module-level instantiation |
-| vsm_backend_tester | Test writing | 75% | 4, 3, 4 | Incomplete coverage, missing edge cases |
-| vsm_frontend_tester | Test writing | 70% | 4, 3, 3 | Build verification gaps |
-| vsm_devops_coder | Docker/CI | 75% | 4, 3, 4 | Health check omissions, .dockerignore absence |
-| vsm_meta | Meta-evaluation | 70% | 3, 3, 3 | Cannot enforce mutations-applied.md |
-| vsm_process_auditor | Process compliance | 65% | 3, 3, 2 | Broker freshness scored as informational |
+| vsm_backend_coder | Python/FastAPI | 85% | 4, 4, 4 | 2 timeouts in FB30; code quality good when not timed out |
+| vsm_frontend_coder | React/TS/Vite | 75% | 4, 4, 3 | Stub pages resolved; jsdom test environment still broken |
+| vsm_security | Auth/GraphQL | 75% | 4, 3, — | Never spawned in FB30 (bypassed); manual audit used instead |
+| vsm_auditor | Code review | 80% | 4, 4, 4 | Foundation/implementation checks converging |
+| vsm_architect | Design | 70% | 4, 5, 2 | Timeout on 4-doc spawn; needs task splitting (M-FB30-1) |
+| vsm_coordinator | Integration | 80% | 4, 4, 4 | GraphQL routing 307 caught; drift detection reliable |
+| vsm_wiring | Entry-point wiring | 85% | 4, 4, 4 | Router registration accurate; module-level instantiation resolved |
+| vsm_backend_tester | Test writing | 65% | 4, 3, 2 | Timed out in FB30; tests good when completed |
+| vsm_frontend_tester | Test writing | 60% | 4, 3, 2 | jsdom localStorage mocking fails consistently |
+| vsm_devops_coder | Docker/CI | 80% | 4, 4, 4 | Dockerfile and compose reliable |
+| vsm_meta | Meta-evaluation | 60% | 3, 3, 2 | False TBD claims in meta-report (PM2 ineffective) |
+| vsm_process_auditor | Process compliance | 60% | 3, 2, 2 | Timed out in FB30; compliance 85/100 despite timeout |
 | vsm_variety_engineer | Environmental scanning | — | — | New agent — unmeasured |
 | vsm_learning_curator | Portfolio management | — | — | New agent — unmeasured |
 
@@ -220,21 +219,21 @@
 - **T3**: Inline fixes during Phase 6/7 — IMPROVED (0 in FB25-FB29)
 - **T4**: Security gate misses enum runtime — RESOLVED (FB24-2 effective)
 - **T5**: mutations-applied.md bypass — RESOLVED (FB26-S3 effective)
-- **T6**: Score regression alarm — ACTIVE (4.0→3.6→3.4, reversed to 4.2 in FB29)
-- **T7**: Architecture→implementation handoff weakest link — ACTIVE (Check 16 added)
-- **T8**: Mutation bloat without removal — ACTIVE (51 active, 18 probationary — new structural mutation SM9 addresses)
-- **T9**: Knowledge broker manual update failure — ACTIVE (auto-broker-update.sh addresses)
+- **T6**: Score regression alarm — ACTIVE (4.0→3.6→3.4→3.6 in FB30; FB30 is regression build of FB25 gold standard 4.0)
+- **T7**: Architecture→implementation handoff weakest link — IMPROVED (Check 16 effective; zero handoff BLOCKERs in FB30)
+- **T8**: Mutation bloat without removal — IMPROVED (48 active, 14 probationary — PM1/PM7 removed, 5 mutations promoted to effective)
+- **T9**: Knowledge broker manual update failure — RESOLVED (broker updated manually in FB30; auto-update hook pending)
 
 ### Efficiency Baselines
 | Metric | Rolling Avg (5 builds) | Last Build | Trend |
 |--------|----------------------|------------|-------|
-| Agents spawned | 13.6 | 14 | → |
-| File writes | 50.0 | 52 | → |
-| Session time (min) | 40 | 38 | → |
-| Context compactions | 2.6 | 3 | → |
-| Tool calls per build | ~192 | ~195 | → |
-| Process violations per build | 2.4 | 2 | ↓ |
-| Mutation backfill rate | 0.12 | 0 | ↓ |
+| Agents spawned | 13.4 | 12 | ↓ |
+| File writes | 48.0 | 42 | ↓ |
+| Session time (min) | 42 | 45 | ↑ |
+| Context compactions | 2.8 | 3 | → |
+| Tool calls per build | ~185 | ~170 | ↓ |
+| Process violations per build | 2.2 | 2 | ↓ |
+| Mutation backfill rate | 0.10 | 0 | ↓ |
 
 ---
 
@@ -251,3 +250,10 @@
 | SM8 | 2026-06-04 Audit | refinement | kimi-code-migration skill | probation | 0 | — | — | — | FB30 |
 | SM9 | 2026-06-04 Audit | structural | vsm_learning_curator agent | probation | 0 | — | — | — | FB30 |
 
+
+| **FB30 MUTATIONS (Created during FB30, await FB31 measurement)** |
+| M-FB30-1 | FB30 Build | structural | Architect task splitting (3 spawns) | probation | 0 | — | — | — | FB31 |
+| M-FB30-2 | FB30 Build | append-only | GraphQLRouter recommendation over ASGI mount | probation | 0 | — | — | — | FB31 |
+| M-FB30-3 | FB30 Build | append-only | Settings attribute UPPERCASE rule | probation | 0 | — | — | — | FB31 |
+| M-FB30-4 | FB30 Build | append-only | Test DB compatibility checklist (SQLite/PostgreSQL) | probation | 0 | — | — | — | FB31 |
+| M-FB30-5 | FB30 Build | append-only | GraphQL camelCase test reminder | probation | 0 | — | — | — | FB31 |

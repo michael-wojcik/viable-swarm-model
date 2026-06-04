@@ -109,3 +109,42 @@ async def client(db) -> AsyncGenerator[AsyncClient, None]:
 **Source**: FB29 achieved 36 backend tests in ~9 seconds using this exact pattern.
 Tests covered auth, articles, users, media, reviews, and GraphQL without any
 PostgreSQL container running.
+
+---
+
+## Rule: Test Database Must Be Compatible with Production Schema
+
+**Applies to**: Backend tests using SQLite as test DB for PostgreSQL apps
+**Severity**: BLOCKER
+**Source**: FB30
+
+**Problem**: PostgreSQL-specific features (`gen_random_uuid()`, `sa.UUID`, `Decimal` with CHECK constraints) fail on SQLite.
+
+**Prevention rules**:
+1. If using SQLite for tests, models MUST use `default=uuid.uuid4` instead of `server_default=sa.text("gen_random_uuid()")`.
+2. Add UUID bind processor in conftest for SQLite compatibility.
+3. Verify `Base.metadata.create_all()` succeeds in test setup before running any tests.
+
+---
+
+## Rule: GraphQL Tests Must Use camelCase Field Names
+
+**Applies to**: GraphQL test suites with Strawberry schema
+**Severity**: BLOCKER
+**Source**: FB30
+
+**Problem**: Strawberry auto-camelCases schema fields. Test queries using snake_case fail with "Cannot query field" errors.
+
+**Example failure**:
+```graphql
+# WRONG — test query
+mutation { create_budget(name: "X", start_date: "2024-01-01") { id } }
+
+# CORRECT — test query
+mutation { createBudget(name: "X", startDate: "2024-01-01") { id } }
+```
+
+**Prevention rules**:
+1. Backend tester MUST verify all GraphQL test queries use camelCase field names.
+2. Run `strawberry export-schema` and grep for snake_case in test files.
+

@@ -955,3 +955,75 @@
 - **Fix iterations**: 1 fix wave + security re-check
 - **Key gap**: Agent timeout avalanche — 5 agents timed out, forcing heavy S5 manual intervention
 - **Mutations**: graphql-pitfalls context-getter rule, python-pitfalls type-statement warning + ORM UUID coercion, security-patterns S3 defaults + dependency wiring, H217-H219
+
+
+---
+
+## FB29: HealthPulse — Health Monitoring & Wellness Platform
+
+**Complexity**: High (Tier 2+, 4-5 waves, ~2200+ lines, 4 services)
+**Date**: 2026-06-03
+**Score**: 3.4 / 5.0
+**Services**: FastAPI backend, React frontend, PostgreSQL, Redis, Celery, Strawberry GraphQL
+
+### Coverage Map
+
+| Capability | Tested by |
+|---|---|
+| H217 — Task sizing ≤500 lines | **Partially effective** — code agents succeeded, architect/tester still timed out |
+| H218 — GraphQL context getter as imported function | **Confirmed** — zero lambdas in context getter |
+| H219 — enum `.value` in tests | **Confirmed** — zero Python 3.14 enum breakage |
+| FB28-S1 — Agent timeout resilience | **FAILURE** — 5 agents timed out (FB28 had 5, FB29 still had 5) |
+| FB28-S2 — Celery module-level `app` | **Prevented** — `celery_app.py` used top-level `app` correctly |
+| Frontend build / TypeScript | ✅ `npm run build` and `tsc -b` pass with zero errors |
+| Backend tests | 36 passed, 0 failed |
+| Frontend tests | 22 passed, 18 failed (jsdom setup issues) |
+| Security gate | 0 BLOCKERs, 1 CRITICAL + 2 HIGH + 4 MEDIUM; all fixed |
+
+### Result
+- **Score**: 3.4/5.0 (downward trend: 4.0→3.6→3.4)
+- **BLOCKERs**: 1 code-level (GraphQL routing 307) + 0 process-level
+- **Fix iterations**: 1 fix wave + GraphQL routing hotfix
+- **Key gap**: Agent timeout cascade unchanged despite H217; frontend test environment still broken
+- **Mutations**: None new — H217-H219 ineffective against architect/tester timeouts
+
+
+---
+
+## FB30: BudgetWise — Personal Finance & Budget Management Platform (Regression Build)
+
+**Complexity**: High (Tier 2+, 4-5 waves, ~2000+ lines, 4 services)
+**Date**: 2026-06-04
+**Score**: 3.6 / 5.0
+**Services**: FastAPI backend, React frontend, PostgreSQL, Redis, Celery, Strawberry GraphQL
+
+### Coverage Map
+
+| Capability | Tested by |
+|---|---|
+| FB25 regression validation | **Score dropped 0.4** (4.0→3.6) despite same domain and complexity |
+| H217 — Task sizing ≤500 lines | **Partially effective** — code agents OK, architect (4 docs) and tester still timeout |
+| H218 — GraphQL context getter as imported function | **Confirmed** — `get_graphql_context()` is top-level async function |
+| PM4 — GraphQL parity admin override | **Confirmed** — `deleteBudget` admin-only, ownership filtering on list queries |
+| PM5 — Enum `.value` in conditionals | **Confirmed** — `user.role.value == "admin"` used throughout |
+| C1 — FastAPI lifespan context manager | **Confirmed** — `@asynccontextmanager lifespan` used correctly |
+| C2 — `@field_validator` for comma-separated env strings | **Confirmed** — settings validate comma-separated lists |
+| A4 — Phase 4 gate strengthening | **Confirmed** — gate accurate (30 pass/0 fail = PASS, 11/21 fail = BLOCK) |
+| H223 — Tester sub-waves | **Not tested** — tester timed out before sub-wave split could apply |
+| Architect timeout | **FAILURE** — architect timed out writing 4 large documents in single spawn |
+| Security agent spawn | **FAILURE** — `vsm_security` never spawned; manual S5 audit used instead |
+| Meta-report accuracy | **FAILURE** — meta-report listed 3 files as "TBD" despite existing |
+| Frontend test environment | **FAILURE** — 11/21 frontend tests fail (jsdom `localStorage` mocking) |
+| Frontend build / TypeScript | ✅ `npm run build` and `tsc -b` pass with zero errors |
+| Backend tests | 30 passed, 0 failed |
+| Frontend tests | 10 passed, 11 failed (jsdom localStorage mocking issues) |
+| Security gate | 0 BLOCKERs, 0 CRITICAL, 0 HIGH, 2 MEDIUM, 3 LOW (manual S5 audit) |
+| Process compliance | 85/100 (exceeds 80 threshold despite process auditor timeout) |
+
+### Result
+- **Score**: 3.6/5.0 (regression from FB25 gold standard 4.0)
+- **BLOCKERs**: 0 code-level + 0 process-level
+- **Fix iterations**: 1 fix wave + GraphQL routing fix + auth attribute fix + UUID compatibility fix + database.py lazy init
+- **Key gap**: **5 agent timeouts** forced excessive S5 manual intervention. Code quality improved (architecture, security, GraphQL parity) but agent reliability regressed.
+- **Mutations Applied**: M-FB30-1 (architect 3-spawn split), M-FB30-2 (GraphQLRouter validation), M-FB30-3 (settings UPPERCASE convention), M-FB30-4 (test DB SQLite compat), M-FB30-5 (GraphQL camelCase test queries), H223 (tester sub-waves)
+- **Ineffective Mutations Flagged**: PM1 (hook-enforced process auditor — hooks don't handle timeouts), PM7 (S5 manual work cap ≤1 file — failed under pressure, S5 wrote 5+ files)

@@ -346,3 +346,39 @@
 **Source**: Fitness build FB28, Phase 4
 **Experiment**: Add rule to python-pitfalls. Next build — monitor warning count.
 **Expected**: Zero `UnsupportedFieldAttributeWarning` in test output.
+
+---
+
+## FB30 Hypothesis Updates
+
+### H217: Agent task sizing ≤500 lines per spawn prevents timeouts
+**Status**: partially confirmed
+**Tested by**: FB30
+**Result**: Backend code agents completed without timeout (improvement). Architect and backend tester still timed out. H217 scope is too narrow — covers implementation agents but not design/test agents.
+**Rationale**: Code-writing agents benefit from smaller tasks; design agents producing multi-document architecture specs still exceed timeout limits.
+
+### H218: GraphQL context getter must reference imported function, never lambda/static dict
+**Status**: confirmed
+**Tested by**: FB30
+**Result**: `get_graphql_context` is imported function in `graphql.py`. Zero lambda usage. Context builder works correctly.
+
+### H219: Pydantic `type` statement + `Field(alias=...)` produces warnings
+**Status**: confirmed
+**Tested by**: FB30
+**Result**: `UnsupportedFieldAttributeWarning` present in test output but non-functional. Warning is cosmetic; no test failures or runtime errors.
+
+### H220: GraphQLRouter prevents 307 redirect issues vs ASGI mount
+**Status**: confirmed
+**Tested by**: FB30
+**Result**: `app.mount("/graphql", GraphQL(...))` caused 307 redirects on POST. Switching to `strawberry.fastapi.GraphQLRouter` with `app.include_router` fixed the issue. All GraphQL tests pass.
+
+### H221: SQLite UUID compatibility requires explicit bind processor
+**Status**: confirmed
+**Tested by**: FB30
+**Result**: Tests failed on `gen_random_uuid()` (PostgreSQL-only) and UUID type binding. Required `default=uuid.uuid4` in models and bind processor patch in conftest.
+
+### H222: S5 manual work cap (≤1 file) cannot be enforced by prompt alone
+**Status**: confirmed
+**Tested by**: FB30
+**Result**: S5 manually wrote 5+ files due to agent timeouts. Process audit scored this 6/10. Prompt-only cap fails under time pressure.
+
