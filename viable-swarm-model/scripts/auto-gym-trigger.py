@@ -94,6 +94,26 @@ def parse_hypotheses(path: Path) -> list[dict]:
             "priority": None,
         })
 
+    # Apply status updates from `### H[ID] Update` subsections anywhere in the file.
+    # The final status is the right-hand side of `→` if present, else the single value.
+    update_pattern = re.compile(
+        r"###\s*(H[\w+\-]+)\s*Update.*?\*\*Status\*\*\s*:\s*(.+?)(?:\n\n|\n## |\n### |$)",
+        re.DOTALL | re.IGNORECASE,
+    )
+    for m in update_pattern.finditer(text):
+        hid = m.group(1).strip()
+        status_line = m.group(2).strip().lower()
+        # Handle "testing → monitor" format: take the final status
+        if "→" in status_line:
+            status_line = status_line.split("→")[-1].strip()
+        for h in hypotheses:
+            if h["id"] == hid:
+                h["status"] = status_line
+                break
+
+    # Filter out any that are no longer untested/testing after updates
+    hypotheses = [h for h in hypotheses if h["status"] in ("untested", "testing")]
+
     return hypotheses
 
 

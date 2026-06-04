@@ -67,7 +67,10 @@ while IFS= read -r line; do
       # Update mutation-log.md: replace **PENDING** with measured effect
       if grep -q "^## Mutation $MUTATION_ID" "$MUTATION_LOG"; then
         # Check if measured effect is still pending (supports **PENDING**, [PENDING], PENDING)
-        if grep -A30 "^## Mutation $MUTATION_ID" "$MUTATION_LOG" | grep -qE 'Measured effect:.*PENDING'; then
+        # Scoped to the mutation block; look for PENDING in measured effect line.
+        # The line may have markdown bold: **Measured effect**: [PENDING]
+        MEASURED_EFFECT_LINE=$(grep -A30 "^## Mutation $MUTATION_ID" "$MUTATION_LOG" | grep -i 'Measured effect' | head -1 || true)
+        if echo "$MEASURED_EFFECT_LINE" | grep -qi 'PENDING'; then
           # Extract the score from evidence or default to Effective
           if echo "$EVIDENCE" | grep -qi "ineffective"; then
             EFFECT="Ineffective (Score: 1–2) — $EVIDENCE"
@@ -90,7 +93,7 @@ with open('$MUTATION_LOG', 'r') as f:
 
 # Find the mutation block and replace PENDING in measured effect
 # Match **PENDING**, [PENDING], or bare PENDING with optional surrounding markdown
-pattern = r'(## Mutation $SAFE_ID.*?Measured effect:[ \t]*)((?:\*\*)?\[?PENDING\]?(?:\*\*)?(?:[ \t]*—[ \t]*awaiting[^\n]*)?)'
+pattern = r'(## Mutation $SAFE_ID.*?(?:\*\*)?Measured effect(?:\*\*)?:[ \t]*)((?:\*\*)?\[?PENDING\]?(?:\*\*)?(?:[ \t]*—[ \t]*awaiting[^\n]*)?)'
 
 def repl(m):
     return m.group(1) + '$EFFECT'
@@ -122,8 +125,9 @@ with open('$MUTATION_STATE', 'r') as f:
     content = f.read()
 
 # Find the row for this mutation and increment Builds Tested
-# Match: | ID | ... | ... | ... | ... | N | ... |
-pattern = r'(\| $SAFE_ID \|[^\n]*\|)([0-9]+)( \| [^\n]*\|)'
+# Match: | ID | Source | Type | Target | Status | N | ...
+# Uses [^|]*\| to match each column boundary precisely.
+pattern = r'(\| $SAFE_ID \|[^|]*\|[^|]*\|[^|]*\|[^|]*\|)([0-9]+)( \|)'
 
 def increment(match):
     return match.group(1) + str(int(match.group(2)) + 1) + match.group(3)

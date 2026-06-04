@@ -117,26 +117,25 @@ def extract_build_score(build_dir: Path) -> float | None:
         kimi_dir / "meta-evaluation-report.md",
     ]
 
-    # Ordered patterns: more specific first
+    # Ordered patterns: more specific first. Tuple of (regex, normalize_to_5)
     patterns = [
-        r"Overall Score:\s*([0-9]+(?:\.[0-9]+)?)\s*/\s*5",
-        r"Self[- ]?Score:\s*([0-9]+(?:\.[0-9]+)?)\s*/\s*5",
-        r"Score:\s*([0-9]+(?:\.[0-9]+)?)\s*/\s*5",
-        r"([0-9]+(?:\.[0-9]+)?)\s*/\s*5\.0",
-        r"Overall Score:\s*([0-9]+(?:\.[0-9]+)?)\s*/\s*100",
-        r"Score:\s*([0-9]+(?:\.[0-9]+)?)\s*/\s*100",
+        (r"Overall Score:\s*([0-9]+(?:\.[0-9]+)?)\s*/\s*5", False),
+        (r"Self[- ]?Score:\s*([0-9]+(?:\.[0-9]+)?)\s*/\s*5", False),
+        (r"Score:\s*([0-9]+(?:\.[0-9]+)?)\s*/\s*5", False),
+        (r"([0-9]+(?:\.[0-9]+)?)\s*/\s*5\.0", False),
+        (r"Overall Score:\s*([0-9]+(?:\.[0-9]+)?)\s*/\s*100", True),
+        (r"Score:\s*([0-9]+(?:\.[0-9]+)?)\s*/\s*100", True),
     ]
 
     for file_path in candidate_files:
         if not file_path.exists():
             continue
         text = file_path.read_text(encoding="utf-8")
-        for pat in patterns:
+        for pat, normalize in patterns:
             m = re.search(pat, text, re.IGNORECASE)
             if m:
                 score = float(m.group(1))
-                # Normalize /100 to /5
-                if "/100" in m.group(0):
+                if normalize:
                     score = score / 20.0
                 return round(score, 2)
 

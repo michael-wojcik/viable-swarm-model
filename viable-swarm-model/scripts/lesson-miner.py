@@ -47,23 +47,35 @@ STOP_WORDS = {
     "back", "after", "man", "great", "world", "should", "through", "before", "between",
     "both", "few", "those", "while", "this", "that", "with", "have", "from", "they",
     "been", "were", "said", "there", "when", "would", "could",
+    # Build noise
     "app", "backend", "frontend", "file", "files", "code", "test", "tests", "error",
     "phase", "build", "agent", "missing", "fix", "found", "used", "using", "added",
     "call", "called", "need", "needs", "must", "should", "correctly", "incorrectly",
     "check", "checked", "verify", "verified", "exists", "existing", "correct",
     "issue", "issues", "bug", "bugs", "failure", "fail", "pass", "passed",
+    "graph", "graphql", "rest", "api", "web", "webhook", "socket",
 }
 
-AGENT_NAMES = {
-    "vsm_backend_coder", "vsm_frontend_coder", "vsm_security",
-    "vsm_auditor", "vsm_architect", "vsm_coordinator", "vsm_wiring",
-    "vsm_tester", "vsm_meta", "vsm_devops_coder",
-    "vsm_backend_tester", "vsm_frontend_tester", "vsm_process_auditor",
-    "vsm_product", "vsm_backend_fix_agent", "vsm_frontend_fix_agent",
-    "vsm_variety_engineer", "vsm_learning_curator", "vsm_explore",
-    "foundation auditor", "implementation auditor", "security auditor",
-    "backend fix agent", "frontend fix agent", "process auditor",
-    "backend coder", "frontend coder", "backend tester", "frontend tester",
+AGENT_ALIASES: dict[str, list[str]] = {
+    "vsm_backend_coder": ["vsm_backend_coder", "backend coder", "backend implementation"],
+    "vsm_frontend_coder": ["vsm_frontend_coder", "frontend coder", "frontend implementation"],
+    "vsm_security": ["vsm_security", "security agent", "security gate", "security auditor"],
+    "vsm_auditor": ["vsm_auditor", "foundation auditor", "implementation auditor", "auditor agent"],
+    "vsm_architect": ["vsm_architect", "architect agent"],
+    "vsm_coordinator": ["vsm_coordinator", "coordinator agent"],
+    "vsm_wiring": ["vsm_wiring", "wiring agent"],
+    "vsm_tester": ["vsm_tester", "tester agent"],
+    "vsm_meta": ["vsm_meta", "meta agent", "meta-evaluation"],
+    "vsm_devops_coder": ["vsm_devops_coder", "devops agent", "devops coder"],
+    "vsm_backend_tester": ["vsm_backend_tester", "backend tester"],
+    "vsm_frontend_tester": ["vsm_frontend_tester", "frontend tester"],
+    "vsm_process_auditor": ["vsm_process_auditor", "process auditor"],
+    "vsm_product": ["vsm_product", "product agent"],
+    "vsm_backend_fix_agent": ["vsm_backend_fix_agent", "backend fix agent"],
+    "vsm_frontend_fix_agent": ["vsm_frontend_fix_agent", "frontend fix agent"],
+    "vsm_variety_engineer": ["vsm_variety_engineer", "variety engineer"],
+    "vsm_learning_curator": ["vsm_learning_curator", "learning curator"],
+    "vsm_explore": ["vsm_explore", "explore agent"],
 }
 
 
@@ -92,7 +104,7 @@ def extract_sentences(text: str) -> list[str]:
 
 def find_meta_reports(build_dir: Path) -> list[Path]:
     candidates = []
-    for name in ("meta-report.md", "meta-evaluation-report.md"):
+    for name in ("meta-evaluation-report.md", "meta-report.md"):
         p = build_dir / ".kimi" / name
         if p.exists():
             candidates.append(p)
@@ -102,47 +114,76 @@ def find_meta_reports(build_dir: Path) -> list[Path]:
     return candidates
 
 
-def extract_overall_score(text: str) -> float | None:
-    m = re.search(r"[Oo]verall\s+[Ss]core[:\s]+(\d+(?:\.\d+)?)\s*/\s*100", text)
-    if m:
-        return float(m.group(1))
-
-    m = re.search(r"[Ss]core[:\s]+(\d+(?:\.\d+)?)\s*/\s*100", text)
-    if m:
-        return float(m.group(1))
-
-    m = re.search(r"(\d+(?:\.\d+)?)\s*/\s*5\.0?", text)
-    if m:
-        return float(m.group(1)) * 20.0
-
-    m = re.search(r"[Oo]verall\s+[Bb]uild\s+[Ss]core[:\s]+(\d+(?:\.\d+)?)", text)
-    if m:
-        val = float(m.group(1))
-        if val <= 5.0:
-            return val * 20.0
+def _parse_score_value(raw: str) -> float | None:
+    val = float(raw)
+    if val <= 5.0:
+        return val * 20.0
+    if val <= 100.0:
         return val
+    return None
 
-    lines = text.splitlines()
+
+def extract_overall_score(text: str) -> float | None:
+    """Extract overall build score, avoiding per-agent or dimension scores."""
+    top_lines = text.splitlines()[:30]
+    top_text = "\n".join(top_lines)
+
+    # Markdown bold aware: **Score**: or *Score*: or Score:
+    # 1. Overall Score (preferred)
+    m = re.search(r"\*{0,2}[Oo]verall\s+[Ss]core\*{0,2}[:\s]+(\d+(?:\.\d+)?)\s*/\s*100", top_text)
+    if m:
+        return _parse_score_value(m.group(1))
+
+    # 2. Score on a line that also mentions Overall or Verdict (early in doc)
+    for line in top_lines:
+        if re.search(r"(?:overall|verdict|build|conditional)", line, re.IGNORECASE):
+            m = re.search(r"\*{0,2}[Ss]core\*{0,2}[:\s]+(\d+(?:\.\d+)?)\s*/\s*100", line)
+            if m:
+                return _parse_score_value(m.group(1))
+
+    # 3. Overall Phase Average
+    m = re.search(r"[Oo]verall\s+[Pp]hase\s+[Aa]verage[:\s]+(\d+(?:\.\d+)?)\s*/\s*5\.0?", top_text)
+    if m:
+        return _parse_score_value(m.group(1))
+
+    # 4. Overall Build Score
+    m = re.search(r"[Oo]verall\s+[Bb]uild\s+[Ss]core[:\s]+(\d+(?:\.\d+)?)", top_text)
+    if m:
+        return _parse_score_value(m.group(1))
+
+    # 5. Score Trend table: grab first numeric score after header
     in_trend = False
-    for line in lines:
+    header_seen = False
+    rows_after_header = 0
+    for line in text.splitlines():
         if "Score Trend" in line or "score trend" in line.lower():
             in_trend = True
-        if in_trend and "|" in line:
-            parts = [p.strip() for p in line.split("|")]
+            header_seen = False
+            rows_after_header = 0
+            continue
+        if not in_trend:
+            continue
+        if "|" not in line:
+            continue
+        parts = [p.strip() for p in line.split("|")]
+        if not header_seen:
+            if any(p.lower() in ("build", "score", "delta", "primary gap") for p in parts):
+                header_seen = True
+                rows_after_header = 0
+                continue
+        if header_seen:
+            rows_after_header += 1
             for part in parts:
                 if re.match(r"^\d+(?:\.\d+)?$", part):
-                    val = float(part)
-                    if val <= 5.0:
-                        return val * 20.0
-                    if val <= 100.0:
-                        return val
+                    return _parse_score_value(part)
+            if rows_after_header > 5:
+                in_trend = False
+                header_seen = False
 
+    # 6. Fallback anywhere: X overall
     m = re.search(r"([\d.]+)\s+overall", text, re.IGNORECASE)
     if m:
-        val = float(m.group(1))
-        if val <= 5.0:
-            return val * 20.0
-        return val
+        return _parse_score_value(m.group(1))
 
     return None
 
@@ -237,7 +278,9 @@ def extract_patterns(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
     for i in range(n):
         for j in range(i + 1, n):
             shared = entry_words[i] & entry_words[j]
-            if len(shared) >= 2:
+            union = entry_words[i] | entry_words[j]
+            jaccard = len(shared) / len(union) if union else 0.0
+            if len(shared) >= 3 or (len(shared) >= 2 and jaccard >= 0.2):
                 adj[i].add(j)
                 adj[j].add(i)
 
@@ -292,14 +335,9 @@ def detect_lesson_orphans(entries: list[dict[str, Any]]) -> list[dict[str, Any]]
     skill_texts: list[str] = []
     for sf in SKILL_FILES:
         if sf.exists():
-            skill_texts.append(sf.read_text(encoding="utf-8"))
+            skill_texts.append(sf.read_text(encoding="utf-8").lower())
         else:
             eprint(f"Warning: skill file not found: {sf}")
-
-    skill_sentences: list[tuple[str, set[str]]] = []
-    for text in skill_texts:
-        for sent in extract_sentences(text):
-            skill_sentences.append((sent, extract_words(sent)))
 
     orphans: list[dict[str, Any]] = []
     seen_rules: dict[str, bool] = {}
@@ -318,17 +356,27 @@ def detect_lesson_orphans(entries: list[dict[str, Any]]) -> list[dict[str, Any]]
                 })
             continue
 
-        rule_words = extract_words(rule)
-        if len(rule_words) < 3:
-            seen_rules[rule] = True
-            continue
+        rule_lower = rule.lower()
+        matched = any(rule_lower in st for st in skill_texts)
 
-        matched = False
-        for sent, sent_words in skill_sentences:
-            shared = rule_words & sent_words
-            if len(shared) >= 4 or (len(rule_words) > 0 and len(shared) / len(rule_words) >= 0.5):
-                matched = True
-                break
+        if not matched:
+            for st in skill_texts:
+                for sent in extract_sentences(st):
+                    if rule_lower in sent or sent in rule_lower:
+                        matched = True
+                        break
+                if matched:
+                    break
+
+        if not matched:
+            rule_words = extract_words(rule)
+            if len(rule_words) >= 3:
+                for st in skill_texts:
+                    st_words = extract_words(st)
+                    shared = rule_words & st_words
+                    if len(shared) >= max(3, int(len(rule_words) * 0.4)):
+                        matched = True
+                        break
 
         seen_rules[rule] = matched
         if not matched:
@@ -408,9 +456,11 @@ def compute_agent_risk(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
     agent_counts: Counter[str] = Counter()
     for e in entries:
         text = f"{e.get('phase', '')} {e.get('finding', '')} {e.get('fix', '')} {e.get('raw_title', '')}"
-        for agent in AGENT_NAMES:
-            if re.search(rf"\b{re.escape(agent)}\b", text, re.IGNORECASE):
-                agent_counts[agent] += 1
+        for canonical, aliases in AGENT_ALIASES.items():
+            for alias in aliases:
+                if re.search(rf"\b{re.escape(alias)}\b", text, re.IGNORECASE):
+                    agent_counts[canonical] += 1
+                    break
     results = []
     for agent, count in agent_counts.most_common():
         if count >= 1:

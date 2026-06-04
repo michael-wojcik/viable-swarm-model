@@ -10,7 +10,6 @@ Usage:
 """
 
 import argparse
-import os
 import re
 import sys
 from pathlib import Path
@@ -179,11 +178,11 @@ def parse_mutation_log(path: str) -> dict[str, str]:
         if not lines:
             continue
         header = lines[0].strip()
-        # Header like "1 — 2026-05-22" or "FB17-1 — 2026-05-25"
-        m = re.match(r'^([^\s—]+)', header)
-        if not m:
+        # Header like "1 — 2026-05-22" or "FB17-1 — 2026-05-25" or "FB9 / P46 — 2026-05-23"
+        parts = header.split(" — ", 1)
+        if not parts:
             continue
-        mut_id = m.group(1).strip()
+        mut_id = parts[0].strip()
         file_line = None
         for line in lines:
             stripped = line.strip()

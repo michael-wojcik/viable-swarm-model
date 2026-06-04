@@ -6,27 +6,27 @@
 
 | Skill | Builds Used | Avg Score (with) | Avg Score (without) | Delta | Flag |
 |-------|-------------|------------------|---------------------|-------|------|
-| dependency-drift-pitfalls | 1 | 3.60 | 18.56 | -14.96 | NEGATIVE |
-| kimi-code-migration | 1 | 3.80 | 18.52 | -14.72 | NEGATIVE |
-| database-patterns | 1 | 4.40 | 18.40 | -14.00 | NEGATIVE |
-| tester-backend | 1 | 4.40 | 18.40 | -14.00 | NEGATIVE |
-| graphql-pitfalls | 6 | 16.07 | — | — | INSUFFICIENT_DATA |
-| python-pitfalls | 6 | 16.07 | — | — | INSUFFICIENT_DATA |
-| architecture-patterns | 0 | — | 16.07 | — | INSUFFICIENT_DATA |
-| csharp-pitfalls | 0 | — | 16.07 | — | INSUFFICIENT_DATA |
-| devops-patterns | 0 | — | 16.07 | — | INSUFFICIENT_DATA |
-| elixir-pitfalls | 0 | — | 16.07 | — | INSUFFICIENT_DATA |
-| frontend-patterns | 0 | — | 16.07 | — | INSUFFICIENT_DATA |
-| go-pitfalls | 0 | — | 16.07 | — | INSUFFICIENT_DATA |
-| java-pitfalls | 0 | — | 16.07 | — | INSUFFICIENT_DATA |
-| kotlin-pitfalls | 0 | — | 16.07 | — | INSUFFICIENT_DATA |
-| research-patterns | 0 | — | 16.07 | — | INSUFFICIENT_DATA |
-| ruby-pitfalls | 0 | — | 16.07 | — | INSUFFICIENT_DATA |
-| rust-pitfalls | 0 | — | 16.07 | — | INSUFFICIENT_DATA |
-| swift-pitfalls | 0 | — | 16.07 | — | INSUFFICIENT_DATA |
-| docker-pitfalls | 5 | 18.56 | 3.60 | 14.96 |  |
-| security-patterns | 5 | 18.56 | 3.60 | 14.96 |  |
-| typescript-pitfalls | 5 | 18.56 | 3.60 | 14.96 |  |
-| sqla-patterns | 3 | 28.40 | 3.73 | 24.67 |  |
-| testing-patterns | 3 | 28.40 | 3.73 | 24.67 |  |
-| backend-patterns | 3 | 28.47 | 3.67 | 24.80 |  |
+| dependency-drift-pitfalls | 1 | 3.60 | 3.93 | -0.33 | NEGATIVE |
+| kimi-code-migration | 1 | 3.80 | 3.89 | -0.09 | NEGATIVE |
+| graphql-pitfalls | 6 | 3.88 | — | — | INSUFFICIENT_DATA |
+| python-pitfalls | 6 | 3.88 | — | — | INSUFFICIENT_DATA |
+| architecture-patterns | 0 | — | 3.88 | — | INSUFFICIENT_DATA |
+| csharp-pitfalls | 0 | — | 3.88 | — | INSUFFICIENT_DATA |
+| devops-patterns | 0 | — | 3.88 | — | INSUFFICIENT_DATA |
+| elixir-pitfalls | 0 | — | 3.88 | — | INSUFFICIENT_DATA |
+| frontend-patterns | 0 | — | 3.88 | — | INSUFFICIENT_DATA |
+| go-pitfalls | 0 | — | 3.88 | — | INSUFFICIENT_DATA |
+| java-pitfalls | 0 | — | 3.88 | — | INSUFFICIENT_DATA |
+| kotlin-pitfalls | 0 | — | 3.88 | — | INSUFFICIENT_DATA |
+| research-patterns | 0 | — | 3.88 | — | INSUFFICIENT_DATA |
+| ruby-pitfalls | 0 | — | 3.88 | — | INSUFFICIENT_DATA |
+| rust-pitfalls | 0 | — | 3.88 | — | INSUFFICIENT_DATA |
+| swift-pitfalls | 0 | — | 3.88 | — | INSUFFICIENT_DATA |
+| sqla-patterns | 3 | 4.02 | 3.73 | 0.29 |  |
+| testing-patterns | 3 | 4.02 | 3.73 | 0.29 |  |
+| docker-pitfalls | 5 | 3.93 | 3.60 | 0.33 |  |
+| security-patterns | 5 | 3.93 | 3.60 | 0.33 |  |
+| typescript-pitfalls | 5 | 3.93 | 3.60 | 0.33 |  |
+| backend-patterns | 3 | 4.08 | 3.67 | 0.41 |  |
+| database-patterns | 1 | 4.40 | 3.77 | 0.63 |  |
+| tester-backend | 1 | 4.40 | 3.77 | 0.63 |  |
