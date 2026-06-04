@@ -150,7 +150,9 @@ def get_hypothesis_backlog() -> dict:
         return {"untested": 0, "critical_age": 0}
 
     text = hypotheses.read_text()
-    untested = len(re.findall(r"status:\s*untested", text, re.IGNORECASE))
+    # Strip markdown bold markers to handle **Status**: untested
+    clean_text = re.sub(r'\*+', '', text)
+    untested = len(re.findall(r"Status:\s*untested", clean_text, re.IGNORECASE))
 
     # Count hypotheses older than 30 days (rough estimate from dates in file)
     dates = re.findall(r"Proposed:\s*(\d{4}-\d{2}-\d{2})", text)
@@ -260,6 +262,15 @@ def generate_dashboard(builds: list[dict], mutation_metrics: dict, hypothesis_me
 
 def main():
     build_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(".")
+
+    # Guard: refuse to run outside a valid build directory
+    has_plan = (build_dir / "plan.md").exists()
+    has_fb_id = re.search(r"FB\d+", str(build_dir)) is not None
+    if not has_plan and not has_fb_id:
+        print("ERROR: Not a valid build directory (no plan.md, no FB* in path).")
+        print("Usage: python3 build-health-dashboard.py <build-directory>")
+        sys.exit(1)
+
     kimi_dir = build_dir / ".kimi"
     kimi_dir.mkdir(parents=True, exist_ok=True)
 

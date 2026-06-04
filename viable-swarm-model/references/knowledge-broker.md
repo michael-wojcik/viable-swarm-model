@@ -291,3 +291,7 @@ these failure modes disappear.
 **Algedonic status**: WARNING (backlog reduced from CRITICAL to below 20)
 
 *Updated: 2026-06-04*
+
+---
+
+*End of broker.*

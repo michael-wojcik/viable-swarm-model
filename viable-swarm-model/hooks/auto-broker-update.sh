@@ -28,6 +28,11 @@ if [[ ! -d "$KIMI_DIR" ]]; then
     exit 1
 fi
 
+if [[ ! -f "${BUILD_DIR}/plan.md" ]]; then
+    log_error "Build directory $BUILD_DIR has no plan.md — not a valid build directory. Refusing to append UNKNOWN entry."
+    exit 1
+fi
+
 if [[ ! -f "$BROKER_FILE" ]]; then
     log_error "Knowledge broker file not found at $BROKER_FILE"
     exit 1
