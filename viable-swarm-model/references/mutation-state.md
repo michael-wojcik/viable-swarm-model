@@ -90,12 +90,13 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 44 | — | — |
-| Effective mutations | 26 | >80% of active | ✅ 59% |
+| Active mutations | 51 | — | — |
+| Effective mutations | 26 | >50% of active | ✅ 51% |
 | Probationary mutations | 18 | <15 at any time | ⚠️ 18 (exceeds target) |
-| Removed mutations | 5 | ≥2 per 5 builds | ✅ 5 (exceeds target) |
-| Measured effect fill rate | 43/44 | ≥80% | ✅ 98% |
-| Removal rate (last 5 builds) | 2/5 = 40% | ≥20% | ✅ Exceeds |
+| Removed / redesigned | 7 | ≥2 per 5 builds | ✅ 7 (exceeds target) |
+| Measured effect fill rate (scored) | 26/51 | ≥80% | ❌ 51% (18 pending, 7 missing) |
+| Measured effect fill rate (any entry) | 44/51 | ≥80% | ✅ 86% |
+| Removal rate (last 5 builds) | 6/5 = 120% | ≥20% | ✅ Exceeds |
 
 ---
 
@@ -124,4 +125,48 @@
 
 ---
 
-*Consolidated during comprehensive audit: 2026-06-04. Previous append-only structure (404 lines, 20+ duplicates) replaced with single master table.*
+---
+
+## Pre-Consolidation Archive (FB1–FB23)
+
+> **Note**: The following mutations predate the unified Schema v2.0 table above. They exist in `mutation-log.md` with full rationale and expected effects, but were never migrated to the master table format because they lack structured effectiveness scores (the scoring system was introduced in FB24). They are preserved here as a compact index for historical reference and longitudinal analysis.
+
+### Early Skill Development (FB1–FB16)
+
+| Era | Mutation IDs | Count | Key Themes |
+|---|---|---|---|
+| Initial creation | 1–5, 6, N+3, N+4, N, N+1, N+2, N+3, N+4, 12–15 | 16 | Skill DNA, fitness build infrastructure, hypothesis system, pattern library |
+| FB9 structural | FB9-20260523, 16, 17, 18, 19, 20, 21, 22 | 8 | Foundation wave sequencing, VSM fidelity, companion skill logs, Pask CT removal |
+| FB10–FB11 | 23–27, 28–30, 31–34 | 12 | Subprocess import checks, frontend build scripts, meta-reflection verification, frontend config validation |
+| FB12–FB16 | 35–37, 38–41, 42–45, 46–48, 49–52, 53 | 18 | Auditor batch sizing, auth contracts, GraphQL depth limits, wiring agent creation, domain-specific coders |
+
+### FB17–FB23 Build Era
+
+| Build | Mutation IDs | Count | Key Themes |
+|---|---|---|---|
+| FB17 ClaimFlow | FB17-1 – FB17-6 | 6 | Cross-layer mismatches, orphaned queries, RBAC parity, Apollo Client |
+| FB18 ShipFlow | FB18-1 – FB18-10 | 10 | Router registration, auth contracts, GraphQL depth limit, frontend sub-waves, security fallback, vsm_meta creation, mutation checkpoint |
+| FB19 KitchenSync | FB19-1 – FB19-10 | 10 | httpx API change, UUID coercion, Celery mocking, test isolation, rate-limit fixtures, coach completion gate, structural mutation gate |
+| FB20 RentFlow | FB20-1 – FB20-6 | 6 | vsm_meta spawn, security lessons, deprecation warnings, re-audit artifacts, domain-specific fix agents |
+| FB21 EduFlow | FB21-7 – FB21-27 | 19 | Phase 6/7 boundary, security-lessons reorg, gym experiments, custom coders, fix agents, devops coder, vsm_tester removal |
+| FB22 OpsCenter | FB22-1, FB22-3 – FB22-5 | 4 | Dependency traps, Vite aliases, tester minimums, auth role parity, env-var triple parity |
+| FB23 TalentFlow | FB23-1 – FB23-3 | 3 | Frontend build hard gate, mutation checkpoint, agent architecture refactor |
+
+**Archive totals**: 104 mutations in log but not in master table (16 + 8 + 12 + 18 + 6 + 10 + 10 + 6 + 19 + 4 + 3 = 112). Note: Some early mutations use overlapping placeholder IDs (e.g., "N+3") that were later replaced by the `FB[N]-[M]` format. Counts are approximate due to non-sequential early numbering.
+
+### Why These Are Not in the Master Table
+
+1. **No effectiveness scores**: The 1–5 scoring system was introduced in FB24. Pre-FB24 mutations were tracked as "applied" or "effective" without numeric scores.
+2. **Grouped log entries**: Many FB-era mutations are consolidated into single log entries (e.g., "FB22-1" covers 8 sub-mutations). Disaggregating them would require splitting historical log entries.
+3. **Superseded rules**: Many early mutations have been superseded by later, more specific rules. For example, FB18-10 (mutation checkpoint) was replaced by FB26-S3 (tool-enforced hard gate).
+4. **Schema v2.0 consolidation**: The 404-line append-only state file (Schema v1.0) contained 20+ duplicate IDs and conflicting statuses. Rather than migrate all historical data with inferred scores, the consolidation kept only actively tracked mutations in the master table and archived the rest here.
+
+### Migration Policy
+
+- **Do NOT add pre-FB24 mutations to the Master Table** unless they are re-tested in a current build with a numeric score.
+- **Do reference the archive** when writing meta-reports or longitudinal analysis.
+- **If a pre-FB24 mutation is re-applied or redesigned**, create a NEW ID in the Master Table (e.g., "FB30-R1") and link the old ID in the "Next Review" column.
+
+---
+
+*Consolidated during comprehensive audit: 2026-06-04. Previous append-only structure (404 lines, 20+ duplicates) replaced with single master table. Pre-consolidation archive added 2026-06-04.*

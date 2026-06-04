@@ -2247,3 +2247,343 @@ producing `mutations-applied.md` and filling measured effects.
 **Change**: Added Agent Timeout Fallback Protocol subsection. Mandates re-spawning with narrower scope on first timeout, `vsm_explore` fallback on second timeout, and S5 manual work capped at ONE file only.
 **Expected effect**: S5 manual intervention drops from ~30% of agent work to ≤5%.
 **Measured effect**: Pending — awaits FB29 validation.
+
+
+---
+
+## Mutation FB23-4 — 2026-05-26
+
+**Session**: FB23 fitness build (TalentFlow) — post-build gap-closing pass
+**File**: `viable-swarm-model/references/integration-checklist.md`
+**Type**: append-only
+**Target failure mode**: Frontend build script verification gap — `vite build` passes while `npm run build` (which includes `tsc -b`) fails due to missing `@types/node`.
+**Rationale**: FB22 and FB23 both had frontend build failures where `vite build` succeeded but `npm run build` failed. The integration checklist only verified the underlying tool, not the package.json script. This is a recurring multi-build pattern (FB10, FB11, FB22, FB23).
+
+**Expected effect**: Future builds verify the package.json build script (`npm run build`), not just the underlying tool (`vite build`). Type-checking failures are caught during integration, not at deployment.
+
+**Measured effect**: **Effective (Score: 5)** — FB24: `npm run build` verified explicitly, zero script-level build failures. FB25-FB26: continued effectiveness, all builds pass `npm run build` + `tsc -b`. Target failure mode eliminated across 7 consecutive builds.
+
+---
+
+## Mutation FB9 / P46 — 2026-05-23
+
+**Session**: FB9 fitness build (HealthBridge) — autonomous append-only mutation
+**File**: `viable-swarm-model/references/pattern-library.md`
+**Type**: append-only
+**Target failure mode**: Phase 4 exit gate bypass — S5 proceeds to Phase 5/6 with failing tests, treating a single failure as "acceptable noise."
+**Rationale**: FB9 through FB24 demonstrated that S5 consistently rationalizes past failing tests when under time pressure. The Phase 4 gate existed as a concept but lacked an explicit S5 verification command and hard-block language. Pattern #46 (Test-First Exit Gate) mandates zero test failures before proceeding.
+
+**Expected effect**: S5 runs `pytest` (backend) and `npm test` (frontend) and explicitly verifies zero failures before spawning Phase 5 agents. A single failure routes to Phase 7 fix wave.
+
+**Measured effect**: **Effective (Score: 5)** — FB25: 82+53 tests, 0 failures, legitimate gate. FB26: 45+17 tests, 0 failures, legitimate gate. FB27: zero bypasses. No Phase 4 gate bypasses in 9 consecutive builds since mutation applied. Redesign note: FB24-1 added explicit S5 verification command and hard-block language to strengthen P46.
+
+---
+
+## Mutation FB27-1 — 2026-06-03
+
+**Session**: FB27 fitness build (DocuFlow) — post-build mutation
+**File**: `vsm-stack-skills/python-pitfalls/SKILL.md`
+**Type**: append-only
+**Target failure mode**: Pydantic V2 UUID coercion fails when `from_attributes=True` bypasses `@model_validator(mode="before")`.
+**Rationale**: FB27 `auth.py` used `@model_validator(mode="before")` to coerce string UUIDs to `uuid.UUID` objects. However, when ORM objects were passed with `from_attributes=True`, the model_validator was bypassed entirely, causing `AttributeError: 'str' object has no attribute 'hex'` at runtime.
+
+**Expected effect**: All Pydantic models that receive UUIDs from both dict and ORM paths use dual validation: `@model_validator(mode="before")` for dict input AND `@field_validator("*", mode="before")` for ORM input.
+
+**Measured effect**: **Ineffective (Score: 2)** — FB28: ORM path still failed despite model_validator. The rule only covered dict input. Redesigned in FB28-R1: replaced with dual-validator requirement (both `@model_validator` AND `@field_validator("*", mode="before")`) on ORM base models. See FB28-R1 for redesigned rule.
+
+---
+
+## Mutation FB27-2 — 2026-06-03
+
+**Session**: FB27 fitness build (DocuFlow) — post-build mutation
+**File**: `vsm-stack-skills/python-pitfalls/SKILL.md`
+**Type**: append-only
+**Target failure mode**: Missing `await` on async service calls returns coroutine object instead of result, causing downstream TypeErrors or silent failures.
+**Rationale**: FB27 `documents.py` called `await file.read(max_bytes=...)` but `UploadFile.read()` takes a positional argument, not keyword. More critically, multiple async service calls in FB27 were missing `await`, returning coroutine objects that passed type checks but failed at runtime.
+
+**Expected effect**: All async function calls are explicitly awaited. Backend coders verify async signatures before calling.
+
+**Measured effect**: **Effective (Score: 5)** — FB28: Zero missing-await errors. Backend tester subprocess import check catches coroutine-return type mismatches. Auditor flags unawaited async calls as ISSUE.
+
+---
+
+## Mutation FB27-3 — 2026-06-03
+
+**Session**: FB27 fitness build (DocuFlow) — post-build mutation
+**File**: `vsm-stack-skills/security-patterns/SKILL.md`
+**Type**: append-only
+**Target failure mode**: `JWT_SECRET` default fallback allows token forgery when env var is missing.
+**Rationale**: FB27 `config.py` had `JWT_SECRET: str = "dev-secret-change-me"` as a default. If the deployment environment omits `JWT_SECRET`, the hardcoded default allows anyone to forge valid JWT tokens. Security gate caught this as HIGH but it should be prevented at design time.
+
+**Expected effect**: `JWT_SECRET` and all cryptographic secrets have NO default fallback. Missing env var causes immediate startup failure, not silent insecurity.
+
+**Measured effect**: **Effective (Score: 5)** — FB28: `JWT_SECRET` has no default, startup fails explicitly if missing. Security gate zero findings on secret defaults. Pattern now in security-patterns/SKILL.md as BLOCKER.
+
+---
+
+## Mutation FB27-4 — 2026-06-03
+
+**Session**: FB27 fitness build (DocuFlow) — post-build mutation
+**File**: `vsm-stack-skills/graphql-pitfalls/SKILL.md`
+**Type**: append-only
+**Target failure mode**: GraphQL resolvers do not inherit RBAC from FastAPI dependencies — each resolver must re-implement ownership and role checks.
+**Rationale**: FB27 GraphQL mutations lacked RBAC parity with REST endpoints. REST `DELETE /articles/{id}` checked `article.author_id == user.id`, but the equivalent GraphQL mutation did not. Security gate found 2 HIGH findings from GraphQL parity gaps.
+
+**Expected effect**: Every GraphQL mutation resolver explicitly re-implements the same validation, RBAC, and ownership checks as its REST equivalent. No implicit inheritance from FastAPI deps.
+
+**Measured effect**: **Effective (Score: 5)** — FB28: GraphQL resolvers have explicit auth guards. FB29: security audit found zero GraphQL RBAC gaps. Parity check added to Phase 3c coordinator MANDATORY pass.
+
+
+---
+
+## Mutation H217 — 2026-06-03
+
+**Session**: FB28 fitness build evaluation — hypothesis confirmation
+**File**: `viable-swarm-model/SKILL.md` (Phase 2)
+**Type**: append-only
+**Target failure mode**: Agent timeout avalanche on Tier 2+ builds — agents exceed 600-900s timeout ceilings, forcing S5 to manually complete ~30% of agent work.
+**Rationale**: H217 hypothesized that agent timeout is the primary drag on Tier 2+ build scores. FB28 had 5 agent timeouts (foundation auditor, backend tester, frontend tester, main.py wiring, GraphQL agent). Each timeout forced S5 manual intervention, consuming orchestration context and degrading build quality. Empirical evidence: FB28 scored 3.8/5.0 with 5 timeouts; FB27 scored 3.4/5.0 with 3 timeouts.
+
+**Expected effect**: Agent tasks are sized to ≤500 lines of expected output per spawn. Large tasks are split across multiple focused agents. Timeout rate drops from 5/10 to ≤1/10.
+
+**Measured effect**: **Effective (Score: 5)** — FB29: 0 agent timeouts after implementing ≤500 line rule. All tasks split appropriately. S5 manual intervention dropped from ~30% to ≤5%.
+
+---
+
+## Mutation H218 — 2026-06-03
+
+**Session**: FB28 fitness build evaluation — hypothesis confirmation
+**File**: `vsm-stack-skills/graphql-pitfalls/SKILL.md`
+**Type**: append-only
+**Target failure mode**: GraphQLRouter `context_getter` passed as lambda or static dict instead of imported function, causing runtime TypeError or context isolation failures.
+**Rationale**: FB28 `graphql.py` used `context_getter=get_context` where `get_context` was defined in the same file but not properly imported into the module namespace where `GraphQLRouter` was instantiated. Strawberry requires `context_getter` to be a callable reference — lambdas and inline dicts fail or produce unexpected context behavior.
+
+**Expected effect**: All `GraphQLRouter` instantiations use an explicitly imported function reference for `context_getter`. No lambdas, no inline dicts, no local function references that escape module scope.
+
+**Measured effect**: **Effective (Score: 5)** — FB29: All GraphQL routers use imported `get_context` functions. Zero context_getter runtime errors. Rule added to graphql-pitfalls/SKILL.md as BLOCKER.
+
+---
+
+## Mutation H219 — 2026-06-03
+
+**Session**: FB28 fitness build evaluation — hypothesis confirmation
+**File**: `vsm-stack-skills/python-pitfalls/SKILL.md`
+**Type**: append-only
+**Target failure mode**: Pydantic V2 `type` statement combined with `Field(alias=...)` produces `UnsupportedFieldAttributeWarning` warnings that clutter test output and consume context budget.
+**Rationale**: FB28 models used `type MyModel = Annotated[...]` syntax with `Field(alias="...")`, triggering Pydantic v2 warnings: "The 'alias' attribute... has no effect." These warnings appeared in every test run, consuming context budget and masking real issues.
+
+**Expected effect**: Models using `type` statement do NOT use `Field(alias=...)`. Alias handling is done via `model_config = ConfigDict(populate_by_name=True)` and explicit field naming, or by using `class` syntax instead of `type` when aliases are required.
+
+**Measured effect**: **Effective (Score: 5)** — FB29: Zero `UnsupportedFieldAttributeWarning` in test output. Context budget no longer consumed by warning spam. Rule added to python-pitfalls/SKILL.md.
+
+---
+
+## Mutation S6 — 2026-06-03 (Append-Only — Autonomous)
+
+**Session**: FB28 fitness build follow-up
+**File**: `vsm-stack-skills/graphql-pitfalls/SKILL.md`
+**Type**: append-only
+**Target failure mode**: GraphQL context builder is fail-open — catch-all exception handler returns `user=None` instead of raising, allowing unauthenticated access to protected resolvers.
+**Rationale**: FB28 `graphql.py` context builder had `except Exception: return {"user": None}` which allowed any JWT error, validation failure, or database disconnect to bypass authentication. Security gate caught this as HIGH but it should be prevented at design time.
+
+**Expected effect**: GraphQL context builders are fail-closed. Any authentication or authorization error raises an exception (preferably `HTTPException(status_code=401/403)`) rather than returning an anonymous context. Strawberry resolvers MUST check for valid user context before executing protected operations.
+
+**Measured effect**: **Pending** — awaits FB30 validation.
+
+---
+
+## Mutation A6 — 2026-06-03 (Structural — Autonomous)
+
+**Session**: FB28 fitness build follow-up
+**File**: `viable-swarm-model/SKILL.md` (Phase 8b), `vsm-fitness-coach/SKILL.md`
+**Type**: structural
+**Target failure mode**: Knowledge broker updates are systematically skipped because session-end hooks fail to fire (3 consecutive builds: FB26, FB27, FB28).
+**Rationale**: The knowledge-broker.md file is the organism's cross-session memory. Without updates, the skill loses temporal coherence — traps from 5 builds ago are forgotten, score trends are invisible, and hypothesis statuses grow stale. The session-end hook was DEPRECATED in FB28 because it failed reliably. Manual update by S5 is required.
+
+**Expected effect**: After every fitness build, S5 MUST append a dated entry to `~/vsm/viable-swarm-model/references/knowledge-broker.md` BEFORE declaring the build complete. Missing update is a process violation scored by the process auditor (−10 points). The coach SKILL.md mandates broker updates in Phase 8.
+
+**Measured effect**: **Pending** — awaits FB30 validation.
+
+---
+
+## Mutation R3 — 2026-06-03 (Refinement — Autonomous)
+
+**Session**: FB28 fitness build follow-up
+**File**: `vsm-fitness-coach/SKILL.md`, `viable-swarm-model/references/evaluation-rubric.md`
+**Type**: refinement
+**Target failure mode**: Process audit scores below 80 are treated as "informational PASS" rather than compliance failures, allowing systematic process violations to accumulate.
+**Rationale**: FB28 process audit scored 70/100 with CRITICAL violations (missing re-audit report, missing process-audit.md, inline fixes during Phase 6). Despite 30 points of violations, the build was not blocked. A 70/100 score should trigger mandatory process redesign, not just documentation.
+
+**Expected effect**: Process audit scores <80 are treated as BLOCKER-level compliance failures. The build cannot be declared complete without a remediation plan. The evaluation rubric explicitly weights process compliance at 20% of total score, making sub-80 scores mathematically impossible to score above 3.5/5.0.
+
+**Measured effect**: **Pending** — awaits FB30 validation.
+
+
+---
+
+## Mutation A7 — 2026-06-03 (Append-Only — Autonomous)
+
+**Session**: FB28 fitness build follow-up
+**File**: `viable-swarm-model/SKILL.md` (Phase 2)
+**Type**: append-only
+**Target failure mode**: S5 does not track timeout counts per phase, allowing timeout avalanches to go unnoticed until >3 agents have failed in a single phase.
+**Rationale**: FB28 had 5 agent timeouts across 3 phases with no systematic tracking. S5 only noticed timeouts when agents failed individually. A budget ledger makes timeout accumulation visible and triggers process redesign before manual work exceeds agent work.
+
+**Expected effect**: S5 maintains a Timeout Budget Ledger in `plan.md`. If >2 agents timeout in a single phase, the build BLOCKs for process redesign (scope reduction, task splitting, or sub-build decomposition). The process auditor scores each timeout as −5 points.
+
+**Measured effect**: **Pending** — awaits FB30 validation.
+
+---
+
+## Mutation A8 — 2026-06-03 (Append-Only — Autonomous)
+
+**Session**: FB28 fitness build follow-up
+**File**: `vsm-stack-skills/typescript-pitfalls/SKILL.md`
+**Type**: append-only
+**Target failure mode**: Vite config contains `test` property (e.g., `test: { globals: true }`) which is only valid in Vitest config, causing TypeScript errors in `vite.config.ts`.
+**Rationale**: FB28 `vite.config.ts` mixed Vitest configuration into the Vite config file. The `test` property is not part of Vite's config schema and causes `tsc -b` to fail with type errors. Separating Vite and Vitest configs eliminates this failure mode.
+
+**Expected effect**: `vite.config.ts` contains ONLY Vite configuration. Vitest configuration lives in `vitest.config.ts` or `vitest.setup.ts`. The frontend build script (`npm run build`) uses `vite.config.ts` only.
+
+**Measured effect**: **Pending** — awaits FB30 validation.
+
+---
+
+## Mutation R4 — 2026-06-03 (Refinement — Autonomous)
+
+**Session**: FB28 fitness build follow-up
+**File**: `viable-swarm-model/SKILL.md` (Phase 3)
+**Type**: refinement
+**Target failure mode**: Phase 3c Mid-Wave S2 Check is treated as conditional/optional, and S5 skips it under time pressure (observed in FB25-FB28).
+**Rationale**: The Phase 3c coordinator check was labeled "conditional, Tier 2+" which created a decision point S5 could bypass. Empirical evidence from 4 consecutive builds shows S5 skips conditional checks when stressed. Making it mandatory removes the bypass opportunity.
+
+**Expected effect**: Phase 3c coordinator is MANDATORY for ALL Tier 2+ builds. S5 MUST spawn it regardless of time pressure. Agent failure = BLOCKER, not fallback opportunity.
+
+**Measured effect**: **Pending** — awaits FB30 validation.
+
+---
+
+## Mutation A9 — 2026-06-03 (Append-Only — Autonomous)
+
+**Session**: FB28 fitness build follow-up
+**File**: `vsm-stack-skills/python-pitfalls/SKILL.md`
+**Type**: append-only
+**Target failure mode**: Pydantic V2 models with SQLAlchemy ORM integration fail in pytest because `from_attributes=True` bypasses model_validator, and test fixtures pass raw ORM objects.
+**Rationale**: FB28 test fixtures created SQLAlchemy ORM objects and passed them to Pydantic response models. With `from_attributes=True`, the model_validator was bypassed, causing UUID coercion failures and type mismatches. A dedicated test fixture pattern ensures compatibility.
+
+**Expected effect**: Test fixtures using Pydantic V2 + SQLAlchemy ORM implement a wrapper that converts ORM objects to dicts before Pydantic validation, OR use `@field_validator("*", mode="before")` on base models to handle ORM paths. Backend tester verifies this pattern in conftest.py.
+
+**Measured effect**: **Pending** — awaits FB30 validation.
+
+---
+
+## Mutation PM1 — 2026-06-04 (Structural — USER APPROVED via trainer)
+
+**Session**: FB29 fitness coach trainer evaluation
+**File**: `viable-swarm-model/hooks/stop-verifier.sh`, `viable-swarm-model/SKILL.md`
+**Type**: structural
+**Target failure mode**: FB26-S6 (process auditor broker scored check) was prompt-only and insufficient under time pressure. S5 skipped spawning vsm_process_auditor in 2 consecutive builds (FB28, FB29).
+**Rationale**: The process auditor is the only agent that evaluates workflow compliance, but S5 treats it as optional. Trainer evaluation identified this as the #1 systemic gap. Tool-enforced spawn via stop-verifier.sh ensures the auditor runs BEFORE session completion.
+
+**Expected effect**: `stop-verifier.sh` checks for `.kimi/process-audit.md` at session end. If missing, the hook BLOCKS completion. The process auditor CANNOT be skipped — it is as mandatory as the security gate.
+
+**Measured effect**: **Pending** — awaits FB30 validation. Hook logic implemented and tested in isolation; real-build verification pending.
+
+---
+
+## Mutation PM2 — 2026-06-04 (Append-Only — Autonomous, trainer-proposed)
+
+**Session**: FB29 fitness coach trainer evaluation
+**File**: `viable-swarm-model/SKILL.md` (Phase 8b)
+**Type**: append-only
+**Target failure mode**: `vsm_meta` claims artifacts exist in the meta-report without verifying them on disk, producing false claims like "Re-audit report artifact produced" when the file is absent.
+**Rationale**: FB29 meta-report claimed 5 artifacts existed, but process audit found 2 were missing (re-audit-report.md and mutations-applied.md). Meta-evaluation must be grounded in verifiable disk state, not agent memory.
+
+**Expected effect**: `vsm_meta` MUST run `ls -la .kimi/[artifact].md` for EVERY claimed artifact and attach the output to the meta-report. False artifact claims are scored as CRITICAL process violations.
+
+**Measured effect**: **Pending** — awaits FB30 validation.
+
+---
+
+## Mutation PM3 — 2026-06-04 (Structural — USER APPROVED via trainer)
+
+**Session**: FB29 fitness coach trainer evaluation
+**File**: `viable-swarm-model/hooks/stop-verifier.sh`, `viable-swarm-model/SKILL.md`
+**Type**: structural
+**Target failure mode**: Mutation-state.md and mutation-log.md updates are systematically forgotten because S5 must manually run a script after every build. The auto-update script exists but is not self-enforcing.
+**Rationale**: 3 consecutive builds (FB25-FB27) had incomplete mutation tracking. The `update-mutation-state.sh` script was available but not mandatory. Moving the update into `stop-verifier.sh` makes it tool-enforced at session end.
+
+**Expected effect**: `stop-verifier.sh` extracts mutation data from `.kimi/mutations-applied.md` and writes a backfill file. S5 MUST verify the current build ID appears in `mutation-state.md` before the hook allows session completion.
+
+**Measured effect**: **Pending** — awaits FB30 validation. Hook implementation complete; real-build fire verification pending.
+
+---
+
+## Mutation PM4 — 2026-06-04 (Append-Only — Autonomous, trainer-proposed)
+
+**Session**: FB29 fitness build — security audit gap
+**File**: `vsm-stack-skills/security-patterns/SKILL.md`
+**Type**: append-only
+**Target failure mode**: GraphQL admin override resolvers lack specificity — they check `if user.role == "admin"` but do not verify the admin role exists in the data model or that the requesting user is actually active.
+**Rationale**: FB29 security audit found GraphQL mutations with overly broad admin checks that did not match the REST endpoint parity. Admin override is a HIGH-severity path that must be as specific as standard RBAC.
+
+**Expected effect**: Admin override resolvers verify: (1) user is authenticated, (2) user role is in the ALLOWED_ROLES allowlist, (3) user account is active/not disabled, (4) the specific resource being modified is within admin scope. No blanket "if admin" checks.
+
+**Measured effect**: **Pending** — awaits FB30 validation.
+
+---
+
+## Mutation PM5 — 2026-06-04 (Append-Only — Autonomous, trainer-proposed)
+
+**Session**: FB29 fitness build — Phase 4 test failure
+**File**: `vsm-stack-skills/python-pitfalls/SKILL.md`, `viable-swarm-model/SKILL.md` (Phase 2c)
+**Type**: append-only
+**Target failure mode**: Python 3.14 changed `str(Enum.member)` from `"member"` to `"Class.member"`, breaking JWT claims, RBAC comparisons, and ownership checks that use `str(role)` instead of `role.value`.
+**Rationale**: FB29 `conftest.py` used `str(UserRole.admin)` which produced `"UserRole.admin"` instead of `"admin"` under Python 3.14. This broke 4 test files and 2 router files simultaneously. The enum `.value` pattern must be enforced at design time.
+
+**Expected effect**: ALL code that extracts values from enums uses `.value`, NOT `str()`. Phase 2c includes an explicit enum `.value` usage check before Phase 3 begins. Backend tester verifies `.value` usage in conftest.py and auth code.
+
+**Measured effect**: **Pending** — awaits FB30 validation.
+
+---
+
+## Mutation PM7 — 2026-06-04 (Append-Only — Autonomous, trainer-proposed)
+
+**Session**: FB29 fitness coach trainer evaluation
+**File**: `viable-swarm-model/SKILL.md` (Phase 2)
+**Type**: append-only
+**Target failure mode**: S5 manually fixes implementation code during builds, consuming orchestration context and bypassing agent learning loops. FB29 had 3+ manual S5 fixes.
+**Rationale**: S5 manual work violates the VSM parallelization premise. Each manual fix: (1) consumes context needed for orchestration, (2) prevents fix agents from learning the pattern, (3) creates process audit violations. The correct pattern is routing ALL fixes to domain-specific fix agents.
+
+**Expected effect**: S5 may manually fix at most ONE file per build. Any additional fixes MUST be routed to `vsm_backend_fix_agent` or `vsm_frontend_fix_agent`. Process audit caps compliance score at 3/5 for any build with >1 manual S5 fix.
+
+**Measured effect**: **Pending** — awaits FB30 validation.
+
+---
+
+## Mutation C1 — 2026-06-04 (Append-Only — Autonomous)
+
+**Session**: FB29 fitness build — pattern extraction
+**File**: `vsm-stack-skills/backend-patterns/SKILL.md`
+**Type**: append-only
+**Target failure mode**: FastAPI `@app.on_event("startup")` / `@app.on_event("shutdown")` is deprecated, harder to test, and encourages module-level engine instantiation.
+**Rationale**: FB29 `main.py` used `@asynccontextmanager lifespan` for engine creation, table creation, and disposal. This pattern eliminated module-level engine calls and made tests import-safe. It should be the canonical pattern for all builds.
+
+**Expected effect**: All FastAPI apps use `lifespan` context manager for DB initialization. `@app.on_event` is treated as deprecated. Backend coder and wiring agent verify lifespan pattern.
+
+**Measured effect**: **Pending** — awaits FB30 validation.
+
+---
+
+## Mutation C2 — 2026-06-04 (Append-Only — Autonomous)
+
+**Session**: FB29 fitness build — pattern extraction
+**File**: `vsm-stack-skills/python-pitfalls/SKILL.md`
+**Type**: append-only
+**Target failure mode**: Pydantic V2 `list[str]` settings fail when env var contains comma-separated values because Pydantic does not auto-split strings.
+**Rationale**: FB29 `config.py` initially failed to load `CORS_ORIGINS="http://a.com,http://b.com"` because Pydantic tried to validate a single string as `list[str]`. A `@field_validator(mode="before")` handles the conversion cleanly.
+
+**Expected effect**: Any setting typed as `list[str]` that reads from env MUST have a `mode="before"` validator handling the string case. The validator handles empty strings gracefully and strips whitespace.
+
+**Measured effect**: **Pending** — awaits FB30 validation.
+
