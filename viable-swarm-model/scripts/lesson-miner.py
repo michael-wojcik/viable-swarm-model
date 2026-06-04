@@ -128,7 +128,6 @@ def extract_overall_score(text: str) -> float | None:
     top_lines = text.splitlines()[:30]
     top_text = "\n".join(top_lines)
 
-    # Markdown bold aware: **Score**: or *Score*: or Score:
     # 1. Overall Score (preferred)
     m = re.search(r"\*{0,2}[Oo]verall\s+[Ss]core\*{0,2}[:\s]+(\d+(?:\.\d+)?)\s*/\s*100", top_text)
     if m:
@@ -141,29 +140,38 @@ def extract_overall_score(text: str) -> float | None:
             if m:
                 return _parse_score_value(m.group(1))
 
-    # 3. Overall Phase Average
+    # 3. Self-Score
+    m = re.search(r"\*{0,2}[Ss]elf[-\s]?[Ss]core\*{0,2}[:\s]+(\d+(?:\.\d+)?)\s*/\s*5\.0?", top_text)
+    if m:
+        return _parse_score_value(m.group(1))
+
+    # 4. Overall Phase Average
     m = re.search(r"[Oo]verall\s+[Pp]hase\s+[Aa]verage[:\s]+(\d+(?:\.\d+)?)\s*/\s*5\.0?", top_text)
     if m:
         return _parse_score_value(m.group(1))
 
-    # 4. Overall Build Score
+    # 5. Overall Build Score
     m = re.search(r"[Oo]verall\s+[Bb]uild\s+[Ss]core[:\s]+(\d+(?:\.\d+)?)", top_text)
     if m:
         return _parse_score_value(m.group(1))
 
-    # 5. Score Trend table: grab first numeric score after header
+    # 6. Score Trend table: grab LAST numeric score (current build is typically last)
     in_trend = False
     header_seen = False
     rows_after_header = 0
+    last_score: float | None = None
     for line in text.splitlines():
         if "Score Trend" in line or "score trend" in line.lower():
             in_trend = True
             header_seen = False
             rows_after_header = 0
+            last_score = None
             continue
         if not in_trend:
             continue
         if "|" not in line:
+            if header_seen and rows_after_header > 0:
+                break
             continue
         parts = [p.strip() for p in line.split("|")]
         if not header_seen:
@@ -175,12 +183,15 @@ def extract_overall_score(text: str) -> float | None:
             rows_after_header += 1
             for part in parts:
                 if re.match(r"^\d+(?:\.\d+)?$", part):
-                    return _parse_score_value(part)
-            if rows_after_header > 5:
-                in_trend = False
-                header_seen = False
+                    score = _parse_score_value(part)
+                    if score is not None:
+                        last_score = score
+            if rows_after_header > 10:
+                break
+    if last_score is not None:
+        return last_score
 
-    # 6. Fallback anywhere: X overall
+    # 7. Fallback anywhere: X overall
     m = re.search(r"([\d.]+)\s+overall", text, re.IGNORECASE)
     if m:
         return _parse_score_value(m.group(1))
@@ -191,6 +202,30 @@ def extract_overall_score(text: str) -> float | None:
 # ---------------------------------------------------------------------------
 # Core functions
 # ---------------------------------------------------------------------------
+
+def _grab_field(text: str, label: str) -> str:
+    pat = re.compile(
+        rf"\*\*{re.escape(label)}\*\*[:\s]*(.+?)(?=\n\*\*|$)",
+        re.DOTALL | re.IGNORECASE,
+    )
+    m = pat.search(text)
+    if m:
+        return re.sub(r"\s+", " ", m.group(1).strip())
+    return ""
+
+
+def _is_lesson_header(line: str) -> bool:
+    return bool(re.match(r"(?:Lesson|Entry|L)\s*\d+[:.\-\s]", line, re.IGNORECASE))
+
+
+def _is_alt_lesson_header(line: str) -> bool:
+    """Alternative format: '### 1. Title' under What Didn't Work / Lessons Learned."""
+    return bool(re.match(r"\d+[:.\-\s]+\w+", line))
+
+
+def _looks_like_lesson_body(text: str) -> bool:
+    return "**Finding**" in text or "**Source**" in text
+
 
 def scan_lessons() -> list[dict[str, Any]]:
     files = sorted(BUILDS_ROOT.rglob(".kimi/lessons.md"))
@@ -204,58 +239,100 @@ def scan_lessons() -> list[dict[str, Any]]:
             continue
 
         text = fpath.read_text(encoding="utf-8")
-        parts = re.split(r"\n##\s+", text)
+        build_entries: list[dict[str, Any]] = []
+
+        # Strategy 1: standard format (## Lesson N / Entry N / ### Lesson N)
+        # Some files use ### Lesson N under a parent ## section
+        parts = re.split(r"\n#{2,3}\s+", text)
+        standard_count = 0
         for part in parts:
             part = part.strip()
             if not part:
                 continue
             first_line = part.split("\n", 1)[0].strip()
-            is_lesson = bool(
-                re.match(r"(?:Lesson|Entry|L)\s*\d+[:.\-\s]", first_line, re.IGNORECASE)
-            )
-            if not is_lesson:
-                if "**Finding**" in part or "**Source**" in part:
-                    is_lesson = True
-                else:
+            if _is_lesson_header(first_line):
+                standard_count += 1
+            elif _looks_like_lesson_body(part):
+                standard_count += 1
+
+        if standard_count >= 2:
+            # Use standard parsing
+            for part in parts:
+                part = part.strip()
+                if not part:
+                    continue
+                first_line = part.split("\n", 1)[0].strip()
+                if not _is_lesson_header(first_line) and not _looks_like_lesson_body(part):
                     continue
 
-            def grab_field(label: str) -> str:
-                pat = re.compile(
-                    rf"\*\*{re.escape(label)}\*\*[:\s]*(.+?)(?=\n\*\*|$)",
-                    re.DOTALL | re.IGNORECASE,
-                )
-                m = pat.search(part)
-                if m:
-                    return re.sub(r"\s+", " ", m.group(1).strip())
-                return ""
+                finding = _grab_field(part, "Finding")
+                fix = _grab_field(part, "Fix")
+                phase = _grab_field(part, "Phase")
+                source = _grab_field(part, "Source")
 
-            finding = grab_field("Finding")
-            fix = grab_field("Fix")
-            phase = grab_field("Phase")
-            source = grab_field("Source")
+                prevention = ""
+                for label in ("Prevention rule", "Prevention", "Mutation", "Recommendation"):
+                    prevention = _grab_field(part, label)
+                    if prevention:
+                        break
 
-            prevention = ""
-            for label in ("Prevention rule", "Prevention", "Mutation", "Recommendation"):
-                prevention = grab_field(label)
-                if prevention:
-                    break
+                source_file = ""
+                for haystack in (source, finding):
+                    m = re.search(r"`?([\w/\-_]+\.\w+)`?", haystack)
+                    if m:
+                        source_file = m.group(1)
+                        break
 
-            source_file = ""
-            for haystack in (source, finding):
-                m = re.search(r"`?([\w/\-_]+\.\w+)`?", haystack)
-                if m:
-                    source_file = m.group(1)
-                    break
+                build_entries.append({
+                    "build_id": build_id,
+                    "phase": phase or "",
+                    "finding": finding,
+                    "fix": fix,
+                    "prevention_rule": prevention,
+                    "source_file": source_file,
+                    "raw_title": first_line,
+                })
+        else:
+            # Strategy 2: alternative format (numbered subsections under What Didn't Work / Lessons)
+            all_parts = re.split(r"\n#{2,3}\s+", text)
+            for part in all_parts:
+                part = part.strip()
+                if not part:
+                    continue
+                first_line = part.split("\n", 1)[0].strip()
+                if not _is_alt_lesson_header(first_line):
+                    continue
+                body = part[len(first_line):].strip()
+                if len(body) < 30:
+                    continue
+                finding = f"{first_line}: {body[:300]}"
+                build_entries.append({
+                    "build_id": build_id,
+                    "phase": "8",
+                    "finding": finding,
+                    "fix": "",
+                    "prevention_rule": "",
+                    "source_file": "",
+                    "raw_title": first_line,
+                })
 
-            entries.append({
-                "build_id": build_id,
-                "phase": phase or "",
-                "finding": finding,
-                "fix": fix,
-                "prevention_rule": prevention,
-                "source_file": source_file,
-                "raw_title": first_line,
-            })
+            # Strategy 3: numbered bold items (1. **Title**: description)
+            if not build_entries:
+                for m in re.finditer(r"^\d+\.\s+\*\*([^*]+)\*\*[:\s]+(.+?)(?=\n\d+\.\s+\*\*|\n#{1,3}\s+|\Z)", text, re.DOTALL | re.MULTILINE):
+                    title = m.group(1).strip()
+                    body = re.sub(r"\s+", " ", m.group(2).strip())
+                    finding = f"{title}: {body[:300]}"
+                    build_entries.append({
+                        "build_id": build_id,
+                        "phase": "8",
+                        "finding": finding,
+                        "fix": "",
+                        "prevention_rule": "",
+                        "source_file": "",
+                        "raw_title": title,
+                    })
+
+        entries.extend(build_entries)
 
     eprint(f"Parsed {len(entries)} lesson entries")
     return entries
