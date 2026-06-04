@@ -2624,7 +2624,7 @@ producing `mutations-applied.md` and filling measured effects.
 **Target failure mode**: Reactive adaptation only — organism waits for failures to appear in builds before acting
 **Rationale**: Stafford Beer's System 4* (environmental scanning) was missing. The organism had no proactive health monitoring. The variety engineer performs environmental scanning BEFORE builds begin, surfacing systemic strain (mutation bloat, score trends, broker staleness) before it causes failures.
 **Expected effect**: Every build starts with a health check. CRITICAL signals halt builds until addressed. Score trends are visible before they become entrenched.
-**Measured effect**: AWAITING_BUILD — applied this session; awaits FB31 for measurement
+**Measured effect**: AWAITING_BUILD — applied this session; awaits FB30 for measurement
 
 ---
 
@@ -2635,7 +2635,7 @@ producing `mutations-applied.md` and filling measured effects.
 **Target failure mode**: vsm_process_auditor detects violations but cannot stop S5 from ignoring them
 **Rationale**: The core Beer VSM violation — System 3* could raise alerts but System 5 had no obligation to heed them. HARD BLOCK transforms the auditor from advisory to regulatory. The stop-verifier hook physically blocks session end if HARD BLOCK is present.
 **Expected effect**: Process compliance < 80 → build is NOT complete. S5 cannot bypass via willpower.
-**Measured effect**: AWAITING_BUILD — applied this session; awaits FB31 for measurement
+**Measured effect**: AWAITING_BUILD — applied this session; awaits FB30 for measurement
 
 ---
 
@@ -2646,7 +2646,7 @@ producing `mutations-applied.md` and filling measured effects.
 **Target failure mode**: Hypotheses, experiments, mutations, and builds tracked independently with no unified causal graph
 **Rationale**: Cross-build learning requires knowing WHICH mutation fixed WHICH failure mode in WHICH build. The causal index provides queryable linkage. The hook auto-updates it at session end.
 **Expected effect**: Every mutation is traceable to its origin hypothesis and validation build.
-**Measured effect**: AWAITING_BUILD — applied this session; awaits FB31 for measurement
+**Measured effect**: AWAITING_BUILD — applied this session; awaits FB30 for measurement
 
 ---
 
@@ -2657,7 +2657,7 @@ producing `mutations-applied.md` and filling measured effects.
 **Target failure mode**: Manual knowledge broker updates are the #1 process violation (missed in FB23–FB29)
 **Rationale**: Human-dependent processes fail under time pressure. The auto-broker hook extracts build metadata automatically and appends structured entries. This removes the human failure point entirely.
 **Expected effect**: Broker is always current within one session. Process auditor no longer scores −10 for stale broker.
-**Measured effect**: AWAITING_BUILD — applied this session; awaits FB31 for measurement
+**Measured effect**: AWAITING_BUILD — applied this session; awaits FB30 for measurement
 
 ---
 
@@ -2668,7 +2668,7 @@ producing `mutations-applied.md` and filling measured effects.
 **Target failure mode**: skill-state.md stale (still showed "Awaiting FB26" when FB29 completed)
 **Rationale**: Two self-model files guarantee one will be stale. Merging skill-state sections into mutation-state.md creates a single source of truth. Auto-updated by scripts.
 **Expected effect**: Zero staleness in organism self-model. All proprioception data in one file.
-**Measured effect**: AWAITING_BUILD — applied this session; awaits FB31 for measurement
+**Measured effect**: AWAITING_BUILD — applied this session; awaits FB30 for measurement
 
 ---
 
@@ -2679,7 +2679,7 @@ producing `mutations-applied.md` and filling measured effects.
 **Target failure mode**: Score trends, mutation portfolio health, and process metrics computed manually per report
 **Rationale**: Longitudinal health requires automated aggregation. The dashboard script computes all metrics from build artifacts and produces both per-build snapshots and historical records.
 **Expected effect**: Health metrics visible at a glance. Declining trends trigger automatic algedonic signals.
-**Measured effect**: AWAITING_BUILD — applied this session; awaits FB31 for measurement
+**Measured effect**: AWAITING_BUILD — applied this session; awaits FB30 for measurement
 
 ---
 
@@ -2690,7 +2690,7 @@ producing `mutations-applied.md` and filling measured effects.
 **Target failure mode**: Coach and gym wait for manual invocation; no continuous learning heartbeat
 **Rationale**: The ecosystem should not wait for human triggers. Heartbeat mode detects overdue builds, declining scores, and hypothesis backlog overflow. Auto-emits algedonic with specific corrective actions.
 **Expected effect**: Fitness builds run at regular intervals. Regression builds trigger automatically on score decline. Gym experiments clear hypothesis backlogs before they stall.
-**Measured effect**: AWAITING_BUILD — applied this session; awaits FB31 for measurement
+**Measured effect**: AWAITING_BUILD — applied this session; awaits FB30 for measurement
 
 ---
 
@@ -2712,5 +2712,5 @@ producing `mutations-applied.md` and filling measured effects.
 **Target failure mode**: Mutations accumulate but are never pruned; 51 active, 18 probationary exceeds healthy threshold
 **Rationale**: A learning organism that only accumulates rules eventually chokes on them. The learning curator manages the mutation lifecycle — promoting effective, removing ineffective, consolidating overlaps. HARD BLOCK if portfolio health is CRITICAL.
 **Expected effect**: Mutation count stays < 50. Probationary ratio stays < 30%. Removal rate ≥ 2 per 5 builds.
-**Measured effect**: AWAITING_BUILD — applied this session; awaits FB31 for measurement
+**Measured effect**: AWAITING_BUILD — applied this session; awaits FB30 for measurement
 
