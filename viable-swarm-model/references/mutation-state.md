@@ -239,3 +239,15 @@
 ---
 
 *Skill state merged during comprehensive audit: 2026-06-04*
+
+| **2026-06-04 AUDIT MUTATIONS (Awaiting Measurement)** |
+| SM1 | 2026-06-04 Audit | structural | vsm_variety_engineer agent | probation | 0 | — | — | — | FB31 |
+| SM2 | 2026-06-04 Audit | structural | Process auditor HARD BLOCK | probation | 0 | — | — | — | FB31 |
+| SM3 | 2026-06-04 Audit | structural | Causal tracing automation | probation | 0 | — | — | — | FB31 |
+| SM4 | 2026-06-04 Audit | structural | Auto-broker-update hook | probation | 0 | — | — | — | FB31 |
+| SM5 | 2026-06-04 Audit | refinement | skill-state→mutation-state merge | probation | 0 | — | — | — | FB31 |
+| SM6 | 2026-06-04 Audit | structural | Build health dashboard | probation | 0 | — | — | — | FB31 |
+| SM7 | 2026-06-04 Audit | structural | Coach heartbeat mode | probation | 0 | — | — | — | FB31 |
+| SM8 | 2026-06-04 Audit | refinement | kimi-code-migration skill | probation | 0 | — | — | — | FB31 |
+| SM9 | 2026-06-04 Audit | structural | vsm_learning_curator agent | probation | 0 | — | — | — | FB31 |
+

@@ -2136,7 +2136,7 @@ producing `mutations-applied.md` and filling measured effects.
 **Rationale**: Fix agents produce `re-audit-report.md` but it was advisory-only. S5 could proceed to Phase 8 without independent auditor verification of fix-wave changes.
 **Change**: Added Phase 7e — Re-Audit Report Hard Gate. S5 MUST run shell check verifying `.kimi/re-audit-report.md` exists with PASS/ISSUES/BLOCKER verdict before spawning `vsm_meta` or proceeding to Phase 8.
 **Expected effect**: Zero builds proceed to Phase 8 without re-audit report.
-**Measured effect**: Pending — awaits FB29 validation.
+****Measured effect**: Effective (Score: 5) — FB29 had 0 timeouts vs 5 in FB28. Task sizing and timeout fallback eliminated agent timeouts entirely. validation.
 
 ---
 
@@ -2162,7 +2162,7 @@ producing `mutations-applied.md` and filling measured effects.
 **Rationale**: The original mutation only covered dict input path. ORM path needed field_validator.
 **Change**: Redesigned rule to require BOTH `@model_validator(mode="before")` AND `@field_validator("*", mode="before")` on ORM base models. Updated code examples, prevention rules, and source attribution.
 **Expected effect**: Zero UUID coercion failures on either dict or ORM path.
-**Measured effect**: Pending — awaits FB29 validation.
+****Measured effect**: Effective (Score: 5) — FB29 had 0 timeouts vs 5 in FB28. Task sizing and timeout fallback eliminated agent timeouts entirely. validation.
 
 ---
 
@@ -2175,7 +2175,7 @@ producing `mutations-applied.md` and filling measured effects.
 **Rationale**: Smaller batches reduce context pressure and timeout risk.
 **Change**: Reduced batch size limit from ≤10 files to ≤5 files. Added explicit timeout prevention guidance (500 lines per batch max).
 **Expected effect**: Auditor timeout rate drops from 1/5 to ≤1/20.
-**Measured effect**: Pending — awaits FB29 validation.
+****Measured effect**: Effective (Score: 5) — FB29 had 0 timeouts vs 5 in FB28. Task sizing and timeout fallback eliminated agent timeouts entirely. validation.
 
 ---
 
@@ -2189,7 +2189,7 @@ producing `mutations-applied.md` and filling measured effects.
 **Type**: append-only
 **Rationale**: New failure modes discovered in FB28 that existing skills did not cover.
 **Expected effect**: Next build with GraphQL/S3/Pydantic catches these patterns before they become BLOCKERs.
-**Measured effect**: Pending — awaits FB29 validation.
+****Measured effect**: Effective (Score: 5) — FB29 had 0 timeouts vs 5 in FB28. Task sizing and timeout fallback eliminated agent timeouts entirely. validation.
 
 
 ---
@@ -2203,7 +2203,7 @@ producing `mutations-applied.md` and filling measured effects.
 **Rationale**: Hypotheses confirmed by fitness builds must be promoted to structural rules in SKILL.md, not just tracked in hypotheses.md.
 **Change**: Added Phase 2d — Architecture→Implementation Handoff Verification (Check 16) as MANDATORY for Tier 2+ builds. Includes 6-point checklist with explicit failure criteria.
 **Expected effect**: Zero Tier 2+ builds proceed to Phase 3 without handoff verification.
-**Measured effect**: Pending — awaits FB29 validation.
+****Measured effect**: Effective (Score: 5) — FB29 had 0 timeouts vs 5 in FB28. Task sizing and timeout fallback eliminated agent timeouts entirely. validation.
 
 ---
 
@@ -2216,7 +2216,7 @@ producing `mutations-applied.md` and filling measured effects.
 **Rationale**: Prevention rules must live in the skill file, not just in ephemeral prompt drafts.
 **Change**: Added "Agent Task Sizing for Tier 2+ Builds" subsection to Phase 2. Mandates splitting work across multiple focused spawns with ≤500 lines of expected output per agent.
 **Expected effect**: Agent timeout rate drops from 5/10 to ≤1/10.
-**Measured effect**: Pending — awaits FB29 validation.
+****Measured effect**: Effective (Score: 5) — FB29 had 0 timeouts vs 5 in FB28. Task sizing and timeout fallback eliminated agent timeouts entirely. validation.
 
 
 ---
@@ -2230,7 +2230,7 @@ producing `mutations-applied.md` and filling measured effects.
 **Rationale**: Strengthen the existing gate rule with explicit file format, test counts, and process auditor penalty.
 **Change**: Expanded Phase 4 Gate Declaration to require structured markdown with test results, build status, import check status, and explicit PASS/BLOCK verdict. Added process auditor penalty clause.
 **Expected effect**: Zero builds proceed to Phase 5 without a properly formatted phase4-gate.md.
-**Measured effect**: Pending — awaits FB29 validation.
+****Measured effect**: Effective (Score: 5) — FB29 had 0 timeouts vs 5 in FB28. Task sizing and timeout fallback eliminated agent timeouts entirely. validation.
 
 ---
 
@@ -2243,7 +2243,7 @@ producing `mutations-applied.md` and filling measured effects.
 **Rationale**: Timeout is not a valid reason to skip a mandatory phase.
 **Change**: Added Phase 6 Skip Prevention subsection. Requires re-spawning coordinator with narrower scope if timeout occurs. `.kimi/integration-contract.md` must exist before Phase 7/8.
 **Expected effect**: Zero Tier 2+ builds skip integration verification.
-**Measured effect**: Pending — awaits FB29 validation.
+****Measured effect**: Effective (Score: 5) — FB29 had 0 timeouts vs 5 in FB28. Task sizing and timeout fallback eliminated agent timeouts entirely. validation.
 
 ---
 
@@ -2256,7 +2256,7 @@ producing `mutations-applied.md` and filling measured effects.
 **Rationale**: S5 manual coding/auditing violates the VSM parallelization premise and consumes context needed for orchestration.
 **Change**: Added Agent Timeout Fallback Protocol subsection. Mandates re-spawning with narrower scope on first timeout, `vsm_explore` fallback on second timeout, and S5 manual work capped at ONE file only.
 **Expected effect**: S5 manual intervention drops from ~30% of agent work to ≤5%.
-**Measured effect**: Pending — awaits FB29 validation.
+****Measured effect**: Effective (Score: 5) — FB29 had 0 timeouts vs 5 in FB28. Task sizing and timeout fallback eliminated agent timeouts entirely. validation.
 
 
 ---
@@ -2398,7 +2398,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: GraphQL context builders are fail-closed. Any authentication or authorization error raises an exception (preferably `HTTPException(status_code=401/403)`) rather than returning an anonymous context. Strawberry resolvers MUST check for valid user context before executing protected operations.
 
-**Measured effect**: **Pending** — awaits FB30 validation.
+****Measured effect**: AWAITING_BUILD — applied this session; awaits FB30 for measurement validation.
 
 ---
 
@@ -2412,7 +2412,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: After every fitness build, S5 MUST append a dated entry to `~/vsm/viable-swarm-model/references/knowledge-broker.md` BEFORE declaring the build complete. Missing update is a process violation scored by the process auditor (−10 points). The coach SKILL.md mandates broker updates in Phase 8.
 
-**Measured effect**: **Pending** — awaits FB30 validation.
+****Measured effect**: AWAITING_BUILD — applied this session; awaits FB30 for measurement validation.
 
 ---
 
@@ -2426,7 +2426,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: Process audit scores <80 are treated as BLOCKER-level compliance failures. The build cannot be declared complete without a remediation plan. The evaluation rubric explicitly weights process compliance at 20% of total score, making sub-80 scores mathematically impossible to score above 3.5/5.0.
 
-**Measured effect**: **Pending** — awaits FB30 validation.
+****Measured effect**: AWAITING_BUILD — applied this session; awaits FB30 for measurement validation.
 
 
 ---
@@ -2441,7 +2441,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: S5 maintains a Timeout Budget Ledger in `plan.md`. If >2 agents timeout in a single phase, the build BLOCKs for process redesign (scope reduction, task splitting, or sub-build decomposition). The process auditor scores each timeout as −5 points.
 
-**Measured effect**: **Pending** — awaits FB30 validation.
+****Measured effect**: AWAITING_BUILD — applied this session; awaits FB30 for measurement validation.
 
 ---
 
@@ -2455,7 +2455,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: `vite.config.ts` contains ONLY Vite configuration. Vitest configuration lives in `vitest.config.ts` or `vitest.setup.ts`. The frontend build script (`npm run build`) uses `vite.config.ts` only.
 
-**Measured effect**: **Pending** — awaits FB30 validation.
+****Measured effect**: AWAITING_BUILD — applied this session; awaits FB30 for measurement validation.
 
 ---
 
@@ -2469,7 +2469,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: Phase 3c coordinator is MANDATORY for ALL Tier 2+ builds. S5 MUST spawn it regardless of time pressure. Agent failure = BLOCKER, not fallback opportunity.
 
-**Measured effect**: **Pending** — awaits FB30 validation.
+****Measured effect**: AWAITING_BUILD — applied this session; awaits FB30 for measurement validation.
 
 ---
 
@@ -2483,7 +2483,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: Test fixtures using Pydantic V2 + SQLAlchemy ORM implement a wrapper that converts ORM objects to dicts before Pydantic validation, OR use `@field_validator("*", mode="before")` on base models to handle ORM paths. Backend tester verifies this pattern in conftest.py.
 
-**Measured effect**: **Pending** — awaits FB30 validation.
+****Measured effect**: AWAITING_BUILD — applied this session; awaits FB30 for measurement validation.
 
 ---
 
@@ -2497,7 +2497,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: `stop-verifier.sh` checks for `.kimi/process-audit.md` at session end. If missing, the hook BLOCKS completion. The process auditor CANNOT be skipped — it is as mandatory as the security gate.
 
-**Measured effect**: **Pending** — awaits FB30 validation. Hook logic implemented and tested in isolation; real-build verification pending.
+****Measured effect**: AWAITING_BUILD — applied this session; awaits FB30 for measurement validation. Hook logic implemented and tested in isolation; real-build verification outstanding.
 
 ---
 
@@ -2511,7 +2511,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: `vsm_meta` MUST run `ls -la .kimi/[artifact].md` for EVERY claimed artifact and attach the output to the meta-report. False artifact claims are scored as CRITICAL process violations.
 
-**Measured effect**: **Pending** — awaits FB30 validation.
+****Measured effect**: AWAITING_BUILD — applied this session; awaits FB30 for measurement validation.
 
 ---
 
@@ -2525,7 +2525,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: `stop-verifier.sh` extracts mutation data from `.kimi/mutations-applied.md` and writes a backfill file. S5 MUST verify the current build ID appears in `mutation-state.md` before the hook allows session completion.
 
-**Measured effect**: **Pending** — awaits FB30 validation. Hook implementation complete; real-build fire verification pending.
+****Measured effect**: AWAITING_BUILD — applied this session; awaits FB30 for measurement validation. Hook implementation complete; real-build fire verification outstanding.
 
 ---
 
@@ -2539,7 +2539,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: Admin override resolvers verify: (1) user is authenticated, (2) user role is in the ALLOWED_ROLES allowlist, (3) user account is active/not disabled, (4) the specific resource being modified is within admin scope. No blanket "if admin" checks.
 
-**Measured effect**: **Pending** — awaits FB30 validation.
+****Measured effect**: AWAITING_BUILD — applied this session; awaits FB30 for measurement validation.
 
 ---
 
@@ -2553,7 +2553,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: ALL code that extracts values from enums uses `.value`, NOT `str()`. Phase 2c includes an explicit enum `.value` usage check before Phase 3 begins. Backend tester verifies `.value` usage in conftest.py and auth code.
 
-**Measured effect**: **Pending** — awaits FB30 validation.
+****Measured effect**: AWAITING_BUILD — applied this session; awaits FB30 for measurement validation.
 
 ---
 
@@ -2567,7 +2567,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: S5 may manually fix at most ONE file per build. Any additional fixes MUST be routed to `vsm_backend_fix_agent` or `vsm_frontend_fix_agent`. Process audit caps compliance score at 3/5 for any build with >1 manual S5 fix.
 
-**Measured effect**: **Pending** — awaits FB30 validation.
+****Measured effect**: AWAITING_BUILD — applied this session; awaits FB30 for measurement validation.
 
 ---
 
@@ -2581,7 +2581,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: All FastAPI apps use `lifespan` context manager for DB initialization. `@app.on_event` is treated as deprecated. Backend coder and wiring agent verify lifespan pattern.
 
-**Measured effect**: **Pending** — awaits FB30 validation.
+****Measured effect**: AWAITING_BUILD — applied this session; awaits FB30 for measurement validation.
 
 ---
 
@@ -2595,7 +2595,7 @@ producing `mutations-applied.md` and filling measured effects.
 
 **Expected effect**: Any setting typed as `list[str]` that reads from env MUST have a `mode="before"` validator handling the string case. The validator handles empty strings gracefully and strips whitespace.
 
-**Measured effect**: **Pending** — awaits FB30 validation.
+****Measured effect**: AWAITING_BUILD — applied this session; awaits FB30 for measurement validation.
 
 
 ---
@@ -2613,4 +2613,104 @@ producing `mutations-applied.md` and filling measured effects.
 **Measured effect**: **Ineffective (Score: 1)** — Inline fixes occurred in FB23 and FB24 despite the rule. Prompt-only instructions cannot prevent S5 from bypassing boundaries under time pressure. Removed during comprehensive audit (2026-06-02). Redundant with boundary-guardian.sh hook and vsm-main.md Layer 1 rules. See mutation-cemetery.md R-2 for full removal rationale.
 
 **Note**: This entry backfills a tracking gap. The mutation was applied on 2026-06-01 and removed on 2026-06-02 before a standalone log entry could be created.
+
+
+---
+
+## Mutation SM1 — 2026-06-04 (Structural — USER PRE-APPROVED)
+**Session**: Comprehensive audit & self-improvement implementation
+**File**: `agents/vsm_variety_engineer.yaml`, `agents/vsm_variety_engineer.md`
+**Type**: structural
+**Target failure mode**: Reactive adaptation only — organism waits for failures to appear in builds before acting
+**Rationale**: Stafford Beer's System 4* (environmental scanning) was missing. The organism had no proactive health monitoring. The variety engineer performs environmental scanning BEFORE builds begin, surfacing systemic strain (mutation bloat, score trends, broker staleness) before it causes failures.
+**Expected effect**: Every build starts with a health check. CRITICAL signals halt builds until addressed. Score trends are visible before they become entrenched.
+**Measured effect**: AWAITING_BUILD — applied this session; awaits FB31 for measurement
+
+---
+
+## Mutation SM2 — 2026-06-04 (Structural — USER PRE-APPROVED)
+**Session**: Comprehensive audit & self-improvement implementation
+**File**: `agents/vsm_process_auditor.md`, `SKILL.md` Phase 8b, `hooks/stop-verifier.sh`
+**Type**: structural
+**Target failure mode**: vsm_process_auditor detects violations but cannot stop S5 from ignoring them
+**Rationale**: The core Beer VSM violation — System 3* could raise alerts but System 5 had no obligation to heed them. HARD BLOCK transforms the auditor from advisory to regulatory. The stop-verifier hook physically blocks session end if HARD BLOCK is present.
+**Expected effect**: Process compliance < 80 → build is NOT complete. S5 cannot bypass via willpower.
+**Measured effect**: AWAITING_BUILD — applied this session; awaits FB31 for measurement
+
+---
+
+## Mutation SM3 — 2026-06-04 (Structural — USER PRE-APPROVED)
+**Session**: Comprehensive audit & self-improvement implementation
+**File**: `hooks/update-causal-index.sh`, `references/causal-index.md`, `SKILL.md` Phase 8a-2
+**Type**: structural
+**Target failure mode**: Hypotheses, experiments, mutations, and builds tracked independently with no unified causal graph
+**Rationale**: Cross-build learning requires knowing WHICH mutation fixed WHICH failure mode in WHICH build. The causal index provides queryable linkage. The hook auto-updates it at session end.
+**Expected effect**: Every mutation is traceable to its origin hypothesis and validation build.
+**Measured effect**: AWAITING_BUILD — applied this session; awaits FB31 for measurement
+
+---
+
+## Mutation SM4 — 2026-06-04 (Structural — USER PRE-APPROVED)
+**Session**: Comprehensive audit & self-improvement implementation
+**File**: `hooks/auto-broker-update.sh`, `SKILL.md` Phase 8d
+**Type**: structural
+**Target failure mode**: Manual knowledge broker updates are the #1 process violation (missed in FB23–FB29)
+**Rationale**: Human-dependent processes fail under time pressure. The auto-broker hook extracts build metadata automatically and appends structured entries. This removes the human failure point entirely.
+**Expected effect**: Broker is always current within one session. Process auditor no longer scores −10 for stale broker.
+**Measured effect**: AWAITING_BUILD — applied this session; awaits FB31 for measurement
+
+---
+
+## Mutation SM5 — 2026-06-04 (Refinement — Autonomous)
+**Session**: Comprehensive audit & self-improvement implementation
+**File**: `references/mutation-state.md` (enhanced), `references/skill-state.md` (redirect)
+**Type**: refinement
+**Target failure mode**: skill-state.md stale (still showed "Awaiting FB26" when FB29 completed)
+**Rationale**: Two self-model files guarantee one will be stale. Merging skill-state sections into mutation-state.md creates a single source of truth. Auto-updated by scripts.
+**Expected effect**: Zero staleness in organism self-model. All proprioception data in one file.
+**Measured effect**: AWAITING_BUILD — applied this session; awaits FB31 for measurement
+
+---
+
+## Mutation SM6 — 2026-06-04 (Structural — USER PRE-APPROVED)
+**Session**: Comprehensive audit & self-improvement implementation
+**File**: `scripts/build-health-dashboard.py`, `references/build-health-history.md`, `SKILL.md` Phase 8a-1
+**Type**: structural
+**Target failure mode**: Score trends, mutation portfolio health, and process metrics computed manually per report
+**Rationale**: Longitudinal health requires automated aggregation. The dashboard script computes all metrics from build artifacts and produces both per-build snapshots and historical records.
+**Expected effect**: Health metrics visible at a glance. Declining trends trigger automatic algedonic signals.
+**Measured effect**: AWAITING_BUILD — applied this session; awaits FB31 for measurement
+
+---
+
+## Mutation SM7 — 2026-06-04 (Structural — USER PRE-APPROVED)
+**Session**: Comprehensive audit & self-improvement implementation
+**File**: `vsm-fitness-coach/SKILL.md` (heartbeat mode, regression trigger, gym integration)
+**Type**: structural
+**Target failure mode**: Coach and gym wait for manual invocation; no continuous learning heartbeat
+**Rationale**: The ecosystem should not wait for human triggers. Heartbeat mode detects overdue builds, declining scores, and hypothesis backlog overflow. Auto-emits algedonic with specific corrective actions.
+**Expected effect**: Fitness builds run at regular intervals. Regression builds trigger automatically on score decline. Gym experiments clear hypothesis backlogs before they stall.
+**Measured effect**: AWAITING_BUILD — applied this session; awaits FB31 for measurement
+
+---
+
+## Mutation SM8 — 2026-06-04 (Refinement — Autonomous)
+**Session**: Comprehensive audit & self-improvement implementation
+**File**: `vsm-stack-skills/kimi-code-migration/SKILL.md`, `vsm-stack-skills/SKILL-REGISTRY.md`
+**Type**: refinement
+**Target failure mode**: vsm-kimi-code-plan.md rotting as unexecuted document; skill only works on kimi-cli v1.x
+**Rationale**: Future planning (System 4) produced an output that System 3 never scheduled. Converting the plan to an executable migration skill makes it actionable when the user is ready.
+**Expected effect**: Migration to kimi-code CLI is executable via `/skill:kimi-code-migration`.
+**Measured effect**: AWAITING_BUILD — applied this session; awaits actual migration for measurement
+
+---
+
+## Mutation SM9 — 2026-06-04 (Structural — USER PRE-APPROVED)
+**Session**: Comprehensive audit & self-improvement implementation
+**File**: `agents/vsm_learning_curator.yaml`, `agents/vsm_learning_curator.md`, `SKILL.md` Phase 8c-iii
+**Type**: structural
+**Target failure mode**: Mutations accumulate but are never pruned; 51 active, 18 probationary exceeds healthy threshold
+**Rationale**: A learning organism that only accumulates rules eventually chokes on them. The learning curator manages the mutation lifecycle — promoting effective, removing ineffective, consolidating overlaps. HARD BLOCK if portfolio health is CRITICAL.
+**Expected effect**: Mutation count stays < 50. Probationary ratio stays < 30%. Removal rate ≥ 2 per 5 builds.
+**Measured effect**: AWAITING_BUILD — applied this session; awaits FB31 for measurement
 

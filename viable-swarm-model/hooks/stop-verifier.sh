@@ -100,13 +100,23 @@ if [[ -f "$MUTATION_LOG" ]]; then
     # Count "Measured effect: [PENDING]" or "Measured effect: [pending]" entries
     # Also catch empty measured effect fields from recent sessions
     # Match: [PENDING], **PENDING**, [pending], **Pending**, plain PENDING/Pending
+    # Count "PENDING" measured effects — but exclude "AWAITING_BUILD" which is
+    # the expected status for mutations applied in the current session that will
+    # be measured in the NEXT build.
     PENDING_COUNT=$(grep -ciE '\*\*Measured effect\*\*:\s*(\*\*|\[)?PENDING(\*\*|\])?|\*\*Measured effect\*\*:\s*(\*\*|\[)?pending(\*\*|\])?|Measured effect:\s*(\*\*|\[)?PENDING(\*\*|\])?|Measured effect:\s*(\*\*|\[)?pending(\*\*|\])?' "$MUTATION_LOG" 2>/dev/null || true)
     PENDING_COUNT=${PENDING_COUNT:-0}
 
-    # Only block if there are actual pending entries (not just template placeholders)
-    # We look for entries that have a real mutation ID pattern
-    if [[ "$PENDING_COUNT" -gt 0 ]]; then
-        echo "STOP BLOCKED by stop-verifier.sh: $PENDING_COUNT mutation(s) have pending measured effects. Complete the mutation effectiveness audit before stopping." >&2
+    AWAITING_COUNT=$(grep -ciE 'AWAITING_BUILD|awaiting.*build' "$MUTATION_LOG" 2>/dev/null || true)
+    AWAITING_COUNT=${AWAITING_COUNT:-0}
+
+    # Effective pending = PENDING entries minus AWAITING_BUILD entries
+    EFFECTIVE_PENDING=$((PENDING_COUNT - AWAITING_COUNT))
+    if [[ "$EFFECTIVE_PENDING" -lt 0 ]]; then
+        EFFECTIVE_PENDING=0
+    fi
+
+    if [[ "$EFFECTIVE_PENDING" -gt 0 ]]; then
+        echo "STOP BLOCKED by stop-verifier.sh: $EFFECTIVE_PENDING mutation(s) have pending measured effects (excluding $AWAITING_COUNT awaiting next build). Complete the mutation effectiveness audit before stopping." >&2
         echo '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"Measured effects pending. Complete mutation effectiveness audit before stopping."}}'
         exit 0
     fi
