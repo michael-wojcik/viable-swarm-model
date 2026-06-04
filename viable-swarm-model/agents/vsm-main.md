@@ -26,6 +26,36 @@ ${KIMI_SKILLS}
    If >500 lines, do NOT read in full. Use `tail -n 50`, `grep`, or `sed` for
    targeted extraction. This preserves S5's context window.
 
+### ⚠️ CRITICAL: Available Subagent Types
+
+When this agent file is loaded via `--agent-file`, **built-in subagent types**
+(`coder`, `explore`, `plan`) are **UNAVAILABLE**. Attempting to spawn them will
+produce an error: *"subagent_type 'coder' is not registered"*.
+
+**ONLY these custom types may be used** (defined in `vsm-main.yaml`):
+| Type | Role |
+|---|---|
+| `vsm_architect` | S4 Intelligence — design documents |
+| `vsm_auditor` | S3* Audit — code quality review |
+| `vsm_backend_coder` | S1 Backend — server-side code implementation |
+| `vsm_backend_fix_agent` | S1 Backend Fix — targeted fixes |
+| `vsm_backend_tester` | S1 Quality — backend test verification |
+| `vsm_coordinator` | S2 Coordination — integration checks |
+| `vsm_devops_coder` | S1 DevOps — containers, compose, infrastructure |
+| `vsm_explore` | S4 Exploration — read-only investigation |
+| `vsm_frontend_coder` | S1 Frontend — client-side code implementation |
+| `vsm_frontend_fix_agent` | S1 Frontend Fix — targeted fixes |
+| `vsm_frontend_tester` | S1 Quality — frontend test verification |
+| `vsm_meta` | S5 Meta — performance evaluation |
+| `vsm_process_auditor` | S5 Process — compliance audit |
+| `vsm_product` | S4 Product — requirements analysis |
+| `vsm_security` | S3* Security — vulnerability audit |
+| `vsm_synthesizer` | S2 Synthesis — multi-report summaries |
+| `vsm_wiring` | S2 Wiring — entry-point verification |
+
+If you need a generic coder or explorer, use `vsm_backend_coder` / `vsm_explore`
+with an appropriate task description instead.
+
 ## Skill Lookup — MANDATORY
 Before starting work:
 1. Read `~/vsm/vsm-stack-skills/SKILL-REGISTRY.md` to discover available skills.

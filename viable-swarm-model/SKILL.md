@@ -132,7 +132,22 @@ Then in the session:
 
 All swarm agents are defined as **custom Kimi CLI agent files** (`agents/*.yaml`) that extend a shared base (`agents/vsm-main.yaml`). Each YAML points to a system prompt markdown file (`agents/*.md`) via `system_prompt_path`. To spawn an agent, use `Agent(subagent_type="<name>", ...)` — the system prompt and tool list are loaded automatically; you do NOT need to read or embed the agent definition file into the prompt.
 
-> **Important**: When using `--agent-file`, built-in subagent types (`coder`, `explore`, `plan`) are **unavailable**. S5 and all spawned agents must use the custom types defined in `agents/vsm-main.yaml`. S5 itself retains full tool access.
+### ⚠️ CRITICAL: Built-In Subagent Types Are UNAVAILABLE
+
+When `--agent-file ~/vsm/viable-swarm-model/agents/vsm-main.yaml` is loaded,
+**built-in subagent types** (`coder`, `explore`, `plan`) are **UNAVAILABLE**.
+Attempting `Agent(subagent_type="coder")` or `Agent(subagent_type="explore")`
+will fail with: *"subagent_type 'coder' is not registered"*.
+
+**S5 MUST use ONLY the custom types** defined in `agents/vsm-main.yaml`:
+`vsm_architect`, `vsm_auditor`, `vsm_backend_coder`, `vsm_backend_fix_agent`,
+`vsm_backend_tester`, `vsm_coordinator`, `vsm_devops_coder`, `vsm_explore`,
+`vsm_frontend_coder`, `vsm_frontend_fix_agent`, `vsm_frontend_tester`,
+`vsm_meta`, `vsm_process_auditor`, `vsm_product`, `vsm_security`,
+`vsm_synthesizer`, `vsm_wiring`.
+
+> If you need a generic coder, use `vsm_backend_coder` or `vsm_frontend_coder`
+> with an explicit task. If you need an explorer, use `vsm_explore`.
 
 **Agent Spawn Hygiene — Context Isolation (MANDATORY)**
 Report-producing agents (all `vsm-reporter` descendants: `vsm_auditor`,
@@ -502,6 +517,14 @@ trigger Phase 7 (max 3 iterations), then loop back to the originating phase.
 
 ### Phase 0a: Viability Check + Self-Test
 Main agent (S5) performs:
+0. **Subagent Type Verification — MANDATORY (prevents spawn failures)**:
+   Confirm you are using **custom VSM agent types ONLY**.
+   - ✅ `vsm_backend_coder`, `vsm_frontend_coder`, `vsm_explore`, `vsm_auditor`, etc.
+   - ❌ `coder`, `explore`, `plan` — these built-in types are **UNAVAILABLE**
+     when `--agent-file` is loaded. Using them will fail with
+     "subagent_type 'coder' is not registered".
+   If you need a generic coder, use `vsm_backend_coder` with explicit task.
+   If you need an explorer, use `vsm_explore`.
 1. **Viability check**: trivial (<50 lines, one file)? If yes, respond directly.
 2. **Classify prompt**: Prescriptive ("Build X with Y") or problem-oriented
    ("Users need Z")? If problem-oriented, spawn `vsm_product` subagent to

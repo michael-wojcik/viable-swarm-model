@@ -40,6 +40,19 @@ agent:
     - "kimi_cli.tools.background:TaskList"
     - "kimi_cli.tools.background:TaskOutput"
     - "kimi_cli.tools.background:TaskStop"
+  # ── AVAILABLE SUBAGENT TYPES ──
+  # When --agent-file is loaded, BUILT-IN types (coder, explore, plan)
+  # are UNAVAILABLE. Only the custom types listed below may be used.
+  #
+  # Available: vsm_architect, vsm_auditor, vsm_backend_coder, vsm_backend_fix_agent,
+  #            vsm_backend_tester, vsm_coordinator, vsm_devops_coder, vsm_explore,
+  #            vsm_frontend_coder, vsm_frontend_fix_agent, vsm_frontend_tester,
+  #            vsm_meta, vsm_process_auditor, vsm_product, vsm_security,
+  #            vsm_synthesizer, vsm_wiring
+  # External:  vsm_experiment_designer (in vsm-fitness-gym),
+  #            vsm_trainer (in vsm-fitness-coach)
+  #
+  # ERROR you will see if using wrong type: "subagent_type 'coder' is not registered"
   subagents:
     vsm_architect:
       path: ./vsm_architect.yaml
