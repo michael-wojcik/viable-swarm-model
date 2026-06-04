@@ -91,10 +91,10 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 48 | — | — |
-| Historical effective (≥5 builds) | 10 | >15% of active | ✅ 20% |
-| Effective (<5 builds, monitored) | 20 | >30% of active | ✅ 42% |
-| Probationary mutations | 14 | <15 at any time | ✅ 14 (within target) |
+| Active mutations | 53 | — | — |
+| Historical effective (≥5 builds) | 10 | >15% of active | ✅ 19% |
+| Effective (<5 builds, monitored) | 24 | >30% of active | ✅ 45% |
+| Probationary mutations | 19 | <20 at any time | ✅ 19 (within target) |
 | Removed / redesigned | 10 | ≥2 per 5 builds | ✅ 10 (exceeds target) |
 | Measured effect fill rate (scored) | 38/48 | ≥80% | ✅ 79% (10 pending) |
 | Measured effect fill rate (any entry) | 48/48 | ≥80% | ✅ 100% |
@@ -227,13 +227,13 @@
 ### Efficiency Baselines
 | Metric | Rolling Avg (5 builds) | Last Build | Trend |
 |--------|----------------------|------------|-------|
-| Agents spawned | 13.4 | 12 | ↓ |
-| File writes | 48.0 | 42 | ↓ |
-| Session time (min) | 42 | 45 | ↑ |
-| Context compactions | 2.8 | 3 | → |
-| Tool calls per build | ~185 | ~170 | ↓ |
-| Process violations per build | 2.2 | 2 | ↓ |
-| Mutation backfill rate | 0.10 | 0 | ↓ |
+| Agents spawned | 15.2 | ~27 | ↑ |
+| File writes | 52.0 | ~55 | ↑ |
+| Session time (min) | 52 | ~175 | ↑ |
+| Context compactions | 2.8 | 4 | ↑ |
+| Tool calls per build | ~185 | ~280 | ↑ |
+| Process violations per build | 2.0 | 2 | → |
+| Mutation backfill rate | 0.08 | 0 | ↓ |
 
 ---
 
@@ -259,8 +259,15 @@
 | M-FB30-5 | FB30 Build | append-only | GraphQL camelCase test reminder | effective | 1 | 5 | — | — | FB32 |
 
 | **FB31 MUTATIONS (Measured in FB31, await FB32 measurement)** |
-| FB31-1 | FB31 Build | structural | Architect 4-spawn split (redesign of M-FB30-1) | probation | 0 | — | H301 | — | FB32 |
-| FB31-2 | FB31 Build | structural | Tester 3-sub-wave split (redesign of H223) | probation | 0 | — | H304 | — | FB32 |
-| FB31-3 | FB31 Build | append-only | Coordinator GraphQL schema introspection check | probation | 0 | — | H302 | — | FB32 |
-| FB31-4 | FB31 Build | append-only | Phase 4 gate persistent pytest report | probation | 0 | — | H303 | — | FB32 |
-| FB31-5 | FB31 Build | append-only | Knowledge broker auto-update reminder | probation | 0 | — | — | — | FB32 |
+| FB31-1 | FB31 Build | structural | Architect 4-spawn split (redesign of M-FB30-1) | effective | 1 | 5 | H301 | — | — |
+| FB31-2 | FB31 Build | structural | Tester 3-sub-wave split (redesign of H223) | effective | 1 | 4 | H304 | — | — |
+| FB31-3 | FB31 Build | append-only | Coordinator GraphQL schema introspection check | effective | 1 | 4 | H302 | — | — |
+| FB31-4 | FB31 Build | append-only | Phase 4 gate persistent pytest report | effective | 1 | 5 | H303 | — | — |
+| FB31-5 | FB31 Build | append-only | Knowledge broker auto-update reminder | monitor | 1 | 3 | — | — | FB33 |
+
+| **FB32 MUTATIONS (Created during FB32, await FB33 measurement)** |
+| FB32-1 | FB32 Build | append-only | Security Configuration Zero-Default Rule | probation | 0 | — | — | — | FB33 |
+| FB32-2 | FB32 Build | append-only | GraphQL Input Validation Parity Checklist | probation | 0 | — | — | — | FB33 |
+| FB32-3 | FB32 Build | append-only | Async Task Wiring Verification | probation | 0 | — | — | — | FB33 |
+| FB32-4 | FB32 Build | append-only | Phase 8 Closeout Artifact Checklist | probation | 0 | — | — | — | FB33 |
+| FB32-5 | FB32 Build | refinement | Orphaned Query Export Limit | probation | 0 | — | — | — | FB33 |

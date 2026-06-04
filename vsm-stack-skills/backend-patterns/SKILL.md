@@ -120,3 +120,50 @@ async def shutdown():
 **Source**: FB29 `main.py` used `@asynccontextmanager lifespan` for engine
 creation, table creation, and disposal. This pattern eliminated module-level
 engine calls and made tests import-safe.
+
+---
+
+## Pattern: Async Task Wiring Verification (FB32-3)
+
+**When**: Any endpoint or GraphQL mutation claims to enqueue a background task (Celery, RQ, ARQ, etc.).
+**What**: The handler body MUST contain a visible `.delay()`, `.apply_async()`, or equivalent enqueue call. A response message like "queued" or "processing" without an actual enqueue is **ceremonial wiring** and must be flagged.
+**Why**: FB32 had two instances (M6, M7) where REST and GraphQL report endpoints returned `"Report generation queued"` but never called `generate_attendee_report.delay(...))`). This creates a false sense of async architecture and allows unbounded DB row creation without work being done.
+**How**:
+
+**Correct pattern**:
+```python
+@router.post("/reports")
+async def create_report(req: ReportRequest, user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    report = Report(event_id=req.event_id, status="pending", requested_by=user.id)
+    db.add(report); await db.commit(); await db.refresh(report)
+    # ACTUAL enqueue — not just a message
+    generate_attendee_report.delay(str(report.id), str(req.event_id), user.id)
+    return {"message": "Report generation queued", "report_id": str(report.id)}
+```
+
+**Incorrect pattern** (ISSUE — ceremonial wiring):
+```python
+@router.post("/reports")
+async def create_report(req: ReportRequest, user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    report = Report(event_id=req.event_id, status="pending", requested_by=user.id)
+    db.add(report); await db.commit(); await db.refresh(report)
+    # NO .delay() call! The message is a lie.
+    return {"message": "Report generation queued", "report_id": str(report.id)}
+```
+
+**Auditor grep check**:
+```bash
+# Find all endpoints mentioning "queued" / "processing" / "generating"
+grep -rn "queued\|processing\|generating" backend/app/routers/ backend/app/graphql_resolvers.py
+
+# For each match, verify .delay() or .apply_async() exists in the same function
+grep -A 20 "def create_report\|def request_report" backend/app/routers/reports.py backend/app/graphql_resolvers.py | grep -c "\.delay\|\.apply_async"
+```
+
+**Prevention rules**:
+1. **Any endpoint returning a message containing "queued", "processing", "generating", or "async"** MUST have a visible enqueue call in the same handler body.
+2. **Implementation auditor MUST** grep for these messages and verify the enqueue call exists.
+3. **Security auditor MUST** flag unbounded resource creation (e.g., report rows without work being done) as MEDIUM.
+4. **Coordinator MUST** verify Celery tasks are imported and called in the API layer, not just defined in `tasks.py`.
+
+**Source**: FB32 M6 (REST reports.py) and M7 (GraphQL requestReport) both claimed queuing without enqueuing.

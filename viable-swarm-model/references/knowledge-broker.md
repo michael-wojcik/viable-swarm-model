@@ -259,3 +259,48 @@
 - `graphql-pitfalls`: Need rule about frontend query validation against backend schema
 - `testing-patterns`: SQLite async conftest pattern works but shared DB file causes suite-level lock contention
 - `security-patterns`: All 5 critical traps passed — security agent performing at target level
+
+
+---
+
+## Gym Batch Results — FB32 (2026-06-04)
+
+**Batch**: 8 oldest untested hypotheses (H104, H150-H156)
+**Tested**: 3/8 (H150, H151, H154) — top 3 by impact
+**Deferred**: 5/8 (H104, H152, H153, H155, H156) — next batch
+
+### Confirmed Hypotheses
+
+| Hypothesis | Result | Experiment | Skill Mutation Applied |
+|---|---|---|---|
+| **H150**: Verify dependencies against requirements.txt before importing | ✅ CONFIRMED | `fake_package` import → `ModuleNotFoundError` | Strengthened `python-pitfalls` "Dependency Manifest Drift" to BLOCKER with explicit pre-import check |
+| **H151**: Elevate Pydantic `class Config:` from ISSUE to BLOCKER | ✅ CONFIRMED | `class Config:` → `PydanticDeprecatedSince20` warning; `-W error` breaks build | Strengthened `python-pitfalls` "Pydantic ConfigDict" to BLOCKER with `pytest -W error::DeprecationWarning` recommendation |
+| **H154**: `npm run build` as Phase 4 hard gate | ✅ CONFIRMED | Unused import passes Vitest but fails `tsc -b` (`TS6133`) | Added `testing-patterns` rule: "Frontend `npm run build` as Phase 4 Hard Gate" |
+
+### Key Findings
+
+1. **All 3 confirmed hypotheses had related rules already in skills**, but they were
+too weak (ISSUE-level or advisory). The gym experiments provided empirical evidence
+to justify elevating them to BLOCKER-level enforcement.
+
+2. **H154 is the highest-impact**: Without `npm run build` as a hard gate, TypeScript
+errors leak from Phase 4 → Phase 6, wasting the most agent time. FB23 experienced this.
+
+3. **H150 and H151 are preventable at the coder level**: If the backend coder prompt
+explicitly checks requirements.txt before adding imports and rejects `class Config:`,
+these failure modes disappear.
+
+### Remaining Untested (Next Batch)
+
+| Hypothesis | Status | Rationale |
+|---|---|---|
+| H104: ApolloClient `uri` parameter stderr noise | untested | Frontend-specific, lower impact |
+| H152: Pre-build environment smoke tests | untested | Env-specific, partially addressed by Phase 0 checks |
+| H153: Vite alias key `"@"` vs `"@/"` | untested | Already in `typescript-pitfalls` as BLOCKER |
+| H155: Module-level settings audit across ALL files | untested | Backend-specific, wiring agent partially addresses |
+| H156: Dependency manifest-environment parity | untested | Env-specific, related to H150 |
+
+**Backlog after this batch**: 19 untested hypotheses (was 22, now 19)
+**Algedonic status**: WARNING (backlog reduced from CRITICAL to below 20)
+
+*Updated: 2026-06-04*

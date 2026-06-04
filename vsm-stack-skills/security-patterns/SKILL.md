@@ -365,3 +365,55 @@ async def register(data: UserRegister, db: AsyncSession = Depends(get_db)):
 **Source**: FB29 correctly excluded `admin` from `ALLOWED_ROLES` and validated
 registration role against the allowlist. This prevented privilege escalation at
 the registration boundary. Multiple prior builds had this gap.
+
+---
+
+## Pattern: Security Configuration Zero-Default Rule (FB32-1)
+
+**When**: Any build using pydantic-settings, Flask config, or Django settings for secrets and security flags.
+**What**: Treat ANY `Settings` field with an insecure default value as a **HIGH** severity finding. At Tier 2+, these are non-negotiable and must not be "accepted risks."
+**Why**: FB32 had `JWT_SECRET=""`, `SECRET_KEY=""`, `DEBUG=True`, and `GRAPHQL_INTROSPECTION=True` all default to insecure values. The application started silently with no secrets, allowing trivial JWT forgery and exposing the full GraphQL schema.
+**How**:
+
+**BLOCKER-level defaults** (must never have defaults):
+```python
+# CORRECT — no default, app fails loudly at startup if missing
+class Settings(BaseSettings):
+    JWT_SECRET: str = Field(..., min_length=16)
+    SECRET_KEY: str = Field(..., min_length=16)
+    DATABASE_URL: str = Field(..., min_length=1)
+    REDIS_URL: str = Field(..., min_length=1)
+```
+
+**HIGH-level defaults** (must default to secure values):
+```python
+# CORRECT — safe defaults
+class Settings(BaseSettings):
+    DEBUG: bool = False
+    GRAPHQL_INTROSPECTION: bool = False
+    ENV: str = "production"
+```
+
+**Incorrect pattern** (HIGH severity — not acceptable at Tier 2+):
+```python
+# WRONG — silent insecure startup
+class Settings(BaseSettings):
+    JWT_SECRET: str = ""           # Allows JWT forgery
+    SECRET_KEY: str = ""           # Allows session forgery
+    DEBUG: bool = True             # Leaks stack traces
+    GRAPHQL_INTROSPECTION: bool = True  # Exposes schema surface
+    DATABASE_URL: str = "sqlite+aiosqlite:///./test.db"  # Dev DB in prod
+```
+
+**Prevention rules**:
+1. **Security auditor MUST flag** any `Settings` field with a default value that is:
+   - Empty string for secrets (`JWT_SECRET`, `SECRET_KEY`, `API_KEY`, etc.)
+   - `True` for `DEBUG`, `GRAPHQL_INTROSPECTION`, or any verbose-error flag
+   - A local/dev service URL (`localhost`, `127.0.0.1`, `test.db`, in-memory)
+2. **Severity**: HIGH at minimum. At Tier 2+, these are non-negotiable fix-before-deploy items.
+3. **No "accepted risk" rationale** permitted for empty secrets or `DEBUG=True` at Tier 2+.
+4. **Coordinator MUST verify** `.env.example` shows placeholder values (e.g., `JWT_SECRET=change-me`) and NOT working defaults.
+5. **Config validator**: Add `@field_validator` rejecting empty strings and common placeholders (`change-me`, `secret`, `password`, `123456`).
+
+**Source**: FB32 security audit found H1 (empty JWT_SECRET/SECRET_KEY), M4 (GRAPHQL_INTROSPECTION=True), M9 (DEBUG=True). All were HIGH or MEDIUM findings that should have been caught earlier.
+**See also**: FB27-3 (Placeholder Secret Detection) — this rule extends FB27-3 to treat empty defaults as HIGH, not just placeholders.

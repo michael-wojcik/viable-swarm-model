@@ -10,12 +10,28 @@ NEVER instantiate at module level. These crash on import without env vars:
 - SQLAlchemy engine: `engine = create_async_engine(...)` → use `_get_async_engine()` factory
 - Any client that reads env on init
 
-## Pydantic ConfigDict (H151)
-`class Config:` inside a Pydantic model is deprecated in V2. Use:
+## Pydantic ConfigDict (H151) — BLOCKER
+
+**Severity**: BLOCKER (not ISSUE)
+**Confirmed by**: Gym experiment H151 (2026-06-04)
+
+`class Config:` inside a Pydantic model is deprecated in V2 and emits
+`PydanticDeprecatedSince20` warnings. Use:
 ```python
 model_config = ConfigDict(...)
 ```
-Flagged as BLOCKER in audit.
+
+**Why BLOCKER**: FB22 had 9 router files with `class Config:` generating 201
+pytest warnings. The pattern still functions (models work), so agents treat it as
+a minor ISSUE. But the deprecation warning can be promoted to a hard error with
+`pytest -W error::DeprecationWarning`, breaking CI. Treat as BLOCKER to prevent
+warning accumulation.
+
+**Prevention rules**:
+1. **Backend coder MUST NOT** write `class Config:` in any Pydantic model.
+2. **Auditor MUST flag** any `class Config:` as BLOCKER, not ISSUE.
+3. **Tester SHOULD run** `pytest -W error::DeprecationWarning` to mechanically
+   block this pattern.
 
 ## Enum Construction
 Plain `enum.Enum` raises `ValueError` when constructed from strings. Always use:
@@ -36,10 +52,28 @@ import inspect
 ```
 Using non-existent parameters causes `TypeError` on import.
 
-## Dependency Manifest Drift
+## Dependency Manifest Drift (H150) — BLOCKER
+
+**Severity**: BLOCKER
+**Confirmed by**: Gym experiment H150 (2026-06-04)
+
 Before importing ANY non-stdlib package, verify it exists in the project's 
 dependency manifest (`requirements.txt`, `pyproject.toml`, etc.). Using packages 
 not listed is a BLOCKER.
+
+**Why this matters**: FB22's graphql.py agent used `strawberry_sqlalchemy_mapper`
+— a third-party library not in requirements.txt. This caused 15+ minutes of wasted
+agent time trying to verify imports. The gym experiment confirmed that missing
+dependencies cause immediate `ModuleNotFoundError` at module load time.
+
+**Prevention rules**:
+1. **Backend coder MUST check** `requirements.txt` / `pyproject.toml` BEFORE
+   adding any non-stdlib `import` statement.
+2. **If a library is needed but not in the manifest**, add it to
+   `requirements.txt` FIRST, then use it in code.
+3. **Coordinator MUST verify** all backend files import cleanly in a fresh
+   subprocess: `python -c "import app.main"`.
+4. **Auditor MUST flag** any import of a package not in the manifest as BLOCKER.
 
 ## Import Verification
 After writing backend files, verify they import cleanly in a fresh subprocess.

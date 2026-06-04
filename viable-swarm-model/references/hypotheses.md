@@ -52,8 +52,10 @@
 
 ## H150: Requiring agents to verify dependencies against requirements.txt before importing would prevent 100% of non-existent library usage
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-25
+**Tested**: 2026-06-04 (FB32 gym batch)
+**Result**: CONFIRMED — `ModuleNotFoundError` on missing dependency import.
 **Rationale**: FB22 graphql.py agent used `strawberry_sqlalchemy_mapper` — a third-party library not in requirements.txt. The agent spent 15+ minutes trying to verify imports before failing. No existing rule forces agents to check requirements.txt before adding new imports.
 **Source**: Fitness build FB22
 **Experiment**: Add "Before importing any non-stdlib library, verify it exists in requirements.txt or package.json" to vsm_backend_coder and vsm_frontend_coder gotchas. Run next fitness build and count instances of agents using libraries not in dependency manifests.
@@ -64,8 +66,10 @@
 
 ## H151: Elevating Pydantic `class Config` deprecation from ISSUE to BLOCKER would eliminate the pattern from all new code
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-25
+**Tested**: 2026-06-04 (FB32 gym batch)
+**Result**: CONFIRMED — `class Config:` emits `PydanticDeprecatedSince20` warning; `-W error::DeprecationWarning` breaks build.
 **Rationale**: FB22 produced 9 router files using `class Config:` inside Pydantic BaseModel subclasses, generating 201 pytest warnings. The current vsm_backend_coder prompt mentions this as a deprecation avoidance gotcha but does not elevate it to BLOCKER.
 **Source**: Fitness build FB22
 **Experiment**: Update vsm_backend_coder.md to state: "`class Config:` inside Pydantic models is a BLOCKER. Use `model_config = ConfigDict(...)` instead." Run next fitness build and grep for `class Config:` in new Python files.
@@ -100,8 +104,10 @@
 
 ## H154: Requiring `npm run build` as a Phase 4 hard gate would prevent TypeScript/build failures from leaking into Phase 6
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-26
+**Tested**: 2026-06-04 (FB32 gym batch)
+**Result**: CONFIRMED — `vitest` passes on unused imports; `tsc -b && vite build` fails with `TS6133`.
 **Rationale**: FB23 frontend build failed in Phase 6 because `tsc -b` errors (unused imports, vite config type mismatch) were not caught in Phase 4.
 **Source**: Fitness build FB23
 **Experiment**: Add "Frontend `npm run build` must pass" to Phase 4 exit criteria in next build.

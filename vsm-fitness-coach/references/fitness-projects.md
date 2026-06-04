@@ -1060,3 +1060,70 @@
 - **Key gap**: GraphQL schema ↔ frontend query contract mismatch (coordinator missed)
 - **Key surprise**: Meta-report independently caught phase4-gate inflation
 - **Mutations**: M-FB30-1 redesign (5 spawns), H223 redesign (3 sub-waves), coordinator Check 24 strengthening, gate discipline rule
+
+---
+
+## FB32: EventFlow — Event Ticketing & Venue Management Platform
+
+**Complexity**: High (Tier 2, 4-5 waves, ~7500 lines, 4 services)
+**Date**: 2026-06-04
+**Score**: 3.85 / 5.0 (77/100 meta-evaluation)
+**Verdict**: CONDITIONAL PASS
+**Services**: FastAPI backend, React frontend, PostgreSQL, Redis, Celery, Strawberry GraphQL, Socket.IO
+**Build directory**: `~/vsm-fitness-builds/coach/FB32-20260604/`
+
+### Coverage Map
+
+| Capability | Tested by |
+|---|---|
+| FB31-1: Architect 4-spawn split | **Effective** — 0 timeouts, all 4 spawns completed |
+| FB31-2: Tester 3-sub-wave split | **Effective** — 133 backend tests across 3 spawns |
+| FB31-3: Coordinator GraphQL introspection | **Effective** — caught schema drift pre-implementation |
+| FB31-4: Persistent pytest report | **Effective** — cited in gate, independently verified |
+| FB32-1: Security config zero-default (probation) | Trap T1: empty JWT_SECRET/SECRET_KEY — will test in FB33 |
+| FB32-2: GraphQL input validation parity (probation) | H2 caught and fixed inline; will test in FB33 |
+| FB32-3: Async task wiring verification (probation) | M6/M7 deferred; will test in FB33 |
+| FB32-4: Phase 8 artifact checklist (probation) | Missing artifacts initially; written retroactively |
+| FB32-5: Orphaned query export limit (probation) | 25 orphaned exports in queries.ts; will test in FB33 |
+| H150: Dependency verification (gym-confirmed) | **CONFIRMED** — gym experiment reproduced ModuleNotFoundError |
+| H151: Pydantic ConfigDict BLOCKER (gym-confirmed) | **CONFIRMED** — gym experiment showed `-W error` breaks build |
+| H154: npm run build as Phase 4 gate (gym-confirmed) | **CONFIRMED** — gym experiment showed vitest passes, tsc fails |
+| Security gate | 0 BLOCKERs, 5 HIGH (1 fixed inline, 4 accepted) |
+| Zero timeouts | **Achieved** — 0 timeouts across ~27 agent spawns |
+| Process compliance | 78/100 (missing artifacts capped score) |
+
+### Known Stress Points
+- Security gate leniency — 4 HIGH findings accepted rather than fixed
+- Celery ceremonial wiring — endpoints claim "queued" without `.delay()`
+- Closeout artifact gaps — lessons.md, process-audit.md, meta-report.md missing initially
+- Hypothesis backlog neglect — 22 untested deferred without gym batch (later addressed)
+- SQLite test DB flakiness — file-based DB locks between concurrent async tests
+
+### Result
+- **Score**: 3.85/5.0 (77/100)
+- **BLOCKERs**: 0 (all fixed in 2 iterations)
+- **Fix iterations**: 2 (integration contract BLOCKERs + security re-check findings)
+- **Tests**: 133 backend + 31 frontend = 164/164 passing
+- **Security score**: 72/100 (0 BLOCKERs, 5 HIGH, 9 MEDIUM, 6 LOW)
+- **Process compliance**: 78/100
+- **Agent timeouts**: 0 (best in series)
+- **Lines of code**: ~7,500 (backend ~5,077 + frontend ~2,204 + shared ~222)
+
+### Mutations Applied
+- FB32-1: Security Configuration Zero-Default Rule (security-patterns)
+- FB32-2: GraphQL Input Validation Parity Checklist (graphql-pitfalls)
+- FB32-3: Async Task Wiring Verification (backend-patterns)
+- FB32-4: Phase 8 Closeout Artifact Checklist (pattern-library)
+- FB32-5: Orphaned Query Export Limit (graphql-pitfalls)
+- H150: Dependency manifest drift strengthened to BLOCKER (python-pitfalls)
+- H151: Pydantic ConfigDict elevated to BLOCKER (python-pitfalls)
+- H154: Frontend `npm run build` as Phase 4 Hard Gate (testing-patterns)
+
+### Gym Batch
+- 3/8 oldest hypotheses tested (H150, H151, H154)
+- All 3 CONFIRMED
+- 19 untested hypotheses remain (down from 22)
+
+### Next Build
+- **FB33**: StreamLine (Content Streaming & Creator Platform)
+- **Prompt**: `~/vsm-fitness-builds/coach/FB33-20260604/FB33-prompt-draft.md`

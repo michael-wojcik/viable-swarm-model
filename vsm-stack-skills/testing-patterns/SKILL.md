@@ -148,3 +148,53 @@ mutation { createBudget(name: "X", startDate: "2024-01-01") { id } }
 1. Backend tester MUST verify all GraphQL test queries use camelCase field names.
 2. Run `strawberry export-schema` and grep for snake_case in test files.
 
+
+---
+
+## Rule: Frontend `npm run build` as Phase 4 Hard Gate (H154)
+
+**Status**: Active (FB23-sourced, confirmed by gym experiment 2026-06-04)
+**Severity**: BLOCKER for frontend builds
+**Applies to**: vsm_frontend_tester, vsm_coordinator
+
+**Problem**: Vitest (`npm test -- --run`) uses esbuild which transpiles TypeScript
+without full type checking. It can PASS even when `tsc -b` would FAIL on:
+- Unused imports (`noUnusedLocals`)
+- Unused parameters (`noUnusedParameters`)
+- Type mismatches in unreachable code
+- Vite config type errors
+
+**Gym experiment H154** (2026-06-04) confirmed: a React component with an unused
+`useState` import passed Vitest but failed `npm run build` with:
+```
+src/main.tsx(1,1): error TS6133: 'useState' is declared but its value is never read.
+```
+
+**Correct pattern** (Phase 4 exit criteria):
+```markdown
+## Frontend Phase 4 Gate Checklist
+
+- [ ] `npm test -- --run` passes (all tests green)
+- [ ] `npm run build` passes with exit code 0 (type-check + build)
+- [ ] No TypeScript errors in `tsc -b` output
+```
+
+**Incorrect pattern** (gate bypass):
+```markdown
+## Frontend Phase 4 Gate Checklist (INCOMPLETE)
+
+- [ ] `npm test -- --run` passes
+# MISSING: npm run build check — tsc errors leak to Phase 6
+```
+
+**Prevention rules**:
+1. **Frontend tester MUST** run `npm run build` (not just `npm test`) before
+deleting `node_modules` or declaring Phase 4 complete.
+2. **Coordinator MUST** verify `npm run build` exit code is 0 during integration.
+3. **Any build failure in Phase 6** that `tsc -b` would have caught in Phase 4
+is a **process violation** — the Phase 4 gate was bypassed.
+4. **Build scripts SHOULD** set `"build": "tsc -b && vite build"` in
+`package.json` so `npm run build` always runs the type checker.
+
+**Source**: FB23 frontend build failed in Phase 6 because `tsc -b` errors were
+not caught in Phase 4. Gym experiment H154 reproduced the exact failure mode.

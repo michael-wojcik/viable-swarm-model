@@ -342,3 +342,73 @@ app.mount("/graphql", GraphQL(schema, context_getter=get_graphql_context))
 1. DevOps coder MUST use `GraphQLRouter` for FastAPI apps.
 2. Coordinator MUST verify `/graphql` endpoint returns 200 for POST, not 307.
 
+
+---
+
+## Pattern: GraphQL Input Validation Parity Checklist (FB32-2)
+
+**When**: Building FastAPI + Strawberry GraphQL APIs alongside REST endpoints.
+**What**: For every REST endpoint using `Field(..., min_length=...)`, `Field(..., ge=...)`, or custom validators, the corresponding GraphQL resolver MUST apply equivalent validation.
+**Why**: FB32 had two parity gaps:
+- GraphQL `updateAttendee` mutation did not validate that `ticket_type_id` belonged to the same event as the attendee (REST `PATCH /attendees/{id}` enforced this).
+- GraphQL `register` mutation initially lacked `min_length=8` password validation (REST had it via `Field(..., min_length=8)`).
+**How**:
+
+**Coordinator checklist** (mandatory for integration verification):
+```markdown
+## GraphQL/REST Input Validation Parity Check
+
+For each REST endpoint, verify the GraphQL counterpart:
+
+| REST Endpoint | Validator | GraphQL Resolver | Parity? |
+|---|---|---|---|
+| POST /register | `password: Field(min_length=8)` | `register` mutation | ✅ Must check `len(password) >= 8` |
+| POST /events | `capacity: Field(ge=1)` | `createEvent` mutation | ✅ Must check `capacity >= 1` |
+| PATCH /attendees/{id} | `tt.event_id == attendee.event_id` | `updateAttendee` mutation | ✅ Must verify ticket type belongs to event |
+| POST /venues | `capacity: Field(ge=1)` | `createVenue` mutation | ✅ Must check `capacity >= 1` |
+| POST /tickets | `price: Field(ge=0)` | `createTicketType` mutation | ✅ Must check `price >= 0` |
+
+If ANY row is missing parity → ISSUE. If parity gap affects security (auth, ownership, payment) → BLOCKER.
+```
+
+**Prevention rules**:
+1. **Implementation auditor MUST** produce a parity table for all endpoints with `Field(...)` validators.
+2. **Security auditor MUST** re-verify the parity table independently.
+3. **GraphQL resolver MUST NOT** blindly assign input fields to model attributes without validating them.
+4. **Test MUST cover** the failure path for every GraphQL validation check.
+
+**Source**: FB32 H2 (updateAttendee missing ticket-type validation) and security-re-check HIGH-2 (register missing min_length). Both were caught late.
+
+---
+
+## Pattern: Orphaned Query Export Limit (Refinement — FB32-5)
+
+**When**: Frontend GraphQL `queries.ts` or `mutations.ts` grows during implementation.
+**What**: Quantify the orphaned query rule: >5 unused exports = ISSUE, >15 = BLOCKER.
+**Why**: FB32 had 25 orphaned exports in `queries.ts`, indicating the existing "flag if present" rule was too lenient. This bloats the bundle and creates dead code.
+**How**:
+
+**Implementation auditor check**:
+```bash
+# Count exports in queries.ts
+grep -c "^export const" frontend/src/graphql/queries.ts
+
+# Count imports of those exports across the codebase
+grep -rh "from.*queries" frontend/src/ --include="*.tsx" --include="*.ts" | sort | uniq -c
+```
+
+**Severity thresholds**:
+| Orphaned Exports | Severity | Action |
+|---|---|---|
+| 0–5 | ✅ PASS | Acceptable |
+| 6–15 | ⚠️ ISSUE | Must clean up before gate |
+| 16+ | 🔴 BLOCKER | Prevents Phase 4 gate |
+
+**Prevention rules**:
+1. **Frontend coder MUST** delete unused query exports before submitting implementation.
+2. **Implementation auditor MUST** count orphaned exports and apply the severity table.
+3. **Coordinator MUST** verify `queries.ts` exports are all imported in at least one `.tsx` file.
+4. **Build script MAY** add `eslint-plugin-unused-imports` or similar to catch orphans automatically.
+
+**Source**: FB32 integration-contract.md ISSUE-1 (25 orphaned exports). Frontend build succeeded but bundle was bloated.
+**See also**: Existing "orphaned queries" rule in this skill — this refines it with numeric thresholds.

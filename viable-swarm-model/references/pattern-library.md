@@ -739,3 +739,50 @@ return {"status": task.status.value}  # OK — SQLAlchemy returns Status enum
 
 **Source**: FB24 fix wave left 6+ ISSUEs open. FB25 Phase 7d produced `issue-sweep.md` with all issues categorized as FIXED or DEFERRED. Zero MISSED.
 **See also**: `references/hypotheses-archive.md` H205.
+
+---
+
+## Pattern: Phase 8 Closeout Artifact Checklist (FB32-4)
+
+**When**: Before S5 declares Phase 8 (Meta-Reflection / Build Completion) done.
+**What**: S5 MUST run `ls -la .kimi/` and verify the presence of all mandatory closeout artifacts. Missing any = process violation.
+**Why**: FB32 was missing `lessons.md`, `process-audit.md`, and `meta-report.md` at the end of Phase 8. The meta agent had to flag these gaps. The skill's Phase 8b protocol was not self-enforcing.
+**How**:
+
+**Mandatory artifact checklist**:
+```markdown
+## Phase 8 Closeout — Required Artifacts
+
+Run: `ls -la .kimi/`
+
+### Core Test & Audit Artifacts (must exist)
+- [ ] `pytest-report.md` — Persistent pytest output (Phase 4 gate source of truth)
+- [ ] `phase4-gate.md` — Phase 4 PASS declaration
+- [ ] `security-audit-report.md` — Security audit findings
+- [ ] `re-audit-report.md` — Post-fix verification (if fix wave occurred)
+
+### Integration & Synthesis Artifacts (must exist)
+- [ ] `synthesis-integration.md` — Cross-phase synthesis (Phase 6)
+- [ ] `integration-contract.md` — Coordinator binding checkpoints (Phase 3)
+- [ ] `wiring-report.md` — Entry-point verification (Phase 3)
+
+### Meta & Process Artifacts (must exist)
+- [ ] `meta-evaluation-report.md` — Build scorecard & mutation proposals (Phase 8)
+- [ ] `lessons.md` — What worked / what didn't / proposed mutations (Phase 8)
+- [ ] `process-audit.md` — Process compliance scoring (if fitness coach active)
+
+### Optional but Recommended
+- [ ] `foundation-audit.md` — Foundation phase audit
+- [ ] `issue-sweep.md` — Phase 7d ISSUE categorization
+- [ ] `variety-assessment.md` — Variety engineer scan results
+```
+
+**Enforcement rules**:
+1. **S5 MUST run the checklist** before declaring Phase 8 complete.
+2. **Missing ANY core artifact** → Phase 8 is NOT complete. Produce the missing artifact.
+3. **Missing ANY meta/process artifact** → Process compliance score capped at 70/100.
+4. **All artifacts MUST be ≥50 lines** (excluding headers). A 5-line stub does not count.
+5. **Artifacts MUST be in `.kimi/`**, not scattered in root or other directories.
+
+**Source**: FB32 meta-evaluation found missing `lessons.md`, `process-audit.md`, and `meta-report.md`. These gaps reduced process compliance from ~83/100 to ~65/100.
+**See also**: Phase 7d ISSUE Sweep pattern (above) — both are closeout discipline patterns.
