@@ -66,13 +66,13 @@ fi
 LEARNINGS=""
 if [[ -f "${KIMI_DIR}/lessons.md" ]]; then
     # Get first 3 non-empty, non-header lines as key learnings
-    LEARNINGS=$(grep -v '^#' "${KIMI_DIR}/lessons.md" | grep -v '^$' | head -3 | sed 's/^/- /')
+    LEARNINGS=$(grep -v '^#' "${KIMI_DIR}/lessons.md" | grep -v '^$' | head -3 | sed 's/^/- /' || true)
 fi
 
 # Extract new mutations from mutation log (last 7 days)
 NEW_MUTATIONS=""
 if [[ -f "$MUTATION_LOG" ]]; then
-    NEW_MUTATIONS=$(grep -B1 "^## Mutation" "$MUTATION_LOG" | grep "$DATE" | head -5 | sed 's/^/- /')
+    NEW_MUTATIONS=$(grep -B1 "^## Mutation" "$MUTATION_LOG" | grep "$DATE" | head -5 | sed 's/^/- /' || true)
     if [[ -z "$NEW_MUTATIONS" ]]; then
         NEW_MUTATIONS="- (No mutations applied today)"
     fi

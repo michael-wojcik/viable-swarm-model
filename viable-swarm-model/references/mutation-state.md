@@ -91,7 +91,7 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 53 | — | — |
+| Active mutations | 54 | — | — |
 | Historical effective (≥5 builds) | 10 | >15% of active | ✅ 19% |
 | Effective (<5 builds, monitored) | 24 | >30% of active | ✅ 45% |
 | Probationary mutations | 19 | <20 at any time | ✅ 19 (within target) |
@@ -271,3 +271,6 @@
 | FB32-3 | FB32 Build | append-only | Async Task Wiring Verification | probation | 0 | — | — | — | FB33 |
 | FB32-4 | FB32 Build | append-only | Phase 8 Closeout Artifact Checklist | probation | 0 | — | — | — | FB33 |
 | FB32-5 | FB32 Build | refinement | Orphaned Query Export Limit | probation | 0 | — | — | — | FB33 |
+
+| **S5 ITERATION MUTATIONS (2026-06-05)** |
+| R5 | 2026-06-05 S5 | refinement | auto-broker-update.sh pipefail crash on empty grep | effective | 1 | 5 | — | — | — |

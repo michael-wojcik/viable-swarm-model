@@ -3132,3 +3132,27 @@ producing `mutations-applied.md` and filling measured effects.
 **Rationale**: FB31 frontend queries fetched all records without `limit` or `first` parameters. The backend schema supported pagination but frontend queries didn't use it.
 **Expected effect**: GraphQL queries include pagination parameters by default. Auditor flags unbounded exports.
 **Measured effect**: **PENDING** — awaits FB33 validation.
+
+---
+
+## Mutation R5 — 2026-06-05 (Refinement — S5 Iteration)
+
+**Session**: S5 orchestrator iteration — fixed automation infrastructure test failure
+**File**: `viable-swarm-model/hooks/auto-broker-update.sh`
+**Type**: refinement
+**Target failure mode**: `auto-broker-update.sh` silently exits without updating the knowledge broker when `mutation-log.md` exists but contains no entries for the current date
+**Rationale**: The script uses `set -euo pipefail`. The `NEW_MUTATIONS` pipeline (`grep ... | grep "$DATE" | head -5 | sed ...`) exits with code 1 when the date filter finds no matches. `pipefail` propagates this failure, and `set -e` kills the script before it can fall back to raw append mode or update the broker timestamp. This caused the #1 process violation (manual broker updates missed) to persist despite the automation existing. Test suite showed 12 passed / 1 failed before the fix; 13 passed / 0 failed after.
+**Expected effect**: Knowledge broker auto-update succeeds reliably even when no mutations were applied on the current date. The script degrades gracefully to "(No mutations applied today)" instead of crashing.
+**Measured effect**: **Effective (Score: 5)** — `test-automation.sh` Test 5 passes. Script successfully appends fallback entry and updates timestamp when mutation log has no matching date entries.
+
+**Before**:
+```bash
+LEARNINGS=$(grep -v '^#' "${KIMI_DIR}/lessons.md" | grep -v '^$' | head -3 | sed 's/^/- /')
+NEW_MUTATIONS=$(grep -B1 "^## Mutation" "$MUTATION_LOG" | grep "$DATE" | head -5 | sed 's/^/- /')
+```
+
+**After**:
+```bash
+LEARNINGS=$(grep -v '^#' "${KIMI_DIR}/lessons.md" | grep -v '^$' | head -3 | sed 's/^/- /' || true)
+NEW_MUTATIONS=$(grep -B1 "^## Mutation" "$MUTATION_LOG" | grep "$DATE" | head -5 | sed 's/^/- /' || true)
+```
