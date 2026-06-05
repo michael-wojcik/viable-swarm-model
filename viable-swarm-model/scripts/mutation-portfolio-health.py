@@ -387,6 +387,27 @@ def write_health_markdown(health: PortfolioHealth, build_dir: Path) -> None:
             lines.append(f"| {c['target_failure']} | {ids_str} | {c['rationale']} |")
         lines.append("")
 
+    # Spot-check guidance for the learning curator agent
+    lines.extend([
+        "## Spot-Check Guidance (for vsm_learning_curator)",
+        "",
+        "If you are the learning curator agent, follow this guidance:",
+        "- For metrics marked ✅ OK: No spot-check needed. Trust the pre-computed result.",
+        "- For metrics marked ⚠️ WARNING: Verify the specific rows in mutation-state.md.",
+        "- For promotion/demotion candidates: Read the specific mutation row in mutation-state.md to confirm builds_tested and score.",
+        "",
+        "| Check | If suspicious, verify this | What to look for |",
+        "|---|---|---|",
+        "| Total active mutations | `references/mutation-state.md` master table | Count of active rows matches |",
+        "| Promotions ready | Specific mutation rows | builds_tested ≥ 3, score ≥ 4 |",
+        "| Demotions ready | Specific mutation rows | builds_tested ≥ 3, score ≤ 2 |",
+        "| Historical promotions | Specific mutation rows | builds_tested ≥ 5, score ≥ 4 |",
+        "| Consolidations | `references/mutation-log.md` | Overlapping failure modes |",
+        "",
+        "**Limit**: Maximum 3 spot-checks. If more than 3 candidates, verify the 3 most impactful.",
+        "",
+    ])
+
     if health.data_integrity_errors:
         lines.extend([
             "## ⚠️ Data Integrity Errors",

@@ -5,6 +5,44 @@
 
 ---
 
+## 2026-06-05 — S5 Orchestrator Iteration (R25)
+
+### Diagnosed Constraint
+**System 4→S4 channel / meta-system curation gap**: The `vsm_learning_curator` and `vsm_variety_engineer` both have a **0% exercise rate** — S5 never spawns them. A contributing factor: when spawned, both agents have excessive workloads. The learning curator must read `mutation-state.md` (295 lines), compute portfolio metrics, validate data integrity, and write a comprehensive review. The variety engineer must read 4+ reference files, compute variety metrics, and write an assessment. Both agents had pre-computation scripts (R7, R8) but their prompts still instructed them to "verify independently (do not blindly trust)" and "use pre-computed data as STARTING POINTS" — the exact anti-pattern that caused timeouts for `vsm_process_auditor` (R22) and `vsm_meta` (R23). Without manageable workload, these agents cannot be reliably spawned even if made mandatory.
+
+### Change Made
+**Structural mutation R25**: Applied the proven Mode A/B pre-computation-primary workflow to both `vsm_learning_curator.md` and `vsm_variety_engineer.md`.
+- **Mode A** (pre-computed data exists): Agent reads pre-computed report, TRUSTs quantitative data, spot-checks only 3 items for qualitative depth, writes report incrementally using pre-computed scaffold.
+- **Mode B** (missing): Generate pre-computation, then follow Mode A.
+- Updated `scripts/mutation-portfolio-health.py` with "Spot-Check Guidance" section mapping each metric to the specific source file to verify.
+- Updated `scripts/organism-vitals.py` with "Spot-Check Guidance" section mapping each algedonic to the specific source file to verify.
+- `hooks/test-automation.sh`: Added Tests 65–68.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **73 passed, 0 failed** (was 69 passed, 0 failed)
+- Test 65: vsm_learning_curator.md contains Mode A/Mode B workflow, spot-check limit, and incremental writing
+- Test 66: vsm_variety_engineer.md contains Mode A/Mode B workflow, spot-check limit, and incremental writing
+- Test 67: mutation-portfolio-health.py outputs Spot-Check Guidance with artifact mapping and max 3 limit
+- Test 68: organism-vitals.py outputs Spot-Check Guidance with algedonic-to-file mapping and max 3 limit
+
+### Files Modified
+- `viable-swarm-model/agents/vsm_learning_curator.md`
+- `viable-swarm-model/agents/vsm_variety_engineer.md`
+- `viable-swarm-model/scripts/mutation-portfolio-health.py`
+- `viable-swarm-model/scripts/organism-vitals.py`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4→S4 channel / meta-system spawn gap**: The `vsm_learning_curator` and `vsm_variety_engineer` now have manageable workloads (Mode A/B + spot-check guidance), but they are **still never spawned** because SKILL.md does not make them mandatory. The pre-computation scripts auto-generate fallback data at closeout (R7, R8), so S5 has no enforcement mechanism forcing agent spawn. The next iteration should either (a) add a SKILL.md Phase 8c-iii requirement making vsm_learning_curator mandatory when probationary mutations > 12, or (b) add a stop-verifier check that blocks session stop when the learning curator was not spawned despite CRITICAL portfolio health. Alternatively, **System 1 (Implementation)**: If R24's test target map does not improve tester success rates, the next frontier is creating a `tester-patterns.md` skill with copy-pasteable test templates.
+
+---
+
 ## 2026-06-05 — S5 Orchestrator Iteration (R24)
 
 ### Diagnosed Constraint

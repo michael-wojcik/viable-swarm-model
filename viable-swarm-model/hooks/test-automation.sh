@@ -2958,6 +2958,126 @@ else
 fi
 
 # ============================================================================
+# Test 65: vsm_learning_curator.md contains Mode A/B workflow (R25)
+# ============================================================================
+
+echo -n "TEST: vsm_learning_curator.md has Mode A/B portfolio reviewer workflow ... "
+
+LC_AGENT="$SCRIPT_DIR/../agents/vsm_learning_curator.md"
+if [[ ! -f "$LC_AGENT" ]]; then
+    fail "vsm_learning_curator.md not found"
+else
+    if grep -q "Mode A: Pre-computed portfolio data EXISTS" "$LC_AGENT" && \
+       grep -q "Mode B: Pre-computed portfolio data MISSING" "$LC_AGENT" && \
+       grep -q "maximum 3 spot-checks" "$LC_AGENT" && \
+       grep -q "Step 2 — TRUST" "$LC_AGENT" && \
+       grep -q "WRITE incrementally" "$LC_AGENT"; then
+        pass
+    else
+        fail "learning curator missing Mode A/B workflow or spot-check limits"
+    fi
+fi
+
+# ============================================================================
+# Test 66: vsm_variety_engineer.md contains Mode A/B workflow (R25)
+# ============================================================================
+
+echo -n "TEST: vsm_variety_engineer.md has Mode A/B variety assessor workflow ... "
+
+VE_AGENT="$SCRIPT_DIR/../agents/vsm_variety_engineer.md"
+if [[ ! -f "$VE_AGENT" ]]; then
+    fail "vsm_variety_engineer.md not found"
+else
+    if grep -q "Mode A: Pre-computed vitals EXIST" "$VE_AGENT" && \
+       grep -q "Mode B: Pre-computed vitals MISSING" "$VE_AGENT" && \
+       grep -q "maximum 3 spot-checks" "$VE_AGENT" && \
+       grep -q "Step 2 — TRUST" "$VE_AGENT" && \
+       grep -q "WRITE incrementally" "$VE_AGENT"; then
+        pass
+    else
+        fail "variety engineer missing Mode A/B workflow or spot-check limits"
+    fi
+fi
+
+# ============================================================================
+# Test 67: mutation-portfolio-health.py produces spot-check guidance (R25)
+# ============================================================================
+
+echo -n "TEST: mutation-portfolio-health.py outputs spot-check guidance ... "
+
+mkdir -p "$TMPDIR/build67/.kimi"
+mkdir -p "$TMPDIR/build67/vsm/viable-swarm-model/references"
+
+# Use the real mutation-state.md (copied to temp for isolation)
+cp "$SCRIPT_DIR/../references/mutation-state.md" "$TMPDIR/build67/vsm/viable-swarm-model/references/mutation-state.md"
+
+python3 "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" \
+  --mutation-state "$TMPDIR/build67/vsm/viable-swarm-model/references/mutation-state.md" \
+  --build-dir "$TMPDIR/build67" >/dev/null 2>&1
+
+if [[ -f "$TMPDIR/build67/.kimi/mutation-portfolio-health.md" ]]; then
+    PH_OUTPUT=$(cat "$TMPDIR/build67/.kimi/mutation-portfolio-health.md")
+    if echo "$PH_OUTPUT" | grep -q "Spot-Check Guidance" && \
+       echo "$PH_OUTPUT" | grep -q "For metrics marked ✅ OK" && \
+       echo "$PH_OUTPUT" | grep -q "Maximum 3 spot-checks"; then
+        pass
+    else
+        fail "portfolio health missing spot-check guidance"
+    fi
+else
+    fail "portfolio health markdown not generated"
+fi
+
+# ============================================================================
+# Test 68: organism-vitals.py produces spot-check guidance (R25)
+# ============================================================================
+
+echo -n "TEST: organism-vitals.py outputs spot-check guidance ... "
+
+mkdir -p "$TMPDIR/build68/vsm/viable-swarm-model/references"
+mkdir -p "$TMPDIR/build68/vsm-fitness-builds/coach"
+
+cat > "$TMPDIR/build68/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target | Status | Builds | Score |
+|---|---|---|---|---|---|---|
+| T1 | Test | append | Test | effective | 5 | 4 |
+EOF
+
+cat > "$TMPDIR/build68/vsm/viable-swarm-model/references/hypotheses.md" << 'EOF'
+# Hypotheses
+## H1: Test
+**Status**: confirmed
+EOF
+
+cat > "$TMPDIR/build68/vsm/viable-swarm-model/references/knowledge-broker.md" << 'EOF'
+# Broker
+**Last updated**: 2026-06-05
+Content here.
+EOF
+
+cat > "$TMPDIR/build68/vsm/viable-swarm-model/references/build-health-history.md" << 'EOF'
+# Build Health History
+## 2026-06-01 — FB998
+- Score: 4.0/5.0
+EOF
+
+python3 "$SCRIPT_DIR/../scripts/organism-vitals.py" --build-dir "$TMPDIR/build68" >/dev/null 2>&1
+
+if [[ -f "$TMPDIR/build68/.kimi/organism-vitals.md" ]]; then
+    OV_OUTPUT=$(cat "$TMPDIR/build68/.kimi/organism-vitals.md")
+    if echo "$OV_OUTPUT" | grep -q "Spot-Check Guidance" && \
+       echo "$OV_OUTPUT" | grep -q "For metrics within thresholds" && \
+       echo "$OV_OUTPUT" | grep -q "Maximum 3 spot-checks"; then
+        pass
+    else
+        fail "organism vitals missing spot-check guidance"
+    fi
+else
+    fail "organism vitals markdown not generated"
+fi
+
+# ============================================================================
 # Summary
 # ============================================================================
 

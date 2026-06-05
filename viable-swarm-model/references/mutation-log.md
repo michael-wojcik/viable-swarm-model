@@ -3813,3 +3813,39 @@ The tester agent reads this map FIRST and uses it as the authoritative test plan
 **Measured effect**: **Awaiting measurement** — Success criteria: (1) Tester success rate improves from 65%/60% to ≥75% in next 3 builds, (2) No increase in missed test targets (map coverage ≥90% of manually discovered targets), (3) Tester agents complete within timeout limits when target map exists.
 
 ---
+
+## Mutation R25 — 2026-06-05
+
+**Session**: S5 Orchestrator Iteration R25
+**File**: `agents/vsm_learning_curator.md`, `agents/vsm_variety_engineer.md`, `scripts/mutation-portfolio-health.py`, `scripts/organism-vitals.py`
+**Type**: structural
+**Rationale**: The `vsm_learning_curator` and `vsm_variety_engineer` both have a **0% exercise rate** — S5 never spawns them. While the root cause includes SKILL.md not making them mandatory, a contributing factor is that WHEN spawned, both agents have excessive workloads. The `vsm_learning_curator` must read `mutation-state.md` (295 lines), compute portfolio metrics, validate data integrity, and write a comprehensive review. The `vsm_variety_engineer` must read 4+ reference files, compute variety metrics, and write an assessment. Both agents had pre-computation scripts (R7, R8) but their prompts still instructed them to "verify independently (do not blindly trust)" and "use pre-computed data as STARTING POINTS" — the exact anti-pattern that caused timeouts for `vsm_process_auditor` (R22) and `vsm_meta` (R23).
+
+**Expected effect**: Both agents now operate in TWO modes:
+- **Mode A** (pre-computed data exists): Read pre-computed report → TRUST quantitative data → spot-check only 3 items for qualitative depth → WRITE report incrementally using pre-computed scaffold
+- **Mode B** (missing): Generate pre-computation → read output → follow Mode A
+
+Additionally, both pre-computation scripts now include **"Spot-Check Guidance"** tables that map each metric/algedonic to the specific source file the agent should verify, with explicit limits (maximum 3 spot-checks). This eliminates decision fatigue and further reduces timeout risk.
+
+**Before**:
+- vsm_learning_curator.md: "Verify the metrics independently (do not blindly trust)"
+- vsm_variety_engineer.md: "Verify the metrics independently (do not blindly trust)"
+- mutation-portfolio-health.py: No spot-check guidance for agent
+- organism-vitals.py: No spot-check guidance for agent
+
+**After**:
+- vsm_learning_curator.md: Mode A/B workflow, TRUST pre-computed data, max 3 spot-checks, incremental writing
+- vsm_variety_engineer.md: Mode A/B workflow, TRUST pre-computed data, max 3 spot-checks, incremental writing
+- mutation-portfolio-health.py: Spot-Check Guidance section with artifact mapping table
+- organism-vitals.py: Spot-Check Guidance section with algedonic-to-file mapping table
+
+**Files modified**:
+- `agents/vsm_learning_curator.md` — Restructured as portfolio reviewer (Mode A/B)
+- `agents/vsm_variety_engineer.md` — Restructured as variety assessor (Mode A/B)
+- `scripts/mutation-portfolio-health.py` — Added Spot-Check Guidance section
+- `scripts/organism-vitals.py` — Added Spot-Check Guidance section
+- `hooks/test-automation.sh` — Tests 65–68 verify Mode A/B workflow and spot-check guidance
+
+**Measured effect**: **Awaiting measurement** — Success criteria: (1) When spawned, both agents complete within timeout limits, (2) No increase in false negatives (missed promotions/demotions or algedonics due to over-trusting pre-computation), (3) S5 begins spawning these agents because their workload is now manageable.
+
+---

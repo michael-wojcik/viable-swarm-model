@@ -366,6 +366,26 @@ def main() -> int:
             "",
         ])
 
+    # Spot-check guidance for the variety engineer agent
+    lines.extend([
+        "## Spot-Check Guidance (for vsm_variety_engineer)",
+        "",
+        "If you are the variety engineer agent, follow this guidance:",
+        "- For metrics within thresholds: No spot-check needed. Trust the pre-computed result.",
+        "- For WARNING/CRITICAL algedonics: Read the specific source file to add qualitative depth.",
+        "",
+        "| Algedonic | If triggered, verify this | What to look for |",
+        "|---|---|---|",
+        "| Probationary mutations | `references/mutation-state.md` | Which mutations are probationary and why |",
+        "| Untested hypotheses | `references/hypotheses.md` | Domain distribution of untested hypotheses |",
+        "| Score drop | `references/build-health-history.md` | Which phase or agent caused the drop |",
+        "| Broker stale | `references/knowledge-broker.md` | Last updated date and content quality |",
+        "| Variety deficit | `references/skill-effectiveness-log.md` | Which skills are unused |",
+        "",
+        "**Limit**: Maximum 3 spot-checks. If more than 3 algedonics triggered, verify the 3 most severe.",
+        "",
+    ])
+
     lines.extend([
         "## Proactive Recommendations",
         "",
