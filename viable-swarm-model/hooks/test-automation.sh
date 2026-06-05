@@ -2796,6 +2796,168 @@ else
 fi
 
 # ============================================================================
+# Test 61: test-target-map.py extracts backend targets correctly (R24)
+# ============================================================================
+
+echo -n "TEST: test-target-map.py extracts backend targets from Python files ... "
+
+mkdir -p "$TMPDIR/build61/backend/app"
+
+# Mock FastAPI router
+cat > "$TMPDIR/build61/backend/app/routers.py" << 'EOF'
+from fastapi import APIRouter, Depends
+from app.auth import get_current_user
+
+router = APIRouter()
+
+@router.get("/items")
+async def list_items(user = Depends(get_current_user)):
+    return []
+
+@router.post("/items")
+async def create_item(data: dict, user = Depends(get_current_user)):
+    return data
+
+@router.delete("/items/{item_id}")
+async def delete_item(item_id: int):
+    return {"deleted": item_id}
+EOF
+
+# Mock GraphQL resolvers
+cat > "$TMPDIR/build61/backend/app/graphql.py" << 'EOF'
+import strawberry
+
+@strawberry.type
+class Query:
+    @strawberry.field
+    def user(self, id: int) -> dict:
+        return {}
+
+    @strawberry.field
+    def items(self) -> list:
+        return []
+
+@strawberry.type
+class Mutation:
+    @strawberry.mutation
+    def create_item(self, name: str) -> dict:
+        return {}
+EOF
+
+# Mock models
+cat > "$TMPDIR/build61/backend/app/models.py" << 'EOF'
+from pydantic import BaseModel
+from sqlalchemy.orm import DeclarativeBase
+
+class User(BaseModel):
+    id: int
+    name: str
+
+class Base(DeclarativeBase):
+    pass
+
+class Item(Base):
+    __tablename__ = "items"
+EOF
+
+python3 "$SCRIPT_DIR/../scripts/test-target-map.py" "$TMPDIR/build61" >/dev/null 2>&1
+
+if [[ -f "$TMPDIR/build61/.kimi/test-target-map.md" ]]; then
+    TM_OUTPUT=$(cat "$TMPDIR/build61/.kimi/test-target-map.md")
+    if echo "$TM_OUTPUT" | grep -q "GET" && \
+       echo "$TM_OUTPUT" | grep -q "POST" && \
+       echo "$TM_OUTPUT" | grep -q "DELETE" && \
+       echo "$TM_OUTPUT" | grep -q "list_items" && \
+       echo "$TM_OUTPUT" | grep -q "create_item" && \
+       echo "$TM_OUTPUT" | grep -q "delete_item" && \
+       echo "$TM_OUTPUT" | grep -q "user" && \
+       echo "$TM_OUTPUT" | grep -q "User"; then
+        pass
+    else
+        fail "test-target-map missing expected backend targets"
+    fi
+else
+    fail "test-target-map.md not generated"
+fi
+
+# ============================================================================
+# Test 62: test-target-map.py extracts frontend targets correctly (R24)
+# ============================================================================
+
+echo -n "TEST: test-target-map.py extracts frontend targets from TypeScript files ... "
+
+mkdir -p "$TMPDIR/build62/frontend/src/components"
+mkdir -p "$TMPDIR/build62/frontend/src/stores"
+mkdir -p "$TMPDIR/build62/frontend/src/api"
+
+cat > "$TMPDIR/build62/frontend/src/components/UserCard.tsx" << 'EOF'
+export function UserCard({ user }: { user: User }) {
+  return <div>{user.name}</div>;
+}
+EOF
+
+cat > "$TMPDIR/build62/frontend/src/components/Dashboard.tsx" << 'EOF'
+export default function Dashboard() {
+  return <div>Dashboard</div>;
+}
+EOF
+
+cat > "$TMPDIR/build62/frontend/src/stores/authStore.ts" << 'EOF'
+export const useAuthStore = defineStore('auth', () => {
+  const token = ref('');
+  return { token };
+});
+EOF
+
+cat > "$TMPDIR/build62/frontend/src/api/client.ts" << 'EOF'
+export async function fetchUser(id: number) {
+  return { id };
+}
+EOF
+
+python3 "$SCRIPT_DIR/../scripts/test-target-map.py" "$TMPDIR/build62" >/dev/null 2>&1
+
+if [[ -f "$TMPDIR/build62/.kimi/test-target-map.md" ]]; then
+    TM_OUTPUT=$(cat "$TMPDIR/build62/.kimi/test-target-map.md")
+    if echo "$TM_OUTPUT" | grep -q "UserCard" && \
+       echo "$TM_OUTPUT" | grep -q "Dashboard" && \
+       echo "$TM_OUTPUT" | grep -q "useAuthStore" && \
+       echo "$TM_OUTPUT" | grep -q "fetchUser"; then
+        pass
+    else
+        fail "test-target-map missing expected frontend targets"
+    fi
+else
+    fail "test-target-map.md not generated"
+fi
+
+# ============================================================================
+# Test 63: vsm_backend_tester.md references test-target-map.py (R24)
+# ============================================================================
+
+echo -n "TEST: vsm_backend_tester.md references test target map ... "
+
+if grep -q "test-target-map.md" "$SCRIPT_DIR/../agents/vsm_backend_tester.md" && \
+   grep -q "test-target-map.py" "$SCRIPT_DIR/../agents/vsm_backend_tester.md"; then
+    pass
+else
+    fail "backend tester missing test target map reference"
+fi
+
+# ============================================================================
+# Test 64: vsm_frontend_tester.md references test-target-map.py (R24)
+# ============================================================================
+
+echo -n "TEST: vsm_frontend_tester.md references test target map ... "
+
+if grep -q "test-target-map.md" "$SCRIPT_DIR/../agents/vsm_frontend_tester.md" && \
+   grep -q "test-target-map.py" "$SCRIPT_DIR/../agents/vsm_frontend_tester.md"; then
+    pass
+else
+    fail "frontend tester missing test target map reference"
+fi
+
+# ============================================================================
 # Summary
 # ============================================================================
 

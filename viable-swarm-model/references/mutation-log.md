@@ -3779,3 +3779,37 @@ The **anti-TBD rule was strengthened**: "Using pre-computed data is NOT 'trustin
 **Measured effect**: **Awaiting measurement** — Success criteria: (1) vsm_meta success rate improves from 60% to ≥75% in next 3 builds, (2) No increase in false negatives (missed process violations due to skipped test re-runs), (3) Agent completes within timeout limits when pre-computed data exists.
 
 ---
+
+## Mutation R24 — 2026-06-05
+
+**Session**: S5 Orchestrator Iteration R24
+**File**: `scripts/test-target-map.py`, `agents/vsm_backend_tester.md`, `agents/vsm_frontend_tester.md`
+**Type**: structural
+**Rationale**: The `vsm_backend_tester` (65% success) and `vsm_frontend_tester` (60% success) consistently time out in Tier 2+ builds. R10 created `test-split-orchestrator.py` and R15 made spawn plan compliance mandatory, but the agents still time out. The agent prompts are short (67-68 lines), so verbosity is not the issue. The root cause is that tester agents spend 3-5 minutes per spawn READING source files to discover what to test. In a Tier 2+ build with 20+ source files, the agent must read routers, models, GraphQL schemas, components, and stores before writing a single test. This discovery phase consumes 30-50% of the available time, leaving insufficient time for actual test writing.
+
+**Expected effect**: A `test-target-map.py` script analyzes backend and frontend source files via regex scanning and outputs a structured `.kimi/test-target-map.md` containing:
+- Backend: FastAPI endpoints (method, path, function), GraphQL resolvers (type, name), Pydantic/SQLAlchemy models, auth handlers
+- Frontend: React components, hooks, store actions, API functions
+
+The tester agent reads this map FIRST and uses it as the authoritative test plan, eliminating the discovery phase. Both backend and frontend tester prompts were updated with "Test Target Map — READ FIRST" sections instructing agents to generate the map if missing and use it as the primary test plan.
+
+**Before**:
+- Tester agents discovered test targets by reading 10+ source files manually
+- 3-5 minutes lost per spawn to target discovery
+- No structured test plan existed before test writing began
+
+**After**:
+- `scripts/test-target-map.py` pre-computes all testable targets from source code
+- Tester agents read `.kimi/test-target-map.md` as authoritative test plan
+- Target discovery time reduced from 3-5 minutes to <10 seconds
+- Both backend and frontend tester prompts reference the target map
+
+**Files modified**:
+- `scripts/test-target-map.py` (created)
+- `agents/vsm_backend_tester.md` — Added "Test Target Map — READ FIRST" section
+- `agents/vsm_frontend_tester.md` — Added "Test Target Map — READ FIRST" section
+- `hooks/test-automation.sh` — Tests 61-64 verify backend extraction, frontend extraction, and agent prompt references
+
+**Measured effect**: **Awaiting measurement** — Success criteria: (1) Tester success rate improves from 65%/60% to ≥75% in next 3 builds, (2) No increase in missed test targets (map coverage ≥90% of manually discovered targets), (3) Tester agents complete within timeout limits when target map exists.
+
+---

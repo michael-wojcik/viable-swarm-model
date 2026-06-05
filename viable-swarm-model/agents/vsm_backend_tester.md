@@ -46,6 +46,30 @@ request S5 split it into smaller sub-tasks (e.g., per-domain: auth, courses, upl
 Do NOT attempt to write >300 lines in a single spawn — this causes timeouts that
 degrade build scores.
 
+**Test Target Map — READ FIRST**
+Before reading source files to discover test targets, check if
+`.kimi/test-target-map.md` exists in the build directory. If it exists, read it
+FIRST. This file contains a structured list of all testable targets (endpoints,
+resolvers, models, auth handlers) discovered by scanning the codebase.
+
+**If target map exists**:
+- Use it as your authoritative test plan. Do NOT re-scan source files to
+discover what to test.
+- Write tests for the targets listed in the map, following the prioritization
+  guidance (auth endpoints → model validation → GraphQL resolvers).
+- If a target is missing from the map, note it and append to the map.
+
+**If target map does NOT exist**:
+- Generate it before beginning test writing:
+  ```bash
+  python3 ~/vsm/viable-swarm-model/scripts/test-target-map.py <BUILD_DIR>
+  ```
+- Then read the output and proceed.
+
+**Why this matters**: The backend tester has a 65% success rate due to timeouts.
+Re-discovering test targets by reading 10+ source files wastes 3-5 minutes per
+spawn. The target map eliminates this discovery phase.
+
 **Spawn Plan Compliance — MANDATORY**
 Before writing tests, check if `.kimi/test-spawn-plan.md` exists in the build
 directory. If it exists, read it and follow its domain groupings. Your task

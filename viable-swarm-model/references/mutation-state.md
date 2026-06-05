@@ -292,3 +292,4 @@
 | R21 | 2026-06-05 S5 | refinement | End-to-end closeout+stop-verifier integration test (Tests 53-54) | probation | 0 | — | — | — | S5 iter
 | R22 | 2026-06-05 S5 | structural | Process auditor Mode A/B workflow — pre-computed primary evidence | probation | 0 | — | — | — | S5 iter
 | R23 | 2026-06-05 S5 | structural | Meta-evaluator Mode A/B workflow — pre-computed primary + conditional test verification | probation | 0 | — | — | — | S5 iter
+| R24 | 2026-06-05 S5 | structural | Test target map pre-computation for tester agents | probation | 0 | — | — | — | S5 iter

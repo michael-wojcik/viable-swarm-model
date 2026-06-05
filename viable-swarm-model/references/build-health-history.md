@@ -5,6 +5,44 @@
 
 ---
 
+## 2026-06-05 — S5 Orchestrator Iteration (R24)
+
+### Diagnosed Constraint
+**System 1 (Implementation) / S5→S1 channel**: The `vsm_backend_tester` (65% success) and `vsm_frontend_tester` (60% success) consistently time out in Tier 2+ builds. R10's `test-split-orchestrator.py` and R15's spawn plan compliance were structural improvements, but the agents still time out. The agent prompts are only 67-68 lines, so verbosity is not the issue. The root cause: tester agents spend **3-5 minutes per spawn** reading 10+ source files to discover what to test. In a Tier 2+ build, the agent must read routers, models, GraphQL schemas, components, and stores before writing a single test. This discovery phase consumes 30-50% of available time, leaving insufficient time for actual test writing.
+
+### Change Made
+**Structural mutation R24**: Created `scripts/test-target-map.py` — a source code analyzer that pre-computes testable targets.
+- Scans `backend/*.py` for FastAPI endpoints, GraphQL resolvers, Pydantic/SQLAlchemy models, and auth handlers
+- Scans `frontend/src/*.{ts,tsx}` for React components, hooks, store actions, and API functions
+- Outputs structured `.kimi/test-target-map.md` with tables and prioritized test plan
+- Updated `vsm_backend_tester.md` and `vsm_frontend_tester.md` with "Test Target Map — READ FIRST" sections instructing agents to use the map as their authoritative test plan
+- Agents generate the map if missing via `python3 scripts/test-target-map.py <BUILD_DIR>`
+- `hooks/test-automation.sh`: Added Tests 61–64.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **69 passed, 0 failed** (was 65 passed, 0 failed)
+- Test 61: Backend target extraction — found GET /items, POST /items, DELETE /items/{item_id}, list_items, create_item, delete_item, user/items resolvers, User/Item models
+- Test 62: Frontend target extraction — found UserCard, Dashboard components, useAuthStore hook, fetchUser API function
+- Test 63: vsm_backend_tester.md references test-target-map.md and test-target-map.py
+- Test 64: vsm_frontend_tester.md references test-target-map.md and test-target-map.py
+
+### Files Modified
+- `viable-swarm-model/scripts/test-target-map.py` (created)
+- `viable-swarm-model/agents/vsm_backend_tester.md`
+- `viable-swarm-model/agents/vsm_frontend_tester.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 1 (Implementation) / S5→S1 channel**: The tester timeout problem has now been addressed on THREE fronts: (1) spawn plan compliance (R15) splits tasks by domain, (2) adaptive task sizing limits output to 300 lines, (3) test target map (R24) eliminates discovery phase. If testers STILL time out after R24, the root cause is likely that the actual test-writing task (code generation) exceeds the agent's capacity regardless of preparation. The next frontier would be creating a `tester-patterns.md` skill with copy-pasteable test templates (e.g., FastAPI client fixture + auth header pattern, React Testing Library render pattern) that the agent loads on demand, reducing cognitive overhead per test. Alternatively, **System 4→S4 channel**: The `vsm_learning_curator` and `vsm_variety_engineer` still have **0% empirical exercise rate**. With R7, R8, R18, and R19 creating pre-computation scripts and action plans, the organism has all the data needed for these agents to operate, but S5 never spawns them. A SKILL.md Phase 8c-iii requirement making vsm_learning_curator mandatory when probationary mutations > 12 could close this gap.
+
+---
+
 ## 2026-06-05 — S5 Orchestrator Iteration (R23)
 
 ### Diagnosed Constraint
