@@ -839,3 +839,36 @@ Alternatively, **System 4→S4 channel**: The organism now has 4 pre-computation
 
 ### Next Highest-Leverage Constraint
 **System 1 (Implementation) / S5→S1 channel**: The `vsm_backend_tester` (65%) and `vsm_frontend_tester` (60%) still have the lowest success rates. R24's test target map, R15's spawn plan, and R10's test-split-orchestrator have all been deployed, but the agents still time out. The root cause may now be that the actual test-writing task itself (generating test code) exceeds the agent's capacity within 300 lines. A `tester-patterns.md` stack skill with copy-pasteable FastAPI/React test templates could reduce cognitive overhead per test. Alternatively, **System 3→S1 channel**: `vsm_security` was bypassed in FB30 (manual audit used instead). Session-end.sh Check 11 detects this as a WARNING but stop-verifier.sh has no hard block. Adding a security hard block (analogous to R26's content-quality gates) could prevent vulnerability slip-through.
+
+---
+
+## 2026-06-05 — S5 Orchestrator Iteration (R28)
+
+### Diagnosed Constraint
+**System 3 (Audit/Control) / S3→S1 channel — security bypass gap**: FB30 demonstrated a critical security bypass: `vsm_security` was **never spawned** despite the build containing auth/GraphQL code. Manual audit was used instead. Session-end.sh Check 11 detected this bypass but only generated a **WARNING** in audit telemetry — it did not block session stop. A WARNING is only effective if someone reads it; in practice, S5 completes the build and exits without addressing the gap. Security is too critical to leave as a warning.
+
+### Change Made
+**Structural mutation R28**: Added stop-verifier Check 8 — security hard block.
+- When `meta-report.md` exists but `security-report.md` is missing, stop-verifier scans the build directory for security-relevant surface area using the same grep patterns as session-end.sh Check 11 (jwt, bcrypt, OAuth, GraphQL, WebSocket, CORS, rate limiting).
+- If security-relevant code is detected, stop-verifier **blocks session stop** with a clear message: "Spawn vsm_security during Phase 5 before completing."
+- This upgrades the S3→S1 security channel from WARNING-only to **HARD BLOCK**, matching the enforcement tier of portfolio review (Check 6) and variety assessment (Check 7).
+- Updated Test 53 (end-to-end closeout) to include `security-report.md` so the complete build passes all checks.
+- Added Tests 76–77: missing security report with auth code → block; security report present with auth code → allow.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **82 passed, 0 failed** (was 80 passed, 0 failed)
+- Test 76: stop-verifier blocks when security-report.md missing with auth code present
+- Test 77: stop-verifier allows stop when security-report.md present with auth code present
+
+### Files Modified
+- `viable-swarm-model/hooks/stop-verifier.sh`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 1 (Implementation) / S5→S1 channel**: The `vsm_backend_tester` (65%) and `vsm_frontend_tester` (60%) still have the lowest success rates. R24's test target map, R15's spawn plan, and R10's test-split-orchestrator have all been deployed, but timeout persists. With R26–R28 now hard-blocking all meta-system gaps (portfolio review, variety assessment, security), the organism's enforcement layer is substantially complete. The remaining frontier is either (a) a `tester-patterns.md` stack skill with copy-pasteable FastAPI/React test templates, or (b) reducing tester task size below 300 lines, or (c) accepting that tester timeout is a fundamental capacity limit and designing builds to work around it (e.g., fewer test files per spawn). Alternatively, **System 4→S4 channel**: The 3 lesson orphans (docker-pitfalls COPY syntax, graphql-pitfalls GraphQLRouter recommendation, frontend test runner jsdom compatibility) represent lost empirical knowledge that should be recovered into skill files.

@@ -2465,6 +2465,12 @@ cat > "$TMPDIR/build53/backend/auth.py" << 'EOF'
 import jwt
 EOF
 
+# Security report present so stop-verifier Check 8 doesn't block
+cat > "$TMPDIR/build53/.kimi/security-report.md" << 'EOF'
+# Security Report
+No critical findings.
+EOF
+
 # References
 cat > "$TMPDIR/build53/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
 # Mutation State
@@ -3485,6 +3491,188 @@ else
     else
         fail "SKILL.md missing Phase 8b pre-computation instruction for process auditor"
     fi
+fi
+
+# ============================================================================
+# Test 76: stop-verifier blocks when security-report.md missing with auth code (R28)
+# ============================================================================
+
+echo -n "TEST: stop-verifier.sh blocks stop when security-report.md missing with auth ... "
+
+mkdir -p "$TMPDIR/build76/.kimi"
+mkdir -p "$TMPDIR/build76/backend"
+mkdir -p "$TMPDIR/build76/vsm/viable-swarm-model/references"
+
+touch "$TMPDIR/build76/vsm/viable-swarm-model/references/mutation-log.md"
+
+cat > "$TMPDIR/build76/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target | Status | Builds | Score |
+|---|---|---|---|---|---|---|
+| T1 | FB76 | append | Test | effective | 5 | 4 |
+EOF
+
+cat > "$TMPDIR/build76/.kimi/mutations-applied.md" << 'EOF'
+## Build ID: FB76
+**Mutation**: M1
+**Effectiveness**: 5/5
+EOF
+
+cat > "$TMPDIR/build76/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+# Valid portfolio review
+cat > "$TMPDIR/build76/.kimi/mutation-portfolio-review.md" << 'EOF'
+# Mutation Portfolio Review
+
+## Portfolio Health Metrics
+| Metric | Value |
+|---|---|
+| Total | 10 |
+
+## Promotions
+| ID | Status |
+|---|---|
+| T1 | effective |
+
+## Binding Recommendations
+1. No action needed.
+EOF
+
+# Valid variety assessment
+cat > "$TMPDIR/build76/.kimi/variety-assessment.md" << 'EOF'
+# Variety Assessment
+
+## Health Metrics
+| Metric | Value | Status |
+|---|---|---|
+| Probationary | 5 | OK |
+
+## Algedonic Signals
+None.
+
+## Proactive Recommendations
+1. Continue monitoring.
+EOF
+
+# Security-relevant code present but NO security-report.md
+cat > "$TMPDIR/build76/backend/auth.py" << 'EOF'
+import jwt
+def get_current_user(token: str):
+    pass
+EOF
+
+cat > "$TMPDIR/build76/.kimi/process-audit.md" << 'EOF'
+# Process Audit
+Score: 85/100
+EOF
+
+export HOME="$TMPDIR/build76"
+
+PAYLOAD='{"session_id":"test-session-76","cwd":"'$TMPDIR/build76'","reason":"stop","stop_hook_active":false}'
+RC=0
+OUTPUT=$(echo "$PAYLOAD" | bash "$SCRIPT_DIR/stop-verifier.sh" 2>/dev/null) || RC=$?
+
+if echo "$OUTPUT" | grep -q '"permissionDecision":"deny"' && \
+   echo "$OUTPUT" | grep -q "security-report.md"; then
+    pass
+else
+    fail "stop-verifier did not block for missing security-report.md with auth code"
+fi
+
+# ============================================================================
+# Test 77: stop-verifier allows stop when security-report.md present with auth (R28)
+# ============================================================================
+
+echo -n "TEST: stop-verifier.sh allows stop when security-report.md present ... "
+
+mkdir -p "$TMPDIR/build77/.kimi"
+mkdir -p "$TMPDIR/build77/backend"
+mkdir -p "$TMPDIR/build77/vsm/viable-swarm-model/references"
+
+touch "$TMPDIR/build77/vsm/viable-swarm-model/references/mutation-log.md"
+
+cat > "$TMPDIR/build77/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target | Status | Builds | Score |
+|---|---|---|---|---|---|---|
+| T1 | FB77 | append | Test | effective | 5 | 4 |
+EOF
+
+cat > "$TMPDIR/build77/.kimi/mutations-applied.md" << 'EOF'
+## Build ID: FB77
+**Mutation**: M1
+**Effectiveness**: 5/5
+EOF
+
+cat > "$TMPDIR/build77/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+# Valid portfolio review
+cat > "$TMPDIR/build77/.kimi/mutation-portfolio-review.md" << 'EOF'
+# Mutation Portfolio Review
+
+## Portfolio Health Metrics
+| Metric | Value |
+|---|---|
+| Total | 10 |
+
+## Promotions
+| ID | Status |
+|---|---|
+| T1 | effective |
+
+## Binding Recommendations
+1. No action needed.
+EOF
+
+# Valid variety assessment
+cat > "$TMPDIR/build77/.kimi/variety-assessment.md" << 'EOF'
+# Variety Assessment
+
+## Health Metrics
+| Metric | Value | Status |
+|---|---|---|
+| Probationary | 5 | OK |
+
+## Algedonic Signals
+None.
+
+## Proactive Recommendations
+1. Continue monitoring.
+EOF
+
+# Security-relevant code present AND security-report.md present
+cat > "$TMPDIR/build77/backend/auth.py" << 'EOF'
+import jwt
+def get_current_user(token: str):
+    pass
+EOF
+
+cat > "$TMPDIR/build77/.kimi/security-report.md" << 'EOF'
+# Security Report
+No critical findings.
+EOF
+
+cat > "$TMPDIR/build77/.kimi/process-audit.md" << 'EOF'
+# Process Audit
+Score: 85/100
+EOF
+
+export HOME="$TMPDIR/build77"
+
+PAYLOAD='{"session_id":"test-session-77","cwd":"'$TMPDIR/build77'","reason":"stop","stop_hook_active":false}'
+RC=0
+OUTPUT=$(echo "$PAYLOAD" | bash "$SCRIPT_DIR/stop-verifier.sh" 2>/dev/null) || RC=$?
+
+if [ "$RC" -eq 0 ] && ! echo "$OUTPUT" | grep -q '"permissionDecision":"deny"'; then
+    pass
+else
+    fail "stop-verifier blocked despite security-report.md present"
 fi
 
 # ============================================================================

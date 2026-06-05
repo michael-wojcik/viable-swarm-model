@@ -234,4 +234,38 @@ if [[ -f "$KIMI_DIR/meta-report.md" && -f "$KIMI_DIR/mutations-applied.md" ]]; t
     fi
 fi
 
+# Check 8: security-report.md MUST exist when security-relevant code is present (R28)
+# Closes the S3→S1 security bypass gap. FB30 demonstrated this bypass:
+# manual audit was used instead of vsm_security agent. Session-end.sh Check 11
+# detects this as a WARNING; stop-verifier upgrades it to a HARD BLOCK.
+if [[ -f "$KIMI_DIR/meta-report.md" && ! -f "$KIMI_DIR/security-report.md" ]]; then
+    # Detect security-relevant surface area in source files
+    # (same logic as session-end.sh Check 11)
+    HAS_SECURITY_SURFACE="no"
+    if [[ -d "$CWD" ]]; then
+        if grep -riE \
+            '\bjwt\b|\bJWT\b|\bbcrypt\b|\bpasslib\b|\bOAuth\b|get_current_user|require_role|auth_depend|\\bpassword\\b|\\bhash\\b' \
+            "$CWD" --include='*.py' --include='*.ts' --include='*.tsx' --include='*.js' >/dev/null 2>&1; then
+            HAS_SECURITY_SURFACE="yes"
+        elif grep -riE \
+            '\bstrawberry\b|\bGraphQL\b|\bgraphql\b|GraphQLRouter' \
+            "$CWD" --include='*.py' --include='*.ts' --include='*.tsx' --include='*.js' >/dev/null 2>&1; then
+            HAS_SECURITY_SURFACE="yes"
+        elif grep -riE \
+            '\bsocketio\b|\bsio\\.\b|\bwebsocket\b|\bWebSocket\b' \
+            "$CWD" --include='*.py' --include='*.ts' --include='*.tsx' --include='*.js' >/dev/null 2>&1; then
+            HAS_SECURITY_SURFACE="yes"
+        elif grep -riE \
+            'CORSMiddleware|\bRateLimit\b|\bSlowAPI\b|rate_limit|allow_origins' \
+            "$CWD" --include='*.py' --include='*.ts' --include='*.tsx' --include='*.js' >/dev/null 2>&1; then
+            HAS_SECURITY_SURFACE="yes"
+        fi
+    fi
+    if [[ "$HAS_SECURITY_SURFACE" == "yes" ]]; then
+        echo "STOP BLOCKED by stop-verifier.sh: security-report.md is missing but security-relevant code was detected (auth/GraphQL/WebSocket/CORS). Spawn vsm_security during Phase 5 before completing." >&2
+        echo '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"security-report.md missing despite security-relevant code. Spawn vsm_security during Phase 5."}}'
+        exit 0
+    fi
+fi
+
 exit 0

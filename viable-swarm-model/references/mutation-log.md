@@ -3915,3 +3915,43 @@ python3 ~/vsm/viable-swarm-model/scripts/meta-metrics-precompute.py <BUILD_DIR>
 (Same pattern applied to process auditor in Step 8b-2 and variety engineer in Phase 0 Step 15.)
 
 **Measured effect**: **AWAITING_BUILD**
+
+---
+
+## Mutation R28 — 2026-06-05
+
+**Session**: S5 Orchestrator Iteration R28
+**File**: `hooks/stop-verifier.sh`, `hooks/test-automation.sh`
+**Type**: structural
+**Rationale**: FB30 demonstrated a critical security bypass: `vsm_security` was NEVER SPAWNED despite the build containing auth/GraphQL code. Manual audit was used instead, which is inferior to the structured security-patterns skill audit. Session-end.sh Check 11 detected this bypass but only generated a WARNING in audit telemetry — it did not block session stop. This meant S5 could complete the build, write the final summary, and exit without ever addressing the security gap. A WARNING is only effective if someone reads it; a HARD BLOCK is effective regardless. The same logic that made R26's content-quality gates effective (upgrading from optional to mandatory) applies here: security is too critical to leave as a warning.
+
+**Expected effect**: In the next build with security-relevant code (auth, GraphQL, WebSocket, CORS, rate limiting), stop-verifier will BLOCK session end if `security-report.md` is missing. S5 MUST either spawn `vsm_security` during Phase 5 or write a valid security report. The detection logic is identical to session-end.sh Check 11 (same grep patterns for security surface area), ensuring consistency between warning and block layers.
+
+**Before**:
+```bash
+# Check 7: variety-assessment.md MUST exist AND have agent-generated content (R26)
+# ...
+
+exit 0
+```
+
+**After**:
+```bash
+# Check 7: variety-assessment.md MUST exist AND have agent-generated content (R26)
+# ...
+
+# Check 8: security-report.md MUST exist when security-relevant code is present (R28)
+# Closes the S3→S1 security bypass gap.
+if [[ -f "$KIMI_DIR/meta-report.md" && ! -f "$KIMI_DIR/security-report.md" ]]; then
+    # Detect security-relevant surface area (same logic as session-end.sh Check 11)
+    HAS_SECURITY_SURFACE="no"
+    # ... grep patterns for jwt, GraphQL, WebSocket, CORS ...
+    if [[ "$HAS_SECURITY_SURFACE" == "yes" ]]; then
+        # block stop
+    fi
+fi
+
+exit 0
+```
+
+**Measured effect**: **AWAITING_BUILD**
