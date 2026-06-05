@@ -1055,6 +1055,150 @@ else
 fi
 
 # ============================================================================
+# Test 27: session-end.sh — flags missing security-report.md when auth code present
+# ============================================================================
+
+echo -n "TEST: session-end.sh flags security bypass when auth code present ... "
+
+mkdir -p "$TMPDIR/build27/.kimi"
+mkdir -p "$TMPDIR/build27/backend"
+
+cat > "$TMPDIR/build27/plan.md" << 'EOF'
+# Build Plan — FB111
+EOF
+
+cat > "$TMPDIR/build27/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+cat > "$TMPDIR/build27/backend/auth.py" << 'EOF'
+import jwt
+from passlib.context import CryptContext
+EOF
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| T1 | Test | append-only | Test failure | effective | 5 | 4 | — | — | — |
+EOF
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/hypotheses.md" << 'EOF'
+# Hypotheses
+## H1
+**Status**: confirmed
+EOF
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/knowledge-broker.md" << 'EOF'
+# Broker
+> **Last updated**: 2026-06-05
+EOF
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/build-health-history.md" << 'EOF'
+# Build Health History
+EOF
+
+# Simulate session-end payload
+PAYLOAD='{"session_id":"test-session-27","cwd":"'$TMPDIR/build27'","reason":"stop"}'
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/session-end.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   grep -q "security-report.md missing" "$TMPDIR/build27/.kimi/session-telemetry.md" 2>/dev/null && \
+   grep -q "CRITICAL" "$TMPDIR/build27/.kimi/session-telemetry.md" 2>/dev/null; then
+    pass
+else
+    fail "session-end did not flag CRITICAL security bypass"
+fi
+
+# ============================================================================
+# Test 28: session-end.sh — no security flag when build has no security surface
+# ============================================================================
+
+echo -n "TEST: session-end.sh does NOT flag security bypass for static site ... "
+
+mkdir -p "$TMPDIR/build28/.kimi"
+
+cat > "$TMPDIR/build28/plan.md" << 'EOF'
+# Build Plan — FB112
+EOF
+
+cat > "$TMPDIR/build28/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+cat > "$TMPDIR/build28/index.html" << 'EOF'
+<!DOCTYPE html>
+<html><body>Hello</body></html>
+EOF
+
+PAYLOAD='{"session_id":"test-session-28","cwd":"'$TMPDIR/build28'","reason":"stop"}'
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/session-end.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   ! grep -q "security-report.md missing" "$TMPDIR/build28/.kimi/session-telemetry.md" 2>/dev/null; then
+    pass
+else
+    fail "session-end falsely flagged security bypass for static site"
+fi
+
+# ============================================================================
+# Test 29: session-end.sh — no security flag when security-report.md exists
+# ============================================================================
+
+echo -n "TEST: session-end.sh does NOT flag when security-report.md present ... "
+
+mkdir -p "$TMPDIR/build29/.kimi"
+mkdir -p "$TMPDIR/build29/backend"
+
+cat > "$TMPDIR/build29/plan.md" << 'EOF'
+# Build Plan — FB113
+EOF
+
+cat > "$TMPDIR/build29/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+cat > "$TMPDIR/build29/.kimi/security-report.md" << 'EOF'
+# Security Report
+Zero findings.
+EOF
+
+cat > "$TMPDIR/build29/backend/auth.py" << 'EOF'
+import jwt
+EOF
+
+PAYLOAD='{"session_id":"test-session-29","cwd":"'$TMPDIR/build29'","reason":"stop"}'
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/session-end.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   ! grep -q "security-report.md missing" "$TMPDIR/build29/.kimi/session-telemetry.md" 2>/dev/null; then
+    pass
+else
+    fail "session-end falsely flagged security bypass when report exists"
+fi
+
+# ============================================================================
+# Test 30: integration-test-closeout.py — all closeout scripts run together
+# ============================================================================
+
+echo -n "TEST: integration-test-closeout.py exercises full closeout pipeline ... "
+
+RC=0
+python3 "$SCRIPT_DIR/../scripts/integration-test-closeout.py" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ]; then
+    pass
+else
+    fail "integration test for closeout pipeline failed"
+fi
+
+# ============================================================================
 # Summary
 # ============================================================================
 

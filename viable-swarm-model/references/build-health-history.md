@@ -5,6 +5,71 @@
 
 ---
 
+## 2026-06-05 — S5 Orchestrator Iteration (R12)
+
+### Diagnosed Constraint
+**System 4→S4 channel / meta-system integration gap**: The organism now has 5 closeout scripts and `session-end.sh` with 11 checks. Each component is tested in isolation, but there is no integration test that exercises them together on a single mock build directory. This creates a **cascade failure risk**: a format change in `mutation-state.md` could break 3 scripts simultaneously; a session-end.sh bug could suppress multiple checks. Without integration testing, these failures would only be discovered during a real build closeout — too late to prevent data corruption or missed process violations. This is a System 4→S4 channel failure: the meta-system components don't verify their mutual consistency.
+
+### Change Made
+**Structural mutation R12**: Created `scripts/integration-test-closeout.py` and added it to the automation suite.
+- Creates a realistic mock build directory with all required artifacts (plan.md, meta-report.md, phase4-gate.md, re-audit-report.md, lessons.md, mutations-applied.md, security-report.md, auth.py).
+- Runs all 4 closeout scripts sequentially on the SAME directory: build-health-dashboard.py, mutation-portfolio-health.py, organism-vitals.py, process-compliance-precompute.py.
+- Verifies mutual consistency: build-health-history.md contains the build entry, portfolio JSON has valid structure, organism vitals reference consistent metrics, compliance precompute references existing artifacts.
+- Runs `session-end.sh` with piped payload and verifies telemetry is created without false CRITICAL warnings.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **34 passed, 0 failed** (was 33 passed, 0 failed)
+- New Test 30 verifies the full closeout pipeline end-to-end.
+
+### Files Modified
+- `viable-swarm-model/scripts/integration-test-closeout.py` (created)
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 5→S1 channel / S4→S5 intelligence gap**: The `vsm_product` agent (S4 Product) has only 1 lesson mention across 26+ fitness builds, suggesting it is rarely spawned. Yet H[N+1] (gym experiment) confirmed that product briefs are a proven guardrail against architect scope creep — the control architect (no brief) added an entire auth subsystem, while the treatment architect (with brief) eliminated auth entirely and produced a design with only 3 core features and 12+ explicit scope exclusions. Despite this strong empirical evidence, builds routinely skip the product brief phase because SKILL.md only requires it for "problem-oriented prompts." A session-start check for `product-brief.md` or an update to SKILL.md Phase 1 could close this gap and prevent scope creep at the source.
+
+---
+
+## 2026-06-05 — S5 Orchestrator Iteration (R11)
+
+### Diagnosed Constraint
+**System 3* (Security Audit) → System 1 (Implementation) channel failure / S3→S5 compliance gap**: The `vsm_security` agent was **bypassed entirely in FB30** — manual audit was used instead of spawning the security agent. This represents a critical quality gate failure: vulnerabilities that should have been caught by the security agent could have leaked into the delivered build. The session-end closeout hook had checks for missing process-audit.md, portfolio-review.md, and variety-assessment.md, but no check for missing `security-report.md`. This made the bypass invisible during closeout. Unlike process auditor timeout (addressed by R9), a security bypass has higher downstream risk because undetected auth/GraphQL/WebSocket vulnerabilities directly compromise user data and system integrity.
+
+### Change Made
+**Structural mutation R11**: Added Check 11 to `session-end.sh` for security gate bypass detection.
+- `session-end.sh` Check 11: If `meta-report.md` exists (build reached Phase 8) but `security-report.md` is missing AND the build directory contains security-relevant code (auth, GraphQL, WebSocket, CORS, rate limiting), flag a **CRITICAL** process violation.
+- Grep-based security surface detection across `.py`, `.ts`, `.tsx`, `.js` files with pattern groups for auth, GraphQL, WebSocket, and security middleware.
+- No auto-generation fallback — security audits require human/agent judgment and cannot be safely pre-computed.
+- Static sites and builds with no security surface are correctly excluded.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **33 passed, 0 failed** (was 30 passed, 0 failed)
+- New Tests 27–29 verify:
+  - CRITICAL flag when auth code (`jwt`, `passlib`) present but security-report.md missing
+  - No false positive for static HTML site with no security surface
+  - No false positive when security-report.md exists alongside auth code
+
+### Files Modified
+- `viable-swarm-model/hooks/session-end.sh`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4→S4 channel / meta-system integration gap**: The organism now has 5 closeout scripts (build-health-dashboard, mutation-portfolio-health, organism-vitals, process-compliance-precompute, test-split-orchestrator) plus session-end.sh with 11 checks. Each is tested in isolation via `test-automation.sh`, but there is no integration test that exercises them together on a single mock build directory. A format change in `mutation-state.md` could break 3 scripts simultaneously; a session-end.sh bug could suppress multiple checks. A `scripts/integration-test-closeout.py` that simulates a full build closeout and verifies mutual consistency would catch these cascade failures before they reach production.
+
+---
+
 ## 2026-06-05 — S5 Orchestrator Iteration (R5)
 
 ### Diagnosed Constraint

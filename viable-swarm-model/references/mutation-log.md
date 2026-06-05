@@ -3361,3 +3361,70 @@ Additionally, the dashboard was never automatically invoked — it only ran when
 **Measured effect**: **Awaiting measurement** — To be scored after next fitness build or S5 iteration. Success criteria: (1) tester timeout rate drops from 40% to < 20%, (2) at least one build where orchestrator plan was used and all tester spawns completed, (3) S5 manual test writing reduced to ≤ 1 file per build.
 
 ---
+
+## Mutation R11 — 2026-06-05
+
+**Session**: S5 Orchestrator Iteration (Seventh iteration of automated improvement loop)
+**File**: `hooks/session-end.sh`, `hooks/test-automation.sh`
+**Type**: structural
+**Rationale**: The `vsm_security` agent has a 75% success rate but was **bypassed entirely in FB30** — manual audit was used instead. This is a critical S3→S1 channel failure: the security gate, designed to catch vulnerabilities before delivery, was skipped due to time pressure or timeout risk. The session-end hook had no check for missing `security-report.md`, so the bypass was invisible during closeout. This is analogous to the process-auditor-timeout problem that R9 fixed, but for security — arguably higher severity because undetected vulnerabilities have higher downstream cost than process violations.
+
+**Expected effect**:
+- `session-end.sh` Check 11 detects when a completed build (`meta-report.md` exists) lacks `security-report.md` despite containing security-relevant code (auth, GraphQL, WebSocket, CORS, rate limiting).
+- Flagged as **CRITICAL** process violation, not just a warning.
+- No auto-generation fallback — security audits cannot be safely pre-computed; the flag forces S5 awareness.
+- Builds without security surface (static sites) are NOT flagged.
+- Builds with `security-report.md` present are NOT flagged.
+
+**Before**:
+- session-end.sh had 10 checks covering phase4-gate, boundary windows, structural mutations, mutations-applied, lessons, process-audit, broker consumption, portfolio review, variety assessment, and process compliance.
+- No check for missing security-report.md.
+- FB30 security bypass went undetected during closeout.
+
+**After**:
+- session-end.sh Check 11: Security Gate Bypass Detection.
+- Grep-based security surface detection across `.py`, `.ts`, `.tsx`, `.js` files.
+- Patterns: jwt/bcrypt/passlib/OAuth/auth, strawberry/GraphQL, socketio/websocket, CORS/RateLimit/SlowAPI.
+- `test-automation.sh` Tests 27–29 verify: CRITICAL flag when auth code present, no flag for static site, no flag when report exists.
+
+**Files modified**:
+- `hooks/session-end.sh` — Added Check 11 (security gate bypass detection).
+- `hooks/test-automation.sh` — Added Tests 27–29 covering security bypass detection, static site exclusion, and existing report exclusion.
+- `references/mutation-state.md` — Added R11 row.
+
+**Measured effect**: **Awaiting measurement** — To be scored after next fitness build or S5 iteration. Success criteria: (1) zero security gate bypasses in next 3 builds, (2) Check 11 fires correctly when security agent is skipped, (3) no false positives on builds without security surface.
+
+---
+
+## Mutation R12 — 2026-06-05
+
+**Session**: S5 Orchestrator Iteration (Eighth iteration of automated improvement loop)
+**File**: `scripts/integration-test-closeout.py` (new), `hooks/test-automation.sh`
+**Type**: structural
+**Rationale**: The organism now has 5 closeout scripts (build-health-dashboard, mutation-portfolio-health, organism-vitals, process-compliance-precompute, test-split-orchestrator) and `session-end.sh` with 11 checks. Each component is tested in isolation via `test-automation.sh`, but there is no integration test that exercises them together on a single mock build directory. This creates a **cascade failure risk**: a format change in `mutation-state.md` could break 3 scripts simultaneously; a session-end.sh bug could suppress multiple checks. Without integration testing, these failures would only be discovered during a real build closeout — too late to prevent data corruption or missed process violations. This is a classic System 4→S4 channel failure: the meta-system components don't verify their mutual consistency.
+
+**Expected effect**:
+- `scripts/integration-test-closeout.py` creates a realistic mock build directory with all required artifacts (plan.md, meta-report.md, phase4-gate.md, re-audit-report.md, lessons.md, mutations-applied.md, security-report.md, auth.py).
+- Runs all 4 closeout scripts sequentially on the SAME directory: build-health-dashboard.py, mutation-portfolio-health.py, organism-vitals.py, process-compliance-precompute.py.
+- Verifies mutual consistency: build-health-history.md contains the build entry, portfolio JSON has valid structure, organism vitals reference consistent metrics, compliance precompute references existing artifacts.
+- Runs `session-end.sh` with piped payload and verifies telemetry is created without false CRITICAL warnings.
+- Added to `test-automation.sh` as Test 30, ensuring the integration test runs with every automation suite execution.
+
+**Before**:
+- 5 closeout scripts tested in isolation (Tests 8–13, 14–17, 18–20, 21–23).
+- No verification that scripts running on the same build directory interfere with each other.
+- No verification that session-end.sh behaves correctly when ALL artifacts are present.
+
+**After**:
+- `scripts/integration-test-closeout.py` — 210-line integration test script with setup, sequential execution, consistency verification, and session-end hook validation.
+- `hooks/test-automation.sh` — Test 30 exercises the full closeout pipeline.
+- Any format change in shared reference files (mutation-state.md, hypotheses.md, knowledge-broker.md) that breaks multiple scripts will be caught immediately.
+
+**Files modified**:
+- `scripts/integration-test-closeout.py` — Created (210 lines). Mock build setup, 4-script sequential execution, 5 consistency checks, session-end hook validation.
+- `hooks/test-automation.sh` — Added Test 30.
+- `references/mutation-state.md` — Added R12 row.
+
+**Measured effect**: **Awaiting measurement** — To be scored after next fitness build or S5 iteration. Success criteria: (1) integration test continues passing after any closeout script modification, (2) at least one regression caught by integration test before reaching production, (3) session-end.sh produces no false CRITICAL warnings when all artifacts present.
+
+---

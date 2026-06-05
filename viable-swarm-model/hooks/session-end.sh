@@ -137,6 +137,38 @@ if [[ -f "$CWD/.kimi/meta-report.md" && ! -f "$CWD/.kimi/process-audit.md" ]]; t
     fi
 fi
 
+# Check 11: Security gate completion (NEW — closes S3→S1 security bypass gap)
+# If build reached Phase 8, contains security-relevant code, but security-report.md
+# is missing, the security gate was bypassed. This is a CRITICAL process violation.
+# FB30 demonstrated this bypass: manual audit was used instead of vsm_security agent.
+if [[ -f "$CWD/.kimi/meta-report.md" && ! -f "$CWD/.kimi/security-report.md" ]]; then
+    # Detect security-relevant surface area in source files
+    HAS_SECURITY_SURFACE="no"
+    if [[ -d "$CWD" ]]; then
+        # Grep for auth, GraphQL, WebSocket, CORS, rate limiting patterns
+        if grep -riE \
+            '\bjwt\b|\bJWT\b|\bbcrypt\b|\bpasslib\b|\bOAuth\b|get_current_user|require_role|auth_depend|\\bpassword\\b|\\bhash\\b' \
+            "$CWD" --include='*.py' --include='*.ts' --include='*.tsx' --include='*.js' >/dev/null 2>&1; then
+            HAS_SECURITY_SURFACE="yes"
+        elif grep -riE \
+            '\bstrawberry\b|\bGraphQL\b|\bgraphql\b|GraphQLRouter' \
+            "$CWD" --include='*.py' --include='*.ts' --include='*.tsx' --include='*.js' >/dev/null 2>&1; then
+            HAS_SECURITY_SURFACE="yes"
+        elif grep -riE \
+            '\bsocketio\b|\bsio\\.\b|\bwebsocket\b|\bWebSocket\b' \
+            "$CWD" --include='*.py' --include='*.ts' --include='*.tsx' --include='*.js' >/dev/null 2>&1; then
+            HAS_SECURITY_SURFACE="yes"
+        elif grep -riE \
+            'CORSMiddleware|\bRateLimit\b|\bSlowAPI\b|rate_limit|allow_origins' \
+            "$CWD" --include='*.py' --include='*.ts' --include='*.tsx' --include='*.js' >/dev/null 2>&1; then
+            HAS_SECURITY_SURFACE="yes"
+        fi
+    fi
+    if [[ "$HAS_SECURITY_SURFACE" == "yes" ]]; then
+        AUDIT_WARNINGS="${AUDIT_WARNINGS}- CRITICAL: Phase 8b complete but security-report.md missing. vsm_security agent bypassed despite security-relevant code present.\n"
+    fi
+fi
+
 # ── Auto-update mutation state (H213 safety net) ──
 # If mutations-applied.md exists but mutation-state.md was not updated during
 # Phase 8c-ii (S5 forgot to run update-mutation-state.sh), update it now.
