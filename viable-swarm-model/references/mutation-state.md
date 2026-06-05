@@ -290,3 +290,4 @@
 | R19 | 2026-06-05 S5 | structural | algedonic-action-plan.py + S4*→S5 response bridge | probation | 0 | — | — | — | S5 iter
 | R20 | 2026-06-05 S5 | structural | session-end.sh Check 14/15 auto-invoke meta-metrics + algedonic action plan | probation | 0 | — | — | — | S5 iter
 | R21 | 2026-06-05 S5 | refinement | End-to-end closeout+stop-verifier integration test (Tests 53-54) | probation | 0 | — | — | — | S5 iter
+| R22 | 2026-06-05 S5 | structural | Process auditor Mode A/B workflow — pre-computed primary evidence | probation | 0 | — | — | — | S5 iter

@@ -3709,3 +3709,36 @@ This creates a **closeout pipeline gap**: S5 must remember to manually run meta-
 **Measured effect**: **Awaiting measurement** — Success criteria: (1) Tests 53-54 catch at least one regression in closeout or stop pipeline within 3 iterations, (2) test suite runs in <90 seconds, (3) no false positives on complete builds.
 
 ---
+
+## Mutation R22 — 2026-06-05
+
+**Session**: S5 Orchestrator Iteration R22
+**File**: `agents/vsm_process_auditor.md`, `scripts/process-compliance-precompute.py`
+**Type**: structural
+**Rationale**: The `vsm_process_auditor` agent has a 60% success rate with declining scores (3, 2, 2) due to timeouts on large build directories. R9 created a pre-computation script (`process-compliance-precompute.py`) that performs all 10 compliance checks automatically, but the agent prompt still instructed the agent to "verify each finding independently" and "use pre-computed data as STARTING POINTS." This meant the agent performed the full 10-check scan even when pre-computed data existed — the pre-computation only saved ~20% of the workload instead of the intended 80%+. The agent was still a scanner, not a reviewer.
+
+**Expected effect**: Process auditor agent now operates in TWO modes:
+- **Mode A** (pre-computed data exists): Agent reads the pre-computed report, TRUSTs quantitative findings, spot-checks only FAIL items (max 3), and writes the audit report. Workload reduced by ~80%.
+- **Mode B** (pre-computed data missing): Agent runs the pre-computation script, then follows Mode A.
+
+The pre-computation script now includes a "Spot-Check Guidance" table that maps each FAIL check to the specific artifact the agent should read for qualitative depth. This eliminates decision fatigue and further reduces timeout risk.
+
+**Before**:
+- Agent prompt: "Verify each finding independently — do not blindly trust"
+- Agent prompt: "Use the pre-computed PASS/FAIL/ISSUES statuses as STARTING POINTS"
+- Pre-computation script: No guidance on which files to spot-check
+
+**After**:
+- Agent prompt: "Do NOT re-scan files to verify existence, counts, or timestamps"
+- Agent prompt: "Limit yourself to maximum 3 spot-checks"
+- Agent prompt: Explicit Mode A / Mode B workflow
+- Pre-computation script: Spot-check guidance table with artifact mappings and severity prioritization
+
+**Files modified**:
+- `agents/vsm_process_auditor.md` — Restructured as compliance report writer (Mode A/B)
+- `scripts/process-compliance-precompute.py` — Added Spot-Check Guidance section
+- `hooks/test-automation.sh` — Tests 55-57 verify Mode A/B workflow, spot-check guidance, and score accuracy
+
+**Measured effect**: **Awaiting measurement** — Success criteria: (1) Process auditor success rate improves from 60% to ≥75% in next 3 builds, (2) No increase in false negatives (process violations missed due to over-trusting pre-computation), (3) Agent completes within timeout limits when pre-computed data exists.
+
+---

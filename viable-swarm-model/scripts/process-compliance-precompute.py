@@ -321,6 +321,32 @@ def main() -> int:
         for r in issues:
             md_lines.append(f"- **{r['check']}**: {r['evidence']}")
 
+    # Spot-check guidance for the process auditor agent
+    md_lines.extend([
+        "",
+        "## Spot-Check Guidance (for vsm_process_auditor)",
+        "",
+        "If you are the process auditor agent, follow this guidance:",
+        "- For PASS checks: No spot-check needed. Trust the pre-computed result.",
+        "- For ISSUE checks: Quick visual confirmation of the evidence is sufficient.",
+        "- For FAIL checks: Read the specific artifact mentioned in the evidence to add qualitative depth.",
+        "",
+        "| Check | If FAIL, read this file | What to look for |",
+        "|---|---|---|",
+        "| Phase 4 Gate | `.kimi/phase4-gate.md` | Why blocked — missing, retroactive, or content issue |",
+        "| Phase 7 Re-Audit | `.kimi/re-audit-report.md` | Missing files, missing verdicts, no regression mention |",
+        "| Phase 7c Security | `.kimi/security-report.md` | Post-fix security check evidence |",
+        "| Phase 8 Reflection | `.kimi/meta-report.md` | Missing Agent Performance Scores or sections |",
+        "| Phase 8b Mutations | `.kimi/mutations-applied.md` | Missing tracking or unjustified Overlooked |",
+        "| Knowledge Broker | `references/knowledge-broker.md` | Empty or stale content |",
+        "| Phase 0 Broker Read | `plan.md` | Missing broker or mutation state references |",
+        "| Phase 8c-iii Portfolio | `.kimi/mutation-portfolio-review.md` | Missing file or recommendations |",
+        "| Causal Index | `references/causal-index.md` | Missing build entry |",
+        "| Stack Skill Reads | `.kimi/*.md` agent outputs | Missing skill-read citations |",
+        "",
+        "**Limit**: Maximum 3 spot-checks. If more than 3 FAIL, check the 3 most severe.",
+    ])
+
     md_path = build_path / ".kimi" / "process-compliance-precomputed.md"
     md_path.write_text("\n".join(md_lines))
 

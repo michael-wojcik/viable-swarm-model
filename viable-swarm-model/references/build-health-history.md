@@ -5,6 +5,41 @@
 
 ---
 
+## 2026-06-05 — S5 Orchestrator Iteration (R22)
+
+### Diagnosed Constraint
+**System 3* (Process Audit) / S3→S5 compliance channel**: The `vsm_process_auditor` agent has a **60% success rate** with declining scores (3, 2, 2). Despite R9 creating a pre-computation script (`process-compliance-precompute.py`) that performs all 10 compliance checks automatically, the agent prompt still instructed it to "verify each finding independently" and "use pre-computed data as STARTING POINTS." This meant the agent performed the full 10-check manual scan even when pre-computed data existed — the pre-computation only saved ~20% of workload instead of the intended 80%+. The agent was still a scanner, not a reviewer. With SM2 (process auditor HARD BLOCK) probationary and 0 builds tested, the declining auditor success rate threatens Phase 8b/8c compliance reliability.
+
+### Change Made
+**Structural mutation R22**: Restructured `vsm_process_auditor.md` as a compliance report writer with Mode A/Mode B workflow.
+- **Mode A** (pre-computed data exists): Agent reads pre-computed report, TRUSTs quantitative findings, spot-checks only FAIL items (max 3), writes audit report. Eliminates redundant file scanning.
+- **Mode B** (pre-computed data missing): Agent runs pre-computation script, then follows Mode A.
+- Added explicit anti-timeout rule: "Under NO circumstances should you perform manual 10-check scanning without first running or reading the pre-computation output."
+- Updated `process-compliance-precompute.py` with "Spot-Check Guidance" table mapping each FAIL check to the specific artifact to read for qualitative depth.
+- `hooks/test-automation.sh`: Added Tests 55–57.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **62 passed, 0 failed** (was 59 passed, 0 failed)
+- Test 55: vsm_process_auditor.md contains Mode A/Mode B workflow, spot-check limit, and anti-rescan rule
+- Test 56: process-compliance-precompute.py outputs spot-check guidance with artifact mapping table
+- Test 57: Pre-computed compliance score (60/100) matches expected for mixed PASS/ISSUES/FAIL mock build
+
+### Files Modified
+- `viable-swarm-model/agents/vsm_process_auditor.md`
+- `viable-swarm-model/scripts/process-compliance-precompute.py`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 1 (Implementation) / S5→S1 channel**: The `vsm_backend_tester` (65% success) and `vsm_frontend_tester` (60% success) consistently time out in Tier 2+ builds. The FB31-2 mutation (tester 3-sub-wave split) is effective with score 4 but only 1 build tested. R10's `test-split-orchestrator.py` and R15's spawn plan compliance are structural improvements, but the agent prompts still contain verbose 10-check test-writing instructions that may exceed context limits under pressure. A more radical fix would be to create a `tester-patterns.md` reference file that moves common test patterns out of the agent prompt and into a loadable skill, reducing per-spawn token usage by 30%+. Alternatively, **System 5 (Policy)**: The `vsm_meta` agent (60% success, scores 3,3,2) still makes false TBD claims despite R14's pre-computation. The anti-TBD rule in the agent prompt may need strengthening or the pre-computed metrics may need to include more fields.
+
+---
+
 ## 2026-06-05 — S5 Orchestrator Iteration (R21)
 
 ### Diagnosed Constraint
