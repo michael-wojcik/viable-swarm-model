@@ -1691,6 +1691,161 @@ else
 fi
 
 # ============================================================================
+# Test 44: hypothesis-backlog-curator.py — archives confirmed hypotheses
+# ============================================================================
+
+echo -n "TEST: hypothesis-backlog-curator.py archives confirmed hypotheses ... "
+
+mkdir -p "$TMPDIR/curator-test"
+
+cat > "$TMPDIR/curator-test/hypotheses.md" << 'EOF'
+# Hypotheses
+
+## Index
+| Hypothesis | Status |
+|---|---|
+| H1 | untested |
+| H2 | confirmed |
+| H3 | untested |
+
+---
+
+## H1: Test hypothesis one
+**Status**: untested
+**Proposed**: 2026-06-01
+**Rationale**: Test.
+
+---
+
+## H2: Test hypothesis two
+**Status**: confirmed
+**Tested by**: FB99
+**Result**: CONFIRMED.
+
+---
+
+## H3: Test hypothesis three
+**Status**: untested
+**Proposed**: 2026-06-01
+**Rationale**: Test.
+EOF
+
+python3 "$SCRIPT_DIR/../scripts/hypothesis-backlog-curator.py" \
+    --hypotheses "$TMPDIR/curator-test/hypotheses.md" \
+    --archive "$TMPDIR/curator-test/archive.md" 2>/dev/null
+
+# Check that H2 was archived
+if grep -q "H2: Test hypothesis two" "$TMPDIR/curator-test/archive.md"; then
+    :
+else
+    fail "H2 not archived"
+fi
+
+# Check that H1 and H3 remain
+if grep -q "## H1:" "$TMPDIR/curator-test/hypotheses.md" && \
+   grep -q "## H3:" "$TMPDIR/curator-test/hypotheses.md"; then
+    :
+else
+    fail "H1 or H3 missing from hypotheses.md"
+fi
+
+# Check that H2 was removed from hypotheses.md
+if grep -q "## H2:" "$TMPDIR/curator-test/hypotheses.md"; then
+    fail "H2 still present in hypotheses.md"
+fi
+
+# Check index was updated
+if grep -q "| H1 | untested |" "$TMPDIR/curator-test/hypotheses.md" && \
+   grep -q "| H3 | untested |" "$TMPDIR/curator-test/hypotheses.md"; then
+    pass
+else
+    fail "index not updated correctly"
+fi
+
+# ============================================================================
+# Test 45: hypothesis-backlog-curator.py — picks latest status from update section
+# ============================================================================
+
+echo -n "TEST: hypothesis-backlog-curator.py picks latest status from update section ... "
+
+mkdir -p "$TMPDIR/curator-test2"
+
+cat > "$TMPDIR/curator-test2/hypotheses.md" << 'EOF'
+# Hypotheses
+
+## Index
+| Hypothesis | Status |
+|---|---|
+| H1 | untested |
+
+---
+
+## H1: Test hypothesis
+**Status**: untested
+**Proposed**: 2026-06-01
+**Rationale**: Test.
+
+---
+
+## FB99 Updates
+
+### H1: Test hypothesis update
+**Status**: confirmed
+**Tested by**: FB99
+**Result**: CONFIRMED.
+EOF
+
+python3 "$SCRIPT_DIR/../scripts/hypothesis-backlog-curator.py" \
+    --hypotheses "$TMPDIR/curator-test2/hypotheses.md" \
+    --archive "$TMPDIR/curator-test2/archive.md" 2>/dev/null
+
+# H1 should be archived because latest status is confirmed
+if grep -q "H1: Test hypothesis" "$TMPDIR/curator-test2/archive.md"; then
+    pass
+else
+    fail "H1 not archived despite confirmed update section"
+fi
+
+# ============================================================================
+# Test 46: hypothesis-backlog-curator.py — dry-run makes no changes
+# ============================================================================
+
+echo -n "TEST: hypothesis-backlog-curator.py dry-run makes no changes ... "
+
+mkdir -p "$TMPDIR/curator-test3"
+
+cat > "$TMPDIR/curator-test3/hypotheses.md" << 'EOF'
+# Hypotheses
+
+## Index
+| Hypothesis | Status |
+|---|---|
+| H1 | confirmed |
+
+---
+
+## H1: Test hypothesis
+**Status**: confirmed
+**Tested by**: FB99
+**Result**: CONFIRMED.
+EOF
+
+BEFORE=$(md5 -q "$TMPDIR/curator-test3/hypotheses.md")
+
+python3 "$SCRIPT_DIR/../scripts/hypothesis-backlog-curator.py" \
+    --dry-run \
+    --hypotheses "$TMPDIR/curator-test3/hypotheses.md" \
+    --archive "$TMPDIR/curator-test3/archive.md" 2>/dev/null
+
+AFTER=$(md5 -q "$TMPDIR/curator-test3/hypotheses.md")
+
+if [ "$BEFORE" = "$AFTER" ] && [ ! -f "$TMPDIR/curator-test3/archive.md" ]; then
+    pass
+else
+    fail "dry-run modified files"
+fi
+
+# ============================================================================
 # Summary
 # ============================================================================
 

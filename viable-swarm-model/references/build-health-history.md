@@ -5,6 +5,48 @@
 
 ---
 
+## 2026-06-05 — S5 Orchestrator Iteration (R18)
+
+### Diagnosed Constraint
+**System 4* (Learning Curator) / S4→S4 curation channel**: The hypothesis backlog had **23 untested hypotheses** (CRITICAL threshold > 10), but 11 were actually confirmed from fitness build evidence and never archived. Another 10 had strong build evidence (H206–H208, H210–H212, H301–H304) but still showed "untested" status because FB-era update sections appended new status lines without updating main entries or the index. The `vsm_learning_curator` agent (S4* Curation) was designed to do this work but has a **0% exercise rate**. Without autonomous curation, the organism's primary learning loop — hypothesis → experiment → confirmation → prevention rule — was clogged with stale data, producing a permanent CRITICAL algedonic that masked the true state of scientific inquiry.
+
+### Change Made
+**Structural mutation R18**: Created `scripts/hypothesis-backlog-curator.py` and applied it to clean the backlog.
+- `hypothesis-backlog-curator.py`: Parses hypotheses.md, resolves the latest status per hypothesis (main entry vs FB update section), archives confirmed/rejected/superseded hypotheses to hypotheses-archive.md with full provenance, rebuilds the index, and reports remaining untested count.
+- Updated 10 hypothesis statuses from "untested" → "confirmed" based on build evidence (FB25–FB32).
+- Fixed stale index entries (H150, H151, H154 showed "untested" despite being confirmed).
+- Fixed H213 duplicate status (was "untested" + "testing → monitor", now single "monitor" status).
+- Archived 21 confirmed hypotheses to hypotheses-archive.md.
+- `hooks/test-automation.sh`: Added Tests 44–46.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **51 passed, 0 failed** (was 48 passed, 0 failed)
+- Test 44: Curator archives confirmed hypotheses and updates index
+- Test 45: Curator picks latest status from FB update section over main entry
+- Test 46: Dry-run mode makes no file modifications
+
+### Files Modified
+- `viable-swarm-model/scripts/hypothesis-backlog-curator.py` (created)
+- `viable-swarm-model/references/hypotheses.md`
+- `viable-swarm-model/references/hypotheses-archive.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4* (Variety Engineer) / S4→S1 environmental scanning channel**: The `vsm_variety_engineer` still has a **0% exercise rate**. While `organism-vitals.py` (R8) pre-computes health metrics, there is no automated mechanism that acts on the algedonic signals it produces. For example, the variety assessment currently reports:
+- **Skill variety: 0.48** (11/23 skills exercised) — WARNING
+- **Agent variety: 0.74** (14/19 agents) — OK but 5 agents never referenced
+- **19 untested hypotheses** — still WARNING (though no longer CRITICAL)
+
+The next iteration should either (a) create a script that auto-acts on algedonic signals (e.g., spawn gym batches when untested > 7), or (b) expand the integration-test-closeout.py to include stop-verifier.sh and verify zero warnings from session-end.sh on a complete Tier 2+ mock build.
+
+---
+
 ## 2026-06-05 — S5 Orchestrator Iteration (R17)
 
 ### Diagnosed Constraint

@@ -286,3 +286,4 @@
 | R13 | 2026-06-05 S5 | structural | vsm_product mandatory Tier 2+ + product brief guardrail | probation | 0 | — | — | — | S5 iter |
 | R11 | 2026-06-05 S5 | structural | session-end security gate bypass detection (Check 11) | effective | 1 | 5 | — | — | — |
 | R12 | 2026-06-05 S5 | structural | integration-test-closeout.py + closeout pipeline integration test | probation | 0 | — | — | — | S5 iter
+| R18 | 2026-06-05 S5 | structural | hypothesis-backlog-curator.py + S4* autonomous curation | probation | 0 | — | — | — | S5 iter

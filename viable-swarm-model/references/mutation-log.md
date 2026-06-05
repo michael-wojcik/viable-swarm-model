@@ -3588,3 +3588,34 @@ Additionally, the dashboard was never automatically invoked — it only ran when
 **Measured effect**: **Awaiting measurement** — Success criteria: (1) all 3 stop-verifier tests continue passing after any script modification, (2) at least one bug caught by tests before reaching production, (3) test suite runs in <60 seconds.
 
 ---
+
+## Mutation R18 — 2026-06-05
+
+**Session**: S5 Orchestrator Iteration
+**File**: `scripts/hypothesis-backlog-curator.py`, `references/hypotheses.md`, `references/hypotheses-archive.md`
+**Type**: structural
+**Rationale**: The hypothesis backlog had **23 untested hypotheses** (CRITICAL threshold > 10), but 11 of them were actually confirmed from fitness build evidence and simply never archived. Additionally, 10 more hypotheses (H206-H208, H210-H212, H301-H304) had strong build evidence confirming them but still showed "untested" status. The root cause was twofold: (1) no automated mechanism existed to archive confirmed/rejected hypotheses, and (2) FB-era update sections (e.g., "FB30 Hypothesis Updates") appended new status lines without updating the main entry or index. This created a persistent CRITICAL algedonic that masked the true state of the backlog. The vsm_learning_curator (S4* Curation) was designed to do this work but has a 0% exercise rate. A pre-computation script — following the proven R7-R10 pattern — closes this gap autonomously.
+
+**Expected effect**: The hypothesis backlog stays below 20 entries (per file instruction) and accurately reflects untested claims. The organism-vitals.py untested hypothesis count drops from CRITICAL to WARNING. Confirmed hypotheses are preserved in hypotheses-archive.md with full provenance for longitudinal analysis.
+
+**Files modified**:
+- `scripts/hypothesis-backlog-curator.py` — Created. Parses hypotheses.md, finds latest status per hypothesis (respecting FB update sections), archives confirmed/rejected/superseded to hypotheses-archive.md, rebuilds index, reports remaining untested count.
+- `references/hypotheses.md` — Archived 21 confirmed hypotheses. Remaining: 11 (9 untested, 1 monitor, 1 partially confirmed). Fixed stale index entries (H150, H151, H154 showed "untested" despite being confirmed). Fixed duplicate status on H213 (now "monitor").
+- `references/hypotheses-archive.md` — Appended 21 confirmed hypotheses with archival timestamps and final status provenance.
+- `hooks/test-automation.sh` — Added Tests 44-46 for curator script (archive confirmed, pick latest from update section, dry-run no-op).
+
+**Before**:
+- Hypotheses.md: 32 entries, 23 showing "untested" status
+- Index: stale (confirmed hypotheses listed as untested)
+- No archive automation; confirmed hypotheses accumulated indefinitely
+- organism-vitals.py reporting: CRITICAL (23 untested > 10 threshold)
+
+**After**:
+- Hypotheses.md: 11 entries, 9 genuinely untested
+- Index: accurate and auto-maintained by curator
+- hypotheses-archive.md: auditable record of all confirmed hypotheses
+- organism-vitals.py reporting: WARNING (9 untested, below CRITICAL threshold of >10)
+
+**Measured effect**: **Awaiting measurement** — Success criteria: (1) untested count stays ≤ 10 for 3 consecutive S5 iterations, (2) no confirmed hypothesis remains in hypotheses.md > 1 iteration, (3) curator test suite catches any regression in archiving logic.
+
+---

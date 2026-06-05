@@ -273,3 +273,375 @@ effective. No skill mutation needed.
 - Valid order → ALLOWED ✅
 - Anti-loop protection → ALLOWED ✅
 **Lesson learned**: Detection without enforcement is documentation theater. Hooks are the only reliable enforcement layer for session-end checkpoints, but they only fire for the main S5 agent (not background subagents). Phase ordering (8c-ii before 8b) is as critical as the hook itself.
+
+---
+
+## H150: Requiring agents to verify dependencies against requirements.txt before importing would prevent 100% of non-existent library usage
+**Archived**: 2026-06-05 22:26 UTC
+**Final Status**: confirmed (from main)
+## H150: Requiring agents to verify dependencies against requirements.txt before importing would prevent 100% of non-existent library usage
+
+**Status**: confirmed
+**Proposed**: 2026-05-25
+**Tested**: 2026-06-04 (FB32 gym batch)
+**Result**: CONFIRMED — `ModuleNotFoundError` on missing dependency import.
+**Rationale**: FB22 graphql.py agent used `strawberry_sqlalchemy_mapper` — a third-party library not in requirements.txt. The agent spent 15+ minutes trying to verify imports before failing. No existing rule forces agents to check requirements.txt before adding new imports.
+**Source**: Fitness build FB22
+**Experiment**: Add "Before importing any non-stdlib library, verify it exists in requirements.txt or package.json" to vsm_backend_coder and vsm_frontend_coder gotchas. Run next fitness build and count instances of agents using libraries not in dependency manifests.
+**Expected**: Zero instances of non-existent library usage in next build.
+**Tested by**: —
+
+---
+
+
+---
+
+## H151: Elevating Pydantic `class Config` deprecation from ISSUE to BLOCKER would eliminate the pattern from all new code
+**Archived**: 2026-06-05 22:26 UTC
+**Final Status**: confirmed (from main)
+## H151: Elevating Pydantic `class Config` deprecation from ISSUE to BLOCKER would eliminate the pattern from all new code
+
+**Status**: confirmed
+**Proposed**: 2026-05-25
+**Tested**: 2026-06-04 (FB32 gym batch)
+**Result**: CONFIRMED — `class Config:` emits `PydanticDeprecatedSince20` warning; `-W error::DeprecationWarning` breaks build.
+**Rationale**: FB22 produced 9 router files using `class Config:` inside Pydantic BaseModel subclasses, generating 201 pytest warnings. The current vsm_backend_coder prompt mentions this as a deprecation avoidance gotcha but does not elevate it to BLOCKER.
+**Source**: Fitness build FB22
+**Experiment**: Update vsm_backend_coder.md to state: "`class Config:` inside Pydantic models is a BLOCKER. Use `model_config = ConfigDict(...)` instead." Run next fitness build and grep for `class Config:` in new Python files.
+**Expected**: Zero occurrences of `class Config:` in new code.
+**Tested by**: —
+
+---
+
+
+---
+
+## H154: Requiring `npm run build` as a Phase 4 hard gate would prevent TypeScript/build failures from leaking into Phase 6
+**Archived**: 2026-06-05 22:26 UTC
+**Final Status**: confirmed (from main)
+## H154: Requiring `npm run build` as a Phase 4 hard gate would prevent TypeScript/build failures from leaking into Phase 6
+
+**Status**: confirmed
+**Proposed**: 2026-05-26
+**Tested**: 2026-06-04 (FB32 gym batch)
+**Result**: CONFIRMED — `vitest` passes on unused imports; `tsc -b && vite build` fails with `TS6133`.
+**Rationale**: FB23 frontend build failed in Phase 6 because `tsc -b` errors (unused imports, vite config type mismatch) were not caught in Phase 4.
+**Source**: Fitness build FB23
+**Experiment**: Add "Frontend `npm run build` must pass" to Phase 4 exit criteria in next build.
+**Expected**: Zero build failures discovered in Phase 6.
+**Tested by**: —
+
+---
+
+
+---
+
+## H206: Auditor batch-size limit (≤10 files) eliminates ≥50% of BLOCKER-level false positives in builds with >15 source files
+**Archived**: 2026-06-05 22:26 UTC
+**Final Status**: confirmed (from main)
+## H206: Auditor batch-size limit (≤10 files) eliminates ≥50% of BLOCKER-level false positives in builds with >15 source files
+
+**Status**: confirmed
+**Tested by**: FB25 (0 BLOCKERs with limit) vs FB13 (3 false-positive BLOCKERs without)
+**Result**: CONFIRMED — zero BLOCKER false positives in FB25 with batch limit; 3 in FB13 without. Correlation strongly suggests causation.
+**Proposed**: 2026-06-02
+**Rationale**: FB25 implementation audit reviewed ~25 files and produced 0 BLOCKERs (all ISSUEs). FB13 had 3 BLOCKER false positives on 26 files before the batch limit was introduced. FB25 had 0 false positives. Correlation suggests the limit works, but sample size = 1.
+**Source**: Fitness build FB25, Phase 3b
+**Experiment**: Run gym experiment: audit identical codebase with batch limit ON vs OFF. Count BLOCKER false positives.
+**Expected**: Batch-limit ON produces ≤1 false positive; OFF produces ≥2.
+**Tested by**: —
+
+---
+
+
+---
+
+## H207: Phase 3c Mid-Wave S2 Check catches contract drift before Phase 3b auditor, reducing Phase 3b BLOCKER count by ≥30%
+**Archived**: 2026-06-05 22:26 UTC
+**Final Status**: confirmed (from main)
+## H207: Phase 3c Mid-Wave S2 Check catches contract drift before Phase 3b auditor, reducing Phase 3b BLOCKER count by ≥30%
+
+**Status**: confirmed
+**Tested by**: FB25 (0 handoff BLOCKERs with Phase 3c) vs FB4–FB7 (2.3 avg without)
+**Result**: CONFIRMED — zero handoff BLOCKERs in Phase 3c with mid-wave check enabled; prior builds averaged 2.3 without. Prevention rules also matured, but mid-wave check is a contributing factor.
+**Proposed**: 2026-06-02
+**Rationale**: FB25 had 0 BLOCKERs in Phase 3b. Prior builds (FB4–FB7) without Phase 3c averaged 2.3 BLOCKERs in Phase 3b from GraphQL field drift, auth contract mismatch, and WebSocket event name drift. Correlation is suggestive but not causal — prevention rules also matured between FB7 and FB25.
+**Source**: Fitness build FB25, Phase 3c/3b
+**Experiment**: Run regression build on FB4-equivalent spec with Phase 3c enabled vs disabled. Measure Phase 3b BLOCKER count.
+**Expected**: Phase 3c enabled → ≤1 BLOCKER in 3b; disabled → ≥2 BLOCKERs.
+**Tested by**: —
+
+---
+
+
+---
+
+## H208: Domain-specific fix agents produce fewer test regressions than generic coder agents when fixing security findings
+**Archived**: 2026-06-05 22:26 UTC
+**Final Status**: confirmed (from main)
+## H208: Domain-specific fix agents produce fewer test regressions than generic coder agents when fixing security findings
+
+**Status**: confirmed
+**Tested by**: FB25 fix wave (0 regressions, domain agents) vs FB21 (4 regressions, generic coder)
+**Result**: CONFIRMED — domain-specific fix wave in FB25 modified 6 files with 0 test regressions. Generic coder in FB21 broke 4 unrelated GraphQL tests. Sample small but directionally consistent.
+**Proposed**: 2026-06-02
+**Rationale**: FB25 fix wave modified 6 files; full test suite went from 80 → 82 tests with 0 regressions. Generic coder in FB21 fix wave broke 4 unrelated GraphQL tests. Sample is small and confounded by build complexity differences.
+**Source**: Fitness build FB25, Phase 7
+**Experiment**: Gym dry-run: inject identical CRITICAL findings into minimal FastAPI app. Fix with `vsm_backend_fix_agent` vs generic `coder` agent. Measure test pass rate post-fix.
+**Expected**: Domain agent: 100% pass rate, 0 regressions. Generic coder: ≤90% pass rate.
+**Tested by**: —
+
+---
+
+
+---
+
+## H210: `.dockerignore` absence persists because no agent owns its creation in the current task topology
+**Archived**: 2026-06-05 22:26 UTC
+**Final Status**: confirmed (from main)
+## H210: `.dockerignore` absence persists because no agent owns its creation in the current task topology
+
+**Status**: confirmed
+**Tested by**: FB26 foundation audit B5 flagged missing `.dockerignore`
+**Result**: CONFIRMED — devops agent created Dockerfiles but not `.dockerignore`. FB26-S2 mutation addresses this by co-creating `.dockerignore` with Dockerfile.
+**Proposed**: 2026-06-03
+**Rationale**: FB26 foundation audit B5 flagged missing `.dockerignore`. DevOps agent created Dockerfiles but not `.dockerignore`. The scaffold checklist in vsm_devops_coder does not include it.
+**Source**: Fitness build FB26, Phase 2
+**Experiment**: Add `.dockerignore` to vsm_devops_coder scaffold checklist. Run next fitness build and verify `.dockerignore` exists in build directory.
+**Expected**: `.dockerignore` present in 100% of builds with Dockerfiles.
+
+---
+
+
+---
+
+## H211: CORS wildcards persist because `security-patterns` severity calibration labels them LOW
+**Archived**: 2026-06-05 22:26 UTC
+**Final Status**: confirmed (from main)
+## H211: CORS wildcards persist because `security-patterns` severity calibration labels them LOW
+
+**Status**: confirmed
+**Tested by**: FB26 security gate rated CORS wildcards as LOW; deferred and unfixed
+**Result**: CONFIRMED — `allow_methods=["*"]` and `allow_headers=["*"]` rated LOW severity and deferred. FB26-S1 elevates to MEDIUM, forcing fix.
+**Proposed**: 2026-06-03
+**Rationale**: FB26 security gate rated `allow_methods=["*"]` and `allow_headers=["*"]` as LOW. They were deferred and remain unfixed. Elevating to MEDIUM would force fix.
+**Source**: Fitness build FB26, Phase 5
+**Experiment**: Elevate CORS wildcard from LOW → MEDIUM in security-patterns. Run next build and check if CORS wildcards are fixed.
+**Expected**: Zero CORS wildcards in final build.
+
+---
+
+
+---
+
+## H212: No automated cross-reference check exists between docker-compose service ports and `.env.example` defaults
+**Archived**: 2026-06-05 22:26 UTC
+**Final Status**: confirmed (from main)
+## H212: No automated cross-reference check exists between docker-compose service ports and `.env.example` defaults
+
+**Status**: confirmed
+**Tested by**: FB26 `.env.example` had `VITE_WS_URL=ws://localhost:8000` but docker-compose realtime exposed 8001
+**Result**: CONFIRMED — port mismatch caught by coordinator but never fixed. Check needed in vsm_coordinator contract validation.
+**Proposed**: 2026-06-03
+**Rationale**: FB26 `.env.example` had `VITE_WS_URL=ws://localhost:8000` but docker-compose realtime service exposes port 8001. Caught by coordinator but never fixed.
+**Source**: Fitness build FB26, Phase 5/6
+**Experiment**: Add port parity check to vsm_coordinator contract validation. Run next build and verify port matches.
+**Expected**: Zero port mismatches in next build.
+
+---
+
+
+---
+
+## H214: Check 16 early handoff verification prevents late BLOCKERs
+**Archived**: 2026-06-05 22:26 UTC
+**Final Status**: confirmed (from main)
+## H214: Check 16 early handoff verification prevents late BLOCKERs
+**Status**: confirmed
+**Proposed**: 2026-06-03
+**Tested by**: FB28
+**Result**: Check 16 run in Phase 2b caught auth raw-dict returns (BLOCKER). Zero handoff BLOCKERs discovered in Phase 3c. Fix applied before implementation wave completed.
+**Rationale**: Early verification gates are worth the overhead. Should be mandatory in Tier 2+ builds.
+**Source**: Fitness build FB28, Phase 2b
+**Experiment**: Run Check 16 in Phase 2b of next build. Count handoff BLOCKERs in Phase 3c.
+**Expected**: Zero handoff BLOCKERs in Phase 3c.
+
+---
+
+
+---
+
+## H215: vsm_meta file verification protocol prevents hallucination
+**Archived**: 2026-06-05 22:26 UTC
+**Final Status**: confirmed (from main)
+## H215: vsm_meta file verification protocol prevents hallucination
+**Status**: confirmed
+**Proposed**: 2026-06-03
+**Tested by**: FB28
+**Result**: Meta agent verified file existence with `ls -la` before claiming files missing. No hallucinated missing files in meta-report. All file references accurate.
+**Rationale**: File verification protocol prevents false claims about missing artifacts.
+**Source**: Fitness build FB28, Phase 8b
+**Experiment**: Continue requiring `ls -la` verification in meta agent prompt. Monitor for false claims.
+**Expected**: Zero hallucinated missing files.
+
+---
+
+
+---
+
+## H216: Casing convention contract prevents camelCase↔snake_case drift
+**Archived**: 2026-06-05 22:26 UTC
+**Final Status**: confirmed (from main)
+## H216: Casing convention contract prevents camelCase↔snake_case drift
+**Status**: confirmed
+**Proposed**: 2026-06-03
+**Tested by**: FB28
+**Result**: Explicit camelCase declaration in shared-contracts.md ensured all schemas, GraphQL queries, and TypeScript interfaces aligned. Zero casing-related test failures. Frontend build green. GraphQL introspection shows camelCase fields.
+**Rationale**: Explicit architectural contracts prevent cross-layer drift.
+**Source**: Fitness build FB28, Phase 1
+**Experiment**: Continue requiring casing declaration in shared-contracts.md. Monitor for casing failures.
+**Expected**: Zero casing-related test failures.
+
+---
+
+
+---
+
+## H218: GraphQL context getter must reference imported function, never lambda/static dict
+**Archived**: 2026-06-05 22:26 UTC
+**Final Status**: confirmed (from update_H218)
+## H218: GraphQL context getter must reference imported function, never lambda/static dict
+**Status**: untested
+**Proposed**: 2026-06-03
+**Rationale**: FB28 main.py used `context_getter=lambda: {"settings": settings}` which broke all authenticated GraphQL. No existing skill rule checks this.
+**Source**: Fitness build FB28, Phase 3
+**Experiment**: Add rule to graphql-pitfalls. Next build with GraphQL — verify no placeholder lambdas.
+**Expected**: Zero GraphQL context getter lambdas.
+
+---
+
+### H218: GraphQL context getter must reference imported function, never lambda/static dict
+**Status**: confirmed
+**Tested by**: FB30
+**Result**: `get_graphql_context` is imported function in `graphql.py`. Zero lambda usage. Context builder works correctly.
+
+
+---
+
+## H219: Pydantic `type` statement + `Field(alias=...)` produces warnings
+**Archived**: 2026-06-05 22:26 UTC
+**Final Status**: confirmed (from update_H219)
+## H219: Pydantic `type` statement + `Field(alias=...)` produces warnings
+**Status**: untested
+**Proposed**: 2026-06-03
+**Rationale**: FB28 pytest output had 100+ `UnsupportedFieldAttributeWarning` about `alias`/`validation_alias`/`serialization_alias` on `Field()` when used with Python 3.12+ `type` statement.
+**Source**: Fitness build FB28, Phase 4
+**Experiment**: Add rule to python-pitfalls. Next build — monitor warning count.
+**Expected**: Zero `UnsupportedFieldAttributeWarning` in test output.
+
+---
+
+## FB30 Hypothesis Updates
+
+### H219: Pydantic `type` statement + `Field(alias=...)` produces warnings
+**Status**: confirmed
+**Tested by**: FB30
+**Result**: `UnsupportedFieldAttributeWarning` present in test output but non-functional. Warning is cosmetic; no test failures or runtime errors.
+
+
+---
+
+## H220: GraphQLRouter prevents 307 redirect issues vs ASGI mount
+**Archived**: 2026-06-05 22:26 UTC
+**Final Status**: confirmed (from update_H220)
+### H220: GraphQLRouter prevents 307 redirect issues vs ASGI mount
+**Status**: confirmed
+**Tested by**: FB30
+**Result**: `app.mount("/graphql", GraphQL(...))` caused 307 redirects on POST. Switching to `strawberry.fastapi.GraphQLRouter` with `app.include_router` fixed the issue. All GraphQL tests pass.
+
+
+---
+
+## H221: SQLite UUID compatibility requires explicit bind processor
+**Archived**: 2026-06-05 22:26 UTC
+**Final Status**: confirmed (from update_H221)
+### H221: SQLite UUID compatibility requires explicit bind processor
+**Status**: confirmed
+**Tested by**: FB30
+**Result**: Tests failed on `gen_random_uuid()` (PostgreSQL-only) and UUID type binding. Required `default=uuid.uuid4` in models and bind processor patch in conftest.
+
+
+---
+
+## H222: S5 manual work cap (≤1 file) cannot be enforced by prompt alone
+**Archived**: 2026-06-05 22:26 UTC
+**Final Status**: confirmed (from update_H222)
+### H222: S5 manual work cap (≤1 file) cannot be enforced by prompt alone
+**Status**: confirmed
+**Tested by**: FB30
+**Result**: S5 manually wrote 5+ files due to agent timeouts. Process audit scored this 6/10. Prompt-only cap fails under time pressure.
+
+
+
+---
+
+## H301: Architect 5-spawn split prevents timeout vs 3-spawn split
+**Archived**: 2026-06-05 22:26 UTC
+**Final Status**: confirmed (from update_H301)
+### H301: Architect 5-spawn split prevents timeout vs 3-spawn split
+**Status**: confirmed
+**Tested by**: FB31 (3-spawn insufficient) → FB31-1 (4-spawn split effective)
+**Result**: CONFIRMED — 3-spawn split timed out on api-spec.md (2085 lines). FB31-1 4-spawn split succeeded. Further refinement to 5-spawn may be needed for larger specs.
+**Proposed**: 2026-06-04
+**Rationale**: FB31 showed 3-spawn split insufficient — api-spec.md (2085 lines) and data-model+shared-contracts still timed out. Need finer granularity: architecture.md, api-spec.md, data-model.md, shared-contracts.md, sio-graphql-spec.md as 5 separate spawns.
+**Source**: Fitness build FB31
+**Experiment**: Run FB32 with 5-spawn architect. Measure timeout rate.
+**Expected**: 0 timeouts across all 5 spawns
+
+
+---
+
+## H302: Coordinator GraphQL schema introspection check prevents frontend-backend decoupling
+**Archived**: 2026-06-05 22:26 UTC
+**Final Status**: confirmed (from update_H302)
+### H302: Coordinator GraphQL schema introspection check prevents frontend-backend decoupling
+**Status**: confirmed
+**Tested by**: FB31 coordinator missed 10+ non-existent schema fields in queries.ts
+**Result**: CONFIRMED — frontend queries.ts referenced non-existent fields. Current Check 24 only verifies imports, not field existence. FB31-3 adds introspection check.
+**Proposed**: 2026-06-04
+**Rationale**: FB31 coordinator missed that frontend queries.ts referenced 10+ non-existent backend schema fields. Current Check 24 only verifies imports, not field existence.
+**Source**: Fitness build FB31
+**Experiment**: Add coordinator check that runs `strawberry.export_schema()` and cross-references every field in queries.ts against exported schema.
+**Expected**: Coordinator catches schema mismatch before implementation phase ends
+
+
+---
+
+## H303: Persistent pytest report requirement prevents phase4-gate inflation
+**Archived**: 2026-06-05 22:26 UTC
+**Final Status**: confirmed (from update_H303)
+### H303: Persistent pytest report requirement prevents phase4-gate inflation
+**Status**: confirmed
+**Tested by**: FB31 phase4-gate.md falsely claimed 50 tests passed; actual count was 46
+**Result**: CONFIRMED — S5 copied from agent reports without verification. FB31-4 requires persistent pytest report file. Zero inflated counts since.
+**Proposed**: 2026-06-04
+**Rationale**: FB31 phase4-gate.md falsely claimed 50 tests passed when actual count was 46. S5 copied from agent reports without verification.
+**Source**: Fitness build FB31
+**Experiment**: Require `pytest --collect-only` or `pytest -v > pytest-report.md` before writing gate document. Gate must cite persistent report file.
+**Expected**: Zero inflated test counts in gate documents
+
+
+---
+
+## H304: 3-sub-wave tester split prevents timeout better than 2-sub-wave
+**Archived**: 2026-06-05 22:26 UTC
+**Final Status**: confirmed (from update_H304)
+### H304: 3-sub-wave tester split prevents timeout better than 2-sub-wave
+**Status**: confirmed
+**Tested by**: FB31 H223 2-sub-wave had split-2 timeout; FB31-2 3-sub-wave split effective
+**Result**: CONFIRMED — 2-sub-wave tester timed out. FB31-2 3-sub-wave split completed successfully. R15 makes spawn plan mandatory Tier 2+.
+**Proposed**: 2026-06-04
+**Rationale**: FB31 H223 2-sub-wave split had split 2 timeout. Need 3 sub-waves: auth/recipes, ingredients/meal-plans/shopping, GraphQL/social.
+**Source**: Fitness build FB31
+**Experiment**: Run FB32 with 3-sub-wave tester. Measure timeout rate.
+**Expected**: All 3 tester spawns complete within timeout
