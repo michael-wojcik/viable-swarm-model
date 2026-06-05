@@ -156,3 +156,44 @@ Alternatively, **System 4→S1 channel**: The `vsm_variety_engineer` (S4* enviro
 A practical fix: create `scripts/test-split-orchestrator.py` that S5 runs BEFORE spawning testers. Given a list of domains/endpoints, it estimates test lines per domain and outputs a structured spawn plan with chunk sizes < 300 lines. This would make the FB31-2 3-sub-wave split concrete and repeatable, not dependent on S5's judgment under pressure.
 
 Alternatively, **System 3* (Process Audit) timeout**: SM2 (process auditor HARD BLOCK) remains probationary with 0 builds tested. The process auditor's 10-check compliance matrix is still too large for reliable completion within timeout limits. Splitting it into 2 focused sub-tasks (core compliance + extended compliance) would improve its 60% success rate.
+
+---
+
+## 2026-06-05 — S5 Orchestrator Iteration (R9)
+
+### Diagnosed Constraint
+**System 3* (Process Audit) agent timeout / S3→S5 compliance channel failure**: The `vsm_process_auditor` agent has a **60% success rate** and timed out in FB30. SM2 (process auditor HARD BLOCK) is probationary with 0 builds tested. The agent's 10-check compliance matrix requires reading 15+ files across the build directory and skill references — a workload that exceeds timeout budgets in Tier 2+ builds. When the process auditor times out, Phase 8b/8c compliance checks are skipped, allowing process violations to go undetected. The session-end hook previously had no check for missing `process-audit.md`, so timeouts were invisible to S5.
+
+### Change Made
+**Structural mutation R9**: Created `scripts/process-compliance-precompute.py` and wired it into the closeout pipeline.
+- `process-compliance-precompute.py`: 10-check compliance scanner that reads `.kimi/` artifacts and skill references. Computes overall compliance score (0-100) with PASS/ISSUES/FAIL per check. Emits HARD BLOCK if score < 50, ISSUES if < 80. Covers: Phase 4 gate, Phase 7 re-audit, Phase 7c security re-check, Phase 8 reflection, Phase 8b mutations, broker freshness, Phase 0 broker read, portfolio review, causal index, and stack skill references.
+- `session-end.sh`: Added Check 10 — if `meta-report.md` exists but `process-audit.md` does not, flag the omission and auto-invoke `process-compliance-precompute.py` to generate fallback data.
+- `vsm_process_auditor.md`: Added "Pre-computed Compliance Data (READ FIRST)" section instructing the agent to read `.kimi/process-compliance-precomputed.md` before scanning files manually. Includes explicit timeout rationale.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **27 passed, 0 failed** (was 24 passed, 0 failed)
+- New Tests 21–23 verify:
+  - Compliance scoring across all 10 checks with mixed artifacts
+  - HARD BLOCK emission for empty build directory (score 10-15/100)
+  - Session-end auto-generation of compliance data when process audit is missing
+- Real compliance scan (2026-06-05) on empty build directory:
+  - Score: 10/100 (10.0%) → HARD BLOCK
+  - All 10 checks failed except Phase 7c Security (no auth files modified)
+
+### Files Modified
+- `viable-swarm-model/scripts/process-compliance-precompute.py` (created)
+- `viable-swarm-model/hooks/session-end.sh`
+- `viable-swarm-model/agents/vsm_process_auditor.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+
+### Git Commit
+- Hash: 4440272
+
+### Next Highest-Leverage Constraint
+**System 1 (Implementation) agent timeout → S5 (Policy) overload**: The `vsm_backend_tester` (65% success rate) and `vsm_frontend_tester` (60% success rate) consistently time out in Tier 2+ builds. When testers timeout, S5 is forced to manually write tests — violating the confirmed H222 finding that prompt-only manual work caps fail under time pressure. The FB31-2 mutation (tester 3-sub-wave split) is effective but has only been tested once.
+
+R7, R8, and R9 have now addressed the three meta-system agents (learning curator, variety engineer, process auditor) by creating pre-computation scripts that reduce their workload. The same pattern could be applied to S1 testers: create a `scripts/test-split-orchestrator.py` that analyzes the build plan and outputs a concrete spawn schedule with chunk sizes < 300 lines. This would make the FB31-2 3-sub-wave split deterministic rather than dependent on S5 judgment under pressure.
+
+Alternatively, **System 5→S1 channel**: The `vsm_product` agent (S4 Product) has only a 1 lesson mention in the lesson patterns report, suggesting it is rarely spawned. The product brief is a proven guardrail against architect scope creep (H[N+1] confirmed), yet builds often skip it. A pre-computation script or hook check for missing `product-brief.md` could close this gap.
