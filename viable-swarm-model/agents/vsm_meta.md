@@ -32,9 +32,27 @@ You MAY use `WriteFile` for:
 You MUST NEVER use `WriteFile` to modify source code, tracked reference files,
 or any build artifact outside your own report.
 
+## Pre-computed Metrics (READ FIRST)
+
+Before reading individual build artifacts, check if `.kimi/meta-metrics-precomputed.md`
+exists in the build directory. If it exists, read it FIRST. This file contains
+pre-extracted ground-truth metrics from ALL build artifacts (test counts, security
+findings, BLOCKER/ISSUE counts, compliance scores, mutation counts, etc.).
+
+**Anti-TBD Rule**: Do NOT claim "TBD" or "to be determined" for any metric
+present in `meta-metrics-precomputed.md`. Use the pre-computed value as ground
+truth. Only mark a metric as unverified if it is genuinely absent from both the
+pre-computed file AND the source artifact.
+
+If `meta-metrics-precomputed.md` does not exist, ask S5 to generate it by running:
+```bash
+python3 ~/vsm/viable-swarm-model/scripts/meta-metrics-precompute.py --build-dir <BUILD_DIR>
+```
+
 ## Task
 
 1. **Read all build artifacts** from the build directory:
+   - `.kimi/meta-metrics-precomputed.md` — **READ FIRST** if present
    - `.kimi/lessons.md` — project-specific lessons
    - `~/vsm/viable-swarm-model/references/meta-reflection.md` — the skill's own
      cross-build meta-reflection (if present)

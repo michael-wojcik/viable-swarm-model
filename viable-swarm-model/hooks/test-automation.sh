@@ -1298,6 +1298,121 @@ else
 fi
 
 # ============================================================================
+# Test 34: meta-metrics-precompute.py — extracts metrics from mock artifacts
+# ============================================================================
+
+echo -n "TEST: meta-metrics-precompute.py extracts metrics from mock build ... "
+
+mkdir -p "$TMPDIR/build34/.kimi"
+
+cat > "$TMPDIR/build34/.kimi/phase4-gate.md" << 'EOF'
+# Phase 4 Gate
+
+| Check | Result | Details |
+|---|---|---|
+| Backend tests | PASS | 42/42 passed, 0 failed, 0 errors |
+| Frontend tests | PASS | 15/15 passed, 0 failed, 0 errors |
+| Frontend build | PASS | No errors |
+
+## Security Status (Post-Fix Wave)
+- BLOCKER: 0
+- CRITICAL: 0
+- HIGH: 1
+- MEDIUM: 2
+- LOW: 0
+EOF
+
+cat > "$TMPDIR/build34/.kimi/security-report.md" << 'EOF'
+# Security Audit
+
+## Executive Summary
+- **Verdict**: ISSUES
+- **BLOCKER count**: 0
+- **CRITICAL count**: 0
+- **HIGH count**: 3
+- **MEDIUM count**: 5
+- **LOW count**: 1
+EOF
+
+cat > "$TMPDIR/build34/.kimi/foundation-audit.md" << 'EOF'
+# Foundation Audit
+
+- **BLOCKER**: Missing auth router
+- **ISSUE**: Lazy engine pattern not applied
+EOF
+
+cat > "$TMPDIR/build34/.kimi/lessons.md" << 'EOF'
+# Lessons
+
+## Lesson 1
+Foo
+
+## Lesson 2
+Bar
+
+## Lesson 3
+Baz
+EOF
+
+cat > "$TMPDIR/build34/.kimi/mutations-applied.md" << 'EOF'
+# Mutations Applied
+
+- **M1**: Fix auth
+- **M2**: Fix engine
+- **M3**: Fix config
+EOF
+
+RC=0
+python3 "$SCRIPT_DIR/../scripts/meta-metrics-precompute.py" --build-dir "$TMPDIR/build34" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   [ -f "$TMPDIR/build34/.kimi/meta-metrics-precomputed.md" ] && \
+   grep -q "backend_tests_passed: 42" "$TMPDIR/build34/.kimi/meta-metrics-precomputed.md" && \
+   grep -q "security_high: 3" "$TMPDIR/build34/.kimi/meta-metrics-precomputed.md" && \
+   grep -q "lessons_count: 3" "$TMPDIR/build34/.kimi/meta-metrics-precomputed.md" && \
+   grep -q "mutations_count: 3" "$TMPDIR/build34/.kimi/meta-metrics-precomputed.md" && \
+   grep -q "blocker_count: 1" "$TMPDIR/build34/.kimi/meta-metrics-precomputed.md"; then
+    pass
+else
+    fail "meta-metrics-precompute.py did not extract expected metrics"
+fi
+
+# ============================================================================
+# Test 35: meta-metrics-precompute.py — rejects nonexistent build directory
+# ============================================================================
+
+echo -n "TEST: meta-metrics-precompute.py rejects nonexistent directory ... "
+
+RC=0
+python3 "$SCRIPT_DIR/../scripts/meta-metrics-precompute.py" --build-dir "$TMPDIR/nonexistent" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -ne 0 ]; then
+    pass
+else
+    fail "meta-metrics-precompute.py should fail on nonexistent directory"
+fi
+
+# ============================================================================
+# Test 36: meta-metrics-precompute.py — handles empty .kimi directory
+# ============================================================================
+
+echo -n "TEST: meta-metrics-precompute.py handles empty .kimi directory ... "
+
+mkdir -p "$TMPDIR/build36/.kimi"
+
+RC=0
+python3 "$SCRIPT_DIR/../scripts/meta-metrics-precompute.py" --build-dir "$TMPDIR/build36" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   [ -f "$TMPDIR/build36/.kimi/meta-metrics-precomputed.md" ] && \
+   grep -q "Artifacts found" "$TMPDIR/build36/.kimi/meta-metrics-precomputed.md" && \
+   grep "Artifacts found" "$TMPDIR/build36/.kimi/meta-metrics-precomputed.md" | grep -q "0"; then
+    pass
+else
+    fail "meta-metrics-precompute.py did not handle empty .kimi correctly"
+fi
+
+# ============================================================================
 # Summary
 # ============================================================================
 

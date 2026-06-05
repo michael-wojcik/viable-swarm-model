@@ -3462,3 +3462,35 @@ Additionally, the dashboard was never automatically invoked — it only ran when
 **Measured effect**: **Awaiting measurement** — Success criteria: (1) 100% of Tier 2+ builds produce product-brief.md, (2) zero scope-creep BLOCKERs attributed to missing brief in next 3 builds, (3) session-end Check 12 fires zero false positives.
 
 ---
+
+## Mutation R14 — 2026-06-05
+
+**Session**: S5 Orchestrator Iteration — vsm_meta false TBD claims fix
+**File**: `scripts/meta-metrics-precompute.py` (created), `agents/vsm_meta.md`, `hooks/test-automation.sh`
+**Type**: structural
+**Rationale**: The `vsm_meta` agent had a **60% success rate** with declining scores (3, 3, 2). Its primary failure mode was "false TBD claims" — marking metrics as "to be determined" when they were verifiable from build artifacts. This corrupted the cross-build learning loop: inaccurate meta-reports produced invalid hypotheses, wrong mutation scores, and misleading build health data. The agent's workload (read 10+ artifacts, run independent tests, score 12+ agents, write report) exceeded reliable completion bounds. The proven pre-computation pattern (R7–R10) had not been applied to meta-evaluation.
+
+**Expected effect**:
+- Ground-truth metrics are pre-extracted from all `.kimi/` artifacts before vsm_meta runs.
+- vsm_meta reads ONE pre-computed file instead of 10+ individual artifacts.
+- False TBD claims are eliminated — the agent has no excuse for not knowing test counts, security findings, BLOCKER counts, etc.
+- Meta-evaluation success rate improves from 60% to 80%+.
+
+**Files modified**:
+- `scripts/meta-metrics-precompute.py` — Created (240+ lines). Reads `.kimi/*.md` and `.kimi/*.log`, extracts metrics from 10 artifact types (phase4-gate, security-report, foundation/implementation audits, meta-report, process-audit, mutations-applied, lessons, synthesis, pytest log). Handles markdown bold syntax. Outputs structured `.kimi/meta-metrics-precomputed.md`.
+- `agents/vsm_meta.md` — Added "Pre-computed Metrics (READ FIRST)" section. Agents MUST read `meta-metrics-precomputed.md` first and use its values as ground truth. Explicit anti-TBD rule: "Do NOT claim TBD for any metric present in meta-metrics-precomputed.md."
+- `hooks/test-automation.sh` — Added Tests 34–36 verifying metric extraction, directory rejection, and empty build handling.
+
+**Before**:
+- vsm_meta read 10+ artifacts individually, often missing values or running out of context.
+- No ground-truth verification for metrics claimed in meta-report.md.
+- TBD claims went undetected until manual review.
+
+**After**:
+- Metrics are machine-extracted and human-verifiable.
+- vsm_meta focuses on ANALYSIS rather than data extraction.
+- Pre-computed file serves as an audit trail for meta-report accuracy.
+
+**Measured effect**: **Awaiting measurement** — Success criteria: (1) vsm_meta success rate ≥80% in next 3 builds, (2) zero false TBD claims in meta-reports, (3) meta-metrics-precomputed.md present in 100% of builds reaching Phase 8.
+
+---

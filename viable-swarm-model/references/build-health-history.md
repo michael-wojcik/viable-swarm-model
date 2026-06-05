@@ -5,6 +5,39 @@
 
 ---
 
+## 2026-06-05 — S5 Orchestrator Iteration (R14)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) channel failure / S5→S5 evaluation gap**: The `vsm_meta` agent had a **60% success rate** with declining scores (3, 3, 2). Its primary failure mode was "false TBD claims" — the agent marked metrics as "to be determined" when they were verifiable from build artifacts. This corrupted the entire cross-build learning loop: inaccurate meta-reports produced invalid hypotheses, wrong mutation scores, and misleading build health data. The agent's workload (read 10+ artifacts, run independent tests, score 12+ agents, write report) exceeded reliable completion bounds. The proven pre-computation pattern (R7–R10) had not yet been applied to meta-evaluation.
+
+### Change Made
+**Structural mutation R14**: Created `scripts/meta-metrics-precompute.py` and wired it into the vsm_meta agent prompt.
+- `meta-metrics-precompute.py`: Reads all `.kimi/*.md` and `.kimi/*.log` files, extracts ground-truth metrics from 10 artifact types (phase4-gate, security-report, foundation/implementation audits, meta-report, process-audit, mutations-applied, lessons, synthesis, pytest log). Handles markdown bold syntax by stripping `**` before regex extraction. Outputs structured `.kimi/meta-metrics-precomputed.md`.
+- `agents/vsm_meta.md`: Added "Pre-computed Metrics (READ FIRST)" section. vsm_meta MUST read `meta-metrics-precomputed.md` before individual artifacts. Explicit anti-TBD rule: "Do NOT claim TBD for any metric present in this file."
+
+### Test Results
+- `bash hooks/test-automation.sh`: **40 passed, 0 failed** (was 37 passed, 0 failed)
+- New Tests 34–36 verify:
+  - Metric extraction from mock build artifacts (test counts, security findings, BLOCKERs, lessons, mutations)
+  - Rejection of nonexistent build directory
+  - Graceful handling of empty `.kimi/` directory
+
+### Files Modified
+- `viable-swarm-model/scripts/meta-metrics-precompute.py` (created)
+- `viable-swarm-model/agents/vsm_meta.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 1 (Implementation) / S5→S1 channel**: The `vsm_backend_tester` (65% success) and `vsm_frontend_tester` (60% success) still time out in Tier 2+ builds despite R10's test-split-orchestrator.py. The orchestrator provides a spawn plan, but S5 must still manually execute it under time pressure. A more radical fix would be to automate the orchestrator invocation within SKILL.md Phase 4, or to add a session-end.sh check that verifies `.kimi/test-spawn-plan.md` exists for Tier 2+ builds. Alternatively, **System 4→S4 channel**: The `vsm_variety_engineer` and `vsm_learning_curator` now have pre-computation scripts (R8, R7) but still have **0% empirical exercise rate** — no `variety-assessment.md` or `mutation-portfolio-review.md` artifacts exist in any build directory. The session-end checks flag these omissions, but no agent is actually spawned to produce them. The organism still lacks autonomous curation.
+
+---
+
 ## 2026-06-05 — S5 Orchestrator Iteration (R13)
 
 ### Diagnosed Constraint

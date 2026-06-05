@@ -279,6 +279,7 @@
 | R8 | 2026-06-05 S5 | structural | organism-vitals.py + variety engineer auto-invocation | effective | 1 | 5 | — | — | — |
 | R9 | 2026-06-05 S5 | structural | process-compliance-precompute.py + process auditor workload reducer | effective | 1 | 5 | — | — | — |
 | R10 | 2026-06-05 S5 | structural | test-split-orchestrator.py + tester concrete split tool | effective | 1 | 5 | — | — | — |
+| R14 | 2026-06-05 S5 | structural | meta-metrics-precompute.py + vsm_meta anti-TBD guardrail | probation | 0 | — | — | — | S5 iter |
 | R13 | 2026-06-05 S5 | structural | vsm_product mandatory Tier 2+ + product brief guardrail | probation | 0 | — | — | — | S5 iter |
 | R11 | 2026-06-05 S5 | structural | session-end security gate bypass detection (Check 11) | effective | 1 | 5 | — | — | — |
 | R12 | 2026-06-05 S5 | structural | integration-test-closeout.py + closeout pipeline integration test | probation | 0 | — | — | — | S5 iter
