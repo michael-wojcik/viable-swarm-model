@@ -295,3 +295,4 @@
 | R24 | 2026-06-05 S5 | structural | Test target map pre-computation for tester agents | probation | 0 | — | — | — | S5 iter
 | R25 | 2026-06-05 S5 | structural | Learning curator + variety engineer Mode A/B workflow | probation | 0 | — | — | — | S5 iter
 | R26 | 2026-06-05 S5 | structural | Stop-verifier content-quality gates for meta-system agents | probation | 0 | — | — | — | S5 iter
+| R27 | 2026-06-05 S5 | structural | SKILL.md pre-computation instructions before meta-system agent spawn | probation | 0 | — | — | — | S5 iter

@@ -3884,3 +3884,34 @@ exit 0
 ```
 
 **Measured effect**: **AWAITING_BUILD**
+
+---
+
+## Mutation R27 — 2026-06-05
+
+**Session**: S5 Orchestrator Iteration R27
+**File**: `SKILL.md`, `hooks/test-automation.sh`
+**Type**: structural
+**Rationale**: Despite R22 and R23 creating Mode A/B pre-computation-primary workflows for `vsm_process_auditor` and `vsm_meta`, both agents still had 60% success rates with timeout as the primary failure mode. Root cause analysis: S5 was NOT instructed to run the pre-computation scripts BEFORE spawning these agents. The agents fell into Mode B (generate pre-computation themselves, then analyze), which consumed 30-50% of their available time and caused timeouts. This is the exact same failure mode that R25 fixed for the learning curator and variety engineer — the pre-computation scripts existed but the protocol didn't mandate their execution before agent spawn.
+
+**Expected effect**: In the next build, S5 will run `meta-metrics-precompute.py` before spawning `vsm_meta`, and `process-compliance-precompute.py` before spawning `vsm_process_auditor`. Both agents will enter Mode A (read pre-computed data, trust it, spot-check 3 items, write report) instead of Mode B (generate data, then analyze). This should improve their success rates from 60% to 80%+, matching the improvement seen when other agents adopted the Mode A/B pattern.
+
+**Before**:
+```markdown
+**Step 8b-1: Spawn `vsm_meta` ([TIER C: prompt-enforced] MANDATORY — HARD BLOCK)**
+S5 MUST spawn `vsm_meta` before proceeding.
+```
+
+**After**:
+```markdown
+**Step 8b-1: Pre-compute meta metrics, then spawn `vsm_meta` ([TIER C: prompt-enforced] MANDATORY — HARD BLOCK)**
+Before spawning `vsm_meta`, run the pre-computation script so the agent enters
+Mode A (fast) instead of Mode B (generates data itself, risking timeout):
+```bash
+python3 ~/vsm/viable-swarm-model/scripts/meta-metrics-precompute.py <BUILD_DIR>
+```
+```
+
+(Same pattern applied to process auditor in Step 8b-2 and variety engineer in Phase 0 Step 15.)
+
+**Measured effect**: **AWAITING_BUILD**

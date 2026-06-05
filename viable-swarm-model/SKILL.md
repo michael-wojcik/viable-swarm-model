@@ -635,6 +635,17 @@ Main agent (S5) performs:
      requisite variety it lacks.
    Log the tier and the agent ceiling in `plan.md`.
 15. **Variety Engineer Spawn ([TIER C: prompt-enforced] MANDATORY — 2026-06-04 structural mutation)**:
+    **Step 15a — Pre-compute organism vitals BEFORE spawning**:
+    Run the pre-computation script so the variety engineer enters Mode A (fast)
+    instead of Mode B (generates data itself, risking timeout):
+    ```bash
+    python3 ~/vsm/viable-swarm-model/scripts/organism-vitals.py --build-dir <BUILD_DIR>
+    ```
+    This generates `.kimi/organism-vitals.md` with all health metrics, algedonic
+    signals, and spot-check guidance. The agent reads this file first and trusts
+    the quantitative data.
+
+    **Step 15b — Spawn the agent**:
     Spawn `vsm_variety_engineer` subagent. This S4* agent performs proactive
     environmental scanning BEFORE the build begins. It reads:
     - `references/mutation-state.md` — mutation portfolio health
@@ -1364,12 +1375,31 @@ performance. This agent produces a standalone `.kimi/meta-report.md` with indepe
 test verification, agent performance scores, rule effectiveness ratings, and
 process bottleneck analysis.
 
-**Step 8b-1: Spawn `vsm_meta` ([TIER C: prompt-enforced] MANDATORY — HARD BLOCK)**
+**Step 8b-1: Pre-compute meta metrics, then spawn `vsm_meta` ([TIER C: prompt-enforced] MANDATORY — HARD BLOCK)**
+Before spawning `vsm_meta`, run the pre-computation script so the agent enters
+Mode A (fast) instead of Mode B (generates data itself, risking timeout):
+```bash
+python3 ~/vsm/viable-swarm-model/scripts/meta-metrics-precompute.py <BUILD_DIR>
+```
+This generates `.kimi/meta-metrics-precomputed.md` with extracted test counts,
+security findings, audit blockers, compliance score, and integration status.
+The agent reads this file first and trusts the quantitative data.
+
 S5 MUST spawn `vsm_meta` before proceeding. `vsm_meta` produces the per-build
 `.kimi/meta-report.md`. S5 then synthesizes cross-build insights and appends them to
 `~/vsm/viable-swarm-model/references/meta-reflection.md`.
 
-**Step 8b-2: Spawn `vsm_process_auditor` ([TIER B: shell-verified] MANDATORY — HARD BLOCK)**
+**Step 8b-2: Pre-compute compliance metrics, then spawn `vsm_process_auditor` ([TIER B: shell-verified] MANDATORY — HARD BLOCK)**
+Before spawning `vsm_process_auditor`, run the pre-computation script so the
+agent enters Mode A (fast) instead of Mode B (generates data itself, risking
+timeout):
+```bash
+python3 ~/vsm/viable-swarm-model/scripts/process-compliance-precompute.py <BUILD_DIR>
+```
+This generates `.kimi/process-compliance-precomputed.md` with scored compliance
+checks and spot-check guidance mapped to specific artifacts. The agent reads
+this file first and trusts the quantitative findings.
+
 After `vsm_meta` completes, spawn `vsm_process_auditor` to audit process
 compliance. This agent reads `.kimi/` artifacts and produces
 `.kimi/process-audit.md` with a compliance score and any process violations

@@ -805,3 +805,37 @@ Alternatively, **System 4→S4 channel**: The organism now has 4 pre-computation
 
 ### Next Highest-Leverage Constraint
 **System 1 (Implementation) / S5→S1 channel**: The `vsm_backend_tester` (65% success) and `vsm_frontend_tester` (60% success) still time out in Tier 2+ builds. R24's test target map pre-computation was a structural improvement, but the empirical tester success rates haven't been measured in a real build since R24. If the target map doesn't improve rates, the next frontier is a `tester-patterns.md` skill with copy-pasteable test templates, or reducing tester agent task size further (current max 300 lines). Alternatively, **System 3 (Audit/Control)**: The `vsm_process_auditor` and `vsm_meta` both have 60% success rates with timeout as primary failure mode — R22/R23 Mode A/B workflows should improve this, but haven't been empirically validated.
+
+---
+
+## 2026-06-05 — S5 Orchestrator Iteration (R27)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S3 and S5→S5 channels — pre-computation invocation gap**: Despite R22 and R23 restructuring `vsm_process_auditor` and `vsm_meta` with Mode A/B pre-computation-primary workflows, both agents still had **60% success rates** with timeout as the primary failure mode. Root cause: S5 was **not instructed to run the pre-computation scripts before spawning these agents**. The agents fell into Mode B (generate pre-computation themselves, then analyze), consuming 30-50% of available time and timing out. This is the exact same gap that R25 closed for the learning curator and variety engineer — pre-computation infrastructure existed but the protocol didn't mandate its execution at the right time.
+
+### Change Made
+**Structural mutation R27**: Added SKILL.md pre-computation instructions before meta-system agent spawn.
+- **Phase 0 Step 15a**: Before spawning `vsm_variety_engineer`, S5 MUST run `organism-vitals.py` to generate `.kimi/organism-vitals.md`. This ensures the agent enters Mode A instead of Mode B.
+- **Phase 8b Step 8b-1**: Before spawning `vsm_meta`, S5 MUST run `meta-metrics-precompute.py` to generate `.kimi/meta-metrics-precomputed.md`. The agent reads this first and trusts the quantitative data.
+- **Phase 8b Step 8b-2**: Before spawning `vsm_process_auditor`, S5 MUST run `process-compliance-precompute.py` to generate `.kimi/process-compliance-precomputed.md`. The agent reads this first and trusts the scored findings.
+- All three instructions include the rationale: "Mode A (fast) instead of Mode B (generates data itself, risking timeout)."
+- `hooks/test-automation.sh`: Added Tests 73–75 verifying the instructions exist in SKILL.md.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **80 passed, 0 failed** (was 77 passed, 0 failed)
+- Test 73: SKILL.md Phase 0 requires organism-vitals.py before variety engineer spawn
+- Test 74: SKILL.md Phase 8b requires meta-metrics-precompute.py before vsm_meta spawn
+- Test 75: SKILL.md Phase 8b requires process-compliance-precompute.py before process auditor spawn
+
+### Files Modified
+- `viable-swarm-model/SKILL.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 1 (Implementation) / S5→S1 channel**: The `vsm_backend_tester` (65%) and `vsm_frontend_tester` (60%) still have the lowest success rates. R24's test target map, R15's spawn plan, and R10's test-split-orchestrator have all been deployed, but the agents still time out. The root cause may now be that the actual test-writing task itself (generating test code) exceeds the agent's capacity within 300 lines. A `tester-patterns.md` stack skill with copy-pasteable FastAPI/React test templates could reduce cognitive overhead per test. Alternatively, **System 3→S1 channel**: `vsm_security` was bypassed in FB30 (manual audit used instead). Session-end.sh Check 11 detects this as a WARNING but stop-verifier.sh has no hard block. Adding a security hard block (analogous to R26's content-quality gates) could prevent vulnerability slip-through.

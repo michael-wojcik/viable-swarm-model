@@ -3433,6 +3433,61 @@ else
 fi
 
 # ============================================================================
+# Test 73: SKILL.md Phase 0 instructs pre-computation before variety engineer (R27)
+# ============================================================================
+
+echo -n "TEST: SKILL.md Phase 0 requires organism-vitals.py before variety engineer ... "
+
+SKILL="$SCRIPT_DIR/../SKILL.md"
+if [[ ! -f "$SKILL" ]]; then
+    fail "SKILL.md not found"
+else
+    if grep -q "organism-vitals.py" "$SKILL" && \
+       grep -q "Step 15a.*Pre-compute organism vitals BEFORE spawning" "$SKILL" && \
+       grep -q "variety engineer enters Mode A" "$SKILL"; then
+        pass
+    else
+        fail "SKILL.md missing Phase 0 pre-computation instruction for variety engineer"
+    fi
+fi
+
+# ============================================================================
+# Test 74: SKILL.md Phase 8b instructs pre-computation before vsm_meta (R27)
+# ============================================================================
+
+echo -n "TEST: SKILL.md Phase 8b requires meta-metrics-precompute.py before vsm_meta ... "
+
+if [[ ! -f "$SKILL" ]]; then
+    fail "SKILL.md not found"
+else
+    if grep -q "meta-metrics-precompute.py" "$SKILL" && \
+       grep -q "Step 8b-1.*Pre-compute meta metrics, then spawn" "$SKILL" && \
+       grep -q "agent enters Mode A" "$SKILL"; then
+        pass
+    else
+        fail "SKILL.md missing Phase 8b pre-computation instruction for vsm_meta"
+    fi
+fi
+
+# ============================================================================
+# Test 75: SKILL.md Phase 8b instructs pre-computation before process auditor (R27)
+# ============================================================================
+
+echo -n "TEST: SKILL.md Phase 8b requires process-compliance-precompute.py before auditor ... "
+
+if [[ ! -f "$SKILL" ]]; then
+    fail "SKILL.md not found"
+else
+    if grep -q "process-compliance-precompute.py" "$SKILL" && \
+       grep -q "Step 8b-2.*Pre-compute compliance metrics, then spawn" "$SKILL" && \
+       grep -q "agent enters Mode A" "$SKILL"; then
+        pass
+    else
+        fail "SKILL.md missing Phase 8b pre-computation instruction for process auditor"
+    fi
+fi
+
+# ============================================================================
 # Summary
 # ============================================================================
 
