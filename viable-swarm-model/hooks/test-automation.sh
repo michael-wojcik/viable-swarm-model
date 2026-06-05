@@ -2672,6 +2672,130 @@ else
 fi
 
 # ============================================================================
+# Test 58: vsm_meta.md contains Mode A/B workflow (R23)
+# ============================================================================
+
+echo -n "TEST: vsm_meta.md has Mode A/B meta-report writer workflow ... "
+
+META_AGENT="$SCRIPT_DIR/../agents/vsm_meta.md"
+if [[ ! -f "$META_AGENT" ]]; then
+    fail "vsm_meta.md not found"
+else
+    if grep -q "Mode A: Pre-computed metrics EXIST" "$META_AGENT" && \
+       grep -q "Mode B: Pre-computed metrics MISSING" "$META_AGENT" && \
+       grep -q "maximum 4 spot-checks" "$META_AGENT" && \
+       grep -q "Step 2 — TRUST" "$META_AGENT" && \
+       grep -q "SKIP independent test re-runs" "$META_AGENT" && \
+       grep -q "WRITE incrementally" "$META_AGENT"; then
+        pass
+    else
+        fail "vsm_meta.md missing Mode A/B workflow or spot-check limits"
+    fi
+fi
+
+# ============================================================================
+# Test 59: meta-metrics-precompute.py produces Build Health at a Glance (R23)
+# ============================================================================
+
+echo -n "TEST: meta-metrics-precompute.py outputs Build Health at a Glance ... "
+
+mkdir -p "$TMPDIR/build59/.kimi"
+
+# Create mock artifacts with rich data (matching extractor expected formats)
+cat > "$TMPDIR/build59/.kimi/phase4-gate.md" << 'EOF'
+# Phase 4 Gate
+Backend tests: 10/10 passed
+Frontend tests: 8/8 passed
+Frontend build: PASS
+Import sanity: PASS
+EOF
+
+cat > "$TMPDIR/build59/.kimi/pytest-output.log" << 'EOF'
+============================= test session starts ==============================
+10 passed, 0 failed, 0 errors in 2.34s
+EOF
+
+cat > "$TMPDIR/build59/.kimi/security-report.md" << 'EOF'
+# Security Report
+BLOCKER count: 0
+CRITICAL count: 1
+HIGH count: 2
+Verdict: ISSUES
+EOF
+
+cat > "$TMPDIR/build59/.kimi/foundation-audit.md" << 'EOF'
+# Foundation Audit
+- **BLOCKER**: Missing auth
+- **ISSUE**: Slow query
+EOF
+
+cat > "$TMPDIR/build59/.kimi/implementation-audit.md" << 'EOF'
+# Implementation Audit
+- **BLOCKER**: Race condition
+EOF
+
+cat > "$TMPDIR/build59/.kimi/process-audit.md" << 'EOF'
+# Process Audit
+Compliance Score: 85 / 100
+EOF
+
+cat > "$TMPDIR/build59/.kimi/mutations-applied.md" << 'EOF'
+# Mutations Applied
+- **M1**: Applied
+- **M2**: Applied
+EOF
+
+cat > "$TMPDIR/build59/.kimi/lessons.md" << 'EOF'
+# Lessons
+## Lesson 1
+Found something.
+## Lesson 2
+Fixed it.
+EOF
+
+cat > "$TMPDIR/build59/.kimi/synthesis-integration.md" << 'EOF'
+# Synthesis Integration
+Status: PASS
+EOF
+
+python3 "$SCRIPT_DIR/../scripts/meta-metrics-precompute.py" --build-dir "$TMPDIR/build59" >/dev/null 2>&1
+
+if [[ -f "$TMPDIR/build59/.kimi/meta-metrics-precomputed.md" ]]; then
+    MM_OUTPUT=$(cat "$TMPDIR/build59/.kimi/meta-metrics-precomputed.md")
+    if echo "$MM_OUTPUT" | grep -q "Build Health at a Glance" && \
+       echo "$MM_OUTPUT" | grep -q "backend_tests:" && \
+       echo "$MM_OUTPUT" | grep -q "security_findings:" && \
+       echo "$MM_OUTPUT" | grep -q "compliance_score:"; then
+        pass
+    else
+        fail "meta-metrics output missing health summary or key fields"
+    fi
+else
+    fail "meta-metrics-precomputed.md not generated"
+fi
+
+# ============================================================================
+# Test 60: meta-metrics-precompute.py health summary values accurate (R23)
+# ============================================================================
+
+echo -n "TEST: meta-metrics-precompute.py health summary values accurate ... "
+
+MM_OUTPUT=$(cat "$TMPDIR/build59/.kimi/meta-metrics-precomputed.md")
+
+# Verify specific values from the health summary
+if echo "$MM_OUTPUT" | grep -q "backend_tests: 10/10 passed" && \
+   echo "$MM_OUTPUT" | grep -q "pytest: 10 passed" && \
+   echo "$MM_OUTPUT" | grep -q "security_findings: 3" && \
+   echo "$MM_OUTPUT" | grep -q "audit_blockers: 2" && \
+   echo "$MM_OUTPUT" | grep -q "compliance_score: 85/100" && \
+   echo "$MM_OUTPUT" | grep -q "mutations_count: 2" && \
+   echo "$MM_OUTPUT" | grep -q "lessons_count: 2"; then
+    pass
+else
+    fail "health summary values do not match expected"
+fi
+
+# ============================================================================
 # Summary
 # ============================================================================
 

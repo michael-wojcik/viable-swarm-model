@@ -3742,3 +3742,40 @@ The pre-computation script now includes a "Spot-Check Guidance" table that maps 
 **Measured effect**: **Awaiting measurement** — Success criteria: (1) Process auditor success rate improves from 60% to ≥75% in next 3 builds, (2) No increase in false negatives (process violations missed due to over-trusting pre-computation), (3) Agent completes within timeout limits when pre-computed data exists.
 
 ---
+
+## Mutation R23 — 2026-06-05
+
+**Session**: S5 Orchestrator Iteration R23
+**File**: `agents/vsm_meta.md`, `scripts/meta-metrics-precompute.py`
+**Type**: structural
+**Rationale**: The `vsm_meta` agent has a **60% success rate** with declining scores (3, 3, 2) and a primary failure mode of "false TBD claims." R14 created `meta-metrics-precompute.py` to extract ground-truth metrics from build artifacts, but the agent prompt still instructed it to (1) read ALL 15+ build artifacts and skill references independently, (2) run the full test suite independently (5-10 minutes), and (3) write the 200+ line report from scratch. The pre-computation eliminated false TBD for metrics it covered, but the agent's total workload (reading + testing + writing) still exceeded reliable completion bounds. The 243-line agent prompt + 15+ file reads + 4 test commands + comprehensive report writing = guaranteed timeout on Tier 2+ builds.
+
+**Expected effect**: vsm_meta agent now operates in TWO modes:
+- **Mode A** (pre-computed metrics exist): Read pre-computed report → TRUST quantitative data → SKIP independent test re-runs if test metrics present → spot-check only 4 artifacts for qualitative depth → WRITE report incrementally starting with pre-computed scaffold.
+- **Mode B** (missing): Generate pre-computation → read output → follow Mode A.
+
+The pre-computation script now includes a **"Build Health at a Glance"** summary section with consolidated key metrics (test counts, security findings, audit blockers, compliance score, integration status, mutations/lessons counts). This allows the agent to start writing the report immediately without reading individual artifacts.
+
+The **anti-TBD rule was strengthened**: "Using pre-computed data is NOT 'trusting upstream claims' — it is reading ground-truth extracted directly from build artifacts."
+
+**Before**:
+- Agent prompt: "Read all build artifacts" (15+ files)
+- Agent prompt: "Independent test verification (MANDATORY)" — full test suite re-run
+- Agent prompt: "Do NOT trust upstream claims"
+- Pre-computation: Artifact-by-artifact metric extraction, no consolidated summary
+
+**After**:
+- Agent prompt: "Spot-check key artifacts (maximum 4)"
+- Agent prompt: "SKIP independent test re-runs" when pre-computed test metrics exist
+- Agent prompt: "WRITE incrementally" — start with pre-computed scaffold, add qualitative commentary
+- Agent prompt: Explicit Mode A / Mode B workflow
+- Pre-computation: "Build Health at a Glance" consolidated summary + per-artifact detail
+
+**Files modified**:
+- `agents/vsm_meta.md` — Restructured as meta-report writer (Mode A/B, conditional test verification, incremental writing)
+- `scripts/meta-metrics-precompute.py` — Added `_health_summary` computation and "Build Health at a Glance" section
+- `hooks/test-automation.sh` — Tests 58-60 verify Mode A/B workflow, health summary presence, and value accuracy
+
+**Measured effect**: **Awaiting measurement** — Success criteria: (1) vsm_meta success rate improves from 60% to ≥75% in next 3 builds, (2) No increase in false negatives (missed process violations due to skipped test re-runs), (3) Agent completes within timeout limits when pre-computed data exists.
+
+---

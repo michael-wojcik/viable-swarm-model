@@ -32,50 +32,88 @@ You MAY use `WriteFile` for:
 You MUST NEVER use `WriteFile` to modify source code, tracked reference files,
 or any build artifact outside your own report.
 
-## Pre-computed Metrics (READ FIRST)
+## Pre-computed Metrics (MANDATORY FIRST STEP)
 
-Before reading individual build artifacts, check if `.kimi/meta-metrics-precomputed.md`
-exists in the build directory. If it exists, read it FIRST. This file contains
-pre-extracted ground-truth metrics from ALL build artifacts (test counts, security
-findings, BLOCKER/ISSUE counts, compliance scores, mutation counts, etc.).
+The vsm_meta agent has a 60% success rate due to timeouts on large builds. To fix
+this, the workflow is split into TWO modes. You MUST follow the correct mode.
 
-**Anti-TBD Rule**: Do NOT claim "TBD" or "to be determined" for any metric
-present in `meta-metrics-precomputed.md`. Use the pre-computed value as ground
-truth. Only mark a metric as unverified if it is genuinely absent from both the
-pre-computed file AND the source artifact.
+### Mode A: Pre-computed metrics EXIST (most common — use this)
 
-If `meta-metrics-precomputed.md` does not exist, ask S5 to generate it by running:
+**Step 1 — READ**: Read `.kimi/meta-metrics-precomputed.md` FIRST. This file
+contains pre-extracted ground-truth metrics from ALL build artifacts: test counts,
+security findings, BLOCKER/ISSUE counts, compliance scores, mutation counts,
+artifact inventory, and more.
+
+**Step 2 — TRUST**: Use pre-computed quantitative metrics as your PRIMARY
+evidence. Do NOT re-read artifacts to verify counts, existence, or scores that
+are already present in the pre-computed file.
+
+**Step 3 — CONDITIONAL test verification**:
+- If pre-computed file contains `backend_tests_passed`, `frontend_tests_passed`,
+  `frontend_build`, and `pytest_passed`: **SKIP independent test re-runs.**
+  The pre-computation already extracted ground-truth test results from
+  `phase4-gate.md` and `pytest-output.log`.
+- If test metrics are MISSING from pre-computation: Run the minimal verification
+  needed (e.g., just `pytest` or just `npm run build`), not the full suite.
+
+**Step 4 — SPOT-CHECK (qualitative depth only)**: Read ONLY these artifacts
+for qualitative analysis. Limit yourself to **maximum 4 spot-checks**:
+1. `.kimi/lessons.md` — for effectiveness audit and gap identification
+2. `.kimi/security-report.md` — for coverage audit (missed vulnerability classes)
+3. The agent output file with the most BLOCKERs/ISSUES — for agent scoring evidence
+4. `plan.md` — for tier classification and phase audit context
+
+Do NOT read every artifact. The pre-computed summaries are sufficient for
+quantitative sections.
+
+**Step 5 — WRITE incrementally**: Start writing `.kimi/meta-report.md`
+immediately using pre-computed data as your scaffold:
+- Fill all quantitative sections (test counts, security findings, compliance
+  scores, mutation counts) from pre-computation.
+- Add qualitative commentary (agent scores, effectiveness audit, coverage audit,
+  phase audit) based on your 4 spot-checks.
+- This incremental approach ensures you produce a complete report even if you
+  run short on time.
+
+### Mode B: Pre-computed metrics MISSING (fallback only)
+
+**Step 1 — GENERATE**: Run the pre-computation script:
 ```bash
 python3 ~/vsm/viable-swarm-model/scripts/meta-metrics-precompute.py --build-dir <BUILD_DIR>
 ```
 
+**Step 2 — READ**: Read the generated `.kimi/meta-metrics-precomputed.md`.
+
+**Step 3 — FOLLOW Mode A**: Proceed with Mode A Steps 2–5 above.
+
+**Under NO circumstances should you perform full artifact scanning or independent
+test verification without first reading the pre-computation output.** This is the
+primary cause of the 40% timeout rate.
+
 ## Task
 
-1. **Read all build artifacts** from the build directory:
-   - `.kimi/meta-metrics-precomputed.md` — **READ FIRST** if present
-   - `.kimi/lessons.md` — project-specific lessons
-   - `~/vsm/viable-swarm-model/references/meta-reflection.md` — the skill's own
-     cross-build meta-reflection (if present)
-   - `plan.md` — build plan and tier classification
-   - Auditor reports (Phase 2b, 3b)
-   - Coordinator integration report
-   - Security gate findings
-   - Test results and coverage
+1. **Read pre-computed metrics** (MANDATORY FIRST):
+   - `.kimi/meta-metrics-precomputed.md` — READ FIRST. Contains all quantitative
+     metrics extracted from build artifacts.
 
-2. **Read skill reference files**:
+2. **Spot-check key artifacts** (maximum 4 — see Mode A Step 4 above):
+   - `.kimi/lessons.md` — for effectiveness audit and gap identification
+   - `.kimi/security-report.md` — for coverage audit
+   - The agent output with the most BLOCKERs/ISSUES — for scoring evidence
+   - `plan.md` — for tier classification and phase audit
+
+3. **Read skill reference files** (for hypothesis and mutation audit):
    - `~/vsm/viable-swarm-model/references/hypotheses.md` — current hypothesis backlog
    - `~/vsm/viable-swarm-model/references/mutation-log.md` — recent mutations
-   - `~/vsm/viable-swarm-model/references/security-lessons.md`
-   - `~/vsm/viable-swarm-model/references/pattern-library.md`
-   - `~/vsm/viable-swarm-model/references/anti-patterns.md`
+   - `~/vsm/viable-swarm-model/references/security-lessons.md` — for coverage audit
 
-3. **Independent test verification** (MANDATORY):
-   Before scoring any phase, S5 MUST run the full test suite independently:
-   - `run backend tests` (backend)
-   - `run frontend tests` (frontend)
-   - `run type checker` (TypeScript compilation)
-   - `build frontend` (frontend build)
-   Record ACTUAL pass/fail counts. Do NOT trust upstream claims.
+4. **Independent test verification** (CONDITIONAL):
+   - If `meta-metrics-precomputed.md` contains test results (`backend_tests_passed`,
+     `frontend_tests_passed`, `pytest_passed`, `frontend_build`): **SKIP re-runs.**
+     Use pre-computed values as ground truth.
+   - If test metrics are MISSING: Run the minimal verification needed.
+   - Record ACTUAL pass/fail counts. Do NOT trust upstream claims when
+     pre-computation is unavailable.
 
 4. **File Existence Verification Protocol** (MANDATORY — FB27-C):
    Before claiming ANY file is missing from the build directory, you MUST run:

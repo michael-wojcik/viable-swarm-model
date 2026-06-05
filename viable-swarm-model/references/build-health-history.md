@@ -5,6 +5,41 @@
 
 ---
 
+## 2026-06-05 — S5 Orchestrator Iteration (R23)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 evaluation channel**: The `vsm_meta` agent had a **60% success rate** with declining scores (3, 3, 2). R14 created `meta-metrics-precompute.py` to extract ground-truth metrics, but the agent prompt still instructed it to read ALL 15+ build artifacts and skill references independently, run the full test suite (5-10 minutes), and write a 200+ line report from scratch. The pre-computation eliminated false TBD claims for metrics it covered, but the agent's total workload (15+ file reads + 4 test commands + comprehensive report writing) still exceeded reliable completion bounds. The agent was a data gatherer, not a report writer.
+
+### Change Made
+**Structural mutation R23**: Restructured `vsm_meta.md` as a meta-report writer with Mode A/B workflow.
+- **Mode A** (pre-computed metrics exist): Agent reads pre-computed report, TRUSTs quantitative data, SKIPs independent test re-runs when test metrics are present, spot-checks only 4 artifacts for qualitative depth, and writes the report incrementally starting with pre-computed data as scaffold.
+- **Mode B** (missing): Generate pre-computation, then follow Mode A.
+- Strengthened anti-TBD rule: "Using pre-computed data is NOT 'trusting upstream claims' — it is reading ground-truth extracted directly from build artifacts."
+- Updated `meta-metrics-precompute.py` with "Build Health at a Glance" consolidated summary section (test counts, security findings, audit blockers, compliance score, integration status, mutations/lessons counts).
+- `hooks/test-automation.sh`: Added Tests 58–60.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **65 passed, 0 failed** (was 62 passed, 0 failed)
+- Test 58: vsm_meta.md contains Mode A/Mode B workflow, conditional test verification, incremental writing, and spot-check limit
+- Test 59: meta-metrics-precompute.py outputs "Build Health at a Glance" with consolidated key metrics
+- Test 60: Health summary values accurate — backend_tests 10/10, pytest 10 passed, security_findings 3, audit_blockers 2, compliance_score 85/100, mutations_count 2, lessons_count 2
+
+### Files Modified
+- `viable-swarm-model/agents/vsm_meta.md`
+- `viable-swarm-model/scripts/meta-metrics-precompute.py`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 1 (Implementation) / S5→S1 channel**: The `vsm_backend_tester` (65% success) and `vsm_frontend_tester` (60% success) consistently time out in Tier 2+ builds. R10's `test-split-orchestrator.py` and R15's spawn plan compliance are structural improvements, but the agents still time out. The root cause may be that the agents spend excessive time reading source code to understand what to test. A `test-target-map.py` script that analyzes the codebase and outputs "which functions/endpoints need tests" could eliminate this discovery phase. Alternatively, **System 4→S4 channel**: The `vsm_learning_curator` and `vsm_variety_engineer` still have **0% empirical exercise rate**. Pre-computation scripts exist (R7, R8, R18, R19) but the agents themselves are never spawned. The organism cannot autonomously promote mutations or detect environmental drift.
+
+---
+
 ## 2026-06-05 — S5 Orchestrator Iteration (R22)
 
 ### Diagnosed Constraint

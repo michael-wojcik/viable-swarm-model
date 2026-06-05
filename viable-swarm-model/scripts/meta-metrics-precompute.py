@@ -237,9 +237,17 @@ def generate_report(build_dir: Path, all_metrics: dict) -> str:
         lines.append(f'- `{name}`')
     lines.append('')
 
+    # Health summary section for quick meta-agent overview
+    if '_health_summary' in all_metrics:
+        lines.append('## Build Health at a Glance')
+        lines.append('')
+        for metric_name, value in sorted(all_metrics['_health_summary'].items()):
+            lines.append(f'- {metric_name}: {value}')
+        lines.append('')
+
     # For each extractor that produced data, add a section
     for key in sorted(all_metrics.keys()):
-        if key in ('artifact_count', 'artifacts_present', 'errors'):
+        if key in ('artifact_count', 'artifacts_present', 'errors', '_health_summary'):
             continue
         if not isinstance(all_metrics[key], dict):
             continue
@@ -306,6 +314,39 @@ def main():
                     all_metrics[filename.replace('.md', '').replace('.log', '')] = extracted
             except Exception as e:
                 all_metrics.setdefault('errors', []).append(f"{filename}: {e}")
+
+    # Build a quick health summary for the meta agent
+    summary = {}
+    # Tests
+    p4g = all_metrics.get('phase4-gate', {})
+    pytest = all_metrics.get('pytest-output', {})
+    summary['backend_tests'] = f"{p4g.get('backend_tests_passed', '?')}/{p4g.get('backend_tests_total', '?')} passed"
+    summary['frontend_tests'] = f"{p4g.get('frontend_tests_passed', '?')}/{p4g.get('frontend_tests_total', '?')} passed"
+    summary['pytest'] = f"{pytest.get('pytest_passed', '?')} passed"
+    summary['frontend_build'] = p4g.get('frontend_build', 'N/A')
+    # Security
+    sec = all_metrics.get('security-report', {})
+    sec_total = sum(sec.get(f'security_{l.lower()}', 0) for l in ['BLOCKER', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'])
+    summary['security_findings'] = sec_total
+    summary['security_verdict'] = sec.get('security_verdict', 'N/A')
+    # Audit
+    fa = all_metrics.get('foundation-audit', {})
+    ia = all_metrics.get('implementation-audit', {})
+    summary['audit_blockers'] = fa.get('blocker_count', 0) + ia.get('blocker_count', 0)
+    summary['audit_issues'] = fa.get('issue_count', 0) + ia.get('issue_count', 0)
+    # Compliance
+    pa = all_metrics.get('process-audit', {})
+    summary['compliance_score'] = f"{pa.get('compliance_score', 'N/A')}/100"
+    # Integration
+    syn = all_metrics.get('synthesis-integration', {})
+    summary['integration_status'] = syn.get('integration_status', 'N/A')
+    # Mutations & lessons
+    ma = all_metrics.get('mutations-applied', {})
+    summary['mutations_count'] = ma.get('mutations_count', 0)
+    les = all_metrics.get('lessons', {})
+    summary['lessons_count'] = les.get('lessons_count', 0)
+
+    all_metrics['_health_summary'] = summary
 
     report = generate_report(build_dir, all_metrics)
     output_file.write_text(report, encoding='utf-8')
