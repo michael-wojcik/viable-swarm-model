@@ -1846,6 +1846,233 @@ else
 fi
 
 # ============================================================================
+# Test 47: algedonic-action-plan.py — generates specific actions for algedonics
+# ============================================================================
+
+echo -n "TEST: algedonic-action-plan.py generates specific actions ... "
+
+mkdir -p "$TMPDIR/algedonic-test/.kimi"
+mkdir -p "$TMPDIR/algedonic-test/vsm/viable-swarm-model/references"
+mkdir -p "$TMPDIR/algedonic-test/vsm/vsm-stack-skills"
+
+# Mock mutation-state with many probationary + monitor mutations to trigger algedonic
+cat > "$TMPDIR/algedonic-test/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| **HISTORICAL EFFECTIVE** |
+| H1 | Test | structural | Test | effective | 5 | 5 | — | — | — |
+| **EFFECTIVE** |
+| E1 | Test | append-only | Test | effective | 2 | 5 | — | — | — |
+| **PROBATION** |
+| P01 | Test | structural | Test | probation | 0 | — | — | — | — |
+| P02 | Test | structural | Test | probation | 0 | — | — | — | — |
+| P03 | Test | structural | Test | probation | 0 | — | — | — | — |
+| P04 | Test | structural | Test | probation | 0 | — | — | — | — |
+| P05 | Test | structural | Test | probation | 0 | — | — | — | — |
+| P06 | Test | structural | Test | probation | 0 | — | — | — | — |
+| P07 | Test | structural | Test | probation | 0 | — | — | — | — |
+| P08 | Test | structural | Test | probation | 0 | — | — | — | — |
+| P09 | Test | structural | Test | probation | 0 | — | — | — | — |
+| P10 | Test | structural | Test | probation | 0 | — | — | — | — |
+| P11 | Test | structural | Test | probation | 0 | — | — | — | — |
+| P12 | Test | structural | Test | probation | 0 | — | — | — | — |
+| P13 | Test | structural | Test | probation | 0 | — | — | — | — |
+| P14 | Test | structural | Test | probation | 0 | — | — | — | — |
+| P15 | Test | structural | Test | probation | 0 | — | — | — | — |
+| M1 | Test | refinement | Test | monitor | 3 | 2 | — | — | — |
+| **REMOVED** |
+| R1 | Test | structural | Test | removed | 1 | 1 | — | — | — |
+EOF
+
+# Mock hypotheses with many untested entries to trigger algedonic
+cat > "$TMPDIR/algedonic-test/vsm/viable-swarm-model/references/hypotheses.md" << 'EOF'
+# Hypotheses
+
+## H1: Frontend test
+**Status**: untested
+**Proposed**: 2026-06-01
+**Rationale**: React component bug.
+
+## H2: Backend test
+**Status**: untested
+**Proposed**: 2026-06-01
+**Rationale**: FastAPI router issue.
+
+## H3: Docker test
+**Status**: untested
+**Proposed**: 2026-06-01
+**Rationale**: docker-compose port mismatch.
+
+## H4: Agent test
+**Status**: untested
+**Proposed**: 2026-06-01
+**Rationale**: Subagent YAML config.
+
+## H5: Config test
+**Status**: untested
+**Proposed**: 2026-06-01
+**Rationale**: Vite alias failure.
+
+## H6: Auth test
+**Status**: untested
+**Proposed**: 2026-06-01
+**Rationale**: JWT token bug.
+
+## H7: DB test
+**Status**: untested
+**Proposed**: 2026-06-01
+**Rationale**: SQLite UUID binding.
+
+## H8: GraphQL test
+**Status**: untested
+**Proposed**: 2026-06-01
+**Rationale**: Schema introspection.
+
+## H9: Build test
+**Status**: untested
+**Proposed**: 2026-06-01
+**Rationale**: npm run build gate.
+EOF
+
+# Mock skill registry with many unused skills to trigger algedonic
+cat > "$TMPDIR/algedonic-test/vsm/vsm-stack-skills/SKILL-REGISTRY.md" << 'EOF'
+# Stack Skills Registry
+
+## Pattern Skills
+| Skill | Description | Relevant Agents | Depends On | Status |
+|---|---|---|---|---|
+| python-pitfalls | Python traps | backend_coder | — | Full |
+| go-pitfalls | Go traps | backend_coder | — | Planned |
+| rust-pitfalls | Rust traps | backend_coder | — | Planned |
+| java-pitfalls | Java traps | backend_coder | — | Icebox |
+
+## Pitfall Skills
+| Skill | Language | Status | Description |
+|---|---|---|---|
+| python-pitfalls | Python | Full | Module-level instantiation |
+| go-pitfalls | Go | Planned | Awaiting empirical data |
+| rust-pitfalls | Rust | Planned | Awaiting empirical data |
+| java-pitfalls | Java | Icebox | Placeholder |
+EOF
+
+# Mock skill-effectiveness-log (only python-pitfalls used)
+cat > "$TMPDIR/algedonic-test/vsm/viable-swarm-model/references/skill-effectiveness-log.md" << 'EOF'
+# Skill Effectiveness Log
+| Skill | Builds Used | Avg Score |
+|---|---|---|
+| python-pitfalls | 5 | 4.0 |
+| go-pitfalls | 0 | — |
+| rust-pitfalls | 0 | — |
+| java-pitfalls | 0 | — |
+EOF
+
+# Mock build-health-history
+cat > "$TMPDIR/algedonic-test/vsm/viable-swarm-model/references/build-health-history.md" << 'EOF'
+# Build Health History
+## 2026-06-01 — FB997
+- Score: 3.5/5.0
+EOF
+
+export HOME="$TMPDIR/algedonic-test"
+python3 "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" \
+    --build-dir "$TMPDIR/algedonic-test" 2>/dev/null
+
+OUTPUT="$TMPDIR/algedonic-test/.kimi/algedonic-action-plan.md"
+
+if [ ! -f "$OUTPUT" ]; then
+    fail "algedonic-action-plan.md not created"
+fi
+
+CONTENT=$(cat "$OUTPUT")
+
+# Should mention probationary mutations algedonic (15 > 12)
+if ! echo "$CONTENT" | grep -q "Probationary mutations"; then
+    fail "missing Probationary mutations section"
+fi
+
+# Should suggest demoting M1 (monitor, 3 builds, score 2)
+if ! echo "$CONTENT" | grep -q "M1"; then
+    fail "missing specific demotion action for M1"
+fi
+
+# Should NOT suggest moving H1 to historical (H1 is in historical section)
+if echo "$CONTENT" | grep -q "Move.*historical.*H1"; then
+    fail "falsely suggested moving historical mutation H1"
+fi
+
+# Should mention untested hypotheses algedonic (9 > 7)
+if ! echo "$CONTENT" | grep -q "Untested hypotheses"; then
+    fail "missing Untested hypotheses section"
+fi
+
+# Should suggest exercising unused skills
+if ! echo "$CONTENT" | grep -q "go-pitfalls"; then
+    fail "missing unused skill recommendation"
+fi
+
+pass
+
+# ============================================================================
+# Test 48: algedonic-action-plan.py — no algedonics when all metrics OK
+# ============================================================================
+
+echo -n "TEST: algedonic-action-plan.py no actions when metrics OK ... "
+
+mkdir -p "$TMPDIR/algedonic-test2/.kimi"
+mkdir -p "$TMPDIR/algedonic-test2/vsm/viable-swarm-model/references"
+mkdir -p "$TMPDIR/algedonic-test2/vsm/vsm-stack-skills"
+
+# Minimal mutation state with zero probationary
+cat > "$TMPDIR/algedonic-test2/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| E1 | Test | append-only | Test | effective | 5 | 5 | — | — | — |
+EOF
+
+# No untested hypotheses
+cat > "$TMPDIR/algedonic-test2/vsm/viable-swarm-model/references/hypotheses.md" << 'EOF'
+# Hypotheses
+## H1: Test
+**Status**: confirmed
+EOF
+
+# Skill registry with all skills used
+cat > "$TMPDIR/algedonic-test2/vsm/vsm-stack-skills/SKILL-REGISTRY.md" << 'EOF'
+# Stack Skills Registry
+| Skill | Description | Relevant Agents | Depends On | Status |
+|---|---|---|---|---|
+| python-pitfalls | Python traps | backend_coder | — | Full |
+EOF
+
+cat > "$TMPDIR/algedonic-test2/vsm/viable-swarm-model/references/skill-effectiveness-log.md" << 'EOF'
+# Skill Effectiveness Log
+| Skill | Builds Used | Avg Score |
+|---|---|---|
+| python-pitfalls | 5 | 4.0 |
+EOF
+
+cat > "$TMPDIR/algedonic-test2/vsm/viable-swarm-model/references/build-health-history.md" << 'EOF'
+# Build Health History
+## 2026-06-01 — FB997
+- Score: 4.0/5.0
+EOF
+
+export HOME="$TMPDIR/algedonic-test2"
+python3 "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" \
+    --build-dir "$TMPDIR/algedonic-test2" 2>/dev/null
+
+OUTPUT="$TMPDIR/algedonic-test2/.kimi/algedonic-action-plan.md"
+CONTENT=$(cat "$OUTPUT")
+
+if ! echo "$CONTENT" | grep -q "No algedonic signals triggered"; then
+    fail "expected 'No algedonic signals' when all metrics OK"
+fi
+
+pass
+
+# ============================================================================
 # Summary
 # ============================================================================
 

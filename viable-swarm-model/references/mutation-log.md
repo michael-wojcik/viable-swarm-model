@@ -3619,3 +3619,30 @@ Additionally, the dashboard was never automatically invoked — it only ran when
 **Measured effect**: **Awaiting measurement** — Success criteria: (1) untested count stays ≤ 10 for 3 consecutive S5 iterations, (2) no confirmed hypothesis remains in hypotheses.md > 1 iteration, (3) curator test suite catches any regression in archiving logic.
 
 ---
+
+## Mutation R19 — 2026-06-05
+
+**Session**: S5 Orchestrator Iteration
+**File**: `scripts/algedonic-action-plan.py`, `agents/vsm_variety_engineer.md`
+**Type**: structural
+**Rationale**: The `vsm_variety_engineer` (S4* Environmental Scanning) has a **0% exercise rate** — no `variety-assessment.md` artifacts exist in any build directory. While `organism-vitals.py` (R8) pre-computes health metrics and algedonic signals, there is **no bridge between sensing and acting**. The variety engineer's prompt instructs it to "emit algedonic signals" and "write recommendations," but S5 has no concrete tool for translating those signals into specific actions. When organism-vitals.py reports "CRITICAL: Probationary mutations 21" or "WARNING: Skill variety 0.48," S5 must manually diagnose what to do. This reactive-only pattern wastes S5 cognitive capacity and delays intervention. An action plan generator — following the proven pre-computation pattern (R7-R10-R14-R18) — closes the S4*→S5 channel by producing specific, prioritized, copy-pasteable actions.
+
+**Expected effect**: The vsm_variety_engineer (when spawned) verifies the pre-computed action plan rather than inventing recommendations from scratch. S5 receives concrete next steps: "Demote mutation A7 to ineffective," "Run gym batch on H104/H153 (frontend)," "Exercise go-pitfalls in next build." The organism transitions from reactive (problems discovered manually) to semi-autonomous (problems detected and action-planned automatically, awaiting S5 approval).
+
+**Files modified**:
+- `scripts/algedonic-action-plan.py` — Created. Reads organism state (mutation-state, hypotheses, skill registry, build history), identifies triggered algedonics, and generates SPECIFIC actions per signal: mutation demotion/promotion candidates with IDs and scores; categorized gym batches by domain (frontend/backend/infra/arch); unused skill lists with agent spawn suggestions. Skips HISTORICAL and REMOVED sections to avoid false positives.
+- `hooks/test-automation.sh` — Added Tests 47-48: specific action generation for multi-algedonic state, and no-action output when all metrics OK.
+
+**Before**:
+- organism-vitals.py: Reports generic recommendations ("Trigger portfolio review," "Run gym batch")
+- vsm_variety_engineer: 0% exercise rate; no variety-assessment.md artifacts
+- S5: Manually diagnoses every algedonic signal
+
+**After**:
+- algedonic-action-plan.py: Produces concrete, prioritized action items per algedonic
+- vsm_variety_engineer: Can verify pre-computed plan rather than compute from scratch
+- S5: Receives copy-pasteable action plan; decision-making accelerated
+
+**Measured effect**: **Awaiting measurement** — Success criteria: (1) action plan generated for 100% of builds with algedonics, (2) average time from algedonic detection to S5 action < 5 minutes, (3) zero false-positive historical promotions in action plan output.
+
+---

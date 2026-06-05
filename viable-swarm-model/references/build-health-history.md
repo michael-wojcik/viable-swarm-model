@@ -5,6 +5,40 @@
 
 ---
 
+## 2026-06-05 — S5 Orchestrator Iteration (R19)
+
+### Diagnosed Constraint
+**System 4* (Variety Engineer) / S4*→S5 response channel**: The `vsm_variety_engineer` has a **0% exercise rate** — no `variety-assessment.md` artifacts exist in any build directory. While `organism-vitals.py` (R8) pre-computes health metrics and algedonic signals, there is **no bridge between sensing and acting**. When organism-vitals.py reports "CRITICAL: Probationary mutations 21" or "WARNING: Skill variety 0.48," S5 must manually diagnose what to do. The variety engineer's prompt instructs it to "emit algedonic signals" and "write recommendations," but without a concrete tool for translating signals into specific actions, the S4*→S5 channel is one-way: S4* senses problems, but S5 has no structured input for decision-making. This reactive-only pattern wastes S5 cognitive capacity and delays intervention.
+
+### Change Made
+**Structural mutation R19**: Created `scripts/algedonic-action-plan.py` — an S4*→S5 response bridge.
+- `algedonic-action-plan.py`: Reads organism state (mutation-state.md, hypotheses.md, skill registry, build history), identifies triggered algedonics, and generates SPECIFIC actions per signal:
+  - **Mutation actions**: Lists specific demotion/promotion candidates with IDs, scores, and build counts. Skips HISTORICAL and REMOVED sections to avoid false positives.
+  - **Hypothesis actions**: Categorizes untested hypotheses by domain (frontend/backend/infra/arch) and suggests specific gym batches.
+  - **Variety actions**: Lists unused skills and underutilized agents with concrete spawn suggestions.
+- `agents/vsm_variety_engineer.md`: Implicitly supported — the agent now has a pre-computed action plan to verify rather than inventing recommendations from scratch.
+- `hooks/test-automation.sh`: Added Tests 47–48.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **53 passed, 0 failed** (was 51 passed, 0 failed)
+- Test 47: Action plan generates specific demotion, gym batch, and skill exercise recommendations for multi-algedonic state
+- Test 48: Action plan outputs "No algedonic signals triggered" when all metrics are within thresholds
+
+### Files Modified
+- `viable-swarm-model/scripts/algedonic-action-plan.py` (created)
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 1 (Implementation) / S5→S1 channel**: The `vsm_backend_tester` (65% success) and `vsm_frontend_tester` (60% success) consistently time out in Tier 2+ builds. The "Adaptive Task Sizing" rule (≤500 lines) is **Tier C (prompt-only)** and agents frequently violate it under pressure. An end-to-end integration test that exercises the FULL pipeline — from Phase 0 (variety engineer) through Phase 8 (stop-verifier) — on a simulated Tier 2+ build would catch cascade failures. But more importantly, a **tool-enforced task size boundary** (e.g., a pre-flight script that counts lines in agent outputs and blocks oversized spawns) would be more reliable than prompt-only discipline. Alternatively, **System 3* (Process Audit)**: The `vsm_process_auditor` has a 60% success rate with declining scores. SM2 (process auditor HARD BLOCK) is probationary with 0 builds tested. Pre-computation (R9) helps but the agent itself still times out.
+
+---
+
 ## 2026-06-05 — S5 Orchestrator Iteration (R18)
 
 ### Diagnosed Constraint

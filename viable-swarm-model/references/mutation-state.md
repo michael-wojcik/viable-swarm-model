@@ -287,3 +287,4 @@
 | R11 | 2026-06-05 S5 | structural | session-end security gate bypass detection (Check 11) | effective | 1 | 5 | — | — | — |
 | R12 | 2026-06-05 S5 | structural | integration-test-closeout.py + closeout pipeline integration test | probation | 0 | — | — | — | S5 iter
 | R18 | 2026-06-05 S5 | structural | hypothesis-backlog-curator.py + S4* autonomous curation | probation | 0 | — | — | — | S5 iter
+| R19 | 2026-06-05 S5 | structural | algedonic-action-plan.py + S4*→S5 response bridge | probation | 0 | — | — | — | S5 iter
