@@ -70,6 +70,40 @@ discover what to test.
 Re-discovering test targets by reading 10+ source files wastes 3-5 minutes per
 spawn. The target map eliminates this discovery phase.
 
+**Test Scaffolds — Use These Starting Points**
+When writing tests, use these scaffolds as starting points. Adapt them to the
+actual project code. These scaffolds reduce cognitive overhead and prevent
+common timeout-causing mistakes.
+
+### FastAPI Endpoint Test
+```python
+async def test_create_item(client, auth_header):
+    response = await client.post(
+        "/items",
+        json={"name": "Test", "description": "Desc"},
+        headers=auth_header,
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["name"] == "Test"
+```
+
+### GraphQL Mutation Test
+```python
+async def test_graphql_create_item(client, auth_header):
+    response = await client.post(
+        "/graphql",
+        json={
+            "query": "mutation CreateItem($input: ItemCreateInput!) { create_item(input: $input) { id name } }",
+            "variables": {"input": {"name": "Test"}}
+        },
+        headers=auth_header,
+    )
+    assert response.status_code == 200
+    data = response.json()["data"]["create_item"]
+    assert data["name"] == "Test"
+```
+
 **Spawn Plan Compliance — MANDATORY**
 Before writing tests, check if `.kimi/test-spawn-plan.md` exists in the build
 directory. If it exists, read it and follow its domain groupings. Your task

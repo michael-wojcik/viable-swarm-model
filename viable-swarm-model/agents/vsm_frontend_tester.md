@@ -72,6 +72,40 @@ discover what to test.
 Re-discovering test targets by reading 10+ source files wastes 3-5 minutes per
 spawn. The target map eliminates this discovery phase.
 
+**Test Scaffolds — Use These Starting Points**
+When writing tests, use these scaffolds as starting points. Adapt them to the
+actual project code. These scaffolds reduce cognitive overhead and prevent
+common timeout-causing mistakes (especially jsdom compatibility issues).
+
+### Component Render Test
+```typescript
+import { render, screen } from "@testing-library/react";
+import { describe, it, expect } from "vitest";
+
+describe("MyComponent", () => {
+  it("renders correctly", () => {
+    render(<MyComponent />);
+    expect(screen.getByText("Expected")).toBeInTheDocument();
+  });
+});
+```
+
+### Store/Hook Test (with localStorage mock)
+```typescript
+import { describe, it, expect, beforeEach, vi } from "vitest";
+
+beforeEach(() => {
+  // Reset localStorage mock between tests
+  const store: Record<string, string> = {};
+  vi.stubGlobal("localStorage", {
+    getItem: (k: string) => store[k] ?? null,
+    setItem: (k: string, v: string) => { store[k] = v; },
+    removeItem: (k: string) => { delete store[k]; },
+    clear: () => { for (const k in store) delete store[k]; },
+  });
+});
+```
+
 **Spawn Plan Compliance — MANDATORY**
 Before writing tests, check if `.kimi/test-spawn-plan.md` exists in the build
 directory. If it exists, read it and follow its domain groupings. Your task

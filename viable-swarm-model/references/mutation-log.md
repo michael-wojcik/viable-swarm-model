@@ -3955,3 +3955,49 @@ exit 0
 ```
 
 **Measured effect**: **AWAITING_BUILD**
+
+---
+
+## Mutation R29 — 2026-06-05
+
+**Session**: S5 Orchestrator Iteration R29
+**File**: `agents/vsm_backend_tester.md`, `agents/vsm_frontend_tester.md`, `hooks/test-automation.sh`
+**Type**: append-only
+**Rationale**: The `vsm_backend_tester` (65%) and `vsm_frontend_tester` (60%) still have the lowest success rates despite extensive infrastructure (R10 test-split-orchestrator, R15 spawn plan, R24 test target map). Root cause analysis: even with the target map eliminating discovery, the agent still must read 2 stack skill files (testing-patterns ~400 lines, tester-backend ~112 lines) BEFORE writing tests. That's ~500 lines of file reads. Then the agent must read source files to understand the actual code. Then write tests. The total workload exceeds reliable completion bounds.
+
+The stack skills (tester-backend, testing-patterns) contain excellent templates, but the agent pays a time tax to read them. By inlining the most critical scaffolds directly into the agent prompt, the agent has immediate access to starting patterns without the file-read overhead. This is the same principle as Mode A/B pre-computation: move work OUT of the agent's critical path.
+
+**Expected effect**: Backend tester now has copy-pasteable FastAPI endpoint and GraphQL mutation scaffolds in its prompt. Frontend tester now has React render and store/hook scaffolds with localStorage mock setup. Agents can start writing tests immediately after reading the (much shorter) target map, reducing time-to-first-test by 1-2 minutes.
+
+**Before**:
+```markdown
+**Test Target Map — READ FIRST**
+...target map instructions...
+
+**Spawn Plan Compliance — MANDATORY**
+```
+
+**After**:
+```markdown
+**Test Target Map — READ FIRST**
+...target map instructions...
+
+**Test Scaffolds — Use These Starting Points**
+When writing tests, use these scaffolds as starting points...
+
+### FastAPI Endpoint Test
+```python
+async def test_create_item(client, auth_header): ...
+```
+
+### GraphQL Mutation Test
+```python
+async def test_graphql_create_item(client, auth_header): ...
+```
+
+**Spawn Plan Compliance — MANDATORY**
+```
+
+(Same pattern for frontend tester with React render and localStorage mock scaffolds.)
+
+**Measured effect**: **AWAITING_BUILD**

@@ -872,3 +872,36 @@ Alternatively, **System 4→S4 channel**: The organism now has 4 pre-computation
 
 ### Next Highest-Leverage Constraint
 **System 1 (Implementation) / S5→S1 channel**: The `vsm_backend_tester` (65%) and `vsm_frontend_tester` (60%) still have the lowest success rates. R24's test target map, R15's spawn plan, and R10's test-split-orchestrator have all been deployed, but timeout persists. With R26–R28 now hard-blocking all meta-system gaps (portfolio review, variety assessment, security), the organism's enforcement layer is substantially complete. The remaining frontier is either (a) a `tester-patterns.md` stack skill with copy-pasteable FastAPI/React test templates, or (b) reducing tester task size below 300 lines, or (c) accepting that tester timeout is a fundamental capacity limit and designing builds to work around it (e.g., fewer test files per spawn). Alternatively, **System 4→S4 channel**: The 3 lesson orphans (docker-pitfalls COPY syntax, graphql-pitfalls GraphQLRouter recommendation, frontend test runner jsdom compatibility) represent lost empirical knowledge that should be recovered into skill files.
+
+---
+
+## 2026-06-05 — S5 Orchestrator Iteration (R29)
+
+### Diagnosed Constraint
+**System 1 (Implementation) / S5→S1 channel — tester cognitive overhead**: The `vsm_backend_tester` (65%) and `vsm_frontend_tester` (60%) still have the lowest success rates despite extensive infrastructure (R10 test-split-orchestrator, R15 spawn plan, R24 test target map). Root cause: even with the target map eliminating the discovery phase, the agent still must read **2 stack skill files** (testing-patterns ~400 lines, tester-backend ~112 lines) before writing a single test. That's ~500 lines of file reads plus source file reads plus test writing — the total workload exceeds reliable completion bounds. The stack skills contain excellent templates, but the agent pays a time tax to read them.
+
+### Change Made
+**Append-only mutation R29**: Inlined critical test scaffolds directly into tester agent prompts.
+- **vsm_backend_tester.md**: Added "Test Scaffolds — Use These Starting Points" section with copy-pasteable FastAPI endpoint test scaffold and GraphQL mutation test scaffold. Agents can start writing tests immediately without reading the full tester-backend skill.
+- **vsm_frontend_tester.md**: Added "Test Scaffolds — Use These Starting Points" section with React Testing Library render scaffold and store/hook test scaffold including `vi.stubGlobal("localStorage", ...)` mock setup. Directly addresses the "jsdom localStorage mocking fails consistently" failure mode.
+- Both scaffolds include the rationale: "These scaffolds reduce cognitive overhead and prevent common timeout-causing mistakes."
+- `hooks/test-automation.sh`: Added Tests 78–79 verifying scaffolds exist in both agent prompts.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **84 passed, 0 failed** (was 82 passed, 0 failed)
+- Test 78: vsm_backend_tester.md contains FastAPI and GraphQL test scaffolds
+- Test 79: vsm_frontend_tester.md contains React and store test scaffolds with localStorage mock
+
+### Files Modified
+- `viable-swarm-model/agents/vsm_backend_tester.md`
+- `viable-swarm-model/agents/vsm_frontend_tester.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 1 (Implementation) / S5→S1 channel**: The tester timeout problem has now been addressed on FOUR fronts: (1) task splitting (R10), (2) spawn plan compliance (R15), (3) target map pre-computation (R24), (4) inlined scaffolds (R29). If testers STILL time out in the next build, the root cause is likely fundamental: generating test code is inherently time-consuming for an LLM regardless of preparation. The next frontier would be either (a) reducing the minimum meaningful test count for lower-tier builds, or (b) designing builds with fewer testable surfaces per spawn. Alternatively, **System 4→S4 channel**: The lesson-miner produces 100% false-positive orphans because its substring matching can't handle skill-name prefixes or paraphrased rules. Fixing the orphan detection algorithm would prevent wasted curation attention.

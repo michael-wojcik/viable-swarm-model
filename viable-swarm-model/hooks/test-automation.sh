@@ -3676,6 +3676,48 @@ else
 fi
 
 # ============================================================================
+# Test 78: vsm_backend_tester.md contains test scaffolds (R29)
+# ============================================================================
+
+echo -n "TEST: vsm_backend_tester.md contains FastAPI and GraphQL test scaffolds ... "
+
+BT_AGENT="$SCRIPT_DIR/../agents/vsm_backend_tester.md"
+if [[ ! -f "$BT_AGENT" ]]; then
+    fail "vsm_backend_tester.md not found"
+else
+    if grep -q "Test Scaffolds — Use These Starting Points" "$BT_AGENT" && \
+       grep -q "FastAPI Endpoint Test" "$BT_AGENT" && \
+       grep -q "GraphQL Mutation Test" "$BT_AGENT" && \
+       grep -q "test_create_item" "$BT_AGENT" && \
+       grep -q "test_graphql_create_item" "$BT_AGENT"; then
+        pass
+    else
+        fail "backend tester missing test scaffolds"
+    fi
+fi
+
+# ============================================================================
+# Test 79: vsm_frontend_tester.md contains test scaffolds (R29)
+# ============================================================================
+
+echo -n "TEST: vsm_frontend_tester.md contains React and store test scaffolds ... "
+
+FT_AGENT="$SCRIPT_DIR/../agents/vsm_frontend_tester.md"
+if [[ ! -f "$FT_AGENT" ]]; then
+    fail "vsm_frontend_tester.md not found"
+else
+    if grep -q "Test Scaffolds — Use These Starting Points" "$FT_AGENT" && \
+       grep -q "Component Render Test" "$FT_AGENT" && \
+       grep -q "Store/Hook Test" "$FT_AGENT" && \
+       grep -q "localStorage" "$FT_AGENT" && \
+       grep -q "vi.stubGlobal" "$FT_AGENT"; then
+        pass
+    else
+        fail "frontend tester missing test scaffolds"
+    fi
+fi
+
+# ============================================================================
 # Summary
 # ============================================================================
 

@@ -297,3 +297,4 @@
 | R26 | 2026-06-05 S5 | structural | Stop-verifier content-quality gates for meta-system agents | probation | 0 | — | — | — | S5 iter
 | R27 | 2026-06-05 S5 | structural | SKILL.md pre-computation instructions before meta-system agent spawn | probation | 0 | — | — | — | S5 iter
 | R28 | 2026-06-05 S5 | structural | Stop-verifier security hard block when security-relevant code present | probation | 0 | — | — | — | S5 iter
+| R29 | 2026-06-05 S5 | append-only | Inlined test scaffolds in tester agent prompts | probation | 0 | — | — | — | S5 iter
