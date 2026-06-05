@@ -1618,7 +1618,34 @@ EOF
 
 cat > "$TMPDIR/build42/.kimi/mutation-portfolio-review.md" << 'EOF'
 # Mutation Portfolio Review
-All good.
+
+## Portfolio Health Metrics
+| Metric | Value |
+|---|---|
+| Total | 10 |
+
+## Promotions
+| ID | Status |
+|---|---|
+| T1 | effective |
+
+## Binding Recommendations
+1. No action needed.
+EOF
+
+cat > "$TMPDIR/build42/.kimi/variety-assessment.md" << 'EOF'
+# Variety Assessment
+
+## Health Metrics
+| Metric | Value | Status |
+|---|---|---|
+| Probationary | 5 | OK |
+
+## Algedonic Signals
+No critical signals.
+
+## Proactive Recommendations
+1. Continue monitoring.
 EOF
 
 # Touch files to ensure mtimes are reasonable (process-audit not retroactive)
@@ -2392,12 +2419,34 @@ EOF
 
 cat > "$TMPDIR/build53/.kimi/mutation-portfolio-review.md" << 'EOF'
 # Mutation Portfolio Review
-No issues.
+
+## Portfolio Health Metrics
+| Metric | Value |
+|---|---|
+| Total | 10 |
+
+## Promotions
+| ID | Status |
+|---|---|
+| T1 | effective |
+
+## Binding Recommendations
+1. No action needed.
 EOF
 
 cat > "$TMPDIR/build53/.kimi/variety-assessment.md" << 'EOF'
 # Variety Assessment
-No algedonics.
+
+## Health Metrics
+| Metric | Value | Status |
+|---|---|---|
+| Probationary | 5 | OK |
+
+## Algedonic Signals
+No critical signals.
+
+## Proactive Recommendations
+1. Continue monitoring.
 EOF
 
 cat > "$TMPDIR/build53/.kimi/meta-metrics-precomputed.md" << 'EOF'
@@ -2604,7 +2653,19 @@ EOF
 # Portfolio review exists
 cat > "$TMPDIR/build56/.kimi/mutation-portfolio-review.md" << 'EOF'
 # Portfolio Review
-Recommendations: none
+
+## Portfolio Health Metrics
+| Metric | Value |
+|---|---|
+| Total | 10 |
+
+## Promotions
+| ID | Status |
+|---|---|
+| T1 | effective |
+
+## Binding Recommendations
+1. No action needed.
 EOF
 
 mkdir -p "$TMPDIR/build56/vsm/viable-swarm-model/references"
@@ -3075,6 +3136,300 @@ if [[ -f "$TMPDIR/build68/.kimi/organism-vitals.md" ]]; then
     fi
 else
     fail "organism vitals markdown not generated"
+fi
+
+# ============================================================================
+# Test 69: stop-verifier blocks when portfolio-review.md is a stub (R26)
+# ============================================================================
+
+echo -n "TEST: stop-verifier.sh blocks stop when portfolio-review.md is a stub ... "
+
+mkdir -p "$TMPDIR/build69/.kimi"
+mkdir -p "$TMPDIR/build69/vsm/viable-swarm-model/references"
+
+touch "$TMPDIR/build69/vsm/viable-swarm-model/references/mutation-log.md"
+
+cat > "$TMPDIR/build69/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target | Status | Builds | Score |
+|---|---|---|---|---|---|---|
+| T1 | FB69 | append | Test | effective | 5 | 4 |
+EOF
+
+cat > "$TMPDIR/build69/.kimi/mutations-applied.md" << 'EOF'
+## Build ID: FB69
+**Mutation**: M1
+**Effectiveness**: 5/5
+EOF
+
+cat > "$TMPDIR/build69/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+# Stub portfolio review — only 1 required section ("Promotions"), should fail
+# Need >= 2 sections to pass
+cat > "$TMPDIR/build69/.kimi/mutation-portfolio-review.md" << 'EOF'
+# Mutation Portfolio Review
+
+## Promotions
+None.
+EOF
+
+cat > "$TMPDIR/build69/.kimi/process-audit.md" << 'EOF'
+# Process Audit
+Score: 85/100
+EOF
+
+# Valid variety assessment so only portfolio is tested
+cat > "$TMPDIR/build69/.kimi/variety-assessment.md" << 'EOF'
+# Variety Assessment
+
+## Health Metrics
+| Metric | Value |
+|---|---|
+| A | 1 |
+
+## Algedonic Signals
+None.
+
+## Proactive Recommendations
+1. Monitor.
+EOF
+
+export HOME="$TMPDIR/build69"
+
+PAYLOAD='{"session_id":"test-session-69","cwd":"'$TMPDIR/build69'","reason":"stop","stop_hook_active":false}'
+RC=0
+OUTPUT=$(echo "$PAYLOAD" | bash "$SCRIPT_DIR/stop-verifier.sh" 2>/dev/null) || RC=$?
+
+if echo "$OUTPUT" | grep -q '"permissionDecision":"deny"' && \
+   echo "$OUTPUT" | grep -q "stub"; then
+    pass
+else
+    fail "stop-verifier did not block for stub portfolio-review.md"
+fi
+
+# ============================================================================
+# Test 70: stop-verifier blocks when variety-assessment.md is missing (R26)
+# ============================================================================
+
+echo -n "TEST: stop-verifier.sh blocks stop when variety-assessment.md missing ... "
+
+mkdir -p "$TMPDIR/build70/.kimi"
+mkdir -p "$TMPDIR/build70/vsm/viable-swarm-model/references"
+
+touch "$TMPDIR/build70/vsm/viable-swarm-model/references/mutation-log.md"
+
+cat > "$TMPDIR/build70/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target | Status | Builds | Score |
+|---|---|---|---|---|---|---|
+| T1 | FB70 | append | Test | effective | 5 | 4 |
+EOF
+
+cat > "$TMPDIR/build70/.kimi/mutations-applied.md" << 'EOF'
+## Build ID: FB70
+**Mutation**: M1
+**Effectiveness**: 5/5
+EOF
+
+cat > "$TMPDIR/build70/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+# Valid portfolio review
+cat > "$TMPDIR/build70/.kimi/mutation-portfolio-review.md" << 'EOF'
+# Mutation Portfolio Review
+
+## Portfolio Health Metrics
+| Metric | Value |
+|---|---|
+| Total | 10 |
+
+## Promotions
+| ID | Status |
+|---|---|
+| T1 | effective |
+
+## Binding Recommendations
+1. No action needed.
+EOF
+
+# NO variety-assessment.md — should trigger Check 7
+
+cat > "$TMPDIR/build70/.kimi/process-audit.md" << 'EOF'
+# Process Audit
+Score: 85/100
+EOF
+
+export HOME="$TMPDIR/build70"
+
+PAYLOAD='{"session_id":"test-session-70","cwd":"'$TMPDIR/build70'","reason":"stop","stop_hook_active":false}'
+RC=0
+OUTPUT=$(echo "$PAYLOAD" | bash "$SCRIPT_DIR/stop-verifier.sh" 2>/dev/null) || RC=$?
+
+if echo "$OUTPUT" | grep -q '"permissionDecision":"deny"' && \
+   echo "$OUTPUT" | grep -q "variety-assessment.md"; then
+    pass
+else
+    fail "stop-verifier did not block for missing variety-assessment.md"
+fi
+
+# ============================================================================
+# Test 71: stop-verifier allows stop when variety-assessment.md is valid (R26)
+# ============================================================================
+
+echo -n "TEST: stop-verifier.sh allows stop when variety-assessment.md is valid ... "
+
+mkdir -p "$TMPDIR/build71/.kimi"
+mkdir -p "$TMPDIR/build71/vsm/viable-swarm-model/references"
+
+touch "$TMPDIR/build71/vsm/viable-swarm-model/references/mutation-log.md"
+
+cat > "$TMPDIR/build71/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target | Status | Builds | Score |
+|---|---|---|---|---|---|---|
+| T1 | FB71 | append | Test | effective | 5 | 4 |
+EOF
+
+cat > "$TMPDIR/build71/.kimi/mutations-applied.md" << 'EOF'
+## Build ID: FB71
+**Mutation**: M1
+**Effectiveness**: 5/5
+EOF
+
+cat > "$TMPDIR/build71/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+# Valid portfolio review
+cat > "$TMPDIR/build71/.kimi/mutation-portfolio-review.md" << 'EOF'
+# Mutation Portfolio Review
+
+## Portfolio Health Metrics
+| Metric | Value |
+|---|---|
+| Total | 10 |
+
+## Promotions
+| ID | Status |
+|---|---|
+| T1 | effective |
+
+## Binding Recommendations
+1. No action needed.
+EOF
+
+# Valid variety assessment with >=2 required sections
+cat > "$TMPDIR/build71/.kimi/variety-assessment.md" << 'EOF'
+# Variety Assessment
+
+## Health Metrics
+| Metric | Value | Status |
+|---|---|---|
+| Probationary | 5 | OK |
+
+## Algedonic Signals
+No critical signals.
+
+## Proactive Recommendations
+1. Continue monitoring.
+EOF
+
+cat > "$TMPDIR/build71/.kimi/process-audit.md" << 'EOF'
+# Process Audit
+Score: 85/100
+EOF
+
+export HOME="$TMPDIR/build71"
+
+PAYLOAD='{"session_id":"test-session-71","cwd":"'$TMPDIR/build71'","reason":"stop","stop_hook_active":false}'
+RC=0
+OUTPUT=$(echo "$PAYLOAD" | bash "$SCRIPT_DIR/stop-verifier.sh" 2>/dev/null) || RC=$?
+
+if [ "$RC" -eq 0 ] && ! echo "$OUTPUT" | grep -q '"permissionDecision":"deny"'; then
+    pass
+else
+    fail "stop-verifier blocked despite valid variety-assessment.md"
+fi
+
+# ============================================================================
+# Test 72: stop-verifier blocks when variety-assessment.md is a stub (R26)
+# ============================================================================
+
+echo -n "TEST: stop-verifier.sh blocks stop when variety-assessment.md is a stub ... "
+
+mkdir -p "$TMPDIR/build72/.kimi"
+mkdir -p "$TMPDIR/build72/vsm/viable-swarm-model/references"
+
+touch "$TMPDIR/build72/vsm/viable-swarm-model/references/mutation-log.md"
+
+cat > "$TMPDIR/build72/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target | Status | Builds | Score |
+|---|---|---|---|---|---|---|
+| T1 | FB72 | append | Test | effective | 5 | 4 |
+EOF
+
+cat > "$TMPDIR/build72/.kimi/mutations-applied.md" << 'EOF'
+## Build ID: FB72
+**Mutation**: M1
+**Effectiveness**: 5/5
+EOF
+
+cat > "$TMPDIR/build72/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+# Valid portfolio review
+cat > "$TMPDIR/build72/.kimi/mutation-portfolio-review.md" << 'EOF'
+# Mutation Portfolio Review
+
+## Portfolio Health Metrics
+| Metric | Value |
+|---|---|
+| Total | 10 |
+
+## Promotions
+| ID | Status |
+|---|---|
+| T1 | effective |
+
+## Binding Recommendations
+1. No action needed.
+EOF
+
+# Stub variety assessment — only 1 required section ("Health Metrics"), should fail
+cat > "$TMPDIR/build72/.kimi/variety-assessment.md" << 'EOF'
+# Variety Assessment
+
+## Health Metrics
+| Metric | Value |
+|---|---|
+| A | 1 |
+EOF
+
+cat > "$TMPDIR/build72/.kimi/process-audit.md" << 'EOF'
+# Process Audit
+Score: 85/100
+EOF
+
+export HOME="$TMPDIR/build72"
+
+PAYLOAD='{"session_id":"test-session-72","cwd":"'$TMPDIR/build72'","reason":"stop","stop_hook_active":false}'
+RC=0
+OUTPUT=$(echo "$PAYLOAD" | bash "$SCRIPT_DIR/stop-verifier.sh" 2>/dev/null) || RC=$?
+
+if echo "$OUTPUT" | grep -q '"permissionDecision":"deny"' && \
+   echo "$OUTPUT" | grep -q "stub"; then
+    pass
+else
+    fail "stop-verifier did not block for stub variety-assessment.md"
 fi
 
 # ============================================================================

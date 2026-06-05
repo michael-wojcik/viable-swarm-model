@@ -770,3 +770,38 @@ Alternatively, **System 5→S1 channel**: The `vsm_product` agent (S4 Product) h
 R7–R10 have now systematically addressed the meta-system timeout problem (learning curator, variety engineer, process auditor, testers) by creating pre-computation and orchestration scripts. The next frontier is upstream: ensuring the product discovery phase happens BEFORE architecture, so scope creep is prevented at the source rather than caught during audit. A session-start hook check for `product-brief.md` or an update to SKILL.md Phase 1 could close this gap.
 
 Alternatively, **System 4→S4 channel**: The organism now has 4 pre-computation scripts (build-health-dashboard, mutation-portfolio-health, organism-vitals, process-compliance-precompute) and 1 orchestrator (test-split). None of these scripts are automatically tested in an integration sense — they run in isolation in test-automation.sh but are not exercised together in a simulated build closeout. A `scripts/integration-test-closeout.py` that runs all 5 scripts against a mock build directory and verifies their outputs are mutually consistent would catch regressions when one script's output format changes.
+
+---
+
+## 2026-06-05 — S5 Orchestrator Iteration (R26)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S1 channel — meta-system spawn gap**: Despite R25 making workloads manageable via Mode A/B pre-computation, `vsm_learning_curator` and `vsm_variety_engineer` still have **0% empirical exercise rate**. Root cause: (1) `vsm_variety_engineer` had **zero stop-verifier enforcement** — no check blocked session stop when `variety-assessment.md` was missing. (2) `vsm_learning_curator` had Check 6 but it only verified **file existence**, not content quality. S5 could write a 2-line stub to bypass the block without ever spawning the agent. This is the same bypass pattern that made PM1 (hook-enforced process auditor spawn) ineffective.
+
+### Change Made
+**Structural mutation R26**: Strengthened stop-verifier with content-quality gates.
+- **Check 6 strengthened**: `mutation-portfolio-review.md` must now contain ≥2 of 4 required sections (`Portfolio Health Metrics`, `Promotions`, `Removals`, `Binding Recommendations`). Stub files with only a heading are rejected.
+- **Check 7 added**: `variety-assessment.md` must exist AND contain ≥2 of 4 required sections (`Health Metrics`, `Algedonic Signals`, `Proactive Recommendations`, `Cross-Skill Integration Health`). Closes the variety engineer enforcement gap with parity to the learning curator.
+- Both checks only trigger when `meta-report.md` AND `mutations-applied.md` exist (fitness-build detection), same as Check 6.
+- Updated existing tests (42, 53, 56) to create valid portfolio review and variety assessment files with required sections.
+- Added Tests 69–72: stub portfolio review block, missing variety assessment block, valid variety assessment allow, stub variety assessment block.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **77 passed, 0 failed** (was 73 passed, 0 failed)
+- Test 69: stop-verifier blocks when portfolio-review.md is a stub (only 1 required section)
+- Test 70: stop-verifier blocks when variety-assessment.md is missing
+- Test 71: stop-verifier allows stop when variety-assessment.md has required sections
+- Test 72: stop-verifier blocks when variety-assessment.md is a stub
+
+### Files Modified
+- `viable-swarm-model/hooks/stop-verifier.sh`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 1 (Implementation) / S5→S1 channel**: The `vsm_backend_tester` (65% success) and `vsm_frontend_tester` (60% success) still time out in Tier 2+ builds. R24's test target map pre-computation was a structural improvement, but the empirical tester success rates haven't been measured in a real build since R24. If the target map doesn't improve rates, the next frontier is a `tester-patterns.md` skill with copy-pasteable test templates, or reducing tester agent task size further (current max 300 lines). Alternatively, **System 3 (Audit/Control)**: The `vsm_process_auditor` and `vsm_meta` both have 60% success rates with timeout as primary failure mode — R22/R23 Mode A/B workflows should improve this, but haven't been empirically validated.

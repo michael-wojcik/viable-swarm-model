@@ -3849,3 +3849,38 @@ Additionally, both pre-computation scripts now include **"Spot-Check Guidance"**
 **Measured effect**: **Awaiting measurement** — Success criteria: (1) When spawned, both agents complete within timeout limits, (2) No increase in false negatives (missed promotions/demotions or algedonics due to over-trusting pre-computation), (3) S5 begins spawning these agents because their workload is now manageable.
 
 ---
+
+---
+
+## Mutation R26 — 2026-06-05
+
+**Session**: S5 Orchestrator Iteration R26
+**File**: `hooks/stop-verifier.sh`, `hooks/test-automation.sh`
+**Type**: structural
+**Rationale**: Despite R25 making workloads manageable (Mode A/B pre-computation-primary), `vsm_learning_curator` and `vsm_variety_engineer` still have 0% empirical exercise rate. Root cause analysis: (1) `vsm_variety_engineer` had NO stop-verifier enforcement at all — it was entirely optional. (2) `vsm_learning_curator` had Check 6 but it only verified FILE EXISTENCE, not content quality — S5 could write a 2-line stub to bypass the block without spawning the agent. This is the same failure mode that made PM1 (hook-enforced process auditor spawn) ineffective: existence checks are trivially bypassed.
+**Expected effect**: Both agents now have content-quality stop-verifier gates that require ≥2 specific agent-prompt-mandated sections. Stub files with just a heading will be rejected. S5 MUST spawn the actual agents (or put in equivalent effort to produce agent-quality output) to pass the stop-verifier. The variety engineer gap is closed with parity to the learning curator.
+
+**Before**:
+```bash
+# Check 6: mutation-portfolio-review.md MUST exist if this is a fitness build
+if [[ -f "$KIMI_DIR/meta-report.md" && -f "$KIMI_DIR/mutations-applied.md" ]]; then
+    if [[ ! -f "$KIMI_DIR/mutation-portfolio-review.md" ]]; then
+        # block stop
+    fi
+fi
+
+exit 0
+```
+
+**After**:
+```bash
+# Check 6: mutation-portfolio-review.md MUST exist AND have agent-generated content
+# ... file existence check ...
+# Content-quality gate: verify ≥2 of 4 required sections present
+# ... stub detection with section counting ...
+
+# Check 7: variety-assessment.md MUST exist AND have agent-generated content
+# ... same pattern for variety engineer
+```
+
+**Measured effect**: **AWAITING_BUILD**

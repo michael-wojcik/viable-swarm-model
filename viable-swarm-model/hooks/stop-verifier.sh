@@ -169,11 +169,67 @@ if [[ -f "$KIMI_DIR/process-audit.md" ]]; then
     fi
 fi
 
-# Check 6: mutation-portfolio-review.md MUST exist if this is a fitness build (2026-06-04 structural mutation)
+# Check 6: mutation-portfolio-review.md MUST exist AND have agent-generated content
+# (2026-06-04 structural mutation; strengthened 2026-06-05 R26)
+# File existence alone is not sufficient — S5 can write stubs to bypass.
+# The curator agent produces specific sections; verify at least 2 are present.
 if [[ -f "$KIMI_DIR/meta-report.md" && -f "$KIMI_DIR/mutations-applied.md" ]]; then
     if [[ ! -f "$KIMI_DIR/mutation-portfolio-review.md" ]]; then
         echo "STOP BLOCKED by stop-verifier.sh: mutation-portfolio-review.md is missing. Spawn vsm_learning_curator during Phase 8c-iii before completing." >&2
         echo '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"mutation-portfolio-review.md missing. Spawn vsm_learning_curator during Phase 8c-iii."}}'
+        exit 0
+    fi
+
+    # Content-quality gate: verify the file was actually produced by the agent
+    # The curator prompt requires these sections; stubs will fail this check.
+    PORTFOLIO_SECTIONS=0
+    if grep -qE '^## Portfolio Health Metrics' "$KIMI_DIR/mutation-portfolio-review.md" 2>/dev/null; then
+        PORTFOLIO_SECTIONS=$((PORTFOLIO_SECTIONS + 1))
+    fi
+    if grep -qE '^## Promotions' "$KIMI_DIR/mutation-portfolio-review.md" 2>/dev/null; then
+        PORTFOLIO_SECTIONS=$((PORTFOLIO_SECTIONS + 1))
+    fi
+    if grep -qE '^## Removals' "$KIMI_DIR/mutation-portfolio-review.md" 2>/dev/null; then
+        PORTFOLIO_SECTIONS=$((PORTFOLIO_SECTIONS + 1))
+    fi
+    if grep -qE '^## Binding Recommendations' "$KIMI_DIR/mutation-portfolio-review.md" 2>/dev/null; then
+        PORTFOLIO_SECTIONS=$((PORTFOLIO_SECTIONS + 1))
+    fi
+
+    if [[ "$PORTFOLIO_SECTIONS" -lt 2 ]]; then
+        echo "STOP BLOCKED by stop-verifier.sh: mutation-portfolio-review.md exists but contains only $PORTFOLIO_SECTIONS required section(s) (need ≥2). The vsm_learning_curator was not spawned — stub file detected. Spawn the agent during Phase 8c-iii." >&2
+        echo '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"mutation-portfolio-review.md is a stub (only '"$PORTFOLIO_SECTIONS"' required section(s)). Spawn vsm_learning_curator during Phase 8c-iii."}}'
+        exit 0
+    fi
+fi
+
+# Check 7: variety-assessment.md MUST exist AND have agent-generated content (R26)
+# Parity with Check 6 — closes the variety engineer spawn gap.
+if [[ -f "$KIMI_DIR/meta-report.md" && -f "$KIMI_DIR/mutations-applied.md" ]]; then
+    if [[ ! -f "$KIMI_DIR/variety-assessment.md" ]]; then
+        echo "STOP BLOCKED by stop-verifier.sh: variety-assessment.md is missing. Spawn vsm_variety_engineer during Phase 0a-15 before completing." >&2
+        echo '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"variety-assessment.md missing. Spawn vsm_variety_engineer during Phase 0a-15."}}'
+        exit 0
+    fi
+
+    # Content-quality gate: verify the file was actually produced by the agent
+    VARIETY_SECTIONS=0
+    if grep -qE '^## Health Metrics' "$KIMI_DIR/variety-assessment.md" 2>/dev/null; then
+        VARIETY_SECTIONS=$((VARIETY_SECTIONS + 1))
+    fi
+    if grep -qE '^## Algedonic Signals' "$KIMI_DIR/variety-assessment.md" 2>/dev/null; then
+        VARIETY_SECTIONS=$((VARIETY_SECTIONS + 1))
+    fi
+    if grep -qE '^## Proactive Recommendations' "$KIMI_DIR/variety-assessment.md" 2>/dev/null; then
+        VARIETY_SECTIONS=$((VARIETY_SECTIONS + 1))
+    fi
+    if grep -qE '^## Cross-Skill Integration Health' "$KIMI_DIR/variety-assessment.md" 2>/dev/null; then
+        VARIETY_SECTIONS=$((VARIETY_SECTIONS + 1))
+    fi
+
+    if [[ "$VARIETY_SECTIONS" -lt 2 ]]; then
+        echo "STOP BLOCKED by stop-verifier.sh: variety-assessment.md exists but contains only $VARIETY_SECTIONS required section(s) (need ≥2). The vsm_variety_engineer was not spawned — stub file detected. Spawn the agent during Phase 0a-15." >&2
+        echo '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"variety-assessment.md is a stub (only '"$VARIETY_SECTIONS"' required section(s)). Spawn vsm_variety_engineer during Phase 0a-15."}}'
         exit 0
     fi
 fi
