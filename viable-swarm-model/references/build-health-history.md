@@ -5,6 +5,41 @@
 
 ---
 
+## 2026-06-05 — S5 Orchestrator Iteration (R17)
+
+### Diagnosed Constraint
+**System 3* (Audit/Control) / S3→S5 compliance channel**: The `stop-verifier.sh` script has 6 checks that block session completion, but **zero tests** in `test-automation.sh`. This is critical Tier A/B enforcement infrastructure. A bug in stop-verifier could either (a) prevent legitimate session stops, trapping S5 in an infinite loop, or (b) allow illegitimate stops, bypassing mandatory Phase 8 checks. The organism had invested heavily in session-end.sh testing (13 checks, 30+ tests) but completely neglected stop-verifier.sh.
+
+### Change Made
+**Refinement mutation R17**: Added test coverage for `stop-verifier.sh`.
+- `hooks/test-automation.sh`: Added syntax check for stop-verifier.sh in the Preliminary section.
+- Added Tests 41–43:
+  - Test 41: Verifies stop-verifier **blocks** stop when `mutations-applied.md` is missing for a completed build
+  - Test 42: Verifies stop-verifier **allows** stop when all required artifacts are present (mutations-applied.md, meta-report.md, process-audit.md, mutation-portfolio-review.md, mutation-state.md with build ID)
+  - Test 43: Verifies stop-verifier **blocks** stop when `mutation-portfolio-review.md` is missing
+- Tests mock `$HOME` to isolate from real `mutation-log.md` PENDING entries that could interfere with Check 2.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **48 passed, 0 failed** (was 44 passed, 0 failed)
+- Tests 41–43 verify:
+  - Missing mutations-applied.md → blocked
+  - All artifacts present → allowed
+  - Missing portfolio-review.md → blocked
+
+### Files Modified
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 1 (Implementation) / S5→S1 channel**: The `vsm_backend_coder` has an 85% success rate but still times out on 500+ line tasks. The "Adaptive Task Sizing" rule (≤500 lines) is Tier C (prompt-only) and agents frequently violate it under pressure. A tool-enforced boundary — such as a pre-flight script that estimates output size before spawning — would be more reliable than prompt-only discipline. Alternatively, **System 4→S4 channel**: The organism now has 7 pre-computation scripts, 1 orchestrator, 13 session-end checks, 6 stop-verifier checks, and 48 automation tests. There is no integration test that verifies the FULL pipeline from Phase 0 (variety engineer) through Phase 8 (stop-verifier) on a single mock build. A comprehensive end-to-end integration test would catch cascade failures across the entire workflow.
+
+---
+
 ## 2026-06-05 — S5 Orchestrator Iteration (R16)
 
 ### Diagnosed Constraint

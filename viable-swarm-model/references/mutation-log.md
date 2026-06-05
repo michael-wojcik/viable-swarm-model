@@ -3557,3 +3557,34 @@ Additionally, the dashboard was never automatically invoked — it only ran when
 **Measured effect**: **Awaiting measurement** — Success criteria: (1) S5 applies ≥5 historical promotions in next session, (2) active mutation count drops below 70, (3) portfolio health script continues identifying candidates accurately.
 
 ---
+
+## Mutation R17 — 2026-06-05
+
+**Session**: S5 Orchestrator Iteration — stop-verifier.sh test coverage
+**File**: `hooks/test-automation.sh`
+**Type**: refinement
+**Rationale**: The `stop-verifier.sh` script has 6 checks that block session completion (mutations-applied.md missing, retroactive mutations-applied.md, PENDING measured effects, process-audit.md missing/retroactive, mutation-state.md missing build ID, process-audit.md HARD BLOCK, mutation-portfolio-review.md missing). This is critical Tier A/B enforcement infrastructure, but it had **zero tests** in `test-automation.sh`. A bug in stop-verifier could either trap S5 in an infinite loop (false block) or allow illegitimate stops (false pass), bypassing mandatory Phase 8 checks. The organism had invested heavily in session-end.sh testing (13 checks, 30+ tests) but completely neglected stop-verifier.sh.
+
+**Expected effect**:
+- stop-verifier.sh behavior is verified on every automation test run.
+- False blocks and false passes are caught before reaching production.
+- Future modifications to stop-verifier.sh have regression protection.
+
+**Files modified**:
+- `hooks/test-automation.sh` — Added syntax check for stop-verifier.sh (Preliminary). Added Tests 41–43:
+  - Test 41: Blocks stop when mutations-applied.md is missing for a completed build
+  - Test 42: Allows stop when all required artifacts are present (mutations-applied.md, meta-report.md, process-audit.md, mutation-portfolio-review.md, mutation-state.md with build ID)
+  - Test 43: Blocks stop when mutation-portfolio-review.md is missing
+- Tests mock `$HOME` to isolate from real mutation-log.md PENDING entries.
+
+**Before**:
+- stop-verifier.sh: 6 checks, 0 tests
+- Risk of undetected regressions in session-stop enforcement
+
+**After**:
+- stop-verifier.sh: 6 checks, 3 tests covering the most critical paths
+- Regression protection for future modifications
+
+**Measured effect**: **Awaiting measurement** — Success criteria: (1) all 3 stop-verifier tests continue passing after any script modification, (2) at least one bug caught by tests before reaching production, (3) test suite runs in <60 seconds.
+
+---

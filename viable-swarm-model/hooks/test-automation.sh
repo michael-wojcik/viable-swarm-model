@@ -64,6 +64,13 @@ else
     fail "syntax error detected"
 fi
 
+echo -n "TEST: Syntax check stop-verifier.sh ... "
+if bash -n "$SCRIPT_DIR/stop-verifier.sh"; then
+    pass
+else
+    fail "syntax error detected"
+fi
+
 # ============================================================================
 # Test 1: update-mutation-state.sh — dry-run mode
 # ============================================================================
@@ -1540,6 +1547,147 @@ if [ "$RC" -eq 0 ] && \
     pass
 else
     fail "mutation-portfolio-health.py did not detect expected historical promotions"
+fi
+
+# ============================================================================
+# Test 41: stop-verifier.sh — blocks when mutations-applied.md missing
+# ============================================================================
+
+echo -n "TEST: stop-verifier.sh blocks stop when mutations-applied.md missing ... "
+
+mkdir -p "$TMPDIR/build41/.kimi"
+mkdir -p "$TMPDIR/vsm/viable-swarm-model/references"
+
+# Create empty mutation-log.md so Check 2 doesn't interfere
+touch "$TMPDIR/vsm/viable-swarm-model/references/mutation-log.md"
+
+# Create a completed build artifact but no mutations-applied.md
+cat > "$TMPDIR/build41/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+PAYLOAD='{"session_id":"test-session-41","cwd":"'$TMPDIR/build41'","reason":"stop","stop_hook_active":false}'
+RC=0
+OUTPUT=$(echo "$PAYLOAD" | bash "$SCRIPT_DIR/stop-verifier.sh" 2>/dev/null) || RC=$?
+
+if echo "$OUTPUT" | grep -q '"permissionDecision":"deny"' && \
+   echo "$OUTPUT" | grep -q "mutations-applied.md"; then
+    pass
+else
+    fail "stop-verifier did not block for missing mutations-applied.md"
+fi
+
+# ============================================================================
+# Test 42: stop-verifier.sh — allows stop when all artifacts present
+# ============================================================================
+
+echo -n "TEST: stop-verifier.sh allows stop when all artifacts present ... "
+
+mkdir -p "$TMPDIR/build42/.kimi"
+mkdir -p "$TMPDIR/vsm/viable-swarm-model/references"
+
+# Create empty mutation-log.md
+touch "$TMPDIR/vsm/viable-swarm-model/references/mutation-log.md"
+
+# Create mutation-state.md with build ID
+cat > "$TMPDIR/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| T1 | FB42 Build | append-only | Test | effective | 5 | 5 | — | — | — |
+EOF
+
+# Create all required artifacts
+cat > "$TMPDIR/build42/.kimi/mutations-applied.md" << 'EOF'
+## Build ID: FB42
+**Mutation**: M1
+**Effectiveness**: 5/5
+EOF
+
+cat > "$TMPDIR/build42/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+cat > "$TMPDIR/build42/.kimi/process-audit.md" << 'EOF'
+# Process Audit
+Score: 85/100
+All checks passed.
+EOF
+
+cat > "$TMPDIR/build42/.kimi/mutation-portfolio-review.md" << 'EOF'
+# Mutation Portfolio Review
+All good.
+EOF
+
+# Touch files to ensure mtimes are reasonable (process-audit not retroactive)
+touch "$TMPDIR/build42/.kimi/mutations-applied.md"
+touch "$TMPDIR/build42/.kimi/meta-report.md"
+touch "$TMPDIR/build42/.kimi/process-audit.md"
+
+PAYLOAD='{"session_id":"test-session-42","cwd":"'$TMPDIR/build42'","reason":"stop","stop_hook_active":false}'
+RC=0
+OUTPUT=$(echo "$PAYLOAD" | bash "$SCRIPT_DIR/stop-verifier.sh" 2>/dev/null) || RC=$?
+
+if [ "$RC" -eq 0 ] && ! echo "$OUTPUT" | grep -q '"permissionDecision":"deny"'; then
+    pass
+else
+    fail "stop-verifier blocked despite all artifacts present"
+fi
+
+# ============================================================================
+# Test 43: stop-verifier.sh — blocks when portfolio-review.md missing
+# ============================================================================
+
+echo -n "TEST: stop-verifier.sh blocks stop when portfolio-review.md missing ... "
+
+mkdir -p "$TMPDIR/build43/.kimi"
+mkdir -p "$TMPDIR/vsm/viable-swarm-model/references"
+
+# Create empty mutation-log.md
+touch "$TMPDIR/vsm/viable-swarm-model/references/mutation-log.md"
+
+# Create mutation-state.md with build ID
+cat > "$TMPDIR/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| T1 | FB43 Build | append-only | Test | effective | 5 | 5 | — | — | — |
+EOF
+
+cat > "$TMPDIR/build43/.kimi/mutations-applied.md" << 'EOF'
+## Build ID: FB43
+**Mutation**: M1
+**Effectiveness**: 5/5
+EOF
+
+cat > "$TMPDIR/build43/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+cat > "$TMPDIR/build43/.kimi/process-audit.md" << 'EOF'
+# Process Audit
+Score: 85/100
+All checks passed.
+EOF
+
+# NO mutation-portfolio-review.md — this should trigger Check 6
+
+touch "$TMPDIR/build43/.kimi/mutations-applied.md"
+touch "$TMPDIR/build43/.kimi/meta-report.md"
+touch "$TMPDIR/build43/.kimi/process-audit.md"
+
+PAYLOAD='{"session_id":"test-session-43","cwd":"'$TMPDIR/build43'","reason":"stop","stop_hook_active":false}'
+RC=0
+OUTPUT=$(echo "$PAYLOAD" | bash "$SCRIPT_DIR/stop-verifier.sh" 2>/dev/null) || RC=$?
+
+if echo "$OUTPUT" | grep -q '"permissionDecision":"deny"' && \
+   echo "$OUTPUT" | grep -q "mutation-portfolio-review.md"; then
+    pass
+else
+    fail "stop-verifier did not block for missing mutation-portfolio-review.md"
 fi
 
 # ============================================================================
