@@ -178,6 +178,20 @@ if [[ -f "$CWD/plan.md" && ! -f "$CWD/product-brief.md" && ! -f "$CWD/.kimi/prod
     fi
 fi
 
+# Check 13: Test spawn plan completion (NEW — closes S1 timeout gap)
+# Tier 2+ builds require a concrete test spawn plan to prevent tester timeouts.
+# R10 created test-split-orchestrator.py, but S5 must still remember to run it.
+# If plan.md indicates Tier 2+ but test-spawn-plan.md is missing, flag the omission.
+if [[ -f "$CWD/plan.md" && ! -f "$CWD/.kimi/test-spawn-plan.md" ]]; then
+    IS_TIER2PLUS="no"
+    if grep -qiE '\*\*Tier\*\*.*[23]|Tier:[[:space:]]*[23]' "$CWD/plan.md" 2>/dev/null; then
+        IS_TIER2PLUS="yes"
+    fi
+    if [[ "$IS_TIER2PLUS" == "yes" ]]; then
+        AUDIT_WARNINGS="${AUDIT_WARNINGS}- Tier 2+ build missing test-spawn-plan.md. test-split-orchestrator.py not run. Tester timeout risk elevated.\n"
+    fi
+fi
+
 # ── Auto-update mutation state (H213 safety net) ──
 # If mutations-applied.md exists but mutation-state.md was not updated during
 # Phase 8c-ii (S5 forgot to run update-mutation-state.sh), update it now.

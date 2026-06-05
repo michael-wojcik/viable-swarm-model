@@ -48,10 +48,18 @@ request S5 split it into smaller sub-tasks (e.g., per-page or per-component).
 Do NOT attempt to write >300 lines in a single spawn — this causes timeouts that
 degrade build scores.
 
-**Concrete Split Tool**: If S5 provides a large task, recommend running:
+**Spawn Plan Compliance — MANDATORY**
+Before writing tests, check if `.kimi/test-spawn-plan.md` exists in the build
+directory. If it exists, read it and follow its domain groupings. Your task
+scope MUST match the spawn plan's assigned domains for this spawn. If S5's
+task contradicts the spawn plan, escalate via algedonic.
+
+**Concrete Split Tool**: If S5 provides a large task without a spawn plan,
+recommend running:
 ```bash
 python3 ~/vsm/viable-swarm-model/scripts/test-split-orchestrator.py \
-  --domains "auth,home,courses,uploads,admin" --tier <1|2|3> --frontend
+  --domains "auth,home,courses,uploads,admin" --tier <1|2|3> --frontend \
+  --build-dir <BUILD_DIR>
 ```
 This outputs a concrete spawn plan with domain groupings and estimated lines.
 Use the plan to justify your split request with specific numbers.

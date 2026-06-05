@@ -1413,6 +1413,101 @@ else
 fi
 
 # ============================================================================
+# Test 37: session-end.sh — Tier 2+ build missing test-spawn-plan.md flagged
+# ============================================================================
+
+echo -n "TEST: session-end.sh flags missing test-spawn-plan.md for Tier 2 ... "
+
+mkdir -p "$TMPDIR/build37/.kimi"
+
+cat > "$TMPDIR/build37/plan.md" << 'EOF'
+# Build Plan — FB118
+**Tier**: 2
+EOF
+
+cat > "$TMPDIR/build37/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+PAYLOAD='{"session_id":"test-session-37","cwd":"'$TMPDIR/build37'","reason":"stop"}'
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/session-end.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   grep -q "test-spawn-plan.md" "$TMPDIR/build37/.kimi/session-telemetry.md" 2>/dev/null && \
+   grep -q "test-split-orchestrator.py not run" "$TMPDIR/build37/.kimi/session-telemetry.md" 2>/dev/null; then
+    pass
+else
+    fail "session-end did not flag missing test spawn plan for Tier 2"
+fi
+
+# ============================================================================
+# Test 38: session-end.sh — Tier 1 build missing test-spawn-plan.md NOT flagged
+# ============================================================================
+
+echo -n "TEST: session-end.sh does NOT flag missing test-spawn-plan.md for Tier 1 ... "
+
+mkdir -p "$TMPDIR/build38/.kimi"
+
+cat > "$TMPDIR/build38/plan.md" << 'EOF'
+# Build Plan — FB119
+**Tier**: 1
+EOF
+
+cat > "$TMPDIR/build38/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+PAYLOAD='{"session_id":"test-session-38","cwd":"'$TMPDIR/build38'","reason":"stop"}'
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/session-end.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   ! grep -q "test-spawn-plan.md" "$TMPDIR/build38/.kimi/session-telemetry.md" 2>/dev/null; then
+    pass
+else
+    fail "session-end falsely flagged missing test spawn plan for Tier 1"
+fi
+
+# ============================================================================
+# Test 39: session-end.sh — Tier 2+ with test-spawn-plan.md present NOT flagged
+# ============================================================================
+
+echo -n "TEST: session-end.sh does NOT flag when test-spawn-plan.md present ... "
+
+mkdir -p "$TMPDIR/build39/.kimi"
+
+cat > "$TMPDIR/build39/plan.md" << 'EOF'
+# Build Plan — FB120
+**Tier**: 3
+EOF
+
+cat > "$TMPDIR/build39/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+cat > "$TMPDIR/build39/.kimi/test-spawn-plan.md" << 'EOF'
+# Test Spawn Plan
+
+## Spawn 1
+- auth, graphql
+EOF
+
+PAYLOAD='{"session_id":"test-session-39","cwd":"'$TMPDIR/build39'","reason":"stop"}'
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/session-end.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   ! grep -q "test-spawn-plan.md" "$TMPDIR/build39/.kimi/session-telemetry.md" 2>/dev/null; then
+    pass
+else
+    fail "session-end falsely flagged test spawn plan when present"
+fi
+
+# ============================================================================
 # Summary
 # ============================================================================
 

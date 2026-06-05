@@ -3494,3 +3494,37 @@ Additionally, the dashboard was never automatically invoked — it only ran when
 **Measured effect**: **Awaiting measurement** — Success criteria: (1) vsm_meta success rate ≥80% in next 3 builds, (2) zero false TBD claims in meta-reports, (3) meta-metrics-precomputed.md present in 100% of builds reaching Phase 8.
 
 ---
+
+## Mutation R15 — 2026-06-05
+
+**Session**: S5 Orchestrator Iteration — tester timeout prevention via spawn plan enforcement
+**File**: `SKILL.md`, `agents/vsm_backend_tester.md`, `agents/vsm_frontend_tester.md`, `hooks/session-end.sh`, `hooks/test-automation.sh`
+**Type**: structural
+**Rationale**: The `vsm_backend_tester` (65% success) and `vsm_frontend_tester` (60% success) consistently time out in Tier 2+ builds. R10 created `test-split-orchestrator.py` to generate concrete spawn plans, but S5 must still remember to run it under time pressure. SKILL.md Phase 4 used hardcoded example domains (`test_auth.py`, `test_recipes.py`) instead of referencing the orchestrator, making the split ad-hoc and unreliable. Additionally, `vsm_backend_tester.md` and `vsm_frontend_tester.md` only mentioned the orchestrator as a recommendation, not a requirement. Finally, `session-end.sh` had no check for missing `test-spawn-plan.md`, making omission invisible during closeout.
+
+**Expected effect**:
+- 100% of Tier 2+ builds generate `.kimi/test-spawn-plan.md` before spawning testers.
+- Tester agents read and follow the spawn plan's domain groupings.
+- Tester timeout rate drops from 35-40% to <15% in Tier 2+ builds.
+- Missing spawn plans are flagged during session-end closeout.
+
+**Files modified**:
+- `SKILL.md` Phase 4 — Replaced hardcoded 3-sub-wave example with MANDATORY `test-split-orchestrator.py` invocation. Spawn plan MUST be generated before any tester agents are spawned.
+- `agents/vsm_backend_tester.md` — Added "Spawn Plan Compliance — MANDATORY" section. Agent MUST read `.kimi/test-spawn-plan.md` and follow its domain groupings.
+- `agents/vsm_frontend_tester.md` — Added "Spawn Plan Compliance — MANDATORY" section. Same requirement as backend tester.
+- `hooks/session-end.sh` — Added Check 13: flags missing `test-spawn-plan.md` when `plan.md` indicates Tier 2+.
+- `hooks/test-automation.sh` — Added Tests 37–39 verifying Tier 2 flag, Tier 1 no-flag, and present-plan no-flag.
+
+**Before**:
+- `SKILL.md`: Hardcoded example domains for tester splits
+- `vsm_backend_tester.md` / `vsm_frontend_tester.md`: Orchestrator mentioned as optional recommendation
+- `session-end.sh`: No check for test spawn plan
+
+**After**:
+- `SKILL.md`: Dynamic spawn plan via orchestrator, mandatory for Tier 2+
+- Tester agents: Spawn plan compliance is mandatory, not optional
+- `session-end.sh`: Check 13 detects missing spawn plans
+
+**Measured effect**: **Awaiting measurement** — Success criteria: (1) 100% of Tier 2+ builds produce test-spawn-plan.md, (2) tester timeout rate <15% in next 3 Tier 2+ builds, (3) session-end Check 13 fires zero false positives.
+
+---

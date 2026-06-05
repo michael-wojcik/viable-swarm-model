@@ -5,6 +5,43 @@
 
 ---
 
+## 2026-06-05 — S5 Orchestrator Iteration (R15)
+
+### Diagnosed Constraint
+**System 1 (Implementation) / S5→S1 channel**: The `vsm_backend_tester` (65% success) and `vsm_frontend_tester` (60% success) consistently time out in Tier 2+ builds. R10 created `test-split-orchestrator.py` to generate concrete spawn plans, but S5 must still remember to run it under time pressure. SKILL.md Phase 4 used hardcoded example domains (`test_auth.py`, `test_recipes.py`) instead of referencing the orchestrator, making splits ad-hoc and unreliable. The tester agent prompts only mentioned the orchestrator as an optional recommendation. `session-end.sh` had no check for missing `test-spawn-plan.md`, making omission invisible during closeout.
+
+### Change Made
+**Structural mutation R15**: Made test spawn plan generation mandatory for Tier 2+ builds and wired spawn plan compliance into tester agent prompts.
+- `SKILL.md` Phase 4: Replaced hardcoded 3-sub-wave example with MANDATORY `test-split-orchestrator.py` invocation. S5 MUST generate `.kimi/test-spawn-plan.md` before spawning ANY tester agents.
+- `agents/vsm_backend_tester.md`: Added "Spawn Plan Compliance — MANDATORY" section. Agent MUST read `.kimi/test-spawn-plan.md` and follow its domain groupings.
+- `agents/vsm_frontend_tester.md`: Added "Spawn Plan Compliance — MANDATORY" section. Same requirement as backend tester.
+- `hooks/session-end.sh`: Added Check 13: flags missing `test-spawn-plan.md` when `plan.md` indicates Tier 2+.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **43 passed, 0 failed** (was 40 passed, 0 failed)
+- New Tests 37–39 verify:
+  - Tier 2 build with missing test-spawn-plan.md flagged
+  - Tier 1 build with missing test-spawn-plan.md NOT flagged
+  - Tier 3 build with test-spawn-plan.md present NOT flagged
+
+### Files Modified
+- `viable-swarm-model/SKILL.md`
+- `viable-swarm-model/agents/vsm_backend_tester.md`
+- `viable-swarm-model/agents/vsm_frontend_tester.md`
+- `viable-swarm-model/hooks/session-end.sh`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4→S4 channel / meta-system curation gap**: The `vsm_variety_engineer` and `vsm_learning_curator` still have **0% empirical exercise rate** — no `variety-assessment.md` or `mutation-portfolio-review.md` artifacts exist in any build directory. Pre-computation scripts (R7, R8) generate fallback data, but the agents themselves are never spawned. The organism cannot autonomously promote/demote mutations or detect environmental drift. A SKILL.md Phase 8c-iii update making vsm_learning_curator mandatory for builds with ≥5 probationary mutations, or a session-end auto-spawn mechanism, could close this gap.
+
+---
+
 ## 2026-06-05 — S5 Orchestrator Iteration (R14)
 
 ### Diagnosed Constraint

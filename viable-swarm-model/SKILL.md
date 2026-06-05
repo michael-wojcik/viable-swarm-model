@@ -1012,15 +1012,25 @@ spawn both testers + devops_coder. Run tests via Shell.
 
 **Tier 2+ builds** (≥ 1000 lines, 2+ services):
 
+**Tester Spawn Plan — MANDATORY (R15)**
+Before spawning ANY tester agents, run `test-split-orchestrator.py` to generate
+a concrete spawn plan:
+```bash
+python3 ~/vsm/viable-swarm-model/scripts/test-split-orchestrator.py \
+  --domains "<domain1,domain2,...>" --tier <2|3> --backend --frontend \
+  --build-dir <BUILD_DIR>
+```
+This writes `.kimi/test-spawn-plan.md` with domain groupings, estimated lines,
+and copy-paste task templates. S5 MUST use this plan — do NOT invent ad-hoc
+splits under time pressure.
+
 **Tester Sub-Waves for Backend (H223 — Structural, REDESIGNED FB31)**
-Do NOT spawn a single `vsm_backend_tester` for the full suite. Split into
-**3 sequential tester spawns**:
-1. **Spawn 1**: `test_auth.py` + `test_recipes.py` + `test_ingredients.py`
-2. **Spawn 2**: `test_meal_plans.py` + `test_shopping_lists.py` + `test_social.py`
-3. **Spawn 3**: `test_graphql.py` + any remaining tests
+Do NOT spawn a single `vsm_backend_tester` for the full suite. Use the spawn
+plan from `test-split-orchestrator.py` and execute **sequential tester spawns**
+as specified in `.kimi/test-spawn-plan.md`.
 
 Wait via `TaskOutput(block=true)` for each spawn to complete before spawning the next.
-Each spawn gets a narrower scope (< 500 lines expected output) to stay under
+Each spawn gets a narrower scope (< 300 lines expected output) to stay under
 the timeout ceiling.
 
 **Parallel testers** (run simultaneously):
