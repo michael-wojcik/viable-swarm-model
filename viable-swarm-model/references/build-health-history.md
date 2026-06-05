@@ -67,3 +67,45 @@
 
 ### Next Highest-Leverage Constraint
 **System 3* (Process Audit) agent timeout and S4→S5 learning loop closure**: The `vsm_process_auditor` agent has a 60% success rate and timed out in FB30. SM2 (process auditor HARD BLOCK) is probationary and awaits measurement. Without reliable process auditing, Phase 8b/8c compliance checks are inconsistent. Additionally, the `vsm_learning_curator` (S5* Curation, Phase 8c-iii) has never been empirically exercised — no `mutation-portfolio-review.md` artifacts exist in any build directory. This means mutations are never autonomously promoted/demoted, and portfolio health is only assessed manually by S5. The next iteration should either (a) split process auditor tasks to prevent timeout, or (b) enforce learning curator spawn via a hook or stop-verifier check, or (c) both.
+
+---
+
+## 2026-06-05 — S5 Orchestrator Iteration (R7)
+
+### Diagnosed Constraint
+**System 3* (Process Audit) agent timeout and S4→S5 learning loop closure**: The `vsm_process_auditor` agent has a 60% success rate and timed out in FB30, leaving Phase 8b/8c compliance checks inconsistent. SM2 (process auditor HARD BLOCK) is probationary and awaits measurement. More fundamentally, the `vsm_learning_curator` (S5* Curation, Phase 8c-iii) has a **0% exercise rate** — no `mutation-portfolio-review.md` artifacts exist across 32+ fitness builds. Without portfolio review, mutations are never autonomously promoted/demoted, and the organism cannot manage its own learning rules. The S4→S5 intelligence channel is effectively one-way: S4 produces mutations, but S5* never curates them. Additionally, `session-end.sh` exited early when the telemetry directory was missing, skipping all bypass audit checks.
+
+### Change Made
+**Structural mutation R7**: Created `scripts/mutation-portfolio-health.py` and wired it into the closeout pipeline.
+- `mutation-portfolio-health.py`: Parses the multi-section master mutation table from `mutation-state.md`, computes 10 portfolio health metrics (total active, probationary ratio, fill rates, removal velocity), identifies promotion/demotion candidates using the curator's own rules, and suggests consolidations for overlapping failure modes. Outputs both JSON (for machine consumption) and Markdown (for human/agent review).
+- `session-end.sh`: Removed the early-exit guard on missing telemetry (which caused all audit checks to be skipped). Added Check 8: if `meta-report.md` exists but `mutation-portfolio-review.md` does not, flag the omission as a process violation AND auto-invoke `mutation-portfolio-health.py` to generate fallback data.
+- `vsm_process_auditor.md`: Fixed duplicate check numbering — Causal Index is now Check 9, Stack Skill Read Compliance is now Check 10 (was also Check 9).
+- `vsm_learning_curator.md`: Added "Pre-computed Portfolio Data (READ FIRST)" section instructing the agent to read `.kimi/mutation-portfolio-health.md` before computing metrics manually.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **21 passed, 0 failed** (was 17 passed, 0 failed)
+- New Tests 14–17 verify:
+  - Portfolio metrics computation across mixed-status mutation tables
+  - Promotion detection (probation + builds ≥ 3 + score ≥ 4)
+  - Demotion detection (probation + builds ≥ 3 + score ≤ 2)
+  - Session-end auto-generation of portfolio health when review is missing
+- Real mutation-state.md parse: 67 active mutations, 15 probationary, 5 monitor, 7 removed, 0 promotions/demotions currently ready.
+
+### Files Modified
+- `viable-swarm-model/scripts/mutation-portfolio-health.py` (created)
+- `viable-swarm-model/hooks/session-end.sh`
+- `viable-swarm-model/agents/vsm_process_auditor.md`
+- `viable-swarm-model/agents/vsm_learning_curator.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+
+### Git Commit
+- Hash: 5633fef
+
+### Next Highest-Leverage Constraint
+**System 1 (Implementation) agent timeout → S5 (Policy) overload**: The `vsm_backend_tester` (65% success rate) and `vsm_frontend_tester` (60% success rate) consistently time out in Tier 2+ builds. When testers timeout, S5 is forced to manually write tests — violating the S5 manual work cap (H222 confirmed: prompt-only cap fails under time pressure). The FB31 mutation FB31-2 (tester 3-sub-wave split) is effective but has only been tested once. A more robust fix would be to:
+1. Create a `scripts/test-split-orchestrator.py` that automatically divides test files into chunks < 300 lines and spawns tester agents sequentially, or
+2. Reduce tester agent prompt size by moving common test patterns into a shared `tester-patterns.md` reference that the agent reads on demand rather than inline.
+
+Alternatively, **System 4→S1 channel**: The `vsm_variety_engineer` (S4* environmental scanning) has never been empirically exercised. No proactive health scans or environmental drift reports exist. This agent was created during the 2026-06-04 audit (SM1) but has a 0% exercise rate — even lower than the learning curator was. The variety engineer is meant to scan for dependency updates, framework deprecations, and ecosystem shifts that could invalidate existing skill rules. Without it, the organism operates on stale environmental assumptions.
