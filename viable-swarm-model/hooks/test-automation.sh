@@ -1508,6 +1508,41 @@ else
 fi
 
 # ============================================================================
+# Test 40: mutation-portfolio-health.py — detects effective→historical promotions
+# ============================================================================
+
+echo -n "TEST: mutation-portfolio-health.py detects effective->historical promotions ... "
+
+cat > "$TMPDIR/mock-mutation-state.md" << 'EOF'
+# Mutation State
+
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| E1 | Test | append-only | Test failure | effective | 5 | 5 | — | — | — |
+| E2 | Test | append-only | Test failure | effective | 6 | 4 | — | — | — |
+| E3 | Test | append-only | Test failure | effective | 3 | 5 | — | — | — |
+| P1 | Test | append-only | Test failure | probation | 3 | 4 | — | — | — |
+| P2 | Test | append-only | Test failure | probation | 3 | 2 | — | — | — |
+| M1 | Test | append-only | Test failure | monitor | 5 | 4 | — | — | — |
+EOF
+
+RC=0
+python3 "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" \
+  --build-dir "$TMPDIR/build40" \
+  --mutation-state "$TMPDIR/mock-mutation-state.md" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   [ -f "$TMPDIR/build40/.kimi/mutation-portfolio-health.md" ] && \
+   grep -q "Effective → Historical Promotions" "$TMPDIR/build40/.kimi/mutation-portfolio-health.md" && \
+   grep -q "E1" "$TMPDIR/build40/.kimi/mutation-portfolio-health.md" && \
+   grep -q "E2" "$TMPDIR/build40/.kimi/mutation-portfolio-health.md" && \
+   ! grep -A5 "Effective → Historical Promotions" "$TMPDIR/build40/.kimi/mutation-portfolio-health.md" | grep -q "E3"; then
+    pass
+else
+    fail "mutation-portfolio-health.py did not detect expected historical promotions"
+fi
+
+# ============================================================================
 # Summary
 # ============================================================================
 

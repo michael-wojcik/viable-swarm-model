@@ -25,7 +25,7 @@ from dataclasses import dataclass, asdict
 from typing import Optional
 
 VSM_ROOT = Path.home() / "vsm" / "viable-swarm-model"
-MUTATION_STATE = VSM_ROOT / "references" / "mutation-state.md"
+DEFAULT_MUTATION_STATE = VSM_ROOT / "references" / "mutation-state.md"
 
 
 @dataclass
@@ -58,6 +58,7 @@ class PortfolioHealth:
     demotions_ready: list
     monitor_promotions_ready: list
     monitor_removals_ready: list
+    historical_promotions_ready: list
     consolidations_suggested: list
     removal_rate_last_5: int
     data_integrity_errors: list
@@ -165,6 +166,7 @@ def compute_portfolio_health(rows: list[MutationRow]) -> PortfolioHealth:
     demotions = []
     monitor_promotions = []
     monitor_removals = []
+    historical_promotions = []
 
     for row in rows:
         # Categorize by status
@@ -224,6 +226,15 @@ def compute_portfolio_health(rows: list[MutationRow]) -> PortfolioHealth:
                     "rationale": f"{row.builds_tested} builds tested, score {row.score}",
                 })
 
+        # Historical promotion: effective mutations with ≥5 builds and score ≥4
+        if row.status == "effective" and row.builds_tested >= 5:
+            if row.score is not None and row.score >= 4:
+                historical_promotions.append({
+                    "id": row.id,
+                    "new_status": "historical",
+                    "rationale": f"{row.builds_tested} builds tested, score {row.score} — proven effective, move to historical",
+                })
+
     # Consolidation suggestion: if multiple probationary mutations target same failure mode
     failure_mode_groups: dict[str, list[str]] = {}
     for row in rows:
@@ -269,6 +280,7 @@ def compute_portfolio_health(rows: list[MutationRow]) -> PortfolioHealth:
         demotions_ready=demotions,
         monitor_promotions_ready=monitor_promotions,
         monitor_removals_ready=monitor_removals,
+        historical_promotions_ready=historical_promotions,
         consolidations_suggested=consolidations,
         removal_rate_last_5=recent_removed,
         data_integrity_errors=[],
@@ -352,6 +364,17 @@ def write_health_markdown(health: PortfolioHealth, build_dir: Path) -> None:
             lines.append(f"| {p['id']} | {p['new_status']} | {p['rationale']} |")
         lines.append("")
 
+    if health.historical_promotions_ready:
+        lines.extend([
+            "## Effective → Historical Promotions (Autonomous)",
+            "",
+            "| Mutation ID | New Status | Rationale |",
+            "|---|---|---|",
+        ])
+        for p in health.historical_promotions_ready:
+            lines.append(f"| {p['id']} | {p['new_status']} | {p['rationale']} |")
+        lines.append("")
+
     if health.consolidations_suggested:
         lines.extend([
             "## Consolidation Suggestions",
@@ -376,9 +399,11 @@ def write_health_markdown(health: PortfolioHealth, build_dir: Path) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Mutation Portfolio Health Calculator")
     parser.add_argument("--build-dir", help="Build directory to write .kimi/ artifacts to")
+    parser.add_argument("--mutation-state", help="Path to mutation-state.md (default: ~/vsm/viable-swarm-model/references/mutation-state.md)")
     args = parser.parse_args()
 
-    rows, errors = parse_mutation_state(MUTATION_STATE)
+    state_path = Path(args.mutation_state) if args.mutation_state else DEFAULT_MUTATION_STATE
+    rows, errors = parse_mutation_state(state_path)
     health = compute_portfolio_health(rows)
     health.data_integrity_errors = errors
 

@@ -3528,3 +3528,32 @@ Additionally, the dashboard was never automatically invoked — it only ran when
 **Measured effect**: **Awaiting measurement** — Success criteria: (1) 100% of Tier 2+ builds produce test-spawn-plan.md, (2) tester timeout rate <15% in next 3 Tier 2+ builds, (3) session-end Check 13 fires zero false positives.
 
 ---
+
+## Mutation R16 — 2026-06-05
+
+**Session**: S5 Orchestrator Iteration — mutation portfolio curation automation
+**File**: `scripts/mutation-portfolio-health.py`, `hooks/test-automation.sh`
+**Type**: refinement
+**Rationale**: The `vsm_learning_curator` agent (S5* Curation) had a 0% exercise rate, but `stop-verifier.sh` Check 6 already enforces its artifact (`mutation-portfolio-review.md`) for builds reaching Phase 8. The real gap was in the pre-computation script: `mutation-portfolio-health.py` computed portfolio metrics but did NOT identify which effective mutations should be promoted to "historical" status. The curator's promotion rules explicitly state "effective + builds tested ≥ 5 → historical", but this rule was missing from the script. With 76 active mutations (target < 50), the organism needed autonomous curation to reduce bloat. The script identified 10 mutations ready for historical promotion, which would reduce active mutations to 66.
+
+**Expected effect**:
+- Pre-computed portfolio health now includes "Effective → Historical Promotions" section.
+- S5 can apply historical promotions autonomously without spawning vsm_learning_curator.
+- Active mutation count decreases toward the < 50 target.
+- Portfolio bloat velocity improves.
+
+**Files modified**:
+- `scripts/mutation-portfolio-health.py` — Added `historical_promotions_ready` field to PortfolioHealth dataclass. Added promotion rule: effective + builds_tested ≥ 5 + score ≥ 4 → historical. Added markdown output section. Added `--mutation-state` CLI argument for testability.
+- `hooks/test-automation.sh` — Added Test 40 verifying historical promotion detection with mock mutation-state.md.
+
+**Before**:
+- `mutation-portfolio-health.py` output: empty `promotions_ready` arrays, no historical promotion guidance
+- Active mutations: 76, with no automated path to reduce below 50
+
+**After**:
+- `mutation-portfolio-health.py` output: 10 historical promotion candidates identified
+- Active mutations can be reduced to ~66 via autonomous application
+
+**Measured effect**: **Awaiting measurement** — Success criteria: (1) S5 applies ≥5 historical promotions in next session, (2) active mutation count drops below 70, (3) portfolio health script continues identifying candidates accurately.
+
+---

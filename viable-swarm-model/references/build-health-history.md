@@ -5,6 +5,40 @@
 
 ---
 
+## 2026-06-05 — S5 Orchestrator Iteration (R16)
+
+### Diagnosed Constraint
+**System 4→S4 channel / meta-system curation gap**: The `vsm_learning_curator` agent had a 0% exercise rate, but further investigation revealed that `stop-verifier.sh` Check 6 already enforces `mutation-portfolio-review.md` for builds reaching Phase 8. The real gap was in the pre-computation script: `mutation-portfolio-health.py` computed metrics but did NOT implement the curator's "effective → historical" promotion rule. With **76 active mutations** (target < 50), the organism needed autonomous curation to reduce bloat. The script was identifying zero promotions/demotions because it only checked probationary and monitor mutations, missing the most obvious candidates: proven effective mutations with ≥5 builds tested.
+
+### Change Made
+**Refinement mutation R16**: Added the "effective → historical" promotion rule to `mutation-portfolio-health.py`.
+- Added `historical_promotions_ready` field to PortfolioHealth dataclass.
+- Added rule: `effective` + `builds_tested >= 5` + `score >= 4` → `historical`.
+- Added Markdown output section: "Effective → Historical Promotions (Autonomous)".
+- Added `--mutation-state` CLI argument for testability.
+- Real scan identified **10 mutations** ready for historical promotion (e.g., FB25-S1, FB24-1, FB21-8), which would reduce active mutations from 76 to 66.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **44 passed, 0 failed** (was 43 passed, 0 failed)
+- Test 40 verifies:
+  - Mock effective mutations with builds ≥5 and score ≥4 are flagged for historical promotion
+  - Effective mutations with builds <5 are correctly excluded
+
+### Files Modified
+- `viable-swarm-model/scripts/mutation-portfolio-health.py`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 3* (Audit/Control) / S3→S5 compliance channel**: The `stop-verifier.sh` script has 6 checks that block session completion, but **zero tests** in `test-automation.sh`. This is critical infrastructure with no test coverage. A bug in stop-verifier could either (a) prevent legitimate session stops, trapping S5 in an infinite loop, or (b) allow illegitimate stops, bypassing mandatory Phase 8 checks. The organism has invested heavily in session-end.sh testing (13 checks, 30+ tests) but neglected stop-verifier.sh. Adding even 3-4 tests for the most critical checks (mutations-applied.md, process-audit.md, portfolio-review.md) would close this blind spot.
+
+---
+
 ## 2026-06-05 — S5 Orchestrator Iteration (R15)
 
 ### Diagnosed Constraint
