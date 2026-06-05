@@ -5,25 +5,35 @@
 
 ---
 
-## 2026-06-05 — S5 Orchestrator Iteration (R12)
+## 2026-06-05 — S5 Orchestrator Iteration (R11+R12)
 
-### Diagnosed Constraint
-**System 4→S4 channel / meta-system integration gap**: The organism now has 5 closeout scripts and `session-end.sh` with 11 checks. Each component is tested in isolation, but there is no integration test that exercises them together on a single mock build directory. This creates a **cascade failure risk**: a format change in `mutation-state.md` could break 3 scripts simultaneously; a session-end.sh bug could suppress multiple checks. Without integration testing, these failures would only be discovered during a real build closeout — too late to prevent data corruption or missed process violations. This is a System 4→S4 channel failure: the meta-system components don't verify their mutual consistency.
+### Diagnosed Constraint (R11)
+**System 3* (Security Audit) → System 1 (Implementation) channel failure**: The `vsm_security` agent was **bypassed entirely in FB30** — manual audit was used instead of spawning the security agent. The session-end closeout hook had checks for missing process-audit.md, portfolio-review.md, and variety-assessment.md, but no check for missing `security-report.md`. This made the bypass invisible during closeout.
 
-### Change Made
+### Change Made (R11)
+**Structural mutation R11**: Added Check 11 to `session-end.sh` for security gate bypass detection.
+- If `meta-report.md` exists but `security-report.md` is missing AND the build contains security-relevant code, flag a **CRITICAL** process violation.
+- Grep-based security surface detection across `.py`, `.ts`, `.tsx`, `.js` files.
+- Static sites and builds with no security surface are correctly excluded.
+
+### Diagnosed Constraint (R12)
+**System 4→S4 channel / meta-system integration gap**: The organism has 5 closeout scripts and `session-end.sh` with 11 checks. Each is tested in isolation, but there is no integration test that exercises them together on a single mock build directory. This creates a **cascade failure risk**: a format change in `mutation-state.md` could break 3 scripts simultaneously.
+
+### Change Made (R12)
 **Structural mutation R12**: Created `scripts/integration-test-closeout.py` and added it to the automation suite.
-- Creates a realistic mock build directory with all required artifacts (plan.md, meta-report.md, phase4-gate.md, re-audit-report.md, lessons.md, mutations-applied.md, security-report.md, auth.py).
-- Runs all 4 closeout scripts sequentially on the SAME directory: build-health-dashboard.py, mutation-portfolio-health.py, organism-vitals.py, process-compliance-precompute.py.
-- Verifies mutual consistency: build-health-history.md contains the build entry, portfolio JSON has valid structure, organism vitals reference consistent metrics, compliance precompute references existing artifacts.
-- Runs `session-end.sh` with piped payload and verifies telemetry is created without false CRITICAL warnings.
+- Runs all 4 closeout scripts sequentially on the SAME mock build directory.
+- Verifies mutual consistency between script outputs.
+- Runs `session-end.sh` and verifies no false CRITICAL warnings when all artifacts present.
 
 ### Test Results
-- `bash hooks/test-automation.sh`: **34 passed, 0 failed** (was 33 passed, 0 failed)
-- New Test 30 verifies the full closeout pipeline end-to-end.
+- `bash hooks/test-automation.sh`: **34 passed, 0 failed** (was 30 passed, 0 failed before R11)
+- Tests 27–29: Security bypass detection, static-site exclusion, existing-report exclusion
+- Test 30: Full closeout pipeline integration test
 
 ### Files Modified
-- `viable-swarm-model/scripts/integration-test-closeout.py` (created)
-- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/hooks/session-end.sh` (R11: Check 11)
+- `viable-swarm-model/hooks/test-automation.sh` (R11: Tests 27–29; R12: Test 30)
+- `viable-swarm-model/scripts/integration-test-closeout.py` (R12: created)
 - `viable-swarm-model/references/mutation-state.md`
 - `viable-swarm-model/references/mutation-log.md`
 - `viable-swarm-model/references/build-health-history.md`
@@ -32,11 +42,9 @@
 - See `git log` for commit hash
 
 ### Next Highest-Leverage Constraint
-**System 5→S1 channel / S4→S5 intelligence gap**: The `vsm_product` agent (S4 Product) has only 1 lesson mention across 26+ fitness builds, suggesting it is rarely spawned. Yet H[N+1] (gym experiment) confirmed that product briefs are a proven guardrail against architect scope creep — the control architect (no brief) added an entire auth subsystem, while the treatment architect (with brief) eliminated auth entirely and produced a design with only 3 core features and 12+ explicit scope exclusions. Despite this strong empirical evidence, builds routinely skip the product brief phase because SKILL.md only requires it for "problem-oriented prompts." A session-start check for `product-brief.md` or an update to SKILL.md Phase 1 could close this gap and prevent scope creep at the source.
+**System 5→S1 channel / S4→S5 intelligence gap**: The `vsm_product` agent (S4 Product) has only 1 lesson mention across 26+ fitness builds, suggesting it is rarely spawned. Yet H[N+1] (gym experiment) confirmed that product briefs are a proven guardrail against architect scope creep. Builds routinely skip the product brief phase because SKILL.md only requires it for "problem-oriented prompts." A session-start check for `product-brief.md` or an update to SKILL.md Phase 1 could close this gap and prevent scope creep at the source.
 
 ---
-
-## 2026-06-05 — S5 Orchestrator Iteration (R11)
 
 ### Diagnosed Constraint
 **System 3* (Security Audit) → System 1 (Implementation) channel failure / S3→S5 compliance gap**: The `vsm_security` agent was **bypassed entirely in FB30** — manual audit was used instead of spawning the security agent. This represents a critical quality gate failure: vulnerabilities that should have been caught by the security agent could have leaked into the delivered build. The session-end closeout hook had checks for missing process-audit.md, portfolio-review.md, and variety-assessment.md, but no check for missing `security-report.md`. This made the bypass invisible during closeout. Unlike process auditor timeout (addressed by R9), a security bypass has higher downstream risk because undetected auth/GraphQL/WebSocket vulnerabilities directly compromise user data and system integrity.
