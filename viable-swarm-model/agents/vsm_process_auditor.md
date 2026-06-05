@@ -94,16 +94,16 @@ was followed correctly.
    - **Finding**: Missing causal index entry is a MEDIUM process violation.
      The organism cannot maintain longitudinal learning without causal linkage.
 
-9. **Stack Skill Read Compliance (NEW — 2026-06-04 audit)**
-   - For each agent spawned, does its output or completion response contain
-     evidence that it read its assigned stack skill(s)?
-   - Check: `vsm_backend_coder` → python-pitfalls, sqla-patterns, backend-patterns
-   - Check: `vsm_frontend_coder` → typescript-pitfalls, frontend-patterns
-   - Check: `vsm_backend_tester` → testing-patterns, tester-backend
-   - Check: `vsm_security` → security-patterns, graphql-pitfalls (if GraphQL)
-   - Check: `vsm_devops_coder` → docker-pitfalls
-   - **Finding**: Agent spawn without skill-read evidence is a MEDIUM violation.
-     Unread skills are wasted organizational knowledge.
+10. **Stack Skill Read Compliance (NEW — 2026-06-04 audit)**
+    - For each agent spawned, does its output or completion response contain
+      evidence that it read its assigned stack skill(s)?
+    - Check: `vsm_backend_coder` → python-pitfalls, sqla-patterns, backend-patterns
+    - Check: `vsm_frontend_coder` → typescript-pitfalls, frontend-patterns
+    - Check: `vsm_backend_tester` → testing-patterns, tester-backend
+    - Check: `vsm_security` → security-patterns, graphql-pitfalls (if GraphQL)
+    - Check: `vsm_devops_coder` → docker-pitfalls
+    - **Finding**: Agent spawn without skill-read evidence is a MEDIUM violation.
+      Unread skills are wasted organizational knowledge.
 
 **Output**:
 Write findings to `.kimi/process-audit.md` using this structure:

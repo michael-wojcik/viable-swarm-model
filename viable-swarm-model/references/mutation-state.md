@@ -91,14 +91,14 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 54 | — | — |
-| Historical effective (≥5 builds) | 10 | >15% of active | ✅ 19% |
-| Effective (<5 builds, monitored) | 24 | >30% of active | ✅ 45% |
-| Probationary mutations | 19 | <20 at any time | ✅ 19 (within target) |
-| Removed / redesigned | 10 | ≥2 per 5 builds | ✅ 10 (exceeds target) |
-| Measured effect fill rate (scored) | 38/48 | ≥80% | ✅ 79% (10 pending) |
-| Measured effect fill rate (any entry) | 48/48 | ≥80% | ✅ 100% |
-| Removal rate (last 5 builds) | 6/5 = 120% | ≥20% | ✅ Exceeds |
+| Active mutations | 67 | < 50 | ⚠️ WARNING (exceeds target) |
+| Historical effective (≥5 builds) | 10 | >15% of active | ✅ 15% |
+| Effective (<5 builds, monitored) | 52 | >30% of active | ✅ 78% |
+| Probationary mutations | 15 | <20 at any time | ✅ 15 (within target) |
+| Removed / redesigned | 9 | ≥2 per 5 builds | ✅ 9 (exceeds target) |
+| Measured effect fill rate (scored) | 59/67 | ≥80% | ✅ 88% |
+| Measured effect fill rate (any entry) | 67/67 | ≥80% | ✅ 100% |
+| Removal rate (last 5 builds) | 7/5 = 140% | ≥20% | ✅ Exceeds |
 
 ---
 
@@ -274,4 +274,5 @@
 
 | **S5 ITERATION MUTATIONS (2026-06-05)** |
 | R5 | 2026-06-05 S5 | refinement | auto-broker-update.sh pipefail crash on empty grep | effective | 1 | 5 | — | — | — |
-| R6 | 2026-06-05 S5 | refinement | build-health-dashboard.py metric accuracy | probation | 0 | — | — | — | S5 iter
+| R6 | 2026-06-05 S5 | refinement | build-health-dashboard.py metric accuracy | effective | 1 | 5 | — | — | — |
+| R7 | 2026-06-05 S5 | structural | mutation-portfolio-health.py + session-end auto-invocation | probation | 0 | — | — | — | S5 iter

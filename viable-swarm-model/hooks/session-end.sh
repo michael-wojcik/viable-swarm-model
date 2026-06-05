@@ -15,32 +15,24 @@ REASON=$(echo "$PAYLOAD" | jq -r '.reason // "unknown"')
 TELEMETRY_DIR="$HOME/.vsm-telemetry"
 SKILL_STATE="$HOME/vsm/viable-swarm-model/references/skill-state.md"
 
-# Only process if we have telemetry
-if [[ ! -d "$TELEMETRY_DIR" ]]; then
-    exit 0
-fi
-
-# Count file writes for this session
+# Telemetry is optional; process what exists, default to zero/unknown
 FILE_WRITES=0
 if [[ -f "$TELEMETRY_DIR/file-writes.jsonl" ]]; then
     FILE_WRITES=$(grep -c "$SESSION_ID" "$TELEMETRY_DIR/file-writes.jsonl" 2>/dev/null || true)
     FILE_WRITES=${FILE_WRITES:-0}
 fi
 
-# Count subagents spawned for this session
 SUBAGENT_COUNT=0
 if [[ -f "$TELEMETRY_DIR/subagents.jsonl" ]]; then
     SUBAGENT_COUNT=$(grep -c "$SESSION_ID" "$TELEMETRY_DIR/subagents.jsonl" 2>/dev/null || true)
     SUBAGENT_COUNT=${SUBAGENT_COUNT:-0}
 fi
 
-# Count unique agent types
 AGENT_TYPES=""
 if [[ -f "$TELEMETRY_DIR/subagents.jsonl" ]]; then
     AGENT_TYPES=$(grep "$SESSION_ID" "$TELEMETRY_DIR/subagents.jsonl" 2>/dev/null | jq -r '.agent_name' | sort -u | tr '\n' ',' | sed 's/,$//')
 fi
 
-# Calculate session duration from session log
 SESSION_START=""
 SESSION_END="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 DURATION_MIN="unknown"
@@ -104,6 +96,20 @@ fi
 if [[ -f "$CWD/plan.md" ]]; then
     if ! grep -qi "knowledge-broker\|Active Constraints\|broker trap" "$CWD/plan.md" 2>/dev/null; then
         AUDIT_WARNINGS="${AUDIT_WARNINGS}- plan.md has no knowledge broker references. Phase 0 broker read likely skipped.\n"
+    fi
+fi
+
+# Check 8: Mutation portfolio review completion (NEW — closes S4→S5 learning loop)
+# If build reached Phase 8 (meta-report.md exists) but portfolio review was never done,
+# flag the omission and auto-generate pre-computed health data as fallback.
+if [[ -f "$CWD/.kimi/meta-report.md" && ! -f "$CWD/.kimi/mutation-portfolio-review.md" ]]; then
+    AUDIT_WARNINGS="${AUDIT_WARNINGS}- Phase 8b complete but mutation-portfolio-review.md missing. vsm_learning_curator not spawned.\n"
+    # Auto-generate pre-computed portfolio health so S5 has data even without curator
+    PORTFOLIO_SCRIPT="$HOME/vsm/viable-swarm-model/scripts/mutation-portfolio-health.py"
+    if [[ -f "$PORTFOLIO_SCRIPT" ]]; then
+        python3 "$PORTFOLIO_SCRIPT" --build-dir "$CWD" >/dev/null 2>&1 || {
+            echo "WARNING: mutation-portfolio-health.py failed. Portfolio metrics not pre-computed." >&2
+        }
     fi
 fi
 

@@ -558,6 +558,144 @@ else
 fi
 
 # ============================================================================
+# Test 14: mutation-portfolio-health.py — basic computation and JSON output
+# ============================================================================
+
+echo -n "TEST: mutation-portfolio-health.py computes portfolio metrics correctly ... "
+
+mkdir -p "$TMPDIR/build14/.kimi"
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| T1 | Test | append-only | Test failure | effective | 5 | 4 | — | — | — |
+| T2 | Test | structural | Test bypass | probation | 1 | 3 | — | — | — |
+| T3 | Test | refinement | Test gap | monitor | 5 | 2 | — | — | — |
+| T4 | Test | append-only | Auth bug | probation | 3 | 5 | — | — | — |
+| T5 | Test | structural | Config drift | **REMOVED** | 1 | 1 | — | — | — |
+EOF
+
+cat > "$TMPDIR/build14/plan.md" << 'EOF'
+# Build Plan — FB101
+EOF
+
+RC=0
+python3 "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" --build-dir "$TMPDIR/build14" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   [ -f "$TMPDIR/build14/.kimi/mutation-portfolio-health.json" ] && \
+   [ -f "$TMPDIR/build14/.kimi/mutation-portfolio-health.md" ] && \
+   grep -q '"total_active": 4' "$TMPDIR/build14/.kimi/mutation-portfolio-health.json" && \
+   grep -q '"probationary_count": 2' "$TMPDIR/build14/.kimi/mutation-portfolio-health.json" && \
+   grep -q '"promotions_ready"' "$TMPDIR/build14/.kimi/mutation-portfolio-health.json"; then
+    pass
+else
+    fail "portfolio health output incorrect or missing"
+fi
+
+# ============================================================================
+# Test 15: mutation-portfolio-health.py — promotion detection
+# ============================================================================
+
+echo -n "TEST: mutation-portfolio-health.py detects promotion-ready mutations ... "
+
+mkdir -p "$TMPDIR/build15/.kimi"
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| T4 | Test | append-only | Auth bug | probation | 3 | 5 | — | — | — |
+EOF
+
+cat > "$TMPDIR/build15/plan.md" << 'EOF'
+# Build Plan — FB102
+EOF
+
+RC=0
+python3 "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" --build-dir "$TMPDIR/build15" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   grep -q '"id": "T4"' "$TMPDIR/build15/.kimi/mutation-portfolio-health.json" && \
+   grep -q '"new_status": "effective"' "$TMPDIR/build15/.kimi/mutation-portfolio-health.json"; then
+    pass
+else
+    fail "promotion-ready mutation not detected"
+fi
+
+# ============================================================================
+# Test 16: mutation-portfolio-health.py — demotion detection
+# ============================================================================
+
+echo -n "TEST: mutation-portfolio-health.py detects demotion-ready mutations ... "
+
+mkdir -p "$TMPDIR/build16/.kimi"
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| T3 | Test | refinement | Test gap | probation | 3 | 2 | — | — | — |
+EOF
+
+cat > "$TMPDIR/build16/plan.md" << 'EOF'
+# Build Plan — FB103
+EOF
+
+RC=0
+python3 "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" --build-dir "$TMPDIR/build16" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   grep -q '"id": "T3"' "$TMPDIR/build16/.kimi/mutation-portfolio-health.json" && \
+   grep -q '"new_status": "ineffective"' "$TMPDIR/build16/.kimi/mutation-portfolio-health.json"; then
+    pass
+else
+    fail "demotion-ready mutation not detected"
+fi
+
+# ============================================================================
+# Test 17: mutation-portfolio-health.py — session-end hook auto-invocation
+# ============================================================================
+
+echo -n "TEST: session-end.sh auto-generates portfolio health when review missing ... "
+
+mkdir -p "$TMPDIR/build17/.kimi"
+mkdir -p "$TMPDIR/vsm/viable-swarm-model/scripts"
+
+# Copy scripts into TMPDIR so session-end.sh can find them via $HOME
+cp "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" "$TMPDIR/vsm/viable-swarm-model/scripts/"
+
+cat > "$TMPDIR/build17/plan.md" << 'EOF'
+# Build Plan — FB104
+EOF
+
+cat > "$TMPDIR/build17/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| T1 | Test | append-only | Test failure | effective | 5 | 4 | — | — | — |
+EOF
+
+# Simulate session-end payload
+PAYLOAD='{"session_id":"test-session-17","cwd":"'$TMPDIR/build17'","reason":"stop"}'
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/session-end.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   [ -f "$TMPDIR/build17/.kimi/mutation-portfolio-health.json" ] && \
+   grep -q "mutation-portfolio-review.md missing" "$TMPDIR/build17/.kimi/session-telemetry.md" 2>/dev/null; then
+    pass
+else
+    fail "session-end did not auto-generate portfolio health or flag missing review"
+fi
+
+# ============================================================================
 # Summary
 # ============================================================================
 

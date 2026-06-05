@@ -3206,3 +3206,39 @@ Additionally, the dashboard was never automatically invoked — it only ran when
 - `hooks/test-automation.sh` — Added 4 new tests (Tests 10–13) covering score normalization, agent risk exclusion, blocker heading count, and removed mutation count
 
 ---
+
+## Mutation R7 — 2026-06-05
+
+**Session**: S5 Orchestrator Iteration (Third iteration of automated improvement loop)
+**File**: `scripts/mutation-portfolio-health.py` (new), `hooks/session-end.sh`, `agents/vsm_process_auditor.md`, `agents/vsm_learning_curator.md`
+**Type**: structural
+**Rationale**: The `vsm_learning_curator` (S5* Curation, Phase 8c-iii) has NEVER been empirically exercised — zero `mutation-portfolio-review.md` artifacts exist across all 32+ fitness builds. Without portfolio review, mutations are never autonomously promoted/demoted, and the organism cannot manage its own learning rules. Additionally, the `vsm_process_auditor` prompt had a duplicate check "9." (Causal Index and Stack Skill Read both numbered 9), causing confusion.
+
+**Expected effect**: 
+- Every build closeout automatically pre-computes mutation portfolio health metrics via `scripts/mutation-portfolio-health.py`, invoked from `session-end.sh`.
+- If `mutation-portfolio-review.md` is missing when `meta-report.md` exists, session-end flags the omission AND generates fallback portfolio data.
+- The `vsm_learning_curator` agent reads pre-computed data first, reducing its task from "read + parse + compute" to "read + verify + decide", preventing timeout.
+- The `vsm_process_auditor` has corrected numbering (check 10 for Stack Skill Reads), reducing cognitive load.
+
+**Before**:
+- No automated portfolio health computation.
+- Learning curator had 0% exercise rate; S5 manually assessed mutations.
+- Process auditor had duplicate check numbering.
+- session-end.sh exited early if telemetry directory missing, skipping all audit checks.
+
+**After**:
+- `scripts/mutation-portfolio-health.py` parses mutation-state.md, computes 10 portfolio metrics, detects promotion/demotion candidates, suggests consolidations.
+- `session-end.sh` Check 8: auto-generates portfolio health when review missing; no longer exits early on missing telemetry.
+- `vsm_learning_curator.md` instructs agent to read pre-computed `.kimi/mutation-portfolio-health.md` first.
+- `vsm_process_auditor.md` Check 9 = Causal Index, Check 10 = Stack Skill Reads.
+
+**Files modified**:
+- `scripts/mutation-portfolio-health.py` — Created (370 lines). Parses multi-section master table, handles strikethrough IDs, computes portfolio health, writes JSON + Markdown.
+- `hooks/session-end.sh` — Removed early telemetry exit; added Check 8 for missing portfolio review; auto-invokes portfolio health script.
+- `agents/vsm_process_auditor.md` — Fixed duplicate "9." → "10." for Stack Skill Read Compliance.
+- `agents/vsm_learning_curator.md` — Added "Pre-computed Portfolio Data (READ FIRST)" section.
+- `hooks/test-automation.sh` — Added Tests 14–17 covering portfolio health computation, promotion/demotion detection, and session-end auto-invocation.
+
+**Measured effect**: **Awaiting measurement** — To be scored after next fitness build or S5 iteration. Success criteria: (1) portfolio health JSON exists in `.kimi/` for ≥80% of builds, (2) learning curator exercise rate > 0%, (3) process auditor timeout rate improves.
+
+---
