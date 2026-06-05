@@ -5,6 +5,40 @@
 
 ---
 
+## 2026-06-05 — S5 Orchestrator Iteration (R20)
+
+### Diagnosed Constraint
+**System 5 (Policy) / S5→S1 closeout pipeline gap**: The organism created 9 pre-computation/orchestration scripts (R6–R10, R14, R18, R19) but only 5 were auto-invoked at closeout. **meta-metrics-precompute.py** (R14) and **algedonic-action-plan.py** (R19) required S5 to remember to run them manually — a reliability failure under time pressure. When S5 forgets, vsm_meta makes false TBD claims (no pre-computed metrics) and the variety engineer has no structured action plan to verify. This is a systemic pattern: new scripts are created but not wired into the automated pipeline.
+
+### Change Made
+**Structural mutation R20**: Wired missing pre-computation scripts into `session-end.sh`.
+- **Check 14**: If `meta-report.md` exists but `meta-metrics-precomputed.md` is missing, flag the omission and auto-invoke `meta-metrics-precompute.py`. Prevents vsm_meta false TBD claims.
+- **Check 15**: If `meta-report.md` exists but `algedonic-action-plan.md` is missing, flag the omission and auto-invoke `algedonic-action-plan.py`. Gives S5 a concrete action plan for next iteration.
+- Both checks follow the proven pattern from Checks 8–10 (flag → auto-generate fallback).
+- `hooks/test-automation.sh`: Added Tests 49–52.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **57 passed, 0 failed** (was 53 passed, 0 failed)
+- Test 49: session-end flags missing meta-metrics-precomputed.md and auto-generates it
+- Test 50: session-end does NOT flag when meta-metrics-precomputed.md is present
+- Test 51: session-end flags missing algedonic-action-plan.md and auto-generates it
+- Test 52: session-end does NOT flag when algedonic-action-plan.md is present
+
+### Files Modified
+- `viable-swarm-model/hooks/session-end.sh` (Checks 14–15)
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 1 (Implementation) / S5→S1 channel**: The `vsm_backend_tester` (65% success) and `vsm_frontend_tester` (60% success) consistently time out in Tier 2+ builds. The "Adaptive Task Sizing" rule (≤500 lines) is **Tier C (prompt-only)**. An end-to-end integration test that exercises the FULL pipeline — from Phase 0 (variety engineer) through Phase 8 (stop-verifier) — on a simulated Tier 2+ build would catch cascade failures. But more importantly, the **stop-verifier.sh** (R17) is not yet included in `integration-test-closeout.py`, meaning regressions in the session-stop enforcement could go undetected in end-to-end testing.
+
+---
+
 ## 2026-06-05 — S5 Orchestrator Iteration (R19)
 
 ### Diagnosed Constraint

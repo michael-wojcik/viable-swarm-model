@@ -2073,6 +2073,264 @@ fi
 pass
 
 # ============================================================================
+# Test 49: session-end.sh — flags missing meta-metrics-precomputed.md and auto-generates
+# ============================================================================
+
+echo -n "TEST: session-end.sh flags missing meta-metrics-precomputed.md and auto-generates ... "
+
+mkdir -p "$TMPDIR/build49/.kimi"
+mkdir -p "$TMPDIR/build49/vsm/viable-swarm-model/references"
+mkdir -p "$TMPDIR/build49/vsm/viable-swarm-model/scripts"
+mkdir -p "$TMPDIR/build49/vsm-fitness-builds/coach"
+
+# Create minimal artifacts for meta-metrics-precompute.py
+cat > "$TMPDIR/build49/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+cat > "$TMPDIR/build49/.kimi/phase4-gate.md" << 'EOF'
+# Phase 4 Gate
+PASS
+Backend tests: 10 / 10 pass
+EOF
+
+cat > "$TMPDIR/build49/.kimi/security-report.md" << 'EOF'
+# Security Report
+BLOCKER count: 0
+HIGH count: 1
+EOF
+
+cat > "$TMPDIR/build49/.kimi/process-audit.md" << 'EOF'
+# Process Audit
+Score: 85/100
+EOF
+
+cat > "$TMPDIR/build49/.kimi/mutations-applied.md" << 'EOF'
+# Mutations Applied
+| ID | Name | Status |
+|---|---|---|
+| M1 | Test | applied |
+EOF
+
+cat > "$TMPDIR/build49/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target | Status | Builds | Score |
+|---|---|---|---|---|---|---|
+| T1 | Test | append | Test | effective | 5 | 4 |
+EOF
+
+cat > "$TMPDIR/build49/vsm/viable-swarm-model/references/hypotheses.md" << 'EOF'
+# Hypotheses
+## H1: Test
+**Status**: confirmed
+EOF
+
+cat > "$TMPDIR/build49/vsm/viable-swarm-model/references/knowledge-broker.md" << 'EOF'
+# Broker
+> **Last updated**: 2026-06-05
+EOF
+
+cat > "$TMPDIR/build49/vsm/viable-swarm-model/references/build-health-history.md" << 'EOF'
+# Build Health History
+## 2026-06-01 — FB997
+- Score: 4.0/5.0
+EOF
+
+# Copy the real meta-metrics-precompute.py script
+cp "$SCRIPT_DIR/../scripts/meta-metrics-precompute.py" "$TMPDIR/build49/vsm/viable-swarm-model/scripts/"
+
+export HOME="$TMPDIR/build49"
+PAYLOAD='{"session_id":"test-session-49","cwd":"'$TMPDIR/build49'","reason":"stop"}'
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/session-end.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   grep -q "meta-metrics-precomputed.md" "$TMPDIR/build49/.kimi/session-telemetry.md" 2>/dev/null && \
+   [ -f "$TMPDIR/build49/.kimi/meta-metrics-precomputed.md" ]; then
+    pass
+else
+    fail "session-end did not flag or auto-generate meta-metrics-precomputed.md"
+fi
+
+# ============================================================================
+# Test 50: session-end.sh — does NOT flag when meta-metrics-precomputed.md present
+# ============================================================================
+
+echo -n "TEST: session-end.sh does NOT flag when meta-metrics-precomputed.md present ... "
+
+mkdir -p "$TMPDIR/build50/.kimi"
+mkdir -p "$TMPDIR/build50/vsm/viable-swarm-model/references"
+
+cat > "$TMPDIR/build50/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+cat > "$TMPDIR/build50/.kimi/meta-metrics-precomputed.md" << 'EOF'
+# Pre-computed Meta Metrics
+EOF
+
+cat > "$TMPDIR/build50/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target | Status | Builds | Score |
+|---|---|---|---|---|---|---|
+| T1 | Test | append | Test | effective | 5 | 4 |
+EOF
+
+cat > "$TMPDIR/build50/vsm/viable-swarm-model/references/hypotheses.md" << 'EOF'
+# Hypotheses
+## H1: Test
+**Status**: confirmed
+EOF
+
+cat > "$TMPDIR/build50/vsm/viable-swarm-model/references/knowledge-broker.md" << 'EOF'
+# Broker
+> **Last updated**: 2026-06-05
+EOF
+
+cat > "$TMPDIR/build50/vsm/viable-swarm-model/references/build-health-history.md" << 'EOF'
+# Build Health History
+## 2026-06-01 — FB997
+- Score: 4.0/5.0
+EOF
+
+PAYLOAD='{"session_id":"test-session-50","cwd":"'$TMPDIR/build50'","reason":"stop"}'
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/session-end.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   ! grep -q "meta-metrics-precomputed.md" "$TMPDIR/build50/.kimi/session-telemetry.md" 2>/dev/null; then
+    pass
+else
+    fail "session-end falsely flagged meta-metrics when present"
+fi
+
+# ============================================================================
+# Test 51: session-end.sh — flags missing algedonic-action-plan.md and auto-generates
+# ============================================================================
+
+echo -n "TEST: session-end.sh flags missing algedonic-action-plan.md and auto-generates ... "
+
+mkdir -p "$TMPDIR/build51/.kimi"
+mkdir -p "$TMPDIR/build51/vsm/viable-swarm-model/references"
+mkdir -p "$TMPDIR/build51/vsm/viable-swarm-model/scripts"
+mkdir -p "$TMPDIR/build51/vsm/vsm-stack-skills"
+mkdir -p "$TMPDIR/build51/vsm-fitness-builds/coach"
+
+cat > "$TMPDIR/build51/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+cat > "$TMPDIR/build51/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target | Status | Builds | Score |
+|---|---|---|---|---|---|---|
+| T1 | Test | append | Test | effective | 5 | 4 |
+EOF
+
+cat > "$TMPDIR/build51/vsm/viable-swarm-model/references/hypotheses.md" << 'EOF'
+# Hypotheses
+## H1: Test
+**Status**: confirmed
+EOF
+
+cat > "$TMPDIR/build51/vsm/viable-swarm-model/references/knowledge-broker.md" << 'EOF'
+# Broker
+> **Last updated**: 2026-06-05
+EOF
+
+cat > "$TMPDIR/build51/vsm/viable-swarm-model/references/build-health-history.md" << 'EOF'
+# Build Health History
+## 2026-06-01 — FB997
+- Score: 4.0/5.0
+EOF
+
+cat > "$TMPDIR/build51/vsm/vsm-stack-skills/SKILL-REGISTRY.md" << 'EOF'
+# Stack Skills Registry
+| Skill | Description | Relevant Agents | Depends On | Status |
+|---|---|---|---|---|
+| python-pitfalls | Python traps | backend_coder | — | Full |
+EOF
+
+cat > "$TMPDIR/build51/vsm/viable-swarm-model/references/skill-effectiveness-log.md" << 'EOF'
+# Skill Effectiveness Log
+| Skill | Builds Used | Avg Score |
+|---|---|---|
+| python-pitfalls | 5 | 4.0 |
+EOF
+
+# Copy the real algedonic-action-plan.py script
+cp "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" "$TMPDIR/build51/vsm/viable-swarm-model/scripts/"
+
+export HOME="$TMPDIR/build51"
+PAYLOAD='{"session_id":"test-session-51","cwd":"'$TMPDIR/build51'","reason":"stop"}'
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/session-end.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   grep -q "algedonic-action-plan.md" "$TMPDIR/build51/.kimi/session-telemetry.md" 2>/dev/null && \
+   [ -f "$TMPDIR/build51/.kimi/algedonic-action-plan.md" ]; then
+    pass
+else
+    fail "session-end did not flag or auto-generate algedonic-action-plan.md"
+fi
+
+# ============================================================================
+# Test 52: session-end.sh — does NOT flag when algedonic-action-plan.md present
+# ============================================================================
+
+echo -n "TEST: session-end.sh does NOT flag when algedonic-action-plan.md present ... "
+
+mkdir -p "$TMPDIR/build52/.kimi"
+mkdir -p "$TMPDIR/build52/vsm/viable-swarm-model/references"
+
+cat > "$TMPDIR/build52/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+cat > "$TMPDIR/build52/.kimi/algedonic-action-plan.md" << 'EOF'
+# Algedonic Action Plan
+EOF
+
+cat > "$TMPDIR/build52/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target | Status | Builds | Score |
+|---|---|---|---|---|---|---|
+| T1 | Test | append | Test | effective | 5 | 4 |
+EOF
+
+cat > "$TMPDIR/build52/vsm/viable-swarm-model/references/hypotheses.md" << 'EOF'
+# Hypotheses
+## H1: Test
+**Status**: confirmed
+EOF
+
+cat > "$TMPDIR/build52/vsm/viable-swarm-model/references/knowledge-broker.md" << 'EOF'
+# Broker
+> **Last updated**: 2026-06-05
+EOF
+
+cat > "$TMPDIR/build52/vsm/viable-swarm-model/references/build-health-history.md" << 'EOF'
+# Build Health History
+## 2026-06-01 — FB997
+- Score: 4.0/5.0
+EOF
+
+PAYLOAD='{"session_id":"test-session-52","cwd":"'$TMPDIR/build52'","reason":"stop"}'
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/session-end.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   ! grep -q "algedonic-action-plan.md" "$TMPDIR/build52/.kimi/session-telemetry.md" 2>/dev/null; then
+    pass
+else
+    fail "session-end falsely flagged algedonic action plan when present"
+fi
+
+# ============================================================================
 # Summary
 # ============================================================================
 

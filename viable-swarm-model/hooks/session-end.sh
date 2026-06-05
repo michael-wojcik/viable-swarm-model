@@ -192,6 +192,32 @@ if [[ -f "$CWD/plan.md" && ! -f "$CWD/.kimi/test-spawn-plan.md" ]]; then
     fi
 fi
 
+# Check 14: Meta metrics pre-computation (NEW — closes S5→S5 meta-evaluation gap)
+# R14 created meta-metrics-precompute.py to extract ground-truth metrics for vsm_meta.
+# If build reached Phase 8 but pre-computed metrics were never generated, flag and auto-generate.
+if [[ -f "$CWD/.kimi/meta-report.md" && ! -f "$CWD/.kimi/meta-metrics-precomputed.md" ]]; then
+    AUDIT_WARNINGS="${AUDIT_WARNINGS}- Phase 8b complete but meta-metrics-precomputed.md missing. vsm_meta may make false TBD claims.\n"
+    META_METRICS_SCRIPT="$HOME/vsm/viable-swarm-model/scripts/meta-metrics-precompute.py"
+    if [[ -f "$META_METRICS_SCRIPT" ]]; then
+        python3 "$META_METRICS_SCRIPT" --build-dir "$CWD" >/dev/null 2>&1 || {
+            echo "WARNING: meta-metrics-precompute.py failed. Meta metrics not pre-computed." >&2
+        }
+    fi
+fi
+
+# Check 15: Algedonic action plan generation (NEW — closes S4*→S5 action gap)
+# R19 created algedonic-action-plan.py to translate algedonic signals into specific actions.
+# If build reached Phase 8 but action plan was never generated, flag and auto-generate.
+if [[ -f "$CWD/.kimi/meta-report.md" && ! -f "$CWD/.kimi/algedonic-action-plan.md" ]]; then
+    AUDIT_WARNINGS="${AUDIT_WARNINGS}- Phase 8b complete but algedonic-action-plan.md missing. S5 has no structured action plan for next iteration.\n"
+    ACTION_PLAN_SCRIPT="$HOME/vsm/viable-swarm-model/scripts/algedonic-action-plan.py"
+    if [[ -f "$ACTION_PLAN_SCRIPT" ]]; then
+        python3 "$ACTION_PLAN_SCRIPT" --build-dir "$CWD" >/dev/null 2>&1 || {
+            echo "WARNING: algedonic-action-plan.py failed. Action plan not generated." >&2
+        }
+    fi
+fi
+
 # ── Auto-update mutation state (H213 safety net) ──
 # If mutations-applied.md exists but mutation-state.md was not updated during
 # Phase 8c-ii (S5 forgot to run update-mutation-state.sh), update it now.

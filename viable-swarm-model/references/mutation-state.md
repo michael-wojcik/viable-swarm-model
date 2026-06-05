@@ -288,3 +288,4 @@
 | R12 | 2026-06-05 S5 | structural | integration-test-closeout.py + closeout pipeline integration test | probation | 0 | — | — | — | S5 iter
 | R18 | 2026-06-05 S5 | structural | hypothesis-backlog-curator.py + S4* autonomous curation | probation | 0 | — | — | — | S5 iter
 | R19 | 2026-06-05 S5 | structural | algedonic-action-plan.py + S4*→S5 response bridge | probation | 0 | — | — | — | S5 iter
+| R20 | 2026-06-05 S5 | structural | session-end.sh Check 14/15 auto-invoke meta-metrics + algedonic action plan | probation | 0 | — | — | — | S5 iter
