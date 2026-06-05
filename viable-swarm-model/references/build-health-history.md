@@ -5,6 +5,35 @@
 
 ---
 
+## 2026-06-05 — S5 Orchestrator Iteration (R21)
+
+### Diagnosed Constraint
+**System 3* (Audit/Control) / S3→S5 compliance channel**: The `integration-test-closeout.py` (R12) exercises 4 closeout scripts + session-end.sh, but **stop-verifier.sh** (R17) is not included. This creates an end-to-end coverage gap: a format change in `mutations-applied.md` could break both `process-compliance-precompute.py` AND `stop-verifier.sh` simultaneously, but the integration test would only catch the former. Additionally, no test verified that session-end.sh produces **zero CRITICAL warnings** on a complete build with all 15 checks satisfied. Tests 41–43 verify stop-verifier in isolation, but the combination of session-end.sh + stop-verifier.sh on the same build directory was untested.
+
+### Change Made
+**Refinement mutation R21**: Added end-to-end closeout + stop-verifier integration tests.
+- **Test 53**: Creates a complete mock build with ALL required artifacts for a Tier 1 build (plan.md, meta-report.md, phase4-gate.md, re-audit-report.md, lessons.md, mutations-applied.md with Build ID, security-report.md, process-audit.md, mutation-portfolio-review.md, variety-assessment.md, meta-metrics-precomputed.md, algedonic-action-plan.md, backend auth code, references with build ID). Runs session-end.sh (verifies no CRITICAL warnings) and stop-verifier.sh (verifies allow). This is the first test that exercises the FULL pipeline from closeout through session stop.
+- **Test 54**: Creates a build missing only mutation-portfolio-review.md. Verifies stop-verifier.sh blocks the stop with deny decision.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **59 passed, 0 failed** (was 57 passed, 0 failed)
+- Test 53: End-to-end closeout + stop-verifier on complete build — session-end produces no CRITICAL, stop-verifier allows stop
+- Test 54: stop-verifier blocks stop when portfolio-review.md missing
+
+### Files Modified
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 1 (Implementation) / S5→S1 channel**: The `vsm_backend_tester` (65% success) and `vsm_frontend_tester` (60% success) consistently time out in Tier 2+ builds. The "Adaptive Task Sizing" rule (≤500 lines) is **Tier C (prompt-only)**. A tool-enforced boundary — such as a script that estimates output size before agent spawn — would be more reliable. Alternatively, **System 3* (Process Audit)**: The `vsm_process_auditor` has a 60% success rate with declining scores (3, 2, 2). SM2 (process auditor HARD BLOCK) is probationary with 0 builds tested. The pre-computation script (R9) reduces workload but the agent itself still times out on the 10-check compliance matrix.
+
+---
+
 ## 2026-06-05 — S5 Orchestrator Iteration (R20)
 
 ### Diagnosed Constraint

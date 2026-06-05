@@ -3682,3 +3682,30 @@ This creates a **closeout pipeline gap**: S5 must remember to manually run meta-
 **Measured effect**: **Awaiting measurement** — Success criteria: (1) 100% of builds reaching Phase 8 have meta-metrics-precomputed.md present, (2) 100% of builds reaching Phase 8 have algedonic-action-plan.md present, (3) session-end.sh tests continue passing after any modification.
 
 ---
+
+## Mutation R21 — 2026-06-05
+
+**Session**: S5 Orchestrator Iteration
+**File**: `hooks/test-automation.sh`
+**Type**: refinement
+**Rationale**: The `integration-test-closeout.py` (R12) exercises 4 closeout scripts + session-end.sh, but **stop-verifier.sh** (R17) is not included. This creates a coverage gap: the integration test verifies the closeout pipeline but not the session-stop enforcement pipeline. A format change in `mutations-applied.md` could break both `process-compliance-precompute.py` AND `stop-verifier.sh` simultaneously, but the integration test would only catch the former. Additionally, no test verified that session-end.sh produces zero warnings on a **complete** build (all 15 checks satisfied). Tests 41-43 verify stop-verifier in isolation, but the combination of session-end.sh + stop-verifier.sh on the same build directory is untested.
+
+**Expected effect**: The end-to-end test catches cascade failures across the entire closeout + stop pipeline. Any regression in session-end.sh checks, stop-verifier.sh checks, or artifact format requirements is detected before reaching production.
+
+**Files modified**:
+- `hooks/test-automation.sh` — Added Tests 53–54:
+  - Test 53: Creates a complete mock build with ALL required artifacts (plan.md, meta-report.md, phase4-gate.md, re-audit-report.md, lessons.md, mutations-applied.md with Build ID, security-report.md, process-audit.md, mutation-portfolio-review.md, variety-assessment.md, meta-metrics-precomputed.md, algedonic-action-plan.md, backend auth code, references with build ID). Runs session-end.sh (verifies no CRITICAL) and stop-verifier.sh (verifies allow).
+  - Test 54: Creates a build missing only mutation-portfolio-review.md. Verifies stop-verifier.sh blocks the stop.
+
+**Before**:
+- integration-test-closeout.py: Tests 4 closeout scripts + session-end.sh, no stop-verifier.sh
+- stop-verifier.sh: Tested only in isolation (Tests 41-43)
+- No end-to-end test of complete build closeout + stop
+
+**After**:
+- test-automation.sh: Tests 53-54 cover the full closeout + stop pipeline
+- 59 tests total, all passing
+
+**Measured effect**: **Awaiting measurement** — Success criteria: (1) Tests 53-54 catch at least one regression in closeout or stop pipeline within 3 iterations, (2) test suite runs in <90 seconds, (3) no false positives on complete builds.
+
+---

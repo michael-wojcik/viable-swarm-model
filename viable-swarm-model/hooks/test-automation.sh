@@ -2331,6 +2331,216 @@ else
 fi
 
 # ============================================================================
+# Test 53: End-to-end closeout + stop-verifier pipeline on complete Tier 1 build
+# ============================================================================
+
+echo -n "TEST: end-to-end closeout + stop-verifier on complete build ... "
+
+mkdir -p "$TMPDIR/build53/.kimi"
+mkdir -p "$TMPDIR/build53/vsm/viable-swarm-model/references"
+mkdir -p "$TMPDIR/build53/vsm-fitness-builds/coach"
+
+# plan.md (Tier 1 to avoid product-brief and test-spawn-plan checks)
+cat > "$TMPDIR/build53/plan.md" << 'EOF'
+# Build Plan — FB999-IntegrationTest
+**Tier**: 1
+Domain: Integration Test
+EOF
+
+# All required .kimi artifacts
+cat > "$TMPDIR/build53/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+cat > "$TMPDIR/build53/.kimi/phase4-gate.md" << 'EOF'
+# Phase 4 Gate
+PASS
+Backend tests: 10 / 10 pass
+EOF
+
+cat > "$TMPDIR/build53/.kimi/re-audit-report.md" << 'EOF'
+# Re-Audit Report
+Verdict: PASS
+EOF
+
+cat > "$TMPDIR/build53/.kimi/lessons.md" << 'EOF'
+# Lessons
+Learned something.
+EOF
+
+cat > "$TMPDIR/build53/.kimi/mutations-applied.md" << 'EOF'
+# Mutations Applied
+
+## Build ID: FB999-IntegrationTest
+
+**Mutation**: M-TEST-1
+**Effectiveness**: 5/5
+**Measured effect**: Confirmed
+EOF
+
+cat > "$TMPDIR/build53/.kimi/security-report.md" << 'EOF'
+# Security Report
+Zero findings.
+EOF
+
+cat > "$TMPDIR/build53/.kimi/process-audit.md" << 'EOF'
+# Process Audit
+Score: 85/100
+All checks passed.
+EOF
+
+cat > "$TMPDIR/build53/.kimi/mutation-portfolio-review.md" << 'EOF'
+# Mutation Portfolio Review
+No issues.
+EOF
+
+cat > "$TMPDIR/build53/.kimi/variety-assessment.md" << 'EOF'
+# Variety Assessment
+No algedonics.
+EOF
+
+cat > "$TMPDIR/build53/.kimi/meta-metrics-precomputed.md" << 'EOF'
+# Pre-computed Meta Metrics
+Score: 4.0
+EOF
+
+cat > "$TMPDIR/build53/.kimi/algedonic-action-plan.md" << 'EOF'
+# Algedonic Action Plan
+No actions required.
+EOF
+
+# Security-relevant code so Check 11 doesn't flag
+mkdir -p "$TMPDIR/build53/backend"
+cat > "$TMPDIR/build53/backend/auth.py" << 'EOF'
+import jwt
+EOF
+
+# References
+cat > "$TMPDIR/build53/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target | Status | Builds | Score |
+|---|---|---|---|---|---|---|
+| FB999-IntegrationTest | Test | append | Test | effective | 5 | 4 |
+EOF
+
+cat > "$TMPDIR/build53/vsm/viable-swarm-model/references/mutation-log.md" << 'EOF'
+# Mutation Log
+## Mutation Test
+**Measured effect**: CONFIRMED
+EOF
+
+cat > "$TMPDIR/build53/vsm/viable-swarm-model/references/hypotheses.md" << 'EOF'
+# Hypotheses
+## H1: Test
+**Status**: confirmed
+EOF
+
+cat > "$TMPDIR/build53/vsm/viable-swarm-model/references/knowledge-broker.md" << 'EOF'
+# Broker
+> **Last updated**: 2026-06-05
+EOF
+
+cat > "$TMPDIR/build53/vsm/viable-swarm-model/references/build-health-history.md" << 'EOF'
+# Build Health History
+## 2026-06-01 — FB998
+- Score: 4.0/5.0
+EOF
+
+export HOME="$TMPDIR/build53"
+
+# Run session-end.sh
+PAYLOAD='{"session_id":"test-session-53","cwd":"'$TMPDIR/build53'","reason":"stop"}'
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/session-end.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -ne 0 ]; then
+    fail "session-end.sh failed on complete build"
+fi
+
+# Verify no CRITICAL and no WARNING in telemetry
+TELEMETRY="$TMPDIR/build53/.kimi/session-telemetry.md"
+if [ ! -f "$TELEMETRY" ]; then
+    fail "session-telemetry.md not created"
+fi
+
+if grep -q "CRITICAL" "$TELEMETRY" 2>/dev/null; then
+    fail "session-end produced CRITICAL warning on complete build"
+fi
+
+# Note: Some checks may still produce non-CRITICAL warnings. We accept that.
+# The key assertion is that stop-verifier allows the stop.
+
+# Run stop-verifier.sh — should ALLOW stop when all artifacts present
+STOP_PAYLOAD='{"session_id":"test-session-53","cwd":"'$TMPDIR/build53'","reason":"stop","stop_hook_active":"false"}'
+STOP_RC=0
+STOP_OUTPUT=$(echo "$STOP_PAYLOAD" | bash "$SCRIPT_DIR/stop-verifier.sh" 2>/dev/null) || STOP_RC=$?
+
+if [ "$STOP_RC" -ne 0 ] || echo "$STOP_OUTPUT" | grep -q '"permissionDecision":"deny"'; then
+    fail "stop-verifier blocked stop on complete build"
+fi
+
+pass
+
+# ============================================================================
+# Test 54: stop-verifier blocks when portfolio-review.md missing on complete build
+# ============================================================================
+
+echo -n "TEST: stop-verifier blocks stop when portfolio-review.md missing ... "
+
+mkdir -p "$TMPDIR/build54/.kimi"
+mkdir -p "$TMPDIR/build54/vsm/viable-swarm-model/references"
+mkdir -p "$TMPDIR/build54/vsm-fitness-builds/coach"
+
+cat > "$TMPDIR/build54/plan.md" << 'EOF'
+# Build Plan — FB999-Test54
+**Tier**: 1
+EOF
+
+cat > "$TMPDIR/build54/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+cat > "$TMPDIR/build54/.kimi/mutations-applied.md" << 'EOF'
+# Mutations Applied
+## Build ID: FB999-Test54
+**Mutation**: M-TEST-1
+**Effectiveness**: 5/5
+EOF
+
+cat > "$TMPDIR/build54/.kimi/process-audit.md" << 'EOF'
+# Process Audit
+Score: 85/100
+EOF
+
+# NO mutation-portfolio-review.md — should trigger Check 6
+
+cat > "$TMPDIR/build54/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target | Status | Builds | Score |
+|---|---|---|---|---|---|---|
+| FB999-Test54 | Test | append | Test | effective | 5 | 4 |
+EOF
+
+cat > "$TMPDIR/build54/vsm/viable-swarm-model/references/mutation-log.md" << 'EOF'
+# Mutation Log
+## Mutation Test
+**Measured effect**: CONFIRMED
+EOF
+
+export HOME="$TMPDIR/build54"
+
+STOP_PAYLOAD='{"session_id":"test-session-54","cwd":"'$TMPDIR/build54'","reason":"stop","stop_hook_active":"false"}'
+STOP_OUTPUT=$(echo "$STOP_PAYLOAD" | bash "$SCRIPT_DIR/stop-verifier.sh" 2>/dev/null)
+
+if echo "$STOP_OUTPUT" | grep -q '"permissionDecision":"deny"'; then
+    pass
+else
+    fail "stop-verifier did not block for missing portfolio-review.md"
+fi
+
+# ============================================================================
 # Summary
 # ============================================================================
 
