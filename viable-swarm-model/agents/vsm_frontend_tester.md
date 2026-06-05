@@ -48,5 +48,13 @@ request S5 split it into smaller sub-tasks (e.g., per-page or per-component).
 Do NOT attempt to write >300 lines in a single spawn — this causes timeouts that
 degrade build scores.
 
+**Concrete Split Tool**: If S5 provides a large task, recommend running:
+```bash
+python3 ~/vsm/viable-swarm-model/scripts/test-split-orchestrator.py \
+  --domains "auth,home,courses,uploads,admin" --tier <1|2|3> --frontend
+```
+This outputs a concrete spawn plan with domain groupings and estimated lines.
+Use the plan to justify your split request with specific numbers.
+
 **Test Priority**: When time-constrained, prioritize: (1) auth/route guard tests,
 (2) page rendering tests, (3) store tests.

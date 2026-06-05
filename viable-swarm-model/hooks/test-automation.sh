@@ -994,6 +994,67 @@ else
 fi
 
 # ============================================================================
+# Test 24: test-split-orchestrator.py — backend multi-domain split
+# ============================================================================
+
+echo -n "TEST: test-split-orchestrator.py splits backend domains correctly ... "
+
+RC=0
+OUTPUT=$(python3 "$SCRIPT_DIR/../scripts/test-split-orchestrator.py" \
+    --domains "auth,courses,uploads,graphql,users,recipes,ingredients" \
+    --tier 2 --backend 2>&1) || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   echo "$OUTPUT" | grep -q "Recommended spawns" && \
+   echo "$OUTPUT" | grep -q "auth, graphql, uploads" && \
+   echo "$OUTPUT" | grep -q "vsm_backend_tester"; then
+    pass
+else
+    fail "backend split plan incorrect"
+fi
+
+# ============================================================================
+# Test 25: test-split-orchestrator.py — frontend JSON output
+# ============================================================================
+
+echo -n "TEST: test-split-orchestrator.py outputs valid frontend JSON ... "
+
+RC=0
+OUTPUT=$(python3 "$SCRIPT_DIR/../scripts/test-split-orchestrator.py" \
+    --domains "auth,home,courses,graphql,uploads" \
+    --tier 2 --frontend --json 2>&1) || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   echo "$OUTPUT" | grep -q '"stack": "frontend"' && \
+   echo "$OUTPUT" | grep -q '"spawn_count":' && \
+   echo "$OUTPUT" | grep -q '"total_estimated_lines":'; then
+    pass
+else
+    fail "frontend JSON output incorrect"
+fi
+
+# ============================================================================
+# Test 26: test-split-orchestrator.py — writes plan to build directory
+# ============================================================================
+
+echo -n "TEST: test-split-orchestrator.py writes plan to build dir ... "
+
+mkdir -p "$TMPDIR/build26/.kimi"
+
+RC=0
+python3 "$SCRIPT_DIR/../scripts/test-split-orchestrator.py" \
+    --domains "auth,users" --tier 1 --backend --build-dir "$TMPDIR/build26" \
+    >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   [ -f "$TMPDIR/build26/.kimi/test-spawn-plan.md" ] && \
+   grep -q "Backend Spawn Plan" "$TMPDIR/build26/.kimi/test-spawn-plan.md"; then
+    pass
+else
+    fail "build-dir plan file not written correctly"
+fi
+
+# ============================================================================
 # Summary
 # ============================================================================
 

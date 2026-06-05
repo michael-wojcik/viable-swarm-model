@@ -3323,3 +3323,41 @@ Additionally, the dashboard was never automatically invoked — it only ran when
 **Measured effect**: **Awaiting measurement** — To be scored after next fitness build or S5 iteration. Success criteria: (1) process audit completion rate ≥ 80%, (2) process auditor timeout rate < 20%, (3) at least one build where pre-computation caught a process violation that manual audit missed.
 
 ---
+
+## Mutation R10 — 2026-06-05
+
+**Session**: S5 Orchestrator Iteration (Sixth iteration of automated improvement loop)
+**File**: `scripts/test-split-orchestrator.py` (new), `agents/vsm_backend_tester.md`, `agents/vsm_frontend_tester.md`
+**Type**: structural
+**Rationale**: The `vsm_backend_tester` (65% success rate) and `vsm_frontend_tester` (60% success rate) consistently time out in Tier 2+ builds. When testers timeout, S5 is forced to manually write tests — violating the confirmed H222 finding that prompt-only manual work caps fail under time pressure. The FB31-2 mutation (tester 3-sub-wave split) is effective but has only been tested once, and S5 has no concrete tool for deciding HOW to split domains. The existing "Adaptive Task Sizing" rule in tester prompts is Tier C (prompt-only) and agents frequently violate it under pressure.
+
+**Expected effect**:
+- `scripts/test-split-orchestrator.py` provides a deterministic, numbers-based spawn plan given a list of domains.
+- Tester agents can reference the tool when requesting splits, giving S5 concrete data ("auth + graphql + uploads = 290 lines — split recommended") rather than vague requests.
+- S5 can run the script proactively before Phase 4 to pre-plan tester spawns, preventing timeout rather than reacting to it.
+- Backend and frontend heuristics are derived from fitness builds FB25–FB32, with per-domain line estimates.
+
+**Before**:
+- No concrete tool existed for splitting tester tasks.
+- S5 had to guess domain groupings and chunk sizes under time pressure.
+- Tester agents had only a vague "request split if >300 lines" rule with no data to support the request.
+
+**After**:
+- `scripts/test-split-orchestrator.py` accepts `--domains`, `--tier`, `--backend/--frontend`, and `--max-lines`.
+- Uses first-fit-decreasing bin packing (largest domains first) to group domains into chunks < 300 lines.
+- Outputs Markdown spawn plan with agent type, domain groupings, estimated lines, and copy-paste task templates.
+- Supports `--json` for programmatic consumption.
+- Writes to `.kimi/test-spawn-plan.md` when `--build-dir` is provided.
+- Heuristics: auth (120), graphql (100), uploads (70), basic CRUD (50-60) for backend; auth (90), pages (60), components (50) for frontend.
+- `vsm_backend_tester.md` and `vsm_frontend_tester.md` updated with explicit tool reference in Adaptive Task Sizing section.
+
+**Files modified**:
+- `scripts/test-split-orchestrator.py` — Created (180 lines). Domain-based test spawn planner with heuristics.
+- `agents/vsm_backend_tester.md` — Added orchestrator tool reference to Adaptive Task Sizing.
+- `agents/vsm_frontend_tester.md` — Added orchestrator tool reference to Adaptive Task Sizing.
+- `hooks/test-automation.sh` — Added Tests 24–26 covering backend split, frontend JSON, and build-dir output.
+- `references/mutation-state.md` — Added R10 row; promoted R9 to effective.
+
+**Measured effect**: **Awaiting measurement** — To be scored after next fitness build or S5 iteration. Success criteria: (1) tester timeout rate drops from 40% to < 20%, (2) at least one build where orchestrator plan was used and all tester spawns completed, (3) S5 manual test writing reduced to ≤ 1 file per build.
+
+---
