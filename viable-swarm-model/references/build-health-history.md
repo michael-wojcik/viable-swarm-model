@@ -197,3 +197,44 @@ Alternatively, **System 3* (Process Audit) timeout**: SM2 (process auditor HARD 
 R7, R8, and R9 have now addressed the three meta-system agents (learning curator, variety engineer, process auditor) by creating pre-computation scripts that reduce their workload. The same pattern could be applied to S1 testers: create a `scripts/test-split-orchestrator.py` that analyzes the build plan and outputs a concrete spawn schedule with chunk sizes < 300 lines. This would make the FB31-2 3-sub-wave split deterministic rather than dependent on S5 judgment under pressure.
 
 Alternatively, **System 5→S1 channel**: The `vsm_product` agent (S4 Product) has only a 1 lesson mention in the lesson patterns report, suggesting it is rarely spawned. The product brief is a proven guardrail against architect scope creep (H[N+1] confirmed), yet builds often skip it. A pre-computation script or hook check for missing `product-brief.md` could close this gap.
+
+---
+
+## 2026-06-05 — S5 Orchestrator Iteration (R10)
+
+### Diagnosed Constraint
+**System 1 (Implementation) agent timeout → S5 (Policy) overload**: The `vsm_backend_tester` (65% success rate) and `vsm_frontend_tester` (60% success rate) consistently time out in Tier 2+ builds. When testers timeout, S5 is forced to manually write tests — violating the confirmed H222 finding that prompt-only manual work caps fail under time pressure. The FB31-2 mutation (tester 3-sub-wave split) is effective but has only been tested once, and S5 has no concrete tool for deciding HOW to split domains. The existing "Adaptive Task Sizing" rule in tester prompts is Tier C (prompt-only) and agents frequently violate it under pressure.
+
+### Change Made
+**Structural mutation R10**: Created `scripts/test-split-orchestrator.py` and updated tester agent prompts.
+- `test-split-orchestrator.py`: Deterministic domain-based test spawn planner. Accepts `--domains`, `--tier`, `--backend/--frontend`, `--max-lines`. Uses first-fit-decreasing bin packing (largest domains first) to group domains into chunks < 300 lines. Outputs Markdown spawn plan with agent type, domain groupings, estimated lines, and copy-paste task templates. Supports `--json` for programmatic consumption. Writes to `.kimi/test-spawn-plan.md` when `--build-dir` is provided.
+- Heuristics derived from fitness builds FB25–FB32: auth (120), graphql (100), uploads (70), basic CRUD (50-60) for backend; auth (90), pages (60), components (50) for frontend.
+- `vsm_backend_tester.md` and `vsm_frontend_tester.md`: Added explicit orchestrator tool reference in Adaptive Task Sizing section so agents can request splits with concrete data.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **30 passed, 0 failed** (was 27 passed, 0 failed)
+- New Tests 24–26 verify:
+  - Backend multi-domain split into 2 spawns (auth/graphql/uploads = 290 lines, courses/users/recipes/ingredients = 230 lines)
+  - Frontend JSON output with correct spawn count and estimated lines
+  - Build-directory plan file writing
+- Example plan for 7 backend domains (Tier 2):
+  - Spawn 1: auth, graphql, uploads (290 lines)
+  - Spawn 2: courses, users, recipes, ingredients (230 lines)
+
+### Files Modified
+- `viable-swarm-model/scripts/test-split-orchestrator.py` (created)
+- `viable-swarm-model/agents/vsm_backend_tester.md`
+- `viable-swarm-model/agents/vsm_frontend_tester.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+
+### Git Commit
+- Hash: 73fd742
+
+### Next Highest-Leverage Constraint
+**System 5→S1 channel / S4→S5 intelligence gap**: The `vsm_product` agent (S4 Product) has only 1 lesson mention across 26 fitness builds, suggesting it is rarely spawned. Yet H[N+1] (gym experiment) confirmed that product briefs are a proven guardrail against architect scope creep — the control architect (no brief) added an entire auth subsystem, while the treatment architect (with brief) eliminated auth entirely and produced a design with only 3 core features and 12+ explicit scope exclusions. Despite this strong empirical evidence, builds routinely skip the product brief phase, and the `vsm_product` agent is underutilized.
+
+R7–R10 have now systematically addressed the meta-system timeout problem (learning curator, variety engineer, process auditor, testers) by creating pre-computation and orchestration scripts. The next frontier is upstream: ensuring the product discovery phase happens BEFORE architecture, so scope creep is prevented at the source rather than caught during audit. A session-start hook check for `product-brief.md` or an update to SKILL.md Phase 1 could close this gap.
+
+Alternatively, **System 4→S4 channel**: The organism now has 4 pre-computation scripts (build-health-dashboard, mutation-portfolio-health, organism-vitals, process-compliance-precompute) and 1 orchestrator (test-split). None of these scripts are automatically tested in an integration sense — they run in isolation in test-automation.sh but are not exercised together in a simulated build closeout. A `scripts/integration-test-closeout.py` that runs all 5 scripts against a mock build directory and verifies their outputs are mutually consistent would catch regressions when one script's output format changes.
