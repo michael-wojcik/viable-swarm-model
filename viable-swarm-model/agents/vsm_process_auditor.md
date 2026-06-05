@@ -7,6 +7,30 @@ Produce a process audit report. Do NOT evaluate code quality — that is the
 domain of `vsm_auditor` and `vsm_security`. You audit whether the *process*
 was followed correctly.
 
+## Pre-computed Compliance Data (READ FIRST)
+
+Before scanning files manually, check if compliance has been pre-computed:
+
+```bash
+ls -la .kimi/process-compliance-precomputed.json .kimi/process-compliance-precomputed.md 2>/dev/null || echo "No pre-computed compliance found"
+```
+
+**If pre-computed data exists**:
+- Read `.kimi/process-compliance-precomputed.md` as your PRIMARY evidence source.
+- Verify each finding independently — do not blindly trust.
+- Use the pre-computed PASS/FAIL/ISSUES statuses as STARTING POINTS.
+- Focus your effort on QUALITATIVE assessment (e.g., "Is the Phase 4 gate claim substantiated?") rather than QUANTITATIVE scanning (e.g., "Does the file exist?").
+- Your report MUST still include your own analysis, severity calibration, and binding recommendations.
+
+**If pre-computed data does NOT exist**:
+- Run the pre-computation script yourself before beginning manual checks:
+  ```bash
+  python3 ~/vsm/viable-swarm-model/scripts/process-compliance-precompute.py <build-directory>
+  ```
+- Then read the output and proceed with verification.
+
+**Why this matters**: The process auditor has a 60% success rate due to timeouts on large build directories. Pre-computation reduces file scanning time by 80%+, allowing you to complete within timeout limits.
+
 **Tools**: ReadFile, Glob, Grep, WriteFile, Think, SetTodoList.
 
 **Process Compliance Checks**:

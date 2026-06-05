@@ -873,6 +873,127 @@ else
 fi
 
 # ============================================================================
+# Test 21: process-compliance-precompute.py — basic compliance scoring
+# ============================================================================
+
+echo -n "TEST: process-compliance-precompute.py scores compliance correctly ... "
+
+mkdir -p "$TMPDIR/build21/.kimi"
+mkdir -p "$TMPDIR/vsm/viable-swarm-model/scripts"
+
+cp "$SCRIPT_DIR/../scripts/process-compliance-precompute.py" "$TMPDIR/vsm/viable-swarm-model/scripts/"
+
+cat > "$TMPDIR/build21/plan.md" << 'EOF'
+# Build Plan — FB108
+EOF
+
+cat > "$TMPDIR/build21/.kimi/phase4-gate.md" << 'EOF'
+# Phase 4 Gate
+PASS
+EOF
+
+cat > "$TMPDIR/build21/.kimi/re-audit-report.md" << 'EOF'
+# Re-Audit Report
+Files modified: auth.py
+Verdict: PASS
+No regressions.
+EOF
+
+cat > "$TMPDIR/build21/.kimi/lessons.md" << 'EOF'
+# Lessons
+Learned.
+EOF
+
+cat > "$TMPDIR/build21/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+## Agent Performance Scores
+## Phase Audit
+## Hypotheses Generated
+## Mutations Proposed
+EOF
+
+cat > "$TMPDIR/build21/.kimi/mutations-applied.md" << 'EOF'
+# Mutations Applied
+| ID | Status |
+| M1 | Applied |
+EOF
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/knowledge-broker.md" << 'EOF'
+# Broker
+> **Last updated**: 2026-06-05
+EOF
+
+RC=0
+python3 "$SCRIPT_DIR/../scripts/process-compliance-precompute.py" "$TMPDIR/build21" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   [ -f "$TMPDIR/build21/.kimi/process-compliance-precomputed.json" ] && \
+   [ -f "$TMPDIR/build21/.kimi/process-compliance-precomputed.md" ] && \
+   grep -q "Phase 4 Gate Compliance" "$TMPDIR/build21/.kimi/process-compliance-precomputed.md"; then
+    pass
+else
+    fail "compliance precompute output incorrect or missing"
+fi
+
+# ============================================================================
+# Test 22: process-compliance-precompute.py — HARD BLOCK on low score
+# ============================================================================
+
+echo -n "TEST: process-compliance-precompute.py emits HARD BLOCK below 50 ... "
+
+mkdir -p "$TMPDIR/build22/.kimi"
+
+cat > "$TMPDIR/build22/plan.md" << 'EOF'
+# Build Plan — FB109
+EOF
+
+RC=0
+python3 "$SCRIPT_DIR/../scripts/process-compliance-precompute.py" "$TMPDIR/build22" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   grep -q "HARD BLOCK" "$TMPDIR/build22/.kimi/process-compliance-precomputed.md" && \
+   grep -qE "[0-9]+ / 100 \([0-9]+\.[0-9]+%\)" "$TMPDIR/build22/.kimi/process-compliance-precomputed.md"; then
+    pass
+else
+    fail "HARD BLOCK not emitted for empty build directory"
+fi
+
+# ============================================================================
+# Test 23: process-compliance-precompute.py — session-end hook auto-invocation
+# ============================================================================
+
+echo -n "TEST: session-end.sh auto-generates compliance when audit missing ... "
+
+mkdir -p "$TMPDIR/build23/.kimi"
+
+cat > "$TMPDIR/build23/plan.md" << 'EOF'
+# Build Plan — FB110
+EOF
+
+cat > "$TMPDIR/build23/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/knowledge-broker.md" << 'EOF'
+# Broker
+> **Last updated**: 2026-06-05
+EOF
+
+# Simulate session-end payload
+PAYLOAD='{"session_id":"test-session-23","cwd":"'$TMPDIR/build23'","reason":"stop"}'
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/session-end.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   [ -f "$TMPDIR/build23/.kimi/process-compliance-precomputed.md" ] && \
+   grep -q "process-audit.md missing" "$TMPDIR/build23/.kimi/session-telemetry.md" 2>/dev/null; then
+    pass
+else
+    fail "session-end did not auto-generate compliance or flag missing audit"
+fi
+
+# ============================================================================
 # Summary
 # ============================================================================
 

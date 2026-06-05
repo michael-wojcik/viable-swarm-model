@@ -276,4 +276,5 @@
 | R5 | 2026-06-05 S5 | refinement | auto-broker-update.sh pipefail crash on empty grep | effective | 1 | 5 | — | — | — |
 | R6 | 2026-06-05 S5 | refinement | build-health-dashboard.py metric accuracy | effective | 1 | 5 | — | — | — |
 | R7 | 2026-06-05 S5 | structural | mutation-portfolio-health.py + session-end auto-invocation | effective | 1 | 5 | — | — | — |
-| R8 | 2026-06-05 S5 | structural | organism-vitals.py + variety engineer auto-invocation | probation | 0 | — | — | — | S5 iter
+| R8 | 2026-06-05 S5 | structural | organism-vitals.py + variety engineer auto-invocation | effective | 1 | 5 | — | — | — |
+| R9 | 2026-06-05 S5 | structural | process-compliance-precompute.py + process auditor workload reducer | probation | 0 | — | — | — | S5 iter

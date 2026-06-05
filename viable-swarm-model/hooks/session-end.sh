@@ -125,6 +125,18 @@ if [[ -f "$CWD/.kimi/meta-report.md" && ! -f "$CWD/.kimi/variety-assessment.md" 
     fi
 fi
 
+# Check 10: Process audit completion (NEW — closes S3* audit gap)
+# If build reached Phase 8 but process audit was never done, flag and auto-generate.
+if [[ -f "$CWD/.kimi/meta-report.md" && ! -f "$CWD/.kimi/process-audit.md" ]]; then
+    AUDIT_WARNINGS="${AUDIT_WARNINGS}- Phase 8b complete but process-audit.md missing. vsm_process_auditor not spawned or timed out.\n"
+    COMPLIANCE_SCRIPT="$HOME/vsm/viable-swarm-model/scripts/process-compliance-precompute.py"
+    if [[ -f "$COMPLIANCE_SCRIPT" ]]; then
+        python3 "$COMPLIANCE_SCRIPT" "$CWD" >/dev/null 2>&1 || {
+            echo "WARNING: process-compliance-precompute.py failed. Compliance metrics not pre-computed." >&2
+        }
+    fi
+fi
+
 # ── Auto-update mutation state (H213 safety net) ──
 # If mutations-applied.md exists but mutation-state.md was not updated during
 # Phase 8c-ii (S5 forgot to run update-mutation-state.sh), update it now.

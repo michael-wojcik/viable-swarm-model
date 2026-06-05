@@ -3278,3 +3278,48 @@ Additionally, the dashboard was never automatically invoked — it only ran when
 **Measured effect**: **Awaiting measurement** — To be scored after next fitness build or S5 iteration. Success criteria: (1) organism vitals MD exists in `.kimi/` for ≥80% of builds, (2) variety engineer exercise rate > 0%, (3) early detection of at least one systemic strain before build failure.
 
 ---
+
+## Mutation R9 — 2026-06-05
+
+**Session**: S5 Orchestrator Iteration (Fifth iteration of automated improvement loop)
+**File**: `scripts/process-compliance-precompute.py` (new), `hooks/session-end.sh`, `agents/vsm_process_auditor.md`
+**Type**: structural
+**Rationale**: The `vsm_process_auditor` agent has a **60% success rate** and timed out in FB30. SM2 (process auditor HARD BLOCK) is probationary with 0 builds tested. The agent's compliance matrix has 10 checks, each requiring reading one or more files across the build directory and skill references. In a typical Tier 2+ build with 25+ source files and 15+ `.kimi/` artifacts, this file scanning workload exceeds the agent's timeout budget. When the process auditor times out, Phase 8b/8c compliance checks are skipped, allowing process violations to go undetected.
+
+**Expected effect**:
+- The `scripts/process-compliance-precompute.py` script scans all 10 compliance items in < 1 second, producing structured JSON and Markdown reports.
+- The `vsm_process_auditor` agent reads pre-computed compliance data first, reducing its workload from "scan 15+ files" to "verify 10 pre-computed findings and write report".
+- `session-end.sh` Check 10: if `meta-report.md` exists but `process-audit.md` does not, flag the omission AND auto-generate fallback compliance data.
+- Process auditor timeout rate should improve from 40% to < 20%.
+
+**Before**:
+- Process auditor scanned all files manually, often timing out before completing check 7-10.
+- No pre-computation existed for compliance checks.
+- session-end.sh had no check for missing process-audit.md.
+
+**After**:
+- `scripts/process-compliance-precompute.py` performs automated compliance scanning:
+  - Phase 4 Gate: checks for PASS/BLOCK/verification marker
+  - Phase 7 Fix Wave: checks re-audit-report.md for files, verdicts, regressions
+  - Phase 7c Security: detects if fix wave modified auth/GraphQL/WS files and whether post-fix security check exists
+  - Phase 8 Reflection: checks lessons.md existence and meta-report.md required sections
+  - Phase 8b Mutations: checks mutations-applied.md tracking and mutation-state.md linkage
+  - Knowledge Broker: checks freshness and structured content
+  - Phase 0 Broker Read: scores plan.md broker/mutation references (0-10 scale)
+  - Portfolio Review: checks mutation-portfolio-review.md existence
+  - Causal Index: checks if build ID appears in causal-index.md
+  - Stack Skills: heuristic scan of all .kimi/ files for skill references
+- Computes overall compliance score (0-100) with PASS/ISSUES/FAIL per check.
+- Emits HARD BLOCK if score < 50, ISSUES if < 80.
+- `vsm_process_auditor.md` updated with "Pre-computed Compliance Data (READ FIRST)" section.
+
+**Files modified**:
+- `scripts/process-compliance-precompute.py` — Created (260 lines). 10-check compliance scanner with scoring engine.
+- `hooks/session-end.sh` — Added Check 10 for missing process-audit.md; auto-invokes compliance precompute.
+- `agents/vsm_process_auditor.md` — Added pre-computation read-first section with timeout rationale.
+- `hooks/test-automation.sh` — Added Tests 21–23 covering compliance scoring, HARD BLOCK detection, and session-end auto-invocation.
+- `references/mutation-state.md` — Added R9 row; promoted R8 to effective.
+
+**Measured effect**: **Awaiting measurement** — To be scored after next fitness build or S5 iteration. Success criteria: (1) process audit completion rate ≥ 80%, (2) process auditor timeout rate < 20%, (3) at least one build where pre-computation caught a process violation that manual audit missed.
+
+---
