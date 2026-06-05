@@ -23,14 +23,22 @@ GYM_DIR = Path.home() / "vsm-fitness-builds" / "gym"
 REFS_DIR = VSM_ROOT / "references"
 
 
-def extract_score_from_meta_report(path: Path) -> float | None:
-    """Extract trainer score (e.g., 4.2/5.0) from meta-report."""
-    if not path.exists():
-        return None
-    text = path.read_text()
-    match = re.search(r"([0-9]+\.[0-9]+)\s*/\s*5\.0", text)
-    if match:
-        return float(match.group(1))
+def extract_score_from_build(build_dir: Path) -> float | None:
+    """Extract build score from meta-report.md or fitness-report.md.
+    Supports both /5.0 and /100 formats; normalizes /100 to /5.0 scale."""
+    for report_name in ("meta-report.md", "fitness-report.md"):
+        path = build_dir / ".kimi" / report_name
+        if not path.exists():
+            continue
+        text = path.read_text()
+        # Prefer /5.0 format
+        match = re.search(r"([0-9]+(?:\.[0-9]+)?)\s*/\s*5\.0", text)
+        if match:
+            return float(match.group(1))
+        # Fallback to /100 format (fitness-coach scores)
+        match = re.search(r"([0-9]+(?:\.[0-9]+)?)\s*/\s*100", text)
+        if match:
+            return round(float(match.group(1)) / 20, 2)
     return None
 
 
@@ -55,13 +63,28 @@ def extract_timeout_count(path: Path) -> int:
 
 
 def extract_blocker_count(path: Path) -> int:
-    """Count BLOCKERs from audit reports."""
+    """Count BLOCKER findings from audit reports.
+    Counts markdown section headings (### ... BLOCKER) rather than all
+    string occurrences, which over-counts table cells and summaries."""
     count = 0
-    for audit_file in ["foundation-audit.md", "implementation-audit.md", "re-audit-report.md"]:
+    for audit_file in [
+        "foundation-audit.md",
+        "implementation-audit.md",
+        "re-audit-report.md",
+        "security-audit.md",
+        "security-report.md",
+    ]:
         audit_path = path / ".kimi" / audit_file
         if audit_path.exists():
             text = audit_path.read_text()
-            count += len(re.findall(r"BLOCKER", text))
+            # Count headings like "### BLOCKER" or "### `file.py` — BLOCKER"
+            # Exclude summary lines like "BLOCKER count": and "## BLOCKER Details"
+            headings = re.findall(r"^#{1,3}\s+.*\bBLOCKER\b.*$", text, re.MULTILINE)
+            # Filter out "BLOCKER Details" and "BLOCKER count" summary headings
+            for h in headings:
+                if re.search(r"BLOCKER\s+(?:Details|count)", h, re.IGNORECASE):
+                    continue
+                count += 1
     return count
 
 
@@ -95,7 +118,7 @@ def get_build_scores(limit: int = 10) -> list[dict]:
         process_audit = fb_dir / ".kimi" / "process-audit.md"
         plan_md = fb_dir / "plan.md"
 
-        score = extract_score_from_meta_report(meta_report)
+        score = extract_score_from_build(fb_dir)
         process_score = extract_process_score(process_audit)
         timeouts = extract_timeout_count(plan_md)
         blockers = extract_blocker_count(fb_dir)
@@ -127,7 +150,7 @@ def get_mutation_metrics() -> dict:
     effective = len(re.findall(r"\|\s*effective\s*\|", text))
     monitor = len(re.findall(r"\|\s*monitor\s*\|", text))
     ineffective = len(re.findall(r"\|\s*ineffective\s*\|", text))
-    removed = len(re.findall(r"\|\s*removed\s*\|", text))
+    removed = len(re.findall(r"\|\s*removed\s*\|", text, re.IGNORECASE))
 
     total = probation + effective + monitor + ineffective
     fill_rate = 0  # Would need deeper parsing
@@ -225,7 +248,11 @@ def get_agent_risk_assessment() -> list[dict]:
     text = mutation_state.read_text()
     risks = []
     # Find capability matrix section
-    matrix_match = re.search(r"\| Agent \| Domain \| Success Rate \|.*?\n(.*?)(?=\n## |\Z)", text, re.DOTALL)
+    matrix_match = re.search(
+        r"\| Agent \| Domain \| Success Rate \|.*?\n\|[-\s|]+\|\n(.*?)\n\n",
+        text,
+        re.DOTALL,
+    )
     if matrix_match:
         for line in matrix_match.group(1).strip().split("\n"):
             if line.startswith("|") and "Success Rate" not in line and "---" not in line:
@@ -292,7 +319,7 @@ def compute_mutation_bloat_velocity() -> dict | None:
     total = len(re.findall(r"\|\s*probation\s*\|", state_text))
     total += len(re.findall(r"\|\s*effective\s*\|", state_text))
     total += len(re.findall(r"\|\s*monitor\s*\|", state_text))
-    removed = len(re.findall(r"\|\s*removed\s*\|", state_text))
+    removed = len(re.findall(r"\*\*REMOVED\*\*", state_text))
     # Approximate velocity: if total growing faster than removed
     ratio = total / max(removed, 1)
     if ratio > 4:

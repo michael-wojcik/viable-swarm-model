@@ -274,3 +274,4 @@
 
 | **S5 ITERATION MUTATIONS (2026-06-05)** |
 | R5 | 2026-06-05 S5 | refinement | auto-broker-update.sh pipefail crash on empty grep | effective | 1 | 5 | — | — | — |
+| R6 | 2026-06-05 S5 | refinement | build-health-dashboard.py metric accuracy | probation | 0 | — | — | — | S5 iter

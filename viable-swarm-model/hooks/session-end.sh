@@ -146,6 +146,17 @@ echo "$TELEMETRY_BLOCK" >> "$SESSION_TELEMETRY_FILE"
 # NOTE: S5 updates references/skill-state.md during Phase 8 by reading this file.
 # Hooks MUST NOT modify tracked reference files.
 
+# ── Build Health Dashboard ──
+# Generate longitudinal health metrics for S4 intelligence layer.
+# This populates build-health-history.md so variety engineer and S5
+# have accurate trend data for proactive health assessment.
+DASHBOARD_SCRIPT="$HOME/vsm/viable-swarm-model/scripts/build-health-dashboard.py"
+if [[ -f "$CWD/plan.md" && -f "$DASHBOARD_SCRIPT" ]]; then
+    python3 "$DASHBOARD_SCRIPT" "$CWD" >/dev/null 2>&1 || {
+        echo "WARNING: build-health-dashboard.py failed. Longitudinal health metrics not updated." >&2
+    }
+fi
+
 # ── Self-Healing Hook Diagnostic — verify infrastructure ──
 # Run diagnostic-router in test mode to ensure the self-healing layer is functional.
 DIAGNOSTIC_ROUTER="$HOME/vsm/viable-swarm-model/hooks/diagnostic-router.sh"

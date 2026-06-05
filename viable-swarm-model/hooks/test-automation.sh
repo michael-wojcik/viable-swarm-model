@@ -401,6 +401,163 @@ else
 fi
 
 # ============================================================================
+# Test 10: build-health-dashboard.py — score extraction handles /100 format
+# ============================================================================
+
+echo -n "TEST: build-health-dashboard.py normalizes /100 scores to /5.0 ... "
+
+mkdir -p "$TMPDIR/vsm-fitness-builds/coach/FB97/.kimi"
+mkdir -p "$TMPDIR/build10/.kimi"
+
+cat > "$TMPDIR/vsm-fitness-builds/coach/FB97/plan.md" << 'EOF'
+# Build Plan — FB97
+EOF
+cat > "$TMPDIR/vsm-fitness-builds/coach/FB97/.kimi/meta-report.md" << 'EOF'
+Trainer score: 77/100
+EOF
+
+cat > "$TMPDIR/build10/plan.md" << 'EOF'
+# Build Plan — FB97
+EOF
+
+RC=0
+python3 "$SCRIPT_DIR/../scripts/build-health-dashboard.py" "$TMPDIR/build10" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   grep -q "3.85" "$TMPDIR/build10/.kimi/health-dashboard.md"; then
+    pass
+else
+    fail "/100 score not normalized to /5.0 in dashboard"
+fi
+
+# ============================================================================
+# Test 11: build-health-dashboard.py — agent risk excludes non-agent rows
+# ============================================================================
+
+echo -n "TEST: build-health-dashboard.py agent risk excludes efficiency baselines ... "
+
+mkdir -p "$TMPDIR/build11/.kimi"
+
+cat > "$TMPDIR/build11/plan.md" << 'EOF'
+# Build Plan — FB98
+EOF
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| T1 | Test | append-only | Test failure | effective | 5 | 4 | — | — | — |
+
+### Capability Matrix
+| Agent | Domain | Success Rate | Last 3 Scores | Known Failure Modes | Recommended Max Task Size |
+|-------|--------|-------------|---------------|---------------------|--------------------------|
+| vsm_backend_coder | Python | 85% | 4,4,4 | None | 500 lines |
+| Context compactions | 4.0% | — | — | — | 200 lines |
+
+### Known Unknowns
+| Hypothesis | Confidence |
+|---|---|
+| H1 | HIGH |
+EOF
+
+RC=0
+python3 "$SCRIPT_DIR/../scripts/build-health-dashboard.py" "$TMPDIR/build11" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   grep -q "vsm_backend_coder" "$TMPDIR/build11/.kimi/health-dashboard.md" && \
+   ! grep -q "Context compactions" "$TMPDIR/build11/.kimi/health-dashboard.md"; then
+    pass
+else
+    fail "efficiency baseline row incorrectly listed as agent risk"
+fi
+
+# ============================================================================
+# Test 12: build-health-dashboard.py — blocker count uses headings not strings
+# ============================================================================
+
+echo -n "TEST: build-health-dashboard.py counts BLOCKER headings not all occurrences ... "
+
+mkdir -p "$TMPDIR/vsm-fitness-builds/coach/FB98/.kimi"
+mkdir -p "$TMPDIR/vsm-fitness-builds/coach/FB99/.kimi"
+mkdir -p "$TMPDIR/FB100/.kimi"
+
+cat > "$TMPDIR/vsm-fitness-builds/coach/FB98/plan.md" << 'EOF'
+# Build Plan — FB98
+EOF
+cat > "$TMPDIR/vsm-fitness-builds/coach/FB98/.kimi/meta-report.md" << 'EOF'
+Score: 4.0/5.0
+EOF
+
+cat > "$TMPDIR/vsm-fitness-builds/coach/FB99/plan.md" << 'EOF'
+# Build Plan — FB99
+EOF
+cat > "$TMPDIR/vsm-fitness-builds/coach/FB99/.kimi/meta-report.md" << 'EOF'
+Score: 4.0/5.0
+EOF
+cat > "$TMPDIR/vsm-fitness-builds/coach/FB99/.kimi/security-audit.md" << 'EOF'
+# Security Audit
+
+- **BLOCKER count**: 5
+
+## Executive Summary
+Some text with BLOCKER mentioned again.
+
+### BLOCKER
+Actual finding here.
+
+### BLOCKER
+Another actual finding.
+EOF
+
+cat > "$TMPDIR/FB100/plan.md" << 'EOF'
+# Build Plan — FB100
+EOF
+
+RC=0
+python3 "$SCRIPT_DIR/../scripts/build-health-dashboard.py" "$TMPDIR/FB100" >/dev/null 2>&1 || RC=$?
+
+# Extract blocker count from the Build History table in the dashboard
+BLOCKER_VAL=$(grep "FB99" "$TMPDIR/FB100/.kimi/health-dashboard.md" | grep -oE '\| [0-9]+ \| [0-9]+h/[0-9]+i' | awk '{print $2}')
+
+if [ "$RC" -eq 0 ] && [ "$BLOCKER_VAL" = "2" ]; then
+    pass
+else
+    fail "blocker count should be 2 (headings only), got: $BLOCKER_VAL"
+fi
+
+# ============================================================================
+# Test 13: build-health-dashboard.py — removed count handles **REMOVED**
+# ============================================================================
+
+echo -n "TEST: build-health-dashboard.py counts **REMOVED** mutations correctly ... "
+
+mkdir -p "$TMPDIR/build13/.kimi"
+
+cat > "$TMPDIR/build13/plan.md" << 'EOF'
+# Build Plan — FB100
+EOF
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| T1 | Test | append-only | Test failure | effective | 5 | 4 | — | — | — |
+| T2 | Test | structural | Test bypass | **REMOVED** | 1 | 1 | — | — | — |
+| T3 | Test | refinement | Test gap | **REMOVED** | 2 | 2 | — | — | — |
+EOF
+
+RC=0
+python3 "$SCRIPT_DIR/../scripts/build-health-dashboard.py" "$TMPDIR/build13" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   grep -q "Removed: 2" "$TMPDIR/build13/.kimi/health-dashboard.md"; then
+    pass
+else
+    fail "**REMOVED** mutations not counted correctly"
+fi
+
+# ============================================================================
 # Summary
 # ============================================================================
 

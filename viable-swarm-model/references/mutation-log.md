@@ -3156,3 +3156,53 @@ NEW_MUTATIONS=$(grep -B1 "^## Mutation" "$MUTATION_LOG" | grep "$DATE" | head -5
 LEARNINGS=$(grep -v '^#' "${KIMI_DIR}/lessons.md" | grep -v '^$' | head -3 | sed 's/^/- /' || true)
 NEW_MUTATIONS=$(grep -B1 "^## Mutation" "$MUTATION_LOG" | grep "$DATE" | head -5 | sed 's/^/- /' || true)
 ```
+
+
+---
+
+## Mutation R6 — 2026-06-05
+
+**Session**: S5 orchestrator iteration — fixed build-health-dashboard.py metric accuracy and wired into session-end hook
+**Files**: `viable-swarm-model/scripts/build-health-dashboard.py`, `viable-swarm-model/hooks/session-end.sh`, `viable-swarm-model/hooks/test-automation.sh`
+**Type**: refinement
+**Target failure mode**: S4 intelligence layer receiving false/misleading longitudinal health metrics causing incorrect algedonic signals and wasted S5 attention
+**Rationale**: The build-health-dashboard.py script (the canonical longitudinal health recorder for the organism) had four accuracy bugs that produced actively misleading output:
+1. **Score extraction**: Only recognized `/5.0` format; fitness-coach builds using `/100` scores (e.g., FB32 "77/100") were recorded as `None`, breaking score trend calculations.
+2. **Agent risk assessment regex**: Captured the entire text from the capability matrix through subsequent sections (Known Unknowns, Temporal Patterns, Efficiency Baselines), causing efficiency baseline rows like "Context compactions" and "Process violations per build" to be listed as CRITICAL-risk agents with 200-line max task sizes.
+3. **Mutation bloat velocity**: Used case-sensitive `\|\s*removed\s*\|` regex on a file where removed status is `**REMOVED**` (uppercase with bold markers), resulting in `removed=0` and a computed ratio of 65.0 (CRITICAL) instead of the actual ~9.3.
+4. **Blocker count**: Counted every occurrence of the string "BLOCKER" in audit files, including summary lines (`BLOCKER count: 5`), table cells, and section headings. FB24 implementation audit had 18 string occurrences but only 5 actual BLOCKER findings; the dashboard reported 30 blockers for FB24 alone.
+
+Additionally, the dashboard was never automatically invoked — it only ran when manually executed. This meant `build-health-history.md` accumulated no data between manual runs, starving the variety engineer's trend-analysis capability.
+
+**Expected effect**: 
+- Score trends are accurate across both vsm_meta (`/5.0`) and fitness-coach (`/100`) scoring formats.
+- Agent risk assessment lists only actual agents from the capability matrix.
+- Mutation bloat ratio reflects real removed count (7 removed / 65 active ≈ 9.3).
+- Blocker counts reflect actual findings (heading-based count) rather than string occurrences.
+- Every build closeout automatically triggers dashboard generation via session-end.sh, ensuring longitudinal data accumulates without manual intervention.
+
+**Measured effect**: **Awaiting measurement** — To be scored after next fitness build or S5 iteration when variety engineer and S5 consult dashboard output.
+
+**Before**:
+```
+| Predicted Next Score | 4.2/5.0 | Alert: OK |
+| Mutation Bloat | Active: 65, Removed: 0, Ratio: 65.0 | Alert: CRITICAL |
+| Agent Risk Assessment |
+| Context compactions | 4.0% | CRITICAL | 200 |
+| Process violations per build | 2.0% | CRITICAL | 200 |
+| Mutation backfill rate | 0.0% | CRITICAL | 200 |
+```
+
+**After**:
+```
+| Predicted Next Score | 3.83/5.0 | Alert: OK |
+| Mutation Bloat | Active: 65, Removed: 7, Ratio: 9.3 | Alert: CRITICAL |
+| Agent Risk Assessment | (12 actual agents only, no false entries)
+```
+
+**Files modified**:
+- `scripts/build-health-dashboard.py` — 5 function fixes (`extract_score_from_build`, `extract_blocker_count`, `get_agent_risk_assessment`, `compute_mutation_bloat_velocity`)
+- `hooks/session-end.sh` — Added automatic dashboard invocation block before self-healing diagnostic
+- `hooks/test-automation.sh` — Added 4 new tests (Tests 10–13) covering score normalization, agent risk exclusion, blocker heading count, and removed mutation count
+
+---
