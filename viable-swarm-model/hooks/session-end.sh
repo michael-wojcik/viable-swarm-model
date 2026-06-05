@@ -113,6 +113,18 @@ if [[ -f "$CWD/.kimi/meta-report.md" && ! -f "$CWD/.kimi/mutation-portfolio-revi
     fi
 fi
 
+# Check 9: Variety assessment completion (NEW — closes S4* environmental scanning gap)
+# If build reached Phase 8 but variety assessment was never done, flag and auto-generate.
+if [[ -f "$CWD/.kimi/meta-report.md" && ! -f "$CWD/.kimi/variety-assessment.md" ]]; then
+    AUDIT_WARNINGS="${AUDIT_WARNINGS}- Phase 8b complete but variety-assessment.md missing. vsm_variety_engineer not spawned.\n"
+    VITALS_SCRIPT="$HOME/vsm/viable-swarm-model/scripts/organism-vitals.py"
+    if [[ -f "$VITALS_SCRIPT" ]]; then
+        python3 "$VITALS_SCRIPT" --build-dir "$CWD" >/dev/null 2>&1 || {
+            echo "WARNING: organism-vitals.py failed. Variety metrics not pre-computed." >&2
+        }
+    fi
+fi
+
 # ── Auto-update mutation state (H213 safety net) ──
 # If mutations-applied.md exists but mutation-state.md was not updated during
 # Phase 8c-ii (S5 forgot to run update-mutation-state.sh), update it now.

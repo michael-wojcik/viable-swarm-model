@@ -696,6 +696,183 @@ else
 fi
 
 # ============================================================================
+# Test 18: organism-vitals.py — basic vitals computation
+# ============================================================================
+
+echo -n "TEST: organism-vitals.py computes variety metrics and algedonics ... "
+
+mkdir -p "$TMPDIR/build18/.kimi"
+mkdir -p "$TMPDIR/vsm-fitness-builds/coach/FB99/.kimi"
+mkdir -p "$TMPDIR/vsm/viable-swarm-model/scripts"
+
+cp "$SCRIPT_DIR/../scripts/organism-vitals.py" "$TMPDIR/vsm/viable-swarm-model/scripts/"
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| T1 | Test | append-only | Test failure | effective | 5 | 4 | — | — | — |
+| T2 | Test | structural | Test bypass | probation | 1 | 3 | — | — | — |
+| T3 | Test | refinement | Test gap | monitor | 5 | 2 | — | — | — |
+EOF
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/hypotheses.md" << 'EOF'
+# Hypotheses
+## H1: Test
+**Status**: untested
+## H2: Test
+**Status**: confirmed
+## H3: Test
+**Status**: untested
+EOF
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/knowledge-broker.md" << 'EOF'
+# Broker
+> **Last updated**: 2026-06-01
+EOF
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/build-health-history.md" << 'EOF'
+# Build Health History
+## 2026-06-01 — FB99
+- Score: 4.0/5.0
+## 2026-06-02 — FB100
+- Score: 3.8/5.0
+EOF
+
+cat > "$TMPDIR/build18/plan.md" << 'EOF'
+# Build Plan — FB105
+EOF
+
+RC=0
+python3 "$SCRIPT_DIR/../scripts/organism-vitals.py" --build-dir "$TMPDIR/build18" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   [ -f "$TMPDIR/build18/.kimi/organism-vitals.md" ] && \
+   grep -q "Probationary mutations" "$TMPDIR/build18/.kimi/organism-vitals.md" && \
+   grep -q "Variety Score" "$TMPDIR/build18/.kimi/organism-vitals.md"; then
+    pass
+else
+    fail "organism vitals output incorrect or missing"
+fi
+
+# ============================================================================
+# Test 19: organism-vitals.py — CRITICAL algedonic detection
+# ============================================================================
+
+echo -n "TEST: organism-vitals.py detects CRITICAL untested hypotheses ... "
+
+mkdir -p "$TMPDIR/build19/.kimi"
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| T1 | Test | append-only | Test failure | effective | 5 | 4 | — | — | — |
+EOF
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/hypotheses.md" << 'EOF'
+# Hypotheses
+## H1
+**Status**: untested
+## H2
+**Status**: untested
+## H3
+**Status**: untested
+## H4
+**Status**: untested
+## H5
+**Status**: untested
+## H6
+**Status**: untested
+## H7
+**Status**: untested
+## H8
+**Status**: untested
+## H9
+**Status**: untested
+## H10
+**Status**: untested
+## H11
+**Status**: untested
+EOF
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/knowledge-broker.md" << 'EOF'
+# Broker
+> **Last updated**: 2026-06-01
+EOF
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/build-health-history.md" << 'EOF'
+# Build Health History
+EOF
+
+cat > "$TMPDIR/build19/plan.md" << 'EOF'
+# Build Plan — FB106
+EOF
+
+RC=0
+python3 "$SCRIPT_DIR/../scripts/organism-vitals.py" --build-dir "$TMPDIR/build19" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   grep -q "CRITICAL: Untested hypotheses" "$TMPDIR/build19/.kimi/organism-vitals.md" && \
+   grep -q "Blocking.*YES" "$TMPDIR/build19/.kimi/organism-vitals.md"; then
+    pass
+else
+    fail "CRITICAL algedonic for untested hypotheses not detected"
+fi
+
+# ============================================================================
+# Test 20: organism-vitals.py — session-end hook auto-invocation
+# ============================================================================
+
+echo -n "TEST: session-end.sh auto-generates organism vitals when assessment missing ... "
+
+mkdir -p "$TMPDIR/build20/.kimi"
+
+cat > "$TMPDIR/build20/plan.md" << 'EOF'
+# Build Plan — FB107
+EOF
+
+cat > "$TMPDIR/build20/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| T1 | Test | append-only | Test failure | effective | 5 | 4 | — | — | — |
+EOF
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/hypotheses.md" << 'EOF'
+# Hypotheses
+## H1
+**Status**: confirmed
+EOF
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/knowledge-broker.md" << 'EOF'
+# Broker
+> **Last updated**: 2026-06-05
+EOF
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/build-health-history.md" << 'EOF'
+# Build Health History
+EOF
+
+# Simulate session-end payload
+PAYLOAD='{"session_id":"test-session-20","cwd":"'$TMPDIR/build20'","reason":"stop"}'
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/session-end.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   [ -f "$TMPDIR/build20/.kimi/organism-vitals.md" ] && \
+   grep -q "variety-assessment.md missing" "$TMPDIR/build20/.kimi/session-telemetry.md" 2>/dev/null; then
+    pass
+else
+    fail "session-end did not auto-generate organism vitals or flag missing assessment"
+fi
+
+# ============================================================================
 # Summary
 # ============================================================================
 

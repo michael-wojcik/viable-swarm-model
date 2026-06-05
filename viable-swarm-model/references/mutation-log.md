@@ -3242,3 +3242,39 @@ Additionally, the dashboard was never automatically invoked — it only ran when
 **Measured effect**: **Awaiting measurement** — To be scored after next fitness build or S5 iteration. Success criteria: (1) portfolio health JSON exists in `.kimi/` for ≥80% of builds, (2) learning curator exercise rate > 0%, (3) process auditor timeout rate improves.
 
 ---
+
+## Mutation R8 — 2026-06-05
+
+**Session**: S5 Orchestrator Iteration (Fourth iteration of automated improvement loop)
+**File**: `scripts/organism-vitals.py` (new), `hooks/session-end.sh`, `agents/vsm_variety_engineer.md`
+**Type**: structural
+**Rationale**: The `vsm_variety_engineer` (S4* environmental scanning, SM1) has a **0% exercise rate** — no `variety-assessment.md` artifacts exist across all builds. Without proactive environmental scanning, the organism cannot detect systemic strain before it causes build failures. The variety engineer's algedonic thresholds (e.g., agent timeout rate > 10%, probationary mutations > 12, untested hypotheses > 7) are designed to trigger early intervention, but without the agent being spawned, these thresholds are never checked. Additionally, the variety engineer's task is large (read 4+ reference files, compute 7 metrics, calculate variety score, check thresholds, write report), making it susceptible to the same timeout pattern that affects other large-task agents.
+
+**Expected effect**:
+- Every build closeout automatically pre-computes organism vitals via `scripts/organism-vitals.py`, invoked from `session-end.sh`.
+- If `variety-assessment.md` is missing when `meta-report.md` exists, session-end flags the omission AND generates fallback vitals data.
+- The `vsm_variety_engineer` agent reads pre-computed `.kimi/organism-vitals.md` first, reducing its task from "read + parse + compute" to "read + verify + decide", preventing timeout.
+- S5 gains automated visibility into probationary mutation count, untested hypothesis backlog, broker staleness, score trends, and variety score — all from a single pre-computed report.
+
+**Before**:
+- No automated variety metrics computation.
+- Variety engineer had 0% exercise rate; no proactive health monitoring.
+- S4* environmental scanning gap meant systemic strain (e.g., tester timeouts, mutation bloat) was only detected reactively after build failures.
+- session-end.sh had no check for missing variety assessment.
+
+**After**:
+- `scripts/organism-vitals.py` parses mutation-state.md, hypotheses.md, knowledge-broker.md, build-health-history.md, and fitness build directories. Computes 7 health metrics, variety score, and algedonic threshold checks. Writes Markdown report matching variety-assessment-template.md format.
+- `session-end.sh` Check 9: auto-generates organism vitals when variety assessment missing.
+- `vsm_variety_engineer.md` instructs agent to read pre-computed `.kimi/organism-vitals.md` first.
+- Real organism vitals scan (2026-06-05) revealed: 15 probationary mutations (WARNING), 23 untested hypotheses (CRITICAL), fill rate 65.6% (WARNING), variety score 0.62 (WARNING).
+
+**Files modified**:
+- `scripts/organism-vitals.py` — Created (350 lines). Multi-source health scanner with algedonic threshold engine.
+- `hooks/session-end.sh` — Added Check 9 for missing variety assessment; auto-invokes organism vitals script.
+- `agents/vsm_variety_engineer.md` — Added "Pre-computed Vitals Data (READ FIRST)" section.
+- `hooks/test-automation.sh` — Added Tests 18–20 covering vitals computation, CRITICAL algedonic detection, and session-end auto-invocation.
+- `references/mutation-state.md` — Added R8 row.
+
+**Measured effect**: **Awaiting measurement** — To be scored after next fitness build or S5 iteration. Success criteria: (1) organism vitals MD exists in `.kimi/` for ≥80% of builds, (2) variety engineer exercise rate > 0%, (3) early detection of at least one systemic strain before build failure.
+
+---
