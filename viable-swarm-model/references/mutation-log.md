@@ -3428,3 +3428,37 @@ Additionally, the dashboard was never automatically invoked — it only ran when
 **Measured effect**: **Awaiting measurement** — To be scored after next fitness build or S5 iteration. Success criteria: (1) integration test continues passing after any closeout script modification, (2) at least one regression caught by integration test before reaching production, (3) session-end.sh produces no false CRITICAL warnings when all artifacts present.
 
 ---
+
+## Mutation R13 — 2026-06-05
+
+**Session**: S5 Orchestrator Iteration — vsm_product underutilization fix
+**File**: `SKILL.md`, `agents/vsm_architect.md`, `hooks/session-end.sh`, `hooks/test-automation.sh`
+**Type**: structural
+**Rationale**: The `vsm_product` agent (S4 Product) had only 1 lesson mention across 26+ fitness builds, indicating it was rarely spawned. Yet H[N+1] (gym experiment) confirmed that product briefs are a proven guardrail against architect scope creep — the control architect (no brief) added an entire auth subsystem, while the treatment architect (with brief) eliminated auth entirely and produced a design with only 3 core features and 12+ explicit scope exclusions. SKILL.md only required vsm_product for "problem-oriented prompts," making it skippable for prescriptive Tier 2+ builds where scope creep is equally damaging. Additionally, `vsm_architect.md` had no instruction to read `product-brief.md`, so even when the brief was produced, the architect might ignore it. Finally, `session-end.sh` had no check for missing product briefs, making underutilization invisible during closeout.
+
+**Expected effect**:
+- ALL Tier 2+ builds now spawn `vsm_product` regardless of prompt type.
+- Prescriptive Tier 2+ prompts get a lightweight "Build Confirmation Brief" with acceptance criteria and out-of-scope list.
+- Architects explicitly check for and read `product-brief.md` before designing.
+- Missing product briefs in Tier 2+ builds are flagged during session-end closeout.
+- Scope creep is caught at the source (Phase 0/1) rather than during audit (Phase 3b).
+
+**Files modified**:
+- `SKILL.md` Phase 0 step 2 — Changed conditional vsm_product spawn to mandatory for Tier 2+.
+- `agents/vsm_architect.md` — Added "Product Brief Guardrail — MANDATORY" section requiring architects to read product-brief.md and use its out-of-scope list. Escalates BLOCKER if brief is missing for Tier 2+.
+- `hooks/session-end.sh` — Removed duplicate Check 6 (process-audit.md, superseded by Check 10). Added Check 12: flags missing product-brief.md when plan.md indicates Tier 2+.
+- `hooks/test-automation.sh` — Added Tests 31–33 verifying Tier 2 flag, Tier 1 no-flag, and present-brief no-flag.
+
+**Before**:
+- `SKILL.md`: "If problem-oriented, spawn vsm_product"
+- `vsm_architect.md`: No mention of product-brief.md
+- `session-end.sh`: No check for product briefs; duplicate Check 6/10 for process audit
+
+**After**:
+- `SKILL.md`: "For ALL Tier 2+ builds, ALWAYS spawn vsm_product"
+- `vsm_architect.md`: Explicit guardrail to read product brief and respect out-of-scope
+- `session-end.sh`: Check 12 detects missing product briefs; duplicate removed
+
+**Measured effect**: **Awaiting measurement** — Success criteria: (1) 100% of Tier 2+ builds produce product-brief.md, (2) zero scope-creep BLOCKERs attributed to missing brief in next 3 builds, (3) session-end Check 12 fires zero false positives.
+
+---

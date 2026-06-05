@@ -5,6 +5,41 @@
 
 ---
 
+## 2026-06-05 — S5 Orchestrator Iteration (R13)
+
+### Diagnosed Constraint
+**System 5→S1 channel / S4→S5 intelligence gap**: The `vsm_product` agent (S4 Product) had only 1 lesson mention across 26+ fitness builds, indicating it was rarely spawned. Yet H[N+1] (gym experiment) confirmed that product briefs are a proven guardrail against architect scope creep — the control architect (no brief) added an entire auth subsystem, while the treatment architect (with brief) eliminated auth entirely and produced a design with only 3 core features and 12+ explicit scope exclusions. SKILL.md only required vsm_product for "problem-oriented prompts," making it skippable for prescriptive Tier 2+ builds. Additionally, `vsm_architect.md` had no instruction to read `product-brief.md`, and `session-end.sh` had no check for missing product briefs, making underutilization invisible during closeout. A secondary issue: `session-end.sh` contained duplicate Checks 6 and 10 both testing for missing `process-audit.md`.
+
+### Change Made
+**Structural mutation R13**: Made `vsm_product` mandatory for Tier 2+ builds and wired product brief guardrails into the architect prompt and session-end closeout.
+- `SKILL.md` Phase 0: Changed conditional vsm_product spawn ("if problem-oriented") to mandatory for ALL Tier 2+ builds. Prescriptive Tier 2+ prompts get a lightweight "Build Confirmation Brief" with acceptance criteria and out-of-scope list.
+- `agents/vsm_architect.md`: Added "Product Brief Guardrail — MANDATORY" section. Architects must read `product-brief.md` and use its out-of-scope list as design guardrails. Missing brief for Tier 2+ is a BLOCKER-level escalation.
+- `hooks/session-end.sh`: Removed duplicate Check 6 (superseded by Check 10 with auto-generation). Added Check 12: if `plan.md` indicates Tier 2+ but `product-brief.md` is missing, flag the omission as a process violation.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **37 passed, 0 failed** (was 34 passed, 0 failed)
+- New Tests 31–33 verify:
+  - Tier 2 build with missing product-brief.md flagged
+  - Tier 1 build with missing product-brief.md NOT flagged
+  - Tier 3 build with product-brief.md present NOT flagged
+
+### Files Modified
+- `viable-swarm-model/SKILL.md`
+- `viable-swarm-model/agents/vsm_architect.md`
+- `viable-swarm-model/hooks/session-end.sh`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 5 (Policy/Meta-learning) channel failure / S5→S5 evaluation gap**: The `vsm_meta` agent has a **60% success rate** with last 3 scores of 3, 3, 2. Its primary failure mode is "false TBD claims" — the agent marks metrics as "to be determined" when they are actually verifiable from build artifacts. This corrupts the entire cross-build learning loop: inaccurate meta-reports produce invalid hypotheses, wrong mutation scores, and misleading build health data. The agent's workload (read 10+ artifacts, run independent tests, score 12+ agents, write report) exceeds reliable completion bounds. The proven pre-computation pattern (R7–R10) has not yet been applied to meta-evaluation. A `scripts/meta-metrics-precompute.py` that extracts ground-truth metrics from all `.kimi/` artifacts would eliminate TBD claims by providing pre-verified data.
+
+---
+
 ## 2026-06-05 — S5 Orchestrator Iteration (R11+R12)
 
 ### Diagnosed Constraint (R11)

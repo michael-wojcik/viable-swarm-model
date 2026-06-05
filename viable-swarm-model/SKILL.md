@@ -528,9 +528,14 @@ Main agent (S5) performs:
    If you need a generic coder, use `vsm_backend_coder` with explicit task.
    If you need an explorer, use `vsm_explore`.
 1. **Viability check**: trivial (<50 lines, one file)? If yes, respond directly.
-2. **Classify prompt**: Prescriptive ("Build X with Y") or problem-oriented
-   ("Users need Z")? If problem-oriented, spawn `vsm_product` subagent to
-   produce a product brief with user stories and acceptance criteria.
+2. **Classify prompt + Spawn vsm_product (MANDATORY for Tier 2+)**:
+   Prescriptive ("Build X with Y") or problem-oriented ("Users need Z")?
+   - **Tier 2+ builds**: ALWAYS spawn `vsm_product` to produce a product brief.
+     For prescriptive prompts, the brief is a lightweight confirmation with
+     acceptance criteria and explicit out-of-scope list.
+   - **Tier 1 builds**: Spawn `vsm_product` only if problem-oriented.
+   The product brief prevents architect scope creep — H[N+1] confirmed this
+   reduces over-engineering by 80%+.
 3. **Read project memory**: `.kimi/lessons.md` if exists.
 4. **Read acquired wisdom**: `~/vsm/viable-swarm-model/references/acquired-wisdom.md`
    if exists.

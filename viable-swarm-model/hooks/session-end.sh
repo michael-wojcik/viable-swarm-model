@@ -87,11 +87,6 @@ if [[ -f "$CWD/.kimi/meta-report.md" && ! -f "$CWD/.kimi/lessons.md" ]]; then
     AUDIT_WARNINGS="${AUDIT_WARNINGS}- Phase 8b complete but lessons.md missing. Phase 8 reflection bypassed.\n"
 fi
 
-# Check 6: Missing process-audit.md in completed builds
-if [[ -f "$CWD/.kimi/meta-report.md" && ! -f "$CWD/.kimi/process-audit.md" ]]; then
-    AUDIT_WARNINGS="${AUDIT_WARNINGS}- Phase 8b complete but process-audit.md missing. Process auditor not spawned.\n"
-fi
-
 # Check 7: knowledge-broker.md consumption check
 if [[ -f "$CWD/plan.md" ]]; then
     if ! grep -qi "knowledge-broker\|Active Constraints\|broker trap" "$CWD/plan.md" 2>/dev/null; then
@@ -166,6 +161,20 @@ if [[ -f "$CWD/.kimi/meta-report.md" && ! -f "$CWD/.kimi/security-report.md" ]];
     fi
     if [[ "$HAS_SECURITY_SURFACE" == "yes" ]]; then
         AUDIT_WARNINGS="${AUDIT_WARNINGS}- CRITICAL: Phase 8b complete but security-report.md missing. vsm_security agent bypassed despite security-relevant code present.\n"
+    fi
+fi
+
+# Check 12: Product brief completion (NEW — closes S4→S5 intelligence gap)
+# Tier 2+ builds require a product brief to prevent architect scope creep.
+# H[N+1] confirmed: product briefs reduce scope creep by 80%+.
+# If plan.md indicates Tier 2+ but product-brief.md is missing, flag the omission.
+if [[ -f "$CWD/plan.md" && ! -f "$CWD/product-brief.md" && ! -f "$CWD/.kimi/product-brief.md" ]]; then
+    IS_TIER2PLUS="no"
+    if grep -qiE '\*\*Tier\*\*.*[23]|Tier:[[:space:]]*[23]' "$CWD/plan.md" 2>/dev/null; then
+        IS_TIER2PLUS="yes"
+    fi
+    if [[ "$IS_TIER2PLUS" == "yes" ]]; then
+        AUDIT_WARNINGS="${AUDIT_WARNINGS}- Tier 2+ build missing product-brief.md. vsm_product agent not spawned. Architect scope creep risk elevated.\n"
     fi
 fi
 

@@ -1199,6 +1199,105 @@ else
 fi
 
 # ============================================================================
+# Test 31: session-end.sh — Tier 2+ build missing product-brief.md flagged
+# ============================================================================
+
+echo -n "TEST: session-end.sh flags missing product-brief.md for Tier 2 ... "
+
+mkdir -p "$TMPDIR/build31/.kimi"
+
+cat > "$TMPDIR/build31/plan.md" << 'EOF'
+# Build Plan — FB115
+**Tier**: 2
+EOF
+
+cat > "$TMPDIR/build31/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+PAYLOAD='{"session_id":"test-session-31","cwd":"'$TMPDIR/build31'","reason":"stop"}'
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/session-end.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   grep -q "product-brief.md" "$TMPDIR/build31/.kimi/session-telemetry.md" 2>/dev/null && \
+   grep -q "vsm_product agent not spawned" "$TMPDIR/build31/.kimi/session-telemetry.md" 2>/dev/null; then
+    pass
+else
+    fail "session-end did not flag missing product brief for Tier 2"
+fi
+
+# ============================================================================
+# Test 32: session-end.sh — Tier 1 build missing product-brief.md NOT flagged
+# ============================================================================
+
+echo -n "TEST: session-end.sh does NOT flag missing product-brief.md for Tier 1 ... "
+
+mkdir -p "$TMPDIR/build32/.kimi"
+
+cat > "$TMPDIR/build32/plan.md" << 'EOF'
+# Build Plan — FB116
+**Tier**: 1
+EOF
+
+cat > "$TMPDIR/build32/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+PAYLOAD='{"session_id":"test-session-32","cwd":"'$TMPDIR/build32'","reason":"stop"}'
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/session-end.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   ! grep -q "product-brief.md" "$TMPDIR/build32/.kimi/session-telemetry.md" 2>/dev/null; then
+    pass
+else
+    fail "session-end falsely flagged missing product brief for Tier 1"
+fi
+
+# ============================================================================
+# Test 33: session-end.sh — Tier 2+ with product-brief.md present NOT flagged
+# ============================================================================
+
+echo -n "TEST: session-end.sh does NOT flag when product-brief.md present ... "
+
+mkdir -p "$TMPDIR/build33/.kimi"
+
+cat > "$TMPDIR/build33/plan.md" << 'EOF'
+# Build Plan — FB117
+**Tier**: 3
+EOF
+
+cat > "$TMPDIR/build33/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+cat > "$TMPDIR/build33/product-brief.md" << 'EOF'
+# Product Brief
+
+## Problem
+Users need Z.
+
+## Out of Scope
+- Auth subsystem
+- Real-time sync
+EOF
+
+PAYLOAD='{"session_id":"test-session-33","cwd":"'$TMPDIR/build33'","reason":"stop"}'
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/session-end.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   ! grep -q "product-brief.md" "$TMPDIR/build33/.kimi/session-telemetry.md" 2>/dev/null; then
+    pass
+else
+    fail "session-end falsely flagged product brief when present"
+fi
+
+# ============================================================================
 # Summary
 # ============================================================================
 
