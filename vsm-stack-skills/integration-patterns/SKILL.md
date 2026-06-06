@@ -21,6 +21,8 @@ type: reference
 
 ## Anti-Pattern 1: GraphQL Schema Exists but Frontend Uses 0% GraphQL
 
+**Applies to**: vsm_coordinator, vsm_frontend_coder, vsm_auditor
+
 **Symptoms**:
 - `src/graphql/queries.ts` has exports but zero `.tsx` files import from it
 - `src/main.tsx` wraps `<App />` in `<ApolloProvider>` but no page uses `useQuery`/`useMutation`
@@ -40,6 +42,8 @@ type: reference
 ---
 
 ## Anti-Pattern 2: Socket.IO Events Defined but Never Emitted
+
+**Applies to**: vsm_coordinator, vsm_backend_coder, vsm_auditor
 
 **Symptoms**:
 - `shared/sio-events.ts` (or equivalent) defines server→client events
@@ -61,6 +65,8 @@ done
 ---
 
 ## Anti-Pattern 3: Shared Types Imported by Nobody
+
+**Applies to**: vsm_coordinator, vsm_auditor
 
 **Symptoms**:
 - `shared/types.ts` (or `src/shared/types.ts`) exports enums, interfaces, DTOs
@@ -84,6 +90,8 @@ done
 
 ## Anti-Pattern 4: REST API Endpoints with No Frontend Consumer
 
+**Applies to**: vsm_coordinator, vsm_frontend_coder, vsm_devops_coder
+
 **Symptoms**:
 - Backend has routes for `/api/v1/admin/users`, `/api/v1/reports/export`, etc.
 - No frontend page, hook, or utility calls these endpoints
@@ -102,6 +110,8 @@ grep -rP "fetch\(.*\/api\/v1" src/ | grep -oP "/api/v1/[^\"']+" | sort -u
 ---
 
 ## Anti-Pattern 5: Feature Flag / Config Exists but Never Checked
+
+**Applies to**: vsm_coordinator, vsm_backend_coder, vsm_auditor
 
 **Symptoms**:
 - `config.py` defines `ENABLE_ANALYTICS: bool = True`

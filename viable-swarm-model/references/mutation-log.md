@@ -4704,3 +4704,28 @@ Additionally, `integration-test-closeout.py` — 360 lines of critical closeout 
 | FB32-5 | 5 | effective | 8 exports within threshold, caught as ISSUE I5 |
 
 **Updated in**: `mutation-state.md` (status changes applied), `causal-index.md` (FB33 entry added)
+
+## Mutation R55 — 2026-06-06
+
+**Session**: S5 Orchestrator Iteration — Skill registry validation integrity
+**File**: `vsm-stack-skills/validate-skills.py`, `vsm-stack-skills/backend-patterns/SKILL.md`, `vsm-stack-skills/security-patterns/SKILL.md`, `vsm-stack-skills/integration-patterns/SKILL.md`, `hooks/test-automation.sh`
+**Type**: refinement
+**Rationale**: `validate-skills.py` is documented in `SKILL-REGISTRY.md` but was not integrated into the automation suite. When run manually, it produced 5 warnings:
+1. `backend-patterns` listed `backend_fix`, `backend_tester`, `coordinator` in registry but never referenced them in SKILL.md — these agents would not know to read the skill.
+2. `security-patterns` listed `coordinator`, `vsm_frontend_coder` but never referenced them.
+3. `integration-patterns` listed `auditor`, `vsm_backend_coder`, `vsm_frontend_coder`, `vsm_devops_coder` but never referenced them.
+4. `sqla-patterns` and `tester-backend` were flagged as "Full but only 1 rule" despite having 5+ numbered prevention rules — `count_rules()` only recognized bullet points (`- `), not numbered lists (`1. `, `2. `).
+These gaps represent a System 3 (Audit/Control) → System 1 (Implementation) channel failure: skills exist in the registry but agents lack the wiring to discover them.
+
+**Expected effect**: Agents listed in `SKILL-REGISTRY.md` will find their names in skill files and know to read them. The automation suite will catch future skill quality regressions. False warnings from numbered-list formatting are eliminated.
+
+**Files modified**:
+- `vsm-stack-skills/validate-skills.py` — `count_rules()` now recognizes `\d+\.\s+` lines as rules
+- `vsm-stack-skills/backend-patterns/SKILL.md` — Added `vsm_backend_fix`, `vsm_backend_tester`, `vsm_coordinator` to relevant rule "Applies to" sections
+- `vsm-stack-skills/security-patterns/SKILL.md` — Added `vsm_coordinator`, `vsm_frontend_coder` to CORS and Zero-Default rules
+- `vsm-stack-skills/integration-patterns/SKILL.md` — Added "Applies to" sections to all 5 anti-patterns referencing `vsm_auditor`, `vsm_backend_coder`, `vsm_frontend_coder`, `vsm_devops_coder`, `vsm_coordinator`
+- `hooks/test-automation.sh` — Test 149: validates `validate-skills.py` exits 0 with zero errors and zero warnings
+
+**Measured effect**: **5/5** — `validate-skills.py` now reports "OK: 25 skills validated" with zero warnings. All 149 automation suite tests pass.
+
+---

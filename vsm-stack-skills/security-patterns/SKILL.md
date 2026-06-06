@@ -104,7 +104,7 @@ Celery tasks that operate on user-scoped resources MUST accept `user_id` and re-
 
 **Status**: Active (FB26-sourced)
 **Severity**: MEDIUM (was LOW; elevated 2026-06-03)
-**Applies to**: vsm_security, vsm_backend_coder
+**Applies to**: vsm_security, vsm_backend_coder, vsm_coordinator, vsm_frontend_coder
 
 `allow_methods=["*"]` and `allow_headers=["*"]` in FastAPI CORS middleware are **MEDIUM** severity, not LOW. While they are not immediately exploitable, they violate defense-in-depth and allow unexpected methods/headers. This is a consistent deferred issue across builds.
 
@@ -369,6 +369,8 @@ the registration boundary. Multiple prior builds had this gap.
 ---
 
 ## Pattern: Security Configuration Zero-Default Rule (FB32-1)
+
+**Applies to**: vsm_backend_coder, vsm_security, vsm_coordinator
 
 **When**: Any build using pydantic-settings, Flask config, or Django settings for secrets and security flags.
 **What**: Treat ANY `Settings` field with an insecure default value as a **HIGH** severity finding. At Tier 2+, these are non-negotiable and must not be "accepted risks."

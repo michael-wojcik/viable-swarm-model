@@ -28,7 +28,7 @@ CORS → Rate Limiting → Auth → Logging → Router
 
 **Status**: Active (FB29-sourced)
 **Severity**: MEDIUM
-**Applies to**: vsm_backend_coder, vsm_wiring, vsm_auditor
+**Applies to**: vsm_backend_coder, vsm_backend_fix, vsm_wiring, vsm_auditor
 
 When a `APIRouter` already defines `prefix="/auth"`, including it in the app
 with `app.include_router(router, prefix="/auth")` creates double-prefix URLs
@@ -73,7 +73,7 @@ but `auth_router` already defined `prefix="/auth"`. All auth endpoints were at
 
 **Status**: Active (FB29-sourced)
 **Severity**: LOW (pattern preference)
-**Applies to**: vsm_backend_coder, vsm_wiring
+**Applies to**: vsm_backend_coder, vsm_backend_tester, vsm_wiring
 
 FastAPI's `@asynccontextmanager` lifespan hook is the cleanest way to initialize
 and tear down database connections, create tables, and dispose of engines. It
@@ -125,6 +125,8 @@ engine calls and made tests import-safe.
 
 ## Pattern: Async Task Wiring Verification (FB32-3)
 
+**Applies to**: vsm_backend_coder, vsm_coordinator, vsm_auditor
+
 **When**: Any endpoint or GraphQL mutation claims to enqueue a background task (Celery, RQ, ARQ, etc.).
 **What**: The handler body MUST contain a visible `.delay()`, `.apply_async()`, or equivalent enqueue call. A response message like "queued" or "processing" without an actual enqueue is **ceremonial wiring** and must be flagged.
 **Why**: FB32 had two instances (M6, M7) where REST and GraphQL report endpoints returned `"Report generation queued"` but never called `generate_attendee_report.delay(...))`). This creates a false sense of async architecture and allows unbounded DB row creation without work being done.
@@ -169,6 +171,8 @@ grep -A 20 "def create_report\|def request_report" backend/app/routers/reports.p
 **Source**: FB32 M6 (REST reports.py) and M7 (GraphQL requestReport) both claimed queuing without enqueuing.
 
 ## Pattern: Socket.IO Server-Side Emission Verification (FB33-3)
+
+**Applies to**: vsm_backend_coder, vsm_coordinator, vsm_auditor
 
 **When**: Any build with Socket.IO real-time requirements in `shared-contracts.md` or architecture docs.
 **What**: For every server→client event constant defined, at least one `sio.emit()` call MUST exist in backend mutation handlers or event consumers. Missing emissions are an **ISSUE**.

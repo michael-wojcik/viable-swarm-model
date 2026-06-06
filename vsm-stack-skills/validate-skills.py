@@ -63,7 +63,7 @@ def count_rules(skill_md_content):
         stripped = line.strip()
         if stripped.startswith("## ") and not stripped.startswith("## Table"):
             rules += 1
-        elif stripped.startswith("- ") and len(stripped) > 10:
+        elif re.match(r"^(- |\d+\.\s+)", stripped) and len(stripped) > 10:
             rules += 1
     return rules
 

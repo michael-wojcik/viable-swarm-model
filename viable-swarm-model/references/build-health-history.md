@@ -6,6 +6,49 @@
 ---
 ---
 
+## 2026-06-06 — S5 Orchestrator Iteration (R55)
+
+### Diagnosed Constraint
+**System 3 (Audit/Control) / S3→S1 channel — skill registry validation gaps**: `validate-skills.py` (documented in `SKILL-REGISTRY.md` Validation Notes) was not integrated into the automation suite. When run manually, it revealed 5 warnings across 4 skills:
+1. `backend-patterns` listed `backend_fix`, `backend_tester`, `coordinator` but never mentioned them in its content — these agents would not know to read the skill, missing rules like "FastAPI Router Prefix Stacking Trap" and "Async Task Wiring Verification."
+2. `security-patterns` listed `coordinator`, `vsm_frontend_coder` but never mentioned them — frontend coders would miss CORS and input validation guidance.
+3. `integration-patterns` (FB33-sourced, 0 builds used) listed `auditor`, `vsm_backend_coder`, `vsm_frontend_coder`, `vsm_devops_coder` but never mentioned them — agents would miss cross-layer dead code detection guidance.
+4. `sqla-patterns` and `tester-backend` were falsely flagged as "Full but only 1 rule" because `count_rules()` only recognized bullet points (`- `), not numbered prevention rules (`1. `, `2. `).
+
+This is a classic S3→S1 knowledge channel failure: the registry (S3 control) says skills are relevant to agents, but the skill files (S1 implementation) don't reference those agents, so the wiring is broken.
+
+### Change Made
+**Refinement mutation R55**: Fixed `validate-skills.py` accuracy, closed agent reference gaps in 3 skills, and integrated the script into the automation suite.
+- `validate-skills.py`: `count_rules()` now recognizes `\d+\.\s+` lines as empirical rules, eliminating false warnings for `sqla-patterns` (6 rules) and `tester-backend` (5 rules)
+- `backend-patterns/SKILL.md`: Added `vsm_backend_fix` to Router Prefix rule, `vsm_backend_tester` to Lifespan rule, `vsm_coordinator` to Async Task Wiring and Socket.IO Emission rules
+- `security-patterns/SKILL.md`: Added `vsm_coordinator` and `vsm_frontend_coder` to CORS Wildcard and Security Configuration Zero-Default rules
+- `integration-patterns/SKILL.md`: Added "Applies to" sections to all 5 anti-patterns referencing `vsm_coordinator`, `vsm_auditor`, `vsm_backend_coder`, `vsm_frontend_coder`, `vsm_devops_coder`
+- `hooks/test-automation.sh`: Added Test 149 — runs `validate-skills.py` and verifies exit code 0 with zero errors and zero warnings
+
+### Test Results
+- `bash hooks/test-automation.sh`: **149 passed, 0 failed** (was 148 passed, 0 failed)
+- Test 149: `validate-skills.py` exits 0, reports "OK: 25 skills validated", zero warnings → PASS
+- Post-fix manual run: `validate-skills.py` confirms zero errors, zero warnings across all 25 skills
+
+### Files Modified
+- `vsm-stack-skills/validate-skills.py`
+- `vsm-stack-skills/backend-patterns/SKILL.md`
+- `vsm-stack-skills/security-patterns/SKILL.md`
+- `vsm-stack-skills/integration-patterns/SKILL.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — vsm_learning_curator and vsm_variety_engineer still have 0% empirical exercise rate**: With skill registry integrity now enforced (R55), the organism's most persistent unaddressed gap remains the meta-system agents. All pre-computation scripts, Mode A/B workflows, and stop-verifier content-quality gates exist, but the agents themselves have never been spawned in a real build. Without empirical validation, the organism cannot know whether the curated workload reductions actually prevent timeouts. The next frontier requires an actual fitness build to test the full pipeline end-to-end. Alternatively, **System 5 (Policy) / S5→S5 channel — S5 iteration mutation builds_tested counter not incremented**: R44–R54 all show `builds_tested=1` despite having survived 5–10+ subsequent S5 iterations. The historical promotion policy requires ≥5 stable iterations, but there is no automated counting mechanism.
+
+---
+---
+
 ## 2026-06-06 — S5 Orchestrator Iteration (R54)
 
 ### Diagnosed Constraint

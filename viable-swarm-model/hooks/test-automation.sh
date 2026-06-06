@@ -5612,6 +5612,23 @@ else
     fail "expected 1 section for $TODAY with no OLD flag, got $SECTION_COUNT sections, OLD=$HAS_OLD"
 fi
 
+# ============================================================================
+# Test 149: validate-skills.py — zero errors and zero warnings
+# ============================================================================
+
+echo -n "TEST: validate-skills.py validates all skills with zero errors and zero warnings ... "
+
+VALIDATE_OUTPUT=$(HOME="$REAL_HOME" python3 "$REAL_HOME/vsm/vsm-stack-skills/validate-skills.py" 2>&1)
+VALIDATE_RC=$?
+
+if [ "$VALIDATE_RC" -eq 0 ] && \
+   echo "$VALIDATE_OUTPUT" | grep -q "OK:.*skills validated" && \
+   ! echo "$VALIDATE_OUTPUT" | grep -q "WARN:"; then
+    pass
+else
+    fail "validate-skills.py should exit 0 with OK and no warnings; got rc=$VALIDATE_RC output: $VALIDATE_OUTPUT"
+fi
+
 echo ""
 echo "========================================"
 echo "Results: $PASSED passed, $FAILED failed"
