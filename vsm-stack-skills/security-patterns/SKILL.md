@@ -479,3 +479,48 @@ async def get_current_user(...) -> User:
 4. **GraphQL context builder MUST** propagate the `is_active` check — fail-closed for both REST and GraphQL.
 
 **Source**: FB32 security audit H5 (missing `is_active` field). No existing rule in security-patterns or python-pitfalls covers user deactivation.
+
+## Pattern: Environment Variable Default Fallback Rule (FB33-1 Extension)
+
+**When**: Any Python file using `os.environ.get("VAR", "default")` for security-critical configuration.
+**What**: Treat ANY default fallback string (not just empty/zero) for security-critical environment variables as **HIGH** severity.
+**Why**: FB33 revealed that FB32-1 (Zero-Default Rule) only caught empty/zero defaults in `Settings` classes. Three non-empty but insecure defaults escaped:
+- `app/models.py`: `os.environ.get("DATABASE_URL", "postgresql+asyncpg://localhost/db")`
+- `app/celery_app.py`: `os.environ.get("REDIS_URL", "redis://localhost:6379/0")`
+- `app/limiter.py`: `os.environ.get("RATELIMIT_STORAGE_URI", "memory://")`
+These are not empty strings, but they are insecure defaults that allow silent connection to local/dev services in production.
+**How**:
+
+**BLOCKER-level patterns** (must never have defaults):
+```python
+# WRONG — silent fallback to local/dev service
+os.environ.get("DATABASE_URL", "postgresql+asyncpg://localhost/db")
+os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
+os.environ.get("JWT_SECRET", "default-secret-for-dev")
+os.environ.get("SECRET_KEY", "change-me-in-production")
+```
+
+**CORRECT patterns**:
+```python
+# Option A: Required variable — app fails loudly if missing
+DATABASE_URL = os.environ["DATABASE_URL"]
+
+# Option B: Explicit RuntimeError with helpful message
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL environment variable is required")
+```
+
+**Prevention rules**:
+1. **Security auditor MUST flag** any `os.environ.get("...", "...")` with a non-empty default string for:
+   - Database URLs (`DATABASE_URL`, `DB_URL`, `SQLALCHEMY_DATABASE_URI`)
+   - Cache/queue URLs (`REDIS_URL`, `CELERY_BROKER_URL`, `CELERY_RESULT_BACKEND`)
+   - Secrets (`JWT_SECRET`, `SECRET_KEY`, `API_KEY`, `AUTH_TOKEN`)
+   - Storage URIs (`S3_BUCKET_NAME`, `RATELIMIT_STORAGE_URI`, `STORAGE_URL`)
+2. **Severity**: HIGH. These are non-negotiable fix-before-deploy items at Tier 2+.
+3. **Foundation auditor MUST verify** `celery_app.py`, `limiter.py`, and any non-`config.py` files that read env vars do NOT use `os.environ.get(..., default)` for security-critical variables.
+4. **Coordinator MUST verify** `.env.example` contains explicit placeholder comments (`# REQUIRED`) and NOT working defaults for any security-critical variable.
+
+**Source**: FB33 trainer gap analysis — FB32-1 caught empty defaults but missed non-empty local/dev defaults in `celery_app.py` and `limiter.py`.
+**See also**: FB32-1 (Zero-Default Rule) — this rule extends coverage to `os.environ.get()` patterns outside `Settings` classes.

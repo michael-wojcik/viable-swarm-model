@@ -187,12 +187,14 @@
 
 ## H213: `mutation-state.md` is not updated because S5 lacks a concrete, copy-pasteable command/template
 
-**Status**: monitor
+**Status**: confirmed
 **Proposed**: 2026-06-03
 **Rationale**: FB26 meta-report noted mutation-state.md has no measured effects from this build's S5. The backfill table exists in the fitness report but S5 must manually transcribe it. A template or hook would automate this.
 **Source**: Fitness build FB26, Phase 8b
 **Experiment**: Add a concrete shell command or template to SKILL.md Phase 8c-ii that S5 can copy-paste. Run next build and check if mutation-state.md is updated.
 **Expected**: mutation-state.md updated within 5 minutes of mutations-applied.md creation.
+**Tested by**: FB33
+**Result**: CONFIRMED — S5 did NOT update mutation-state.md during Phase 8b. Update only happened after process auditor (30/100) explicitly flagged the gap. Even with `mutations-applied.md` present, S5 skipped the step under time pressure. Tool-enforced gate needed, not just a template.
 
 
 ---
@@ -200,9 +202,9 @@
 ## FB28 Hypothesis Updates
 
 ### H213 Update
-**Status**: monitor
-**Tested by**: FB28
-**Result**: S5 did NOT manually update mutation-state.md. Session-end hook status pending. Cannot confirm until session terminates.
+**Status**: confirmed
+**Tested by**: FB33
+**Result**: S5 updated mutation-state.md and causal-index.md only AFTER process audit flagged them missing. Prompt-only/template-based discipline insufficient. Need tool-enforced gate.
 
 ---
 
@@ -210,12 +212,14 @@
 ---
 
 ## H217: Agent timeout is the primary drag on Tier 2+ build scores
-**Status**: partially confirmed
+**Status**: confirmed
 **Proposed**: 2026-06-03
 **Rationale**: FB28 had 5 agent timeouts (backend_coder, frontend_coder, backend_tester, frontend_tester, foundation_auditor). S5 had to manually complete foundation audit, write tests, fix auth returns, and wire main.py. This forced S5 into coding tasks that should be agent-owned.
 **Source**: Fitness build FB28, Phase 2/4
 **Experiment**: Split Tier 2+ agent tasks into smaller chunks (<500 lines per spawn). Measure timeout rate.
 **Expected**: Timeout rate drops from 5/10 to ≤1/10.
+**Tested by**: FB33
+**Result**: CONFIRMED — 4-spawn architect split produced 1,601 lines with ZERO timeouts. 15+ agents spawned total, zero timeouts. FB31-1 and FB31-2 are effective mutations.
 
 ---
 

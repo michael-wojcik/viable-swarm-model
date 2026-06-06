@@ -167,3 +167,48 @@ grep -A 20 "def create_report\|def request_report" backend/app/routers/reports.p
 4. **Coordinator MUST** verify Celery tasks are imported and called in the API layer, not just defined in `tasks.py`.
 
 **Source**: FB32 M6 (REST reports.py) and M7 (GraphQL requestReport) both claimed queuing without enqueuing.
+
+## Pattern: Socket.IO Server-Side Emission Verification (FB33-3)
+
+**When**: Any build with Socket.IO real-time requirements in `shared-contracts.md` or architecture docs.
+**What**: For every server→client event constant defined, at least one `sio.emit()` call MUST exist in backend mutation handlers or event consumers. Missing emissions are an **ISSUE**.
+**Why**: FB33 had Socket.IO server with JWT auth, room access control, and event constants (`VIEWER_COUNT_UPDATE`, `NEW_COMMENT`, `CONTENT_PUBLISHED`) — but zero `sio.emit()` calls in any mutation handler. The real-time layer was wired but non-functional.
+**How**:
+
+**Correct pattern**:
+```python
+# content.py — emit after successful mutation
+@sio.on("join_room")
+async def handle_join(sid, data):
+    # ... validation ...
+    await sio.enter_room(sid, room)
+
+# In mutation handler
+@app.post("/api/v1/content/{id}/comments")
+async def create_comment(...):
+    # ... create comment in DB ...
+    await sio.emit("NEW_COMMENT", {"comment": comment_dict}, room=f"content:{content_id}")
+    return comment
+```
+
+**Incorrect pattern** (ISSUE severity):
+```python
+# sio.py — only has connection/auth handlers
+@sio.on("connect")
+async def connect(sid, environ, auth):
+    # validates JWT
+    pass
+
+# No sio.emit() calls anywhere in routers
+# Event constants exist in shared/sio-events.ts but are never emitted
+```
+
+**Prevention rules**:
+1. **Backend coder MUST** add `sio.emit()` calls in mutation handlers for every real-time event defined in shared contracts.
+2. **Coordinator MUST verify** during integration check:
+   - For every event constant in `shared/sio-events.ts` (or equivalent), grep for `sio.emit("EVENT_NAME"` in `app/` — must find ≥ 1 match per event
+   - If any event has zero emission calls, flag as ISSUE
+3. **Security auditor SHOULD verify** emissions do NOT leak sensitive data to wrong rooms (ownership check before emit).
+4. **Severity**: ISSUE — the build compiles and connects but real-time features are non-functional.
+
+**Source**: FB33 integration contract I3 — Socket.IO wired but zero server-side emissions.

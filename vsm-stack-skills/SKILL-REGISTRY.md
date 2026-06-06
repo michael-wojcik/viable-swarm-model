@@ -14,6 +14,7 @@
 | devops-patterns | Containers, compose, healthchecks, CI/CD | devops_coder, coordinator | — | Deprecated |
 | research-patterns | Investigating unfamiliar technologies | architect, explore, meta | — | Full |
 | kimi-code-migration | Port VSM skills to kimi-code CLI (no custom agents) | coordinator, meta | — | Full |
+| integration-patterns | Cross-layer dead code detection: unused GraphQL, unexercised Socket.IO, orphaned shared types | coordinator, auditor, all coders | `frontend-patterns`, `backend-patterns`, `graphql-pitfalls` | Full |
 
 ## Pitfall Skills
 | Skill | Language | Status | Description |

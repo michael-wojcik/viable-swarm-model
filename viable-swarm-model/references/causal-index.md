@@ -20,6 +20,7 @@
 | FB30 | 3.6 | H301 | — | M-FB30-1..M-FB30-5 | 3.6 |
 | FB31 | 3.8 | H301, H304, H302, H303 | — | FB31-1..FB31-5 | 3.8 |
 | FB32 | — | H150, H151, H154 | Gym-Batch-FB32 | FB32-1..FB32-5 (probation) | — |
+| FB33 | 6.3 | — | — | FB32-1 scored 2 (ineffective), FB32-2..FB32-5 scored 5 (effective) | 6.3 |
 
 ¹ **CORRECTION**: E17 tests H107, not H300. See [Known Broken Traces](#known-broken-traces).
 ² FB29 meta-report scored 4.2; trainer scored 3.6. Effectiveness uses trainer score.

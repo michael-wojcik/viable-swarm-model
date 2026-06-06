@@ -319,11 +319,11 @@
 | FB31-5 | FB31 Build | append-only | Knowledge broker auto-update reminder | monitor | 1 | 3 | — | — | FB33 |
 
 | **FB32 MUTATIONS (Created during FB32, await FB33 measurement)** |
-| FB32-1 | FB32 Build | append-only | Security Configuration Zero-Default Rule | probation | 0 | — | — | — | FB33 |
-| FB32-2 | FB32 Build | append-only | GraphQL Input Validation Parity Checklist | probation | 0 | — | — | — | FB33 |
-| FB32-3 | FB32 Build | append-only | Async Task Wiring Verification | probation | 0 | — | — | — | FB33 |
-| FB32-4 | FB32 Build | append-only | Phase 8 Closeout Artifact Checklist | probation | 0 | — | — | — | FB33 |
-| FB32-5 | FB32 Build | refinement | Orphaned Query Export Limit | probation | 0 | — | — | — | FB33 |
+| FB32-1 | FB32 Build | append-only | Security Configuration Zero-Default Rule | **ineffective** | 1 | 2 | — | — | redesign with tool enforcement |
+| FB32-2 | FB32 Build | append-only | GraphQL Input Validation Parity Checklist | **effective** | 1 | 5 | — | — | — |
+| FB32-3 | FB32 Build | append-only | Async Task Wiring Verification | **effective** | 1 | 5 | — | — | — |
+| FB32-4 | FB32 Build | append-only | Phase 8 Closeout Artifact Checklist | **effective** | 1 | 5 | — | — | — |
+| FB32-5 | FB32 Build | refinement | Orphaned Query Export Limit | **effective** | 1 | 5 | — | — | — |
 
 | **S5 ITERATION MUTATIONS (2026-06-06)** |
 | R44 | 2026-06-06 S5 | structural | Wire auto-gym-trigger.py into session-end.sh + env var overrides for testability + 4 tests (3 syntax + 3 behavior) | effective | 1 | 5 | — | — | S5 iter |

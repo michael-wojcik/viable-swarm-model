@@ -1760,3 +1760,11 @@ Without a fitness build or additional S5 iteration cycles, the organism has reac
   1. **Untested hypotheses backlog: 9 > 7 threshold** — Requires `/flow:vsm-fitness-gym` invocation to run gym experiments.
   2. **Meta-system agents 0% exercise rate** — `vsm_learning_curator` and `vsm_variety_engineer` never empirically exercised. Requires a real fitness build to validate Mode A/B workflows.
   3. **SM3/SM7/SM8 audit mutations + FB32-1..5 build mutations** — All probationary with `builds_tested=0`. Cannot validate without fitness build.
+
+## FB32 — 2026-06-06
+
+- Score: 3.85
+- Process: 72
+- Mutations active: 54
+- Hypotheses untested: 6
+- Broker staleness: 2 days

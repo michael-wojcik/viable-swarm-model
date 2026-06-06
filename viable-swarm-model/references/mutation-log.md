@@ -4638,3 +4638,69 @@ Additionally, `integration-test-closeout.py` — 360 lines of critical closeout 
 - `hooks/test-automation.sh` — Test 148 verifies Capability Matrix rows are excluded from fill rate and total count
 
 **Measured effect**: **Score 5** — 148 automation tests pass (1 new). organism-vitals.py now reports 121 total mutations and 86.8% fill rate, matching mutation-portfolio-health.py.
+
+
+---
+
+## Mutation FB33-1-EXT — 2026-06-06
+
+**Session**: FB33 Fitness Build Closeout
+**File**: `vsm-stack-skills/security-patterns/SKILL.md`
+**Type**: append-only (extension of existing FB32-1)
+**Rationale**: FB33 trainer evaluation revealed FB32-1 only caught empty/zero defaults in `Settings` classes. Three non-empty but insecure defaults escaped in `models.py`, `celery_app.py`, and `limiter.py` via `os.environ.get("VAR", "default")` patterns. The existing rule's prevention rules were too narrow.
+**Changes**: Appended new pattern "Environment Variable Default Fallback Rule (FB33-1 Extension)" covering `os.environ.get()` with non-empty defaults for database URLs, cache/queue URLs, secrets, and storage URIs. Added foundation auditor and coordinator verification rules.
+**Expected effect**: Zero insecure `os.environ.get(..., default)` patterns escape foundation wave in next build.
+**Measured effect**: Pending FB34 validation.
+
+---
+
+## Mutation FB33-2 — 2026-06-06
+
+**Session**: FB33 Fitness Build Closeout
+**File**: `vsm-stack-skills/frontend-patterns/SKILL.md`
+**Type**: append-only
+**Rationale**: FB33 frontend used 0% GraphQL despite complete schema, Apollo Client, and 8 operations in `queries.ts`. No existing skill rule prevents this dead-code anti-pattern.
+**Changes**: Appended new pattern "GraphQL Usage Mandate for Tier 2+ Builds" requiring ≥2 frontend pages to use `useQuery`/`useMutation` and coordinator verification of GraphQL import counts.
+**Expected effect**: ≥2 frontend pages use GraphQL in Tier 2+ builds with GraphQL backend.
+**Measured effect**: Pending FB34 validation.
+
+---
+
+## Mutation FB33-3 — 2026-06-06
+
+**Session**: FB33 Fitness Build Closeout
+**File**: `vsm-stack-skills/backend-patterns/SKILL.md`
+**Type**: append-only
+**Rationale**: FB33 Socket.IO server authenticated connections but never emitted events. No checklist item verified server-side `sio.emit()` calls exist for defined event constants.
+**Changes**: Appended new pattern "Socket.IO Server-Side Emission Verification" requiring coordinator to grep for `sio.emit("EVENT_NAME"` matches per defined event constant.
+**Expected effect**: 100% of defined server→client events have emission calls.
+**Measured effect**: Pending FB34 validation.
+
+---
+
+## Mutation FB33-4-PROPOSED — 2026-06-06
+
+**Session**: FB33 Fitness Build Closeout
+**File**: `vsm-stack-skills/testing-patterns/SKILL.md` or `viable-swarm-model/SKILL.md` Phase 8
+**Type**: append-only (proposed, pending user approval if structural)
+**Rationale**: FB33 produced all 10 Phase 8 artifacts but 4 were initially missing. Process auditor scored 30/100. Backfills happened after audit, not before.
+**Changes**: (Proposed) Add pre-closeout artifact existence checklist to Phase 8 closeout protocol.
+**Expected effect**: Zero missing artifacts at process audit time.
+**Measured effect**: Pending FB34 validation.
+
+---
+
+## Backfill: FB32 Mutation Effectiveness — FB33 Measurement
+
+**Session**: FB33 Fitness Build Closeout
+**Backfilled by**: S5 + vsm_trainer evaluation
+
+| Mutation | Score | Status | Evidence |
+|---|---|---|---|
+| FB32-1 | 2 | ineffective → redesign | 3 defaults recurred (models.py DB URL, celery_app.py redis, limiter.py memory) |
+| FB32-2 | 5 | effective | GraphQL input types added, RBAC parity verified |
+| FB32-3 | 5 | effective | `.delay()` verified in content, analytics, graphql resolvers |
+| FB32-4 | 3 | monitor → redesign | Artifacts initially missing, backfilled after audit flagged gap |
+| FB32-5 | 5 | effective | 8 exports within threshold, caught as ISSUE I5 |
+
+**Updated in**: `mutation-state.md` (status changes applied), `causal-index.md` (FB33 entry added)

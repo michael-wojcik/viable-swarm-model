@@ -259,3 +259,51 @@ Frontend test runners (Vitest) transpile with esbuild and do NOT run full TypeSc
 4. Any build failure in Phase 6 that `tsc -b` would have caught in Phase 4 is a **process violation**.
 
 **Source**: FB23 frontend build failed in Phase 6 because `tsc -b` errors were not caught in Phase 4. FB24–FB29 consistently reproduce: Vitest passes, `npm run build` fails on unused imports. See `testing-patterns` for full H154 rule.
+
+## Pattern: GraphQL Usage Mandate for Tier 2+ Builds (FB33-2)
+
+**When**: Any Tier 2+ build that includes a GraphQL backend layer and Apollo Client frontend setup.
+**What**: At least 2 frontend page components MUST import and use operations from `src/graphql/queries.ts` (or equivalent). Dead GraphQL code (unused queries, unimported Apollo Client setup) is an **ISSUE**.
+**Why**: FB33 produced a complete GraphQL schema, Apollo Client wired in `main.tsx`, 8 GraphQL operations in `queries.ts`, and `graphql-ws` for subscriptions — yet every frontend page used `fetch()` against REST endpoints. `queries.ts` and `sio/client.ts` were dead code. This wastes backend GraphQL effort and creates a maintenance burden.
+**How**:
+
+**Correct pattern**:
+```typescript
+// At least 2 pages should use GraphQL
+import { useQuery, useMutation } from "@apollo/client";
+import { CONTENTS, CREATE_COMMENT } from "../graphql/queries";
+
+function ContentList() {
+  const { data, loading } = useQuery(CONTENTS);
+  // ...
+}
+
+function ContentDetail({ id }: { id: string }) {
+  const [createComment] = useMutation(CREATE_COMMENT);
+  // ...
+}
+```
+
+**Incorrect pattern** (ISSUE severity):
+```typescript
+// GraphQL layer exists but 0% used
+import { useEffect, useState } from "react";
+
+function ContentList() {
+  const [items, setItems] = useState([]);
+  useEffect(() => {
+    fetch("/api/v1/content").then(r => r.json()).then(setItems);
+  }, []);
+  // queries.ts exists but is never imported by any .tsx file
+}
+```
+
+**Prevention rules**:
+1. **Frontend coder MUST** use `useQuery`/`useMutation` for at least 2 data-fetching pages when GraphQL is in the stack.
+2. **Coordinator MUST verify** during integration check:
+   - Count `.tsx` files importing from `src/graphql/queries.ts` — must be ≥ 2
+   - Count unused exports in `queries.ts` — if > 5 unused by any `.tsx`, flag as ISSUE
+3. **Wiring agent MUST verify** `main.tsx` wraps App in `<ApolloProvider>` and the client is actually initialized (not just imported).
+4. **Severity**: ISSUE (not BLOCKER) — the build is functional but the GraphQL investment is wasted.
+
+**Source**: FB33 integration contract I4/I5 — complete GraphQL layer with 0% frontend adoption.
