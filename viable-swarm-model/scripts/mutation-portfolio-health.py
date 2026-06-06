@@ -189,7 +189,7 @@ def compute_portfolio_health(rows: list[MutationRow]) -> PortfolioHealth:
             monitor += 1
         elif row.status == "ineffective":
             ineffective += 1
-        elif row.status == "removed":
+        elif row.status in ("removed", "redesigned"):
             removed += 1
         elif row.status == "historical":
             historical_effective += 1
@@ -271,7 +271,7 @@ def compute_portfolio_health(rows: list[MutationRow]) -> PortfolioHealth:
     # Heuristic: look for "FB30", "FB31", "FB32", etc. in source or build-derived IDs
     recent_removed = sum(
         1 for r in rows
-        if r.status == "removed" and any(b in r.source for b in ("FB28", "FB29", "FB30", "FB31", "FB32"))
+        if r.status in ("removed", "redesigned") and any(b in r.source for b in ("FB28", "FB29", "FB30", "FB31", "FB32"))
     )
 
     return PortfolioHealth(

@@ -4365,3 +4365,21 @@ Tests added:
 
 **Measured effect**: **TO BE FILLED** — validate in next fitness build that no hook regressions occur.
 
+
+---
+
+## Mutation R42 — 2026-06-06
+
+**Session**: S5 Orchestrator Iteration
+**File**: `references/mutation-state.md`, `scripts/mutation-portfolio-health.py`, `hooks/test-automation.sh`
+**Type**: refinement
+**Rationale**: The Integration Health metrics table in `mutation-state.md` was stale — showing 54 active mutations when actual was 57 (and growing with each new mutation). The root cause: metrics were hardcoded and never updated after mutations were added. Additionally, `mutation-portfolio-health.py` only counted `status == "removed"` for the "Removed / redesigned" metric, missing 8 redesigned mutations. Fixed by:
+1. Updated `mutation-portfolio-health.py` to count both `removed` and `redesigned` statuses
+2. Updated all Integration Health metrics to match computed values (active 58, effective 50, probationary 8, removed/redesigned 18, fill rates 86.6%/87.5%)
+3. Added Test 113: auto-validates that the table's active count matches the computed value from `mutation-portfolio-health.py`, preventing future staleness
+4. Added Test 91b: verifies redesigned mutations are counted in removed_count
+
+**Expected effect**: Integration Health metrics are accurate and auto-validated. The organism's self-model no longer misleads S5 about mutation bloat severity.
+
+**Measured effect**: **TO BE FILLED** — validate in next fitness build that metrics stay in sync.
+

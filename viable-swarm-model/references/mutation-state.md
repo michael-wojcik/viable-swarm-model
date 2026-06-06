@@ -123,13 +123,13 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 54 | < 50 | ⚠️ WARNING (exceeds target) |
-| Historical effective (≥5 builds) | 36 | >15% of active | ✅ 67% |
-| Effective (<5 builds, monitored) | 44 | >30% of active | ✅ 81% |
+| Active mutations | 58 | < 50 | ⚠️ WARNING (exceeds target) |
+| Historical effective (≥5 builds) | 36 | >15% of active | ✅ 62% |
+| Effective (<5 builds, monitored) | 50 | >30% of active | ✅ 86% |
 | Probationary mutations | 8 | <20 at any time | ✅ 8 (within target) |
-| Removed / redesigned | 10 | ≥2 per 5 builds | ✅ 10 (exceeds target) |
-| Measured effect fill rate (scored) | 96/111 | ≥80% | ✅ 86% |
-| Measured effect fill rate (any entry) | 97/111 | ≥80% | ✅ 87% |
+| Removed / redesigned | 18 | ≥2 per 5 builds | ✅ 18 (exceeds target) |
+| Measured effect fill rate (scored) | 86.6% | ≥80% | ✅ 86.6% |
+| Measured effect fill rate (any entry) | 87.5% | ≥80% | ✅ 87.5% |
 | Removal rate (last 5 builds) | 5 | ≥2 | ✅ Meets target |
 
 ---
@@ -324,3 +324,4 @@
 | R39 | 2026-06-06 S5 | refinement | gate-guardian.sh reliability — remove redundant find check, add npm pattern parity, fix missing .kimi/ crash, add 4 tests | effective | 1 | 5 | — | — | S5 iter |
 | R40 | 2026-06-06 S5 | refinement | boundary-guardian.sh + structural-guardian.sh test coverage — 7 tests + 2 syntax checks | effective | 1 | 5 | — | — | S5 iter |
 | R41 | 2026-06-06 S5 | refinement | decision-enforcer + context-pressure + diagnostic-router test coverage — 6 tests + 3 syntax checks + HOME restoration fix in test 77 | effective | 1 | 5 | — | — | S5 iter |
+| R42 | 2026-06-06 S5 | refinement | Fix stale Integration Health metrics in mutation-state.md + count redesigned in mutation-portfolio-health.py + auto-sync test | effective | 1 | 5 | — | — | S5 iter |

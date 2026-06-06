@@ -3926,6 +3926,35 @@ else
 fi
 
 # ============================================================================
+# Test 91: mutation-portfolio-health.py counts redesigned mutations in removed count
+# ============================================================================
+
+echo -n "TEST: mutation-portfolio-health.py counts redesigned mutations in removed count ... "
+
+cat > "$TMPDIR/mock-mutation-state-91b.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| M1 | Test | append-only | Test failure | effective | 5 | 5 | — | — | — |
+| M2 | Test | append-only | Test failure | removed | 1 | 1 | — | — | — |
+| M3 | Test | append-only | Test failure | redesigned | 0 | — | — | — | — |
+EOF
+
+mkdir -p "$TMPDIR/build91b/.kimi"
+
+RC=0
+python3 "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" \
+  --build-dir "$TMPDIR/build91b" \
+  --mutation-state "$TMPDIR/mock-mutation-state-91b.md" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   grep -q '"removed_count": 2' "$TMPDIR/build91b/.kimi/mutation-portfolio-health.json"; then
+    pass
+else
+    fail "removed_count should include redesigned mutations (expected 2)"
+fi
+
+# ============================================================================
 # Test 91: mutation-portfolio-health.py excludes non-mutation rows from fill rate
 # ============================================================================
 
@@ -4002,10 +4031,10 @@ for line in text.splitlines():
 print(len(rows))
 ")
 
-if [ "$ACTIVE_COUNT" -eq 57 ]; then
+if [ "$ACTIVE_COUNT" -eq 58 ]; then
     pass
 else
-    fail "expected 57 active mutations, got $ACTIVE_COUNT"
+    fail "expected 58 active mutations, got $ACTIVE_COUNT"
 fi
 
 # ============================================================================
@@ -4515,7 +4544,27 @@ else
 fi
 
 # ============================================================================
-# Test 113: diagnostic-router.sh self-test passes
+# Test 113: mutation-state.md Integration Health metrics match computed values
+# ============================================================================
+
+echo -n "TEST: mutation-state.md Integration Health active count matches computed value ... "
+
+mkdir -p "$TMPDIR/build113/.kimi"
+python3 "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" \
+  --build-dir "$TMPDIR/build113" \
+  --mutation-state "$SCRIPT_DIR/../references/mutation-state.md" >/dev/null 2>&1 || true
+
+COMPUTED_ACTIVE=$(grep -o '"total_active": [0-9]*' "$TMPDIR/build113/.kimi/mutation-portfolio-health.json" | grep -oE '[0-9]+')
+TABLE_ACTIVE=$(grep -E '^\| Active mutations' "$SCRIPT_DIR/../references/mutation-state.md" | grep -oE '[0-9]+' | head -1)
+
+if [ -n "$COMPUTED_ACTIVE" ] && [ -n "$TABLE_ACTIVE" ] && [ "$COMPUTED_ACTIVE" -eq "$TABLE_ACTIVE" ]; then
+    pass
+else
+    fail "computed active=$COMPUTED_ACTIVE but table shows $TABLE_ACTIVE"
+fi
+
+# ============================================================================
+# Test 114: diagnostic-router.sh self-test passes
 # ============================================================================
 
 echo -n "TEST: diagnostic-router self-test passes ... "
