@@ -526,3 +526,26 @@ if not DATABASE_URL:
 
 **Source**: FB33 trainer gap analysis — FB32-1 caught empty defaults but missed non-empty local/dev defaults in `celery_app.py` and `limiter.py`.
 **See also**: FB32-1 (Zero-Default Rule) — this rule extends coverage to `os.environ.get()` patterns outside `Settings` classes.
+
+---
+
+## Agent Quick Reference
+
+### For `vsm_frontend_coder`
+Frontend security responsibilities:
+1. **Never hardcode API URLs with `||` fallbacks** — use env vars validated at build time (`import.meta.env.VITE_API_URL`).
+2. **Apollo Client `uri`** must match the actual GraphQL endpoint; verify against `api-spec.md`.
+3. **LocalStorage token key** must match the backend contract (e.g., `access_token` vs `token`).
+4. **CORS awareness**: Frontend must not rely on `*` origin in production; coordinate with backend on explicit `allow_origins`.
+5. **Input sanitization**: All form inputs should have client-side validation mirroring backend rules (password length, file extensions, etc.).
+6. **No secrets in source**: API keys, tokens, or credentials must NEVER be committed to the repo.
+
+### For `vsm_coordinator`
+Security verification during integration (Phase 6):
+1. **CORS config**: Verify `allow_origins` is explicit, not `*`, and matches the frontend URL.
+2. **Rate limiting wired**: Check that `slowapi` or equivalent is both installed AND applied as middleware/decorators.
+3. **Env defaults**: `.env.example` must show placeholder comments (`# REQUIRED`), not working defaults for secrets.
+4. **GraphQL introspection**: `GRAPHQL_INTROSPECTION` should be `False` in production.
+5. **Auth parity**: REST and GraphQL auth errors must return consistent 401/403 shapes.
+
+---

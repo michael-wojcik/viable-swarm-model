@@ -5629,6 +5629,75 @@ else
     fail "validate-skills.py should exit 0 with OK and no warnings; got rc=$VALIDATE_RC output: $VALIDATE_OUTPUT"
 fi
 
+# ============================================================================
+# Test 150: increment-s5-iteration-counter.py — backfill mode
+# ============================================================================
+
+echo -n "TEST: increment-s5-iteration-counter.py --backfill computes builds_tested from position ... "
+
+mkdir -p "$TMPDIR/build150/.kimi"
+
+# Create a mock mutation-state.md with S5 iteration mutations
+cat > "$TMPDIR/build150/mutation-state.md" << 'EOF'
+# Mutation State
+
+| **S5 ITERATION MUTATIONS (2026-06-06)** |
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| R99 | 2026-06-06 S5 | structural | Test A | effective | 1 | 5 | — | — | S5 iter |
+| R98 | 2026-06-06 S5 | refinement | Test B | effective | 1 | 5 | — | — | S5 iter |
+| R97 | 2026-06-06 S5 | append-only | Test C | effective | 1 | 5 | — | — | S5 iter |
+
+| **OTHER SECTION** |
+| M1 | FB99 | append | Test | effective | 5 | 4 | — | — | — |
+EOF
+
+python3 "$SCRIPT_DIR/../scripts/increment-s5-iteration-counter.py" --backfill --mutation-state "$TMPDIR/build150/mutation-state.md" >/dev/null 2>&1 || true
+
+UPDATED=$(cat "$TMPDIR/build150/mutation-state.md")
+R99_OK=$(echo "$UPDATED" | grep "R99" | grep "| 3 |" | wc -l)
+R98_OK=$(echo "$UPDATED" | grep "R98" | grep "| 2 |" | wc -l)
+R97_OK=$(echo "$UPDATED" | grep "R97" | grep "| 1 |" | wc -l)
+M1_UNCHANGED=$(echo "$UPDATED" | grep "M1" | grep "effective" | grep "| 5 |" | wc -l)
+
+if [ "$R99_OK" -eq 1 ] && [ "$R98_OK" -eq 1 ] && [ "$R97_OK" -eq 1 ] && [ "$M1_UNCHANGED" -eq 1 ]; then
+    pass
+else
+    fail "backfill should set R99=3, R98=2, R97=1 (unchanged), leave M1 unchanged"
+fi
+
+# ============================================================================
+# Test 151: increment-s5-iteration-counter.py — default increment mode
+# ============================================================================
+
+echo -n "TEST: increment-s5-iteration-counter.py default mode increments effective S5 mutations by 1 ... "
+
+mkdir -p "$TMPDIR/build151/.kimi"
+
+cat > "$TMPDIR/build151/mutation-state.md" << 'EOF'
+# Mutation State
+
+| **S5 ITERATION MUTATIONS (2026-06-06)** |
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| R99 | 2026-06-06 S5 | structural | Test A | effective | 3 | 5 | — | — | S5 iter |
+| R98 | 2026-06-06 S5 | refinement | Test B | monitor | 2 | 3 | — | — | S5 iter |
+| R97 | 2026-06-06 S5 | append-only | Test C | effective | 1 | 5 | — | — | S5 iter |
+EOF
+
+python3 "$SCRIPT_DIR/../scripts/increment-s5-iteration-counter.py" --mutation-state "$TMPDIR/build151/mutation-state.md" >/dev/null 2>&1 || true
+
+UPDATED=$(cat "$TMPDIR/build151/mutation-state.md")
+R99_OK=$(echo "$UPDATED" | grep "R99" | grep "| 4 |" | wc -l)
+R98_OK=$(echo "$UPDATED" | grep "R98" | grep "| 2 |" | wc -l)
+R97_OK=$(echo "$UPDATED" | grep "R97" | grep "| 2 |" | wc -l)
+
+if [ "$R99_OK" -eq 1 ] && [ "$R98_OK" -eq 1 ] && [ "$R97_OK" -eq 1 ]; then
+    pass
+else
+    fail "increment should change R99 3->4, R98 unchanged (monitor), R97 1->2"
+fi
+
 echo ""
 echo "========================================"
 echo "Results: $PASSED passed, $FAILED failed"

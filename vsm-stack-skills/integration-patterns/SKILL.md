@@ -142,3 +142,36 @@ The coordinator SHOULD verify these cross-layer health checks during Phase 6:
 - **Fitness Build**: FB33 (StreamLine)
 - **Trainer Gap**: "Frontend-backend paradigm disconnect — frontend used 100% REST while complete GraphQL layer and Apollo Client setup exist as dead code."
 - **Score Impact**: 3/5 (moderate gap)
+
+---
+
+## Agent Quick Reference
+
+### For `vsm_auditor`
+Cross-layer dead code checks during audit (Phase 3b/4):
+1. **GraphQL adoption**: If `queries.ts` has exports but zero `.tsx` imports, flag as ISSUE.
+2. **Socket.IO emission**: If event constants exist but `sio.emit()` is missing in routers, flag as ISSUE.
+3. **Shared type usage**: If `shared/types.ts` exports are never imported, flag as LOW cleanup item.
+4. **REST consumer match**: Backend endpoints with no frontend `fetch()` consumer should be documented as intentional.
+
+### For `vsm_backend_coder`
+Before declaring backend complete:
+1. **Real-time wiring**: Every Socket.IO event constant MUST have a corresponding `sio.emit()` in a mutation handler.
+2. **GraphQL utilization**: If the frontend uses REST, confirm GraphQL is intentionally unused or coordinate with frontend coder.
+3. **Shared types**: Export only types that the frontend actually needs; remove dead exports.
+4. **Config flags**: Any `ENABLE_*` flag must be read somewhere in the codebase, not just defined.
+
+### For `vsm_frontend_coder`
+Before declaring frontend complete:
+1. **GraphQL imports**: If Apollo Provider is wired, at least 2 pages should import from `queries.ts`.
+2. **REST cross-check**: Every `fetch()` to `/api/v1/*` should correspond to a documented backend endpoint.
+3. **Shared types**: Import shared enums/interfaces from `shared/types.ts` instead of redefining locally.
+4. **Event listeners**: Socket.IO listeners should match events actually emitted by the backend.
+
+### For `vsm_devops_coder`
+Container/integration concerns:
+1. **Port parity**: Frontend proxy port (Vite) must match backend container port.
+2. **Health checks**: Backend container should expose a `/health` endpoint used by Docker Compose.
+3. **Dead endpoint exposure**: Document any backend endpoints intentionally exposed for external consumers but unused by the frontend.
+
+---

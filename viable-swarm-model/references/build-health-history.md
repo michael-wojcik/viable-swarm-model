@@ -6,6 +6,48 @@
 ---
 ---
 
+## 2026-06-06 — S5 Orchestrator Iteration (R56)
+
+### Diagnosed Constraint
+**System 5 (Policy) / S5→S5 channel — S5 iteration mutation `builds_tested` counter frozen at 1**: R44–R54 all showed `builds_tested=1` despite having survived 5–10+ subsequent S5 iterations. The historical promotion policy (R32) requires ≥5 stable iterations for promotion, but there was no automated counting mechanism. This blocked autonomous portfolio curation and contributed to active mutation bloat (55 at the <55 threshold).
+
+**Secondary constraint — System 3 (Audit/Control) / S3→S1 channel — agent skill references lacked actionable depth**: R55 added agent name mentions to skill files, but the references were minimal single-line "Applies to" annotations. Agents like `vsm_backend_fix` (created FB21, used in builds) and `vsm_frontend_coder` still had to scan entire skills to find relevant rules.
+
+### Change Made
+**Structural mutation R56**: Created `increment-s5-iteration-counter.py` and enriched skill files with agent-specific quick-reference sections.
+- `increment-s5-iteration-counter.py`: Two modes — `--backfill` computes `builds_tested` from position in the S5 iteration section (one-time correction); default mode increments all effective S5 mutations by 1 for future use
+- Backfill results: R44→10, R45→9, R46→8, R47→7, R48→6, R51→5, R52→4, R53→3, R54→2, R55→1
+- Promoted R44–R48 to `historical` (≥5 stable iterations); active mutations dropped from 55 to 50
+- `backend-patterns/SKILL.md`: Added "Agent Quick Reference" — fix-agent checklist (4 patterns), tester checklist (4 coverage areas), coordinator integration checklist (4 verification steps)
+- `security-patterns/SKILL.md`: Added "Agent Quick Reference" — frontend-coder security responsibilities (6 items), coordinator security verification (5 items)
+- `integration-patterns/SKILL.md`: Added "Agent Quick Reference" — auditor dead-code checks (4 items), backend-coder wiring checklist (4 items), frontend-coder completion checklist (4 items), devops-coder container concerns (3 items)
+
+### Test Results
+- `bash hooks/test-automation.sh`: **151 passed, 0 failed** (was 149 passed, 0 failed)
+- Test 150: Backfill mode correctly sets builds_tested from file position (R99=3, R98=2, R97=1) → PASS
+- Test 151: Default increment mode changes effective mutations by +1, leaves monitor unchanged → PASS
+- `validate-skills.py`: Still reports "OK: 25 skills validated" with zero warnings
+- `mutation-portfolio-health.py`: Confirms active=50, historical=54, probationary=3, all metrics green
+
+### Files Modified
+- `viable-swarm-model/scripts/increment-s5-iteration-counter.py` (created)
+- `vsm-stack-skills/backend-patterns/SKILL.md`
+- `vsm-stack-skills/security-patterns/SKILL.md`
+- `vsm-stack-skills/integration-patterns/SKILL.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — vsm_learning_curator and vsm_variety_engineer still have 0% empirical exercise rate**: With skill registry integrity enforced (R55) and S5 iteration counter working (R56), the organism's most persistent unaddressed gap remains the meta-system agents. All pre-computation scripts, Mode A/B workflows, and stop-verifier content-quality gates exist, but the agents themselves have never been spawned in a real build. Without empirical validation, the organism cannot know whether the curated workload reductions actually prevent timeouts. The next frontier requires an actual fitness build to test the full pipeline end-to-end. Alternatively, **System 5 (Policy) / S5→S5 channel — R51 is at builds_tested=5 (borderline)**: With one more stable iteration, R51 would be eligible for historical promotion, further reducing active mutation pressure.
+
+---
+---
+
 ## 2026-06-06 — S5 Orchestrator Iteration (R55)
 
 ### Diagnosed Constraint

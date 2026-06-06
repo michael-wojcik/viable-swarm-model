@@ -216,3 +216,30 @@ async def connect(sid, environ, auth):
 4. **Severity**: ISSUE — the build compiles and connects but real-time features are non-functional.
 
 **Source**: FB33 integration contract I3 — Socket.IO wired but zero server-side emissions.
+
+---
+
+## Agent Quick Reference
+
+### For `vsm_backend_fix`
+When fixing backend code, verify these 4 patterns first:
+1. **Router prefix**: Check `app.include_router()` does NOT repeat a prefix already set on the `APIRouter` instance.
+2. **Async task wiring**: Any endpoint returning "queued"/"processing" MUST have a visible `.delay()` or `.apply_async()` call in the same handler.
+3. **Module-level engine**: `create_async_engine()` must be inside a lazy factory function, never at module level.
+4. **Lifespan context**: DB init/teardown belongs in `@asynccontextmanager lifespan`, not `@app.on_event("startup")`.
+
+### For `vsm_backend_tester`
+When writing backend tests, ensure coverage of:
+1. **GraphQL mutations**: At least one test per mutation (create, update, delete) with both success and auth/validation failure paths.
+2. **Auth ownership**: Tests MUST verify that non-owners receive 401/403 on restricted resources.
+3. **Lifespan compatibility**: Tests can import `models.py` without a running DB (no module-level engine instantiation).
+4. **Socket.IO emissions**: If real-time events are defined, tests should verify `sio.emit()` is called in mutation handlers.
+
+### For `vsm_coordinator`
+During Phase 6 integration verification:
+1. **Async task wiring**: Grep for "queued"/`processing`/`generating` in routers, then verify `.delay()` exists in the same function.
+2. **Socket.IO emission coverage**: For every event constant in shared contracts, grep for `sio.emit("EVENT_NAME")` in `app/` — ≥1 match per event.
+3. **Router URL parity**: Cross-reference `api-spec.md` against actual router paths; watch for double prefixes.
+4. **Subprocess import check**: Run `python3 -c "import main; print('OK')"` to catch module-level side effects.
+
+---

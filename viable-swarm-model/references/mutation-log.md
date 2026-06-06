@@ -4729,3 +4729,29 @@ These gaps represent a System 3 (Audit/Control) → System 1 (Implementation) ch
 **Measured effect**: **5/5** — `validate-skills.py` now reports "OK: 25 skills validated" with zero warnings. All 149 automation suite tests pass.
 
 ---
+
+## Mutation R56 — 2026-06-06
+
+**Session**: S5 Orchestrator Iteration — S5 iteration counter fix + skill agent enrichment
+**File**: `scripts/increment-s5-iteration-counter.py`, `vsm-stack-skills/backend-patterns/SKILL.md`, `vsm-stack-skills/security-patterns/SKILL.md`, `vsm-stack-skills/integration-patterns/SKILL.md`, `hooks/test-automation.sh`
+**Type**: structural
+**Rationale**: Two compounding constraints identified in R55 closeout:
+1. **S5→S5 channel failure**: R44–R54 all showed `builds_tested=1` despite surviving 5–10+ subsequent S5 iterations. The historical promotion policy (R32) requires ≥5 stable iterations, but no counting mechanism existed. This blocked autonomous portfolio curation and caused active mutation bloat.
+2. **S3→S1 knowledge depth gap**: R55 added agent name references to skill files, but the references were minimal (single "Applies to" lines). Agents need actionable, agent-specific guidance — not just confirmation that a skill is relevant to them.
+
+**Expected effect**: 
+- S5 iteration mutations now have accurate `builds_tested` counts computed from file position. R44–R48 (≥5 stable iterations) promoted to `historical`, reducing active mutations from 55 to 50.
+- Backend fix agents, backend testers, coordinators, frontend coders, auditors, and devops coders have concise quick-reference sections extracting the most relevant rules for their role.
+- Future S5 iterations can run `increment-s5-iteration-counter.py` (no args) to increment all effective S5 mutations by 1.
+
+**Files modified**:
+- `scripts/increment-s5-iteration-counter.py` (created) — Backfill mode sets builds_tested from position; default mode increments by 1
+- `vsm-stack-skills/backend-patterns/SKILL.md` — Added "Agent Quick Reference" with fix-agent, tester, and coordinator checklists
+- `vsm-stack-skills/security-patterns/SKILL.md` — Added "Agent Quick Reference" with frontend-coder and coordinator security checklists
+- `vsm-stack-skills/integration-patterns/SKILL.md` — Added "Agent Quick Reference" with auditor, backend-coder, frontend-coder, and devops-coder integration checklists
+- `hooks/test-automation.sh` — Tests 150–151 cover backfill and increment modes
+- `references/mutation-state.md` — R44–R48 promoted to historical; remaining S5 mutations backfilled; Integration Health updated
+
+**Measured effect**: **5/5** — Active mutations dropped from 55 to 50 (within <55 target). All 151 automation suite tests pass. `validate-skills.py` still reports zero warnings.
+
+---
