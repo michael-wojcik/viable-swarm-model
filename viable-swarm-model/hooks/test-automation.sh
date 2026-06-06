@@ -4059,10 +4059,10 @@ for line in text.splitlines():
 print(len(rows))
 ")
 
-if [ "$ACTIVE_COUNT" -eq 60 ]; then
+if [ "$ACTIVE_COUNT" -eq 61 ]; then
     pass
 else
-    fail "expected 60 active mutations, got $ACTIVE_COUNT"
+    fail "expected 61 active mutations, got $ACTIVE_COUNT"
 fi
 
 # ============================================================================
@@ -4899,6 +4899,88 @@ if [ "$AG_RC" -eq 0 ] && [ -f "$TMPDIR/build126/.kimi/auto-gym-trigger.md" ] && 
     pass
 else
     fail "expected exit 0 and report with monitor mutation, got RC=$AG_RC"
+fi
+
+# ============================================================================
+# Test 127: mutation-predictor.py — finds similar mutations and predicts effectiveness
+# ============================================================================
+
+echo -n "TEST: mutation-predictor.py predicts effectiveness from similar mutations ... "
+
+mkdir -p "$TMPDIR/build127/.kimi"
+
+# Create a minimal mutation-state.md with scored mutations
+cat > "$TMPDIR/build127/mutation-state.md" << 'EOF'
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| T1 | Test | append-only | test coverage gap | effective | 5 | 5 | — | — | — |
+| T2 | Test | append-only | test coverage gap | effective | 3 | 4 | — | — | — |
+| T3 | Test | structural | config drift | effective | 4 | 3 | — | — | — |
+EOF
+
+# Create a minimal mutation-log.md
+cat > "$TMPDIR/build127/mutation-log.md" << 'EOF'
+## Mutation T1 — 2026-06-01
+**File**: hooks/test-automation.sh
+**Type**: append-only
+
+## Mutation T2 — 2026-06-01
+**File**: hooks/test-automation.sh
+**Type**: append-only
+
+## Mutation T3 — 2026-06-01
+**File**: references/mutation-state.md
+**Type**: structural
+EOF
+
+MP_OUTPUT=$(MUTATION_PREDICTOR_STATE="$TMPDIR/build127/mutation-state.md" \
+    MUTATION_PREDICTOR_LOG="$TMPDIR/build127/mutation-log.md" \
+    python3 "$SCRIPT_DIR/../scripts/mutation-predictor.py" \
+    --type append-only --target "test coverage gap" --file-category hooks 2>&1) || MP_RC=$?
+MP_RC=${MP_RC:-0}
+
+if [ "$MP_RC" -eq 0 ] && \
+   echo "$MP_OUTPUT" | grep -q "Predicted effectiveness:" && \
+   echo "$MP_OUTPUT" | grep -q "T1" && \
+   echo "$MP_OUTPUT" | grep -q "T2" && \
+   echo "$MP_OUTPUT" | grep -q "Confidence:"; then
+    pass
+else
+    fail "expected prediction output with T1/T2, got RC=$MP_RC, output=$MP_OUTPUT"
+fi
+
+# ============================================================================
+# Test 128: mutation-predictor.py — insufficient data when no similar mutations
+# ============================================================================
+
+echo -n "TEST: mutation-predictor.py returns insufficient data when no matches ... "
+
+mkdir -p "$TMPDIR/build128/.kimi"
+
+# Create a mutation-state.md with only dissimilar mutations
+cat > "$TMPDIR/build128/mutation-state.md" << 'EOF'
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| T1 | Test | structural | config drift | effective | 5 | 5 | — | — | — |
+EOF
+
+cat > "$TMPDIR/build128/mutation-log.md" << 'EOF'
+## Mutation T1 — 2026-06-01
+**File**: references/mutation-state.md
+**Type**: structural
+EOF
+
+MP_OUTPUT=$(MUTATION_PREDICTOR_STATE="$TMPDIR/build128/mutation-state.md" \
+    MUTATION_PREDICTOR_LOG="$TMPDIR/build128/mutation-log.md" \
+    python3 "$SCRIPT_DIR/../scripts/mutation-predictor.py" \
+    --type refinement --target "graphql validation" --file-category agents 2>&1) || MP_RC=$?
+MP_RC=${MP_RC:-0}
+
+if [ "$MP_RC" -eq 0 ] && \
+   echo "$MP_OUTPUT" | grep -qi "insufficient data"; then
+    pass
+else
+    fail "expected insufficient data message, got RC=$MP_RC, output=$MP_OUTPUT"
 fi
 
 echo ""

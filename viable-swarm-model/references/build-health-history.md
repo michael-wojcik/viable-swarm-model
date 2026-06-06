@@ -1449,3 +1449,35 @@ Without a fitness build or additional S5 iteration cycles, the organism has reac
 
 ### Next Highest-Leverage Constraint
 **System 3 (Audit/Control) / S3→S1 channel — 2 remaining untested scripts**: `mutation-predictor.py` and `skill-effectiveness-tracker.py` now have syntax checks but no behavior tests. `mutation-predictor.py` is actively used by `vsm_learning_curator.md` and `vsm_meta.md` agent prompts — if it produces incorrect predictions, agents may apply low-effectiveness mutations. Adding behavior tests (e.g., testing similarity scoring, score parsing, recommendation logic) would close this gap. Alternatively, **System 5 (Policy) / S5→S1 channel — test-automation.sh is now 148KB+ and 4700+ lines**: While all 130 tests pass, the script is becoming unwieldy. A test suite refactoring (splitting into sub-files by system, adding a test runner with selective execution) would improve maintainability.
+
+
+---
+
+## 2026-06-06 — S5 Orchestrator Iteration (R45)
+
+### Diagnosed Constraint
+**System 3 (Audit/Control) / S3→S1 channel — mutation-predictor.py had syntax check but no behavior tests.** This script is actively invoked by `vsm_learning_curator.md` and `vsm_meta.md` agent prompts via CLI (`python3 mutation-predictor.py --type ... --target ... --file-category ...`). It computes similarity scores between proposed mutations and historical ones, then predicts effectiveness and recommends whether to proceed. Without behavior tests, a bug in similarity scoring, score parsing, or recommendation logic could cause agents to apply low-effectiveness mutations with false confidence — a silent S4→S5 intelligence failure.
+
+### Change Made
+**Refinement mutation R45**: Made mutation-predictor.py testable and added behavior tests.
+- Added `import os` and env var overrides (`MUTATION_PREDICTOR_STATE`, `MUTATION_PREDICTOR_LOG`) for paths, enabling isolated testing with temp files
+- Test 127: Creates temp mutation-state.md with 3 scored mutations and mutation-log.md with file categories. Runs predictor for an append-only/hooks mutation targeting "test coverage gap". Verifies output contains predicted effectiveness, T1/T2 similar mutations, and confidence level.
+- Test 128: Creates temp mutation-state.md with a single structural mutation unrelated to the query. Runs predictor for refinement/agents targeting "graphql validation". Verifies output contains "Insufficient data".
+
+### Test Results
+- `bash hooks/test-automation.sh`: **132 passed, 0 failed** (was 130 passed, 0 failed)
+- Test 127: similarity scoring + prediction → PASS
+- Test 128: no-match insufficient data → PASS
+
+### Files Modified
+- `viable-swarm-model/scripts/mutation-predictor.py`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- Hash: [to be filled after commit]
+
+### Next Highest-Leverage Constraint
+**System 3 (Audit/Control) / S3→S1 channel — skill-effectiveness-tracker.py has syntax check but no behavior tests.** This script scans fitness build outputs and correlates skill usage with build scores. It writes to `references/skill-effectiveness-log.md` which is read by the learning curator for skill portfolio decisions. Without tests, incorrect score parsing or skill counting could mislead skill selection. Alternatively, **System 5 (Policy) / S5→S1 channel — test-automation.sh is now 153KB+ and 5000+ lines**: While all 132 tests pass, the script is becoming unwieldy. A test suite refactoring (splitting into sub-files by system, adding a test runner) would improve maintainability.

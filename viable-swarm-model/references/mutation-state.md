@@ -123,9 +123,9 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 60 | < 50 | ⚠️ WARNING (exceeds target) |
+| Active mutations | 61 | < 50 | ⚠️ WARNING (exceeds target) |
 | Historical effective (≥5 builds) | 36 | >15% of active | ✅ 62% |
-| Effective (<5 builds, monitored) | 52 | >30% of active | ✅ 87% |
+| Effective (<5 builds, monitored) | 53 | >30% of active | ✅ 87% |
 | Probationary mutations | 8 | <20 at any time | ✅ 8 (within target) |
 | Removed / redesigned | 18 | ≥2 per 5 builds | ✅ 18 (exceeds target) |
 | Measured effect fill rate (scored) | 86.6% | ≥80% | ✅ 86.6% |
@@ -327,3 +327,4 @@
 | R42 | 2026-06-06 S5 | refinement | Fix stale Integration Health metrics in mutation-state.md + count redesigned in mutation-portfolio-health.py + auto-sync test | effective | 1 | 5 | — | — | S5 iter |
 | R43 | 2026-06-06 S5 | refinement | Deprecate knowledge-broker.sh — convert to no-op stub with deprecation notice, remove from diagnostic-router, add 3 tests | effective | 1 | 5 | — | — | S5 iter |
 | R44 | 2026-06-06 S5 | structural | Wire auto-gym-trigger.py into session-end.sh + env var overrides for testability + 4 tests (3 syntax + 3 behavior) | effective | 1 | 5 | — | — | S5 iter |
+| R45 | 2026-06-06 S5 | refinement | mutation-predictor.py env var overrides for testability + 2 behavior tests (similarity + insufficient-data) | effective | 1 | 5 | — | — | S5 iter |

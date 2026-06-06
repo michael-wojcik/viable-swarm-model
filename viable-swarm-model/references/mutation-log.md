@@ -4428,3 +4428,20 @@ Additionally:
 **Expected effect**: The organism's self-improvement loop is no longer broken. Gym experiments will be auto-triggered when conditions are met, preventing hypothesis backlog from growing indefinitely and ensuring monitor mutations get measured.
 
 **Measured effect**: All 130 tests pass. Script correctly detects no-trigger, backlog-trigger, and monitor-mutation-trigger conditions.
+
+
+---
+
+## Mutation R45 — 2026-06-06
+
+**Session**: S5 Orchestrator Iteration
+**Files**: `scripts/mutation-predictor.py`, `hooks/test-automation.sh`, `references/mutation-state.md`
+**Type**: refinement
+**Rationale**: `mutation-predictor.py` had a syntax check but zero behavior tests, despite being actively invoked by `vsm_learning_curator.md` and `vsm_meta.md` agent prompts. If the similarity scoring, score parsing, or recommendation logic had bugs, agents would apply low-effectiveness mutations with false confidence. Fixed by:
+1. Added `import os` and env var overrides for `mutation-state.md` and `mutation-log.md` paths (`MUTATION_PREDICTOR_STATE`, `MUTATION_PREDICTOR_LOG`) — enables isolated testing
+2. Added Test 127: verifies the script finds similar mutations (type match + target keyword overlap + category match), computes weighted average effectiveness, and outputs confidence/recommendation
+3. Added Test 128: verifies the script returns "Insufficient data" when no similar mutations exist
+
+**Expected effect**: S3→S1 channel now verifies mutation-predictor.py behavior. Agents can trust predictions because the scoring logic is continuously validated.
+
+**Measured effect**: All 132 tests pass. Similarity scoring correctly identifies type/category matches and keyword overlap. No-match path correctly returns insufficient data.

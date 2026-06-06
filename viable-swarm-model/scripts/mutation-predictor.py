@@ -10,6 +10,7 @@ Usage:
 """
 
 import argparse
+import os
 import re
 import sys
 from pathlib import Path
@@ -290,10 +291,10 @@ def main():
         "category": args.file_category,
     }
 
-    # Resolve paths
+    # Resolve paths (env vars allow testing with temp files)
     home = Path.home()
-    state_path = home / "vsm" / "viable-swarm-model" / "references" / "mutation-state.md"
-    log_path = home / "vsm" / "viable-swarm-model" / "references" / "mutation-log.md"
+    state_path = Path(os.environ.get("MUTATION_PREDICTOR_STATE", home / "vsm" / "viable-swarm-model" / "references" / "mutation-state.md"))
+    log_path = Path(os.environ.get("MUTATION_PREDICTOR_LOG", home / "vsm" / "viable-swarm-model" / "references" / "mutation-log.md"))
 
     mutations = parse_mutation_state(str(state_path))
     id_to_category = parse_mutation_log(str(log_path))
