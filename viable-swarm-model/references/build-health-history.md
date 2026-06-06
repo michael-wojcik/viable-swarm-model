@@ -1272,3 +1272,39 @@ The 8 unmeasured probationary mutations (SM3, SM7, SM8, FB32-1..5) still await f
 - **2 monitor mutations**: Need more build evidence before removal decision
 
 Without a fitness build or additional S5 iteration cycles, the organism has reached a **local minimum** on active mutation count. The most viable next action would be to either (a) run a fitness build or gym experiment to validate probationary mutations, or (b) wait for R31–R38 to accumulate enough iterations for historical promotion.
+
+---
+
+## 2026-06-06 — S5 Orchestrator Iteration (R39)
+
+### Diagnosed Constraint
+**System 3 (Audit/Control) / S3→S1 channel — Phase 4 gate guardian has zero test coverage and 3 reliability bugs**: The `gate-guardian.sh` hook is registered in `~/.kimi/config.toml` as a PreToolUse hook that runs on EVERY file write, making it Tier A enforcement infrastructure for Rule 1 (Phase 4 Gate Discipline). Despite this critical role, it had zero tests in `test-automation.sh`. Code review revealed: (1) a redundant `find` command gated the test-scanning loop, potentially skipping npm test outputs; (2) inconsistent grep patterns between `.kimi/` and `$CWD/` scans; (3) a crash path when `.kimi/` was missing but test failures existed in `$CWD/`, producing an uncontrolled exit code instead of the intended 2 (BLOCKED).
+
+### Change Made
+**Refinement mutation R39**: Fixed three reliability issues in `gate-guardian.sh` and added comprehensive test coverage.
+- Removed redundant `find` check; the `for` loop handles missing files correctly via `[[ -f ]]` guards
+- Unified grep patterns to `failed|FAIL|error|Error` for both `.kimi/` and `$CWD/` scans
+- Added `mkdir -p "$TEST_DIR"` and `|| true` to the block-log write, preventing crashes when `.kimi/` is absent
+- Added 4 tests to `test-automation.sh`: pytest failure block, npm failure block, no-failure allow, non-PASS allow
+- Added syntax check for `gate-guardian.sh` in the Preliminary section
+
+### Test Results
+- `bash hooks/test-automation.sh`: **101 passed, 0 failed** (was 96 passed, 0 failed)
+- Test 97: gate-guardian blocks when pytest output shows failures → PASS
+- Test 98: gate-guardian blocks when npm test output shows failures → PASS
+- Test 99: gate-guardian allows when all tests pass → PASS
+- Test 100: gate-guardian allows when gate does not claim PASS → PASS
+
+### Files Modified
+- `viable-swarm-model/hooks/gate-guardian.sh`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- Hash: 0aa16420391b6de2619fd1786ef9bd356bb08066
+
+### Next Highest-Leverage Constraint
+**System 3 (Audit/Control) / S3→S1 channel — boundary-guardian.sh and structural-guardian.sh still have zero test coverage**: Both hooks are also registered in `~/.kimi/config.toml` as PreToolUse hooks with 5-second timeouts. The `boundary-guardian.sh` enforces Rule 2 (Phase 6/7 Boundary Discipline) and the `structural-guardian.sh` enforces Rule 3 (Structural Mutation Discipline). Without tests, bugs in these hooks could allow inline fixes or unapproved structural mutations. Additionally, the `boundary-guardian.sh` uses `jq` to parse payload but has no fallback if `jq` is missing, and `structural-guardian.sh` checks `vsm-main.yaml` but the file is at `agents/vsm-main.yaml` not the root — the regex `vsm-main\.yaml$` would match both paths, but this should be verified.
+
