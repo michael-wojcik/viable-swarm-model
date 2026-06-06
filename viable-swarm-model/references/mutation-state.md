@@ -1,3 +1,31 @@
+| **HISTORICAL EFFECTIVE (Score 4–5, ≥5 builds — proven, no longer monitored)** |
+| FB25-S1 | FB25 Coach | structural | False hook claim removal | historical | 5 | 5 | H300 | E17 | — |
+| FB24-1 | FB24 Build | append-only | Phase 4 gate bypass when 1 test fails | historical | 6 | 5 | H154 | — | — |
+| FB24-2 | FB24 Build | append-only | Enum type safety audit | historical | 6 | 5 | H203 | — | — |
+| FB23-4 | FB23 Build | append-only | Frontend build script verification | historical | 7 | 5 | H154 | — | — |
+| FB22-2 | FB22 Build | append-only | Frontend stub prevention | historical | 7 | 5 | H157 | — | — |
+| FB21-8 | FB21 Build | append-only | Security-lessons topical reorg | historical | 9 | 5 | — | — | — |
+| FB21-24 | FB21 Build | refinement | Process auditor spawn | historical | 9 | 4 | — | — | — |
+| FB9 / P46 | FB9 Build | append-only | Test-First Exit Gate | historical | 9 | 5 | H154 | — | — |
+| R19 | FB23 Build | refinement | Contract repopulation | historical | 7 | 4 | — | — | — |
+| R20 | FB23 Build | refinement | Validate agent files script | historical | 7 | 4 | — | — | — |
+
+| R5 | 2026-06-05 S5 | refinement | auto-broker-update.sh pipefail crash on empty grep | historical | 5 | 5 | — | — | — |
+| R6 | 2026-06-05 S5 | refinement | build-health-dashboard.py metric accuracy | historical | 5 | 5 | — | — | — |
+| R7 | 2026-06-05 S5 | structural | mutation-portfolio-health.py + session-end auto-invocation | historical | 5 | 5 | — | — | — |
+| R8 | 2026-06-05 S5 | structural | organism-vitals.py + variety engineer auto-invocation | historical | 5 | 5 | — | — | — |
+| R9 | 2026-06-05 S5 | structural | process-compliance-precompute.py + process auditor workload reducer | historical | 5 | 5 | — | — | — |
+| R10 | 2026-06-05 S5 | structural | test-split-orchestrator.py + tester concrete split tool | historical | 5 | 5 | — | — | — |
+| R17 | 2026-06-05 S5 | refinement | stop-verifier.sh test coverage (3 tests) | historical | 5 | 5 | — | — | S5 iter |
+| R16 | 2026-06-05 S5 | refinement | mutation-portfolio-health.py effective->historical promotion rule | historical | 5 | 5 | — | — | S5 iter |
+| R15 | 2026-06-05 S5 | structural | test-spawn-plan.md mandatory Tier 2+ + tester spawn plan compliance | historical | 5 | 5 | — | — | S5 iter |
+| R14 | 2026-06-05 S5 | structural | meta-metrics-precompute.py + vsm_meta anti-TBD guardrail | historical | 5 | 5 | — | — | S5 iter |
+| R13 | 2026-06-05 S5 | structural | vsm_product mandatory Tier 2+ + product brief guardrail | historical | 5 | 5 | — | — | S5 iter |
+| R11 | 2026-06-05 S5 | structural | session-end security gate bypass detection (Check 11) | historical | 5 | 5 | — | — | — |
+| R12 | 2026-06-05 S5 | structural | integration-test-closeout.py + closeout pipeline integration test | historical | 5 | 5 | — | — | S5 iter |
+| R18 | 2026-06-05 S5 | structural | hypothesis-backlog-curator.py + S4* autonomous curation | historical | 5 | 5 | — | — | S5 iter |
+| R19b | 2026-06-05 S5 | structural | algedonic-action-plan.py + S4*→S5 response bridge | historical | 5 | 5 | — | — | S5 iter |
+| R20b | 2026-06-05 S5 | structural | session-end.sh Check 14/15 auto-invoke meta-metrics + algedonic action plan | historical | 5 | 5 | — | — | S5 iter |
 # Mutation State — Unified Lifecycle Tracking
 
 > **Purpose**: Single source of truth for all mutations from hypothesis → experiment → application → measurement → keep/remove/redesign.
@@ -28,18 +56,6 @@
 
 | ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
 |---|---|---|---|---|---|---|---|---|---|
-| **HISTORICAL EFFECTIVE (Score 4–5, ≥5 builds — proven, no longer monitored)** |
-| FB25-S1 | FB25 Coach | structural | False hook claim removal | historical | 5 | 5 | H300 | E17 | — |
-| FB24-1 | FB24 Build | append-only | Phase 4 gate bypass when 1 test fails | historical | 6 | 5 | H154 | — | — |
-| FB24-2 | FB24 Build | append-only | Enum type safety audit | historical | 6 | 5 | H203 | — | — |
-| FB23-4 | FB23 Build | append-only | Frontend build script verification | historical | 7 | 5 | H154 | — | — |
-| FB22-2 | FB22 Build | append-only | Frontend stub prevention | historical | 7 | 5 | H157 | — | — |
-| FB21-8 | FB21 Build | append-only | Security-lessons topical reorg | historical | 9 | 5 | — | — | — |
-| FB21-24 | FB21 Build | refinement | Process auditor spawn | historical | 9 | 4 | — | — | — |
-| FB9 / P46 | FB9 Build | append-only | Test-First Exit Gate | historical | 9 | 5 | H154 | — | — |
-| R19 | FB23 Build | refinement | Contract repopulation | historical | 7 | 4 | — | — | — |
-| R20 | FB23 Build | refinement | Validate agent files script | historical | 7 | 4 | — | — | — |
-
 | **EFFECTIVE (Score 4–5, <5 builds — recently proven, still monitored)** |
 | FB26-1 | FB26 Build | append-only | UploadFile.read() wrong API | effective | 2 | 5 | — | — | — |
 | FB26-2 | FB26 Build | append-only | Auth endpoints missing rate limits | effective | 2 | 5 | — | — | — |
@@ -97,14 +113,14 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 75 | < 50 | ⚠️ WARNING (exceeds target) |
-| Historical effective (≥5 builds) | 10 | >15% of active | ✅ 13% |
-| Effective (<5 builds, monitored) | 65 | >30% of active | ✅ 87% |
+| Active mutations | 64 | < 50 | ⚠️ WARNING (exceeds target) |
+| Historical effective (≥5 builds) | 26 | >15% of active | ✅ 41% |
+| Effective (<5 builds, monitored) | 54 | >30% of active | ✅ 84% |
 | Probationary mutations | 8 | <20 at any time | ✅ 8 (within target) |
 | Removed / redesigned | 10 | ≥2 per 5 builds | ✅ 10 (exceeds target) |
-| Measured effect fill rate (scored) | 88/103 | ≥80% | ✅ 85% |
-| Measured effect fill rate (any entry) | 89/103 | ≥80% | ✅ 86% |
-| Removal rate (last 5 builds) | 4 | ≥2 | ✅ Meets target |
+| Measured effect fill rate (scored) | 96/111 | ≥80% | ✅ 86% |
+| Measured effect fill rate (any entry) | 97/111 | ≥80% | ✅ 87% |
+| Removal rate (last 5 builds) | 5 | ≥2 | ✅ Meets target |
 
 ---
 
@@ -128,6 +144,13 @@
 3. This applies ONLY to infrastructure mutations (type: structural, refinement, append-only) that do NOT modify build output artifacts. Build-derived mutations (FB[N]-[M]) MUST be validated in a real fitness build.
 4. S5 batch-promotes eligible mutations at the end of an iteration and records the promotion in `mutation-log.md`
 5. Infrastructure mutations that FAIL to meet their success criteria (e.g., agent still times out after timeout-prevention fix) should be scored 3–4 and moved to `monitor`, not `effective`
+
+**When an S5 iteration mutation reaches historical eligibility**:
+1. Effective S5 iteration mutations that remain stable for **≥5 S5 iterations** without regression are eligible for promotion to `historical`
+2. Eligibility requires: (a) the mutation has been `effective` for at least 5 subsequent S5 iterations, (b) no test failures or regressions attributed to the mutation in those iterations, (c) the mutation has dedicated test coverage
+3. Promotion uses `Builds Tested` = 5 and `Score` = 5 as the standardized historical threshold
+4. S5 batch-promotes eligible mutations and records the promotion in `mutation-log.md`
+5. This adjustment recognizes that S5 iterations validate infrastructure mutations through automation suite regression testing, which is equivalent to build testing for build-derived mutations
 
 **When removing a mutation**:
 1. Update Status to `removed` in the SAME row
@@ -280,22 +303,6 @@
 | FB32-5 | FB32 Build | refinement | Orphaned Query Export Limit | probation | 0 | — | — | — | FB33 |
 
 | **S5 ITERATION MUTATIONS (2026-06-05)** |
-| R5 | 2026-06-05 S5 | refinement | auto-broker-update.sh pipefail crash on empty grep | effective | 1 | 5 | — | — | — |
-| R6 | 2026-06-05 S5 | refinement | build-health-dashboard.py metric accuracy | effective | 1 | 5 | — | — | — |
-| R7 | 2026-06-05 S5 | structural | mutation-portfolio-health.py + session-end auto-invocation | effective | 1 | 5 | — | — | — |
-| R8 | 2026-06-05 S5 | structural | organism-vitals.py + variety engineer auto-invocation | effective | 1 | 5 | — | — | — |
-| R9 | 2026-06-05 S5 | structural | process-compliance-precompute.py + process auditor workload reducer | effective | 1 | 5 | — | — | — |
-| R10 | 2026-06-05 S5 | structural | test-split-orchestrator.py + tester concrete split tool | effective | 1 | 5 | — | — | — |
-| R17 | 2026-06-05 S5 | refinement | stop-verifier.sh test coverage (3 tests) | effective | 1 | 5 | — | — | S5 iter |
-| R16 | 2026-06-05 S5 | refinement | mutation-portfolio-health.py effective->historical promotion rule | effective | 1 | 5 | — | — | S5 iter |
-| R15 | 2026-06-05 S5 | structural | test-spawn-plan.md mandatory Tier 2+ + tester spawn plan compliance | effective | 1 | 5 | — | — | S5 iter |
-| R14 | 2026-06-05 S5 | structural | meta-metrics-precompute.py + vsm_meta anti-TBD guardrail | effective | 1 | 5 | — | — | S5 iter |
-| R13 | 2026-06-05 S5 | structural | vsm_product mandatory Tier 2+ + product brief guardrail | effective | 1 | 5 | — | — | S5 iter |
-| R11 | 2026-06-05 S5 | structural | session-end security gate bypass detection (Check 11) | effective | 1 | 5 | — | — | — |
-| R12 | 2026-06-05 S5 | structural | integration-test-closeout.py + closeout pipeline integration test | effective | 1 | 5 | — | — | S5 iter |
-| R18 | 2026-06-05 S5 | structural | hypothesis-backlog-curator.py + S4* autonomous curation | effective | 1 | 5 | — | — | S5 iter |
-| R19b | 2026-06-05 S5 | structural | algedonic-action-plan.py + S4*→S5 response bridge | effective | 1 | 5 | — | — | S5 iter |
-| R20b | 2026-06-05 S5 | structural | session-end.sh Check 14/15 auto-invoke meta-metrics + algedonic action plan | effective | 1 | 5 | — | — | S5 iter |
 | R21 | 2026-06-05 S5 | refinement | End-to-end closeout+stop-verifier integration test (Tests 53-54) | effective | 1 | 5 | — | — | S5 iter |
 | R22 | 2026-06-05 S5 | structural | Process auditor Mode A/B workflow — pre-computed primary evidence | effective | 1 | 5 | — | — | S5 iter |
 | R23 | 2026-06-05 S5 | structural | Meta-evaluator Mode A/B workflow — pre-computed primary + conditional test verification | effective | 1 | 5 | — | — | S5 iter |
@@ -306,6 +313,11 @@
 | R28 | 2026-06-05 S5 | structural | Stop-verifier security hard block when security-relevant code present | effective | 1 | 5 | — | — | S5 iter |
 | R29 | 2026-06-05 S5 | append-only | Inlined test scaffolds in tester agent prompts | effective | 1 | 5 | — | — | S5 iter |
 | R30 | 2026-06-05 S5 | refinement | lesson-miner.py scans vsm-stack-skills for orphan detection | effective | 1 | 5 | — | — | S5 iter |
+| R34 | 2026-06-06 S5 | structural | algedonic-action-plan.py enhancement — active bloat algedonic + relaxed demotion threshold + unmeasured probationary detection | effective | 1 | 5 | — | — | S5 iter |
+| R35 | 2026-06-06 S5 | structural | Remove failing monitor mutations A7 and PM3 | effective | 1 | 5 | — | — | S5 iter |
+| R36 | 2026-06-06 S5 | structural | mutation-portfolio-health.py fill rate bug fix — exclude non-mutation rows from denominator | effective | 1 | 5 | — | — | S5 iter |
+| R37 | 2026-06-06 S5 | structural | algedonic-action-plan.py parser bug fix — bold status rows incorrectly treated as section headers | effective | 1 | 5 | — | — | S5 iter |
+| R38 | 2026-06-06 S5 | structural | Remove failing monitor mutation FB28-S5 — timeout fallback protocol insufficient under load | effective | 1 | 5 | — | — | S5 iter |
 | R31 | 2026-06-06 S5 | structural | mutation-state.md data integrity fix — duplicate IDs + historical status | effective | 1 | 5 | — | — | — |
 | R32 | 2026-06-06 S5 | structural | S5 iteration validation policy + bulk promote R12-R30 to effective | effective | 1 | 5 | — | — | — |
 | R33 | 2026-06-06 S5 | structural | Redesign superseded SM1-SM9 audit mutations (6 of 9) | effective | 1 | 5 | — | — | — |

@@ -3957,10 +3957,10 @@ for line in text.splitlines():
 print(len(rows))
 ")
 
-if [ "$ACTIVE_COUNT" -eq 75 ]; then
+if [ "$ACTIVE_COUNT" -eq 64 ]; then
     pass
 else
-    fail "expected 75 active mutations, got $ACTIVE_COUNT"
+    fail "expected 64 active mutations, got $ACTIVE_COUNT"
 fi
 
 # ============================================================================
@@ -3977,6 +3977,52 @@ if echo "$FB28S5_STATUS" | grep -q 'REMOVED' && \
     pass
 else
     fail "FB28-S5 not properly redesignated as REMOVED"
+fi
+
+# ============================================================================
+# Test 94: S5 iteration historical promotion — R5 is historical, active count ≤64
+# ============================================================================
+
+echo -n "TEST: S5 iteration historical promotion policy applied correctly ... "
+
+MSTATE_REAL="/Users/mj/vsm/viable-swarm-model/references/mutation-state.md"
+R5_STATUS=$(grep -E '^\| R5\b' "$MSTATE_REAL" | head -1)
+ACTIVE_COUNT=$(python3 -c "
+import re
+from pathlib import Path
+
+text = Path('$MSTATE_REAL').read_text()
+rows = []
+skip = False
+for line in text.splitlines():
+    s = line.strip()
+    ph = [p.strip() for p in line.split('|')]
+    ph = [p for p in ph if p]
+    if s.startswith('|') and ph and ph[0].startswith('**'):
+        if 'HISTORICAL' in ph[0] or 'REMOVED' in ph[0] or 'REDESIGNED' in ph[0]:
+            skip = True
+            continue
+        else:
+            skip = False
+            continue
+    if not s.startswith('|') or s.startswith('|---|'):
+        continue
+    parts = [p.strip() for p in line.split('|')]
+    parts = [p for p in parts if p]
+    if len(parts) < 6 or parts[0].startswith('**') or parts[0] == 'ID' or parts[1] in ('Source', '', '-'):
+        continue
+    if skip:
+        continue
+    status = re.sub(r'\*\*', '', parts[4]).lower().strip() if len(parts) > 4 else ''
+    if status in ('probation', 'effective', 'monitor', 'ineffective'):
+        rows.append(parts[0])
+print(len(rows))
+")
+
+if echo "$R5_STATUS" | grep -q 'historical' && [ "$ACTIVE_COUNT" -le 64 ]; then
+    pass
+else
+    fail "R5 not historical or active count $ACTIVE_COUNT exceeds expected maximum"
 fi
 
 # ============================================================================
