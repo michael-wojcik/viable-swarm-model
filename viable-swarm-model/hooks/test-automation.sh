@@ -4042,6 +4042,22 @@ else
 fi
 
 # ============================================================================
+# Test 96: algedonic-action-plan.py hypothesis actions have no numbering gaps
+# ============================================================================
+
+echo -n "TEST: algedonic-action-plan.py hypothesis actions use bullets not hardcoded numbers ... "
+
+ALGEDONIC_OUTPUT=$(cd "$SCRIPT_DIR/.." && python3 scripts/algedonic-action-plan.py 2>&1)
+
+# Check that hypothesis actions don't contain hardcoded list numbers like "1.", "2.", etc.
+# The fix removes numbers entirely, using bullet points with bold labels instead.
+if echo "$ALGEDONIC_OUTPUT" | grep -E '^- [0-9]+\. \*\*' > /dev/null 2>&1; then
+    fail "algedonic output still contains hardcoded numbered list items"
+else
+    pass
+fi
+
+# ============================================================================
 # Summary
 # ============================================================================
 

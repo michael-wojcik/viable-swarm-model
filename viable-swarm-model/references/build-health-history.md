@@ -1235,3 +1235,40 @@ The 8 unmeasured probationary mutations (SM3, SM7, SM8, FB32-1..5) still await f
 - 2 monitor mutations (M-FB30-1 score 3, FB31-5 score 3) need more build evidence before removal decision
 - 8 probationary mutations await fitness build validation
 - A single additional removal or consolidation would reach <50
+
+
+---
+
+## 2026-06-06 — S5 Orchestrator Iteration (R41)
+
+### Diagnosed Constraint
+**System 4 (Adaptation/Intelligence) / S4→S5 channel — algedonic action plan output quality degradation**: During R40 review, two quality issues were found in the S4*→S5 response bridge: (1) `algedonic-action-plan.py` generated hypothesis action lists with hardcoded numbering (1–6) that produced gaps when intermediate categories were empty, yielding confusing output like "4. ... 6. ..."; (2) the Integration Health table in `mutation-state.md` had manually-overwritten fill rates (95%/96%) that diverged from the actual computed values (86%/87%), creating a misleading signal about mutation tracking quality.
+
+### Change Made
+**Refinement mutation R41**: Fixed both quality issues in the S4*→S5 response bridge.
+1. `algedonic-action-plan.py`: Removed hardcoded list numbers from `generate_hypothesis_actions()`. Actions now use bullet points with bold category labels, making gaps impossible.
+2. `references/mutation-state.md`: Corrected Integration Health fill rates to match actual `mutation-portfolio-health.py` output: 86% (scored), 87% (any entry).
+3. `hooks/test-automation.sh`: Added Test 96 verifying algedonic output contains no hardcoded numbered list items.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **96 passed, 0 failed** (was 95 passed, 0 failed)
+- Test 96: algedonic hypothesis actions use bullets, not hardcoded numbers
+- `validate-mutation-state.sh`: ✅ PASS
+
+### Files Modified
+- `viable-swarm-model/scripts/algedonic-action-plan.py`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 5 (Policy) / S5→S5 channel — active mutation bloat at 54** (target <50). Two iterations (R40, R41) have produced measurable improvements but the active count remains 8% above target. The remaining paths to <50 are time-gated:
+- **R31–R33, R34–R38**: Need 3+ more S5 iterations to reach historical eligibility
+- **8 probationary mutations**: Need a real fitness build for measurement
+- **2 monitor mutations**: Need more build evidence before removal decision
+
+Without a fitness build or additional S5 iteration cycles, the organism has reached a **local minimum** on active mutation count. The most viable next action would be to either (a) run a fitness build or gym experiment to validate probationary mutations, or (b) wait for R31–R38 to accumulate enough iterations for historical promotion.

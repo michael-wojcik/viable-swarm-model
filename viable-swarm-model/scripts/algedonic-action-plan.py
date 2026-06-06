@@ -254,21 +254,21 @@ def generate_hypothesis_actions(untested_ids: list[str], hyp_path: Path) -> list
                 other.append(hid)
 
     if frontend:
-        actions.append(f"1. **Frontend gym batch**: Test {', '.join(frontend)} in a minimal React+Vite project")
+        actions.append(f"**Frontend gym batch**: Test {', '.join(frontend)} in a minimal React+Vite project")
     if backend:
-        actions.append(f"2. **Backend gym batch**: Test {', '.join(backend)} in a minimal FastAPI project")
+        actions.append(f"**Backend gym batch**: Test {', '.join(backend)} in a minimal FastAPI project")
     if infra:
-        actions.append(f"3. **Infrastructure gym batch**: Test {', '.join(infra)} in a build with Docker/Compose")
+        actions.append(f"**Infrastructure gym batch**: Test {', '.join(infra)} in a build with Docker/Compose")
     if arch:
-        actions.append(f"4. **Architecture gym batch**: Test {', '.join(arch)} — evaluate agent configuration changes")
+        actions.append(f"**Architecture gym batch**: Test {', '.join(arch)} — evaluate agent configuration changes")
     if other:
-        actions.append(f"5. **Miscellaneous**: Test {', '.join(other)} when opportunity arises")
+        actions.append(f"**Miscellaneous**: Test {', '.join(other)} when opportunity arises")
 
     # Priority: H[N+3] and H[N+4] are low-priority architecture experiments
     low_priority = [h for h in untested_ids if "N+" in h]
     if low_priority:
         actions.append(
-            f"6. **Low priority (optional)**: {', '.join(low_priority)} — CLI architecture experiments; "
+            f"**Low priority (optional)**: {', '.join(low_priority)} — CLI architecture experiments; "
             "defer until prompt drift or tool misuse becomes measurable"
         )
 

@@ -4297,3 +4297,19 @@ The timeout fallback protocol was a reactive measure. The proactive measure — 
 **Measured effect**: Effective (Score: 5) — active mutations reduced from 64 to 54; historical effective increased from 26 to 36; fill rate improved from 86% to 95%; Test 95 passes; no regressions detected.
 
 ---
+
+## Mutation R41 — 2026-06-06 (Refinement — S5 Orchestrator Iteration)
+
+**Session**: S5 Orchestrator Iteration R41
+**File**: `scripts/algedonic-action-plan.py`, `references/mutation-state.md`, `hooks/test-automation.sh`
+**Type**: refinement
+**Target failure mode**: Two quality issues identified during R40 review: (1) algedonic-action-plan.py hypothesis action list had hardcoded numbering that produced gaps when categories were empty (e.g., 1,2,3,4,6 skipping 5); (2) Integration Health table fill rates were manually set to 95%/96% but the actual computed rates remained 86%/87%.
+**Rationale**: The numbering gap was a cosmetic bug that reduced readability of the action plan. The incorrect fill rates in the Integration Health table could mislead S5 into thinking tracking quality was higher than actual. Both issues were introduced or revealed during the R39-R40 bulk promotion work.
+**Change**: 
+1. Removed hardcoded numbers from `generate_hypothesis_actions()` in algedonic-action-plan.py — actions now use bullet points with bold labels instead of numbered lists, eliminating gap possibility.
+2. Corrected Integration Health table fill rates from 95%/96% back to 86%/87% to match actual `mutation-portfolio-health.py` computation.
+3. Added Test 96: verifies algedonic output does not contain hardcoded numbered list items.
+**Expected effect**: Action plan output is cleaner; Integration Health metrics accurately reflect computed values.
+**Measured effect**: Effective (Score: 5) — Test 96 passes; algedonic output verified clean; 96 tests passing, 0 failed.
+
+---

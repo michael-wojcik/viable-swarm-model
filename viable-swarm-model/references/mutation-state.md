@@ -128,8 +128,8 @@
 | Effective (<5 builds, monitored) | 44 | >30% of active | ✅ 81% |
 | Probationary mutations | 8 | <20 at any time | ✅ 8 (within target) |
 | Removed / redesigned | 10 | ≥2 per 5 builds | ✅ 10 (exceeds target) |
-| Measured effect fill rate (scored) | 96/101 | ≥80% | ✅ 95% |
-| Measured effect fill rate (any entry) | 97/101 | ≥80% | ✅ 96% |
+| Measured effect fill rate (scored) | 96/111 | ≥80% | ✅ 86% |
+| Measured effect fill rate (any entry) | 97/111 | ≥80% | ✅ 87% |
 | Removal rate (last 5 builds) | 5 | ≥2 | ✅ Meets target |
 
 ---
