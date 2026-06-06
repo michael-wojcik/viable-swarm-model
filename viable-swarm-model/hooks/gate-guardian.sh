@@ -25,22 +25,19 @@ if echo "$CONTENT" | grep -qiE '\bPASS\b|\bpass\b'; then
     FAIL_FOUND=false
 
     if [[ -d "$TEST_DIR" ]]; then
-        # Check pytest output
-        if find "$TEST_DIR" -maxdepth 1 -name '*pytest*' -o -name '*test*' | head -1 | grep -q .; then
-            for f in "$TEST_DIR"/*pytest* "$TEST_DIR"/*test* "$TEST_DIR"/*npm*; do
-                [[ -f "$f" ]] || continue
-                if grep -qiE 'failed|FAIL|error|Error' "$f" 2>/dev/null; then
-                    FAIL_FOUND=true
-                    break
-                fi
-            done
-        fi
+        for f in "$TEST_DIR"/*pytest* "$TEST_DIR"/*test* "$TEST_DIR"/*npm*; do
+            [[ -f "$f" ]] || continue
+            if grep -qiE 'failed|FAIL|error|Error' "$f" 2>/dev/null; then
+                FAIL_FOUND=true
+                break
+            fi
+        done
     fi
 
     # Also check for pytest-output.log or npm-test.log in build root
     for f in "$CWD/pytest-output.log" "$CWD/npm-test.log" "$CWD/test-output.log"; do
         [[ -f "$f" ]] || continue
-        if grep -qiE 'failed|FAIL' "$f" 2>/dev/null; then
+        if grep -qiE 'failed|FAIL|error|Error' "$f" 2>/dev/null; then
             FAIL_FOUND=true
             break
         fi
@@ -48,8 +45,9 @@ if echo "$CONTENT" | grep -qiE '\bPASS\b|\bpass\b'; then
 
     if [[ "$FAIL_FOUND" == true ]]; then
         echo "FRAUDULENT GATE PASS BLOCKED by gate-guardian.sh: Test results show failures. Fix ALL tests before claiming PASS." >&2
-        # Write marker for S5 to detect
-        echo "BLOCKED_BY_HOOK:gate-guardian:$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$TEST_DIR/.gate-guardian-blocks.log"
+        # Write marker for S5 to detect (ensure directory exists)
+        mkdir -p "$TEST_DIR" 2>/dev/null || true
+        echo "BLOCKED_BY_HOOK:gate-guardian:$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$TEST_DIR/.gate-guardian-blocks.log" 2>/dev/null || true
         exit 2
     fi
 fi

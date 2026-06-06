@@ -4313,3 +4313,20 @@ The timeout fallback protocol was a reactive measure. The proactive measure — 
 **Measured effect**: Effective (Score: 5) — Test 96 passes; algedonic output verified clean; 96 tests passing, 0 failed.
 
 ---
+
+---
+
+## Mutation R39 — 2026-06-06
+
+**Session**: S5 Orchestrator Iteration
+**File**: `hooks/gate-guardian.sh`, `hooks/test-automation.sh`
+**Type**: refinement
+**Rationale**: The `gate-guardian.sh` Phase 4 gate enforcement hook is registered in `~/.kimi/config.toml` as a PreToolUse hook running on EVERY file write, yet it had zero test coverage in `test-automation.sh`. Code review revealed three reliability issues:
+1. Redundant `find` command gated the first test-scanning loop; if no `*pytest*` or `*test*` files existed, the loop was skipped even when `*npm*` files existed. Removing the `find` check simplifies the code and ensures npm test outputs are always scanned.
+2. The `$CWD/` test scan used `failed|FAIL` but the `.kimi/` scan used `failed|FAIL|error|Error` — inconsistent patterns. Unified both to `failed|FAIL|error|Error`.
+3. If `.kimi/` did not exist but test failures were found in `$CWD/`, the hook crashed trying to write `.gate-guardian-blocks.log` to a missing directory, causing an uncontrolled exit code instead of the intended 2 (BLOCKED). Added `mkdir -p` and `|| true` to the log write.
+
+**Expected effect**: Phase 4 gate fraud detection is more reliable, with comprehensive test coverage (4 tests) ensuring blocks work for pytest, npm, and no-failure scenarios.
+
+**Measured effect**: **TO BE FILLED** — validate in next fitness build that no fraudulent gate passes occur.
+

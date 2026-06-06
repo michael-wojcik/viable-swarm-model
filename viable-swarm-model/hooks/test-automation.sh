@@ -71,6 +71,13 @@ else
     fail "syntax error detected"
 fi
 
+echo -n "TEST: Syntax check gate-guardian.sh ... "
+if bash -n "$SCRIPT_DIR/gate-guardian.sh"; then
+    pass
+else
+    fail "syntax error detected"
+fi
+
 # ============================================================================
 # Test 1: update-mutation-state.sh — dry-run mode
 # ============================================================================
@@ -4055,6 +4062,109 @@ if echo "$ALGEDONIC_OUTPUT" | grep -E '^- [0-9]+\. \*\*' > /dev/null 2>&1; then
     fail "algedonic output still contains hardcoded numbered list items"
 else
     pass
+fi
+
+# ============================================================================
+# Test 97: gate-guardian.sh blocks fraudulent PASS when pytest shows failures
+# ============================================================================
+
+echo -n "TEST: gate-guardian blocks when pytest output has failures ... "
+
+GATE_BUILD="$TMPDIR/gate97"
+mkdir -p "$GATE_BUILD/.kimi"
+echo "FAILED tests/test_auth.py::test_login - AssertionError" > "$GATE_BUILD/.kimi/pytest-output.log"
+
+PAYLOAD=$(jq -n \
+    --arg path "$GATE_BUILD/.kimi/phase4-gate.md" \
+    --arg content "# Phase 4 Gate\nStatus: PASS\n" \
+    --arg cwd "$GATE_BUILD" \
+    '{tool_input: {path: $path, content: $content}, cwd: $cwd}')
+
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/gate-guardian.sh" >/dev/null 2>&1 || RC=$?
+
+# The hook should exit 2 (BLOCKED)
+if [ "$RC" -eq 2 ] && [ -f "$GATE_BUILD/.kimi/.gate-guardian-blocks.log" ]; then
+    pass
+else
+    fail "expected exit code 2 and block log, got $RC"
+fi
+
+# ============================================================================
+# Test 98: gate-guardian.sh blocks fraudulent PASS when npm test shows failures
+# ============================================================================
+
+echo -n "TEST: gate-guardian blocks when npm test output has failures ... "
+
+GATE_BUILD="$TMPDIR/gate98"
+mkdir -p "$GATE_BUILD/.kimi"
+echo "Test Suites: 1 failed, 0 passed" > "$GATE_BUILD/.kimi/npm-test.log"
+
+PAYLOAD=$(jq -n \
+    --arg path "$GATE_BUILD/.kimi/phase4-gate.md" \
+    --arg content "# Phase 4 Gate\nStatus: PASS\n" \
+    --arg cwd "$GATE_BUILD" \
+    '{tool_input: {path: $path, content: $content}, cwd: $cwd}')
+
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/gate-guardian.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 2 ]; then
+    pass
+else
+    fail "expected exit code 2, got $RC"
+fi
+
+# ============================================================================
+# Test 99: gate-guardian.sh allows PASS when no test failures exist
+# ============================================================================
+
+echo -n "TEST: gate-guardian allows when all tests pass ... "
+
+GATE_BUILD="$TMPDIR/gate99"
+mkdir -p "$GATE_BUILD/.kimi"
+echo "passed" > "$GATE_BUILD/.kimi/pytest-output.log"
+
+PAYLOAD=$(jq -n \
+    --arg path "$GATE_BUILD/.kimi/phase4-gate.md" \
+    --arg content "# Phase 4 Gate\nStatus: PASS\n" \
+    --arg cwd "$GATE_BUILD" \
+    '{tool_input: {path: $path, content: $content}, cwd: $cwd}')
+
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/gate-guardian.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ]; then
+    pass
+else
+    fail "expected exit code 0, got $RC"
+fi
+
+# ============================================================================
+# Test 100: gate-guardian.sh allows non-PASS gate content
+# ============================================================================
+
+echo -n "TEST: gate-guardian allows when gate does not claim PASS ... "
+
+GATE_BUILD="$TMPDIR/gate100"
+mkdir -p "$GATE_BUILD/.kimi"
+echo "FAILED tests/test_auth.py" > "$GATE_BUILD/.kimi/pytest-output.log"
+
+PAYLOAD=$(jq -n \
+    --arg path "$GATE_BUILD/.kimi/phase4-gate.md" \
+    --arg content "# Phase 4 Gate\nStatus: FAIL\n" \
+    --arg cwd "$GATE_BUILD" \
+    '{tool_input: {path: $path, content: $content}, cwd: $cwd}')
+
+RC=0
+if ! echo "$PAYLOAD" | bash "$SCRIPT_DIR/gate-guardian.sh" >/dev/null 2>&1; then
+    RC=$?
+fi
+
+if [ "$RC" -eq 0 ]; then
+    pass
+else
+    fail "expected exit code 0 for non-PASS gate, got $RC"
 fi
 
 # ============================================================================
