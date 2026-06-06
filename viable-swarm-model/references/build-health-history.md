@@ -1375,3 +1375,42 @@ Without a fitness build or additional S5 iteration cycles, the organism has reac
 ### Next Highest-Leverage Constraint
 **System 3 (Audit/Control) / S3→S1 channel — knowledge-broker.sh is registered but deprecated**: The `knowledge-broker.sh` hook is still registered in `~/.kimi/config.toml` as a SessionEnd hook, but the file itself says it has a "known regex bug in legacy hook" and `auto-broker-update.sh` should be used instead. This creates confusion and potential reliability issues. The hook should either be removed from `config.toml` or fixed. Additionally, `session-start.sh.DEPRECATED-FB28` exists but is still referenced in `diagnostic-router.sh` as a known hook. Cleaning up deprecated hooks would reduce cognitive load and prevent false positives in diagnostic routing. Alternatively, **System 5 (Policy) / S5→S5 channel — integration health metrics remain stale**: The mutation-state.md Integration Health table still shows 77 active mutations (actual is 57), 17.1% probationary ratio (actual is 14.0%), and 10 removed/redesigned (actual is 18). These stale metrics distort S5's perception of organism health.
 
+
+---
+
+## 2026-06-06 — S5 Orchestrator Iteration (R42)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 channel — Integration Health metrics in mutation-state.md were stale and misleading**: The Integration Health table showed 54 active mutations when actual was 57 (and growing with each new mutation), 44 effective when actual was 47, and 10 removed/redesigned when actual was 18. The root cause: metrics were hardcoded and never updated after mutations were added. Additionally, `mutation-portfolio-health.py` only counted `status == "removed"` for the "Removed / redesigned" metric, missing 8 redesigned mutations. This stale data distorted S5's perception of organism health, potentially causing overreaction to false alarms or underreaction to real issues.
+
+### Change Made
+**Refinement mutation R42**: Fixed stale metrics and added auto-validation.
+- Updated `mutation-portfolio-health.py` to count both `removed` and `redesigned` statuses in `removed_count`
+- Updated all Integration Health metrics to match computed values:
+  - Active: 58 (was 54)
+  - Historical effective: 36 (62% of active)
+  - Effective + monitor: 50 (86% of active)
+  - Probationary: 8 (within target)
+  - Removed / redesigned: 18 (was 10)
+  - Fill rates: 86.6% scored, 87.5% any entry
+- Added Test 91b: verifies redesigned mutations are counted in removed_count
+- Added Test 113: auto-validates that the table's active count matches the computed value from `mutation-portfolio-health.py`
+
+### Test Results
+- `bash hooks/test-automation.sh`: **121 passed, 0 failed** (was 119 passed, 0 failed)
+- Test 91b: redesigned mutations counted in removed_count → PASS
+- Test 113: table active count matches computed value → PASS
+
+### Files Modified
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/scripts/mutation-portfolio-health.py`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- Hash: bb0ab78758fdfacfdf3459bea71fef79a7aa670d
+
+### Next Highest-Leverage Constraint
+**System 3 (Audit/Control) / S3→S1 channel — knowledge-broker.sh is registered but deprecated**: The `knowledge-broker.sh` hook is still registered in `~/.kimi/config.toml` as a SessionEnd hook, but the file itself says it has a "known regex bug in legacy hook" and `auto-broker-update.sh` should be used instead. The `diagnostic-router.sh` already routes knowledge-broker failures to "Run auto-broker-update.sh instead." This creates confusion and potential reliability issues. The hook should either be removed from `config.toml` or fixed. Alternatively, **System 5 (Policy) / S5→S1 channel — test-automation.sh is 143KB and growing**: The test suite has grown to 121 tests. While all pass, the script is becoming unwieldy. A test suite refactoring (splitting into sub-files, adding a test runner) could improve maintainability. However, this is lower priority than fixing deprecated infrastructure.
+
