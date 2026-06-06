@@ -1308,3 +1308,35 @@ Without a fitness build or additional S5 iteration cycles, the organism has reac
 ### Next Highest-Leverage Constraint
 **System 3 (Audit/Control) / S3→S1 channel — boundary-guardian.sh and structural-guardian.sh still have zero test coverage**: Both hooks are also registered in `~/.kimi/config.toml` as PreToolUse hooks with 5-second timeouts. The `boundary-guardian.sh` enforces Rule 2 (Phase 6/7 Boundary Discipline) and the `structural-guardian.sh` enforces Rule 3 (Structural Mutation Discipline). Without tests, bugs in these hooks could allow inline fixes or unapproved structural mutations. Additionally, the `boundary-guardian.sh` uses `jq` to parse payload but has no fallback if `jq` is missing, and `structural-guardian.sh` checks `vsm-main.yaml` but the file is at `agents/vsm-main.yaml` not the root — the regex `vsm-main\.yaml$` would match both paths, but this should be verified.
 
+
+---
+
+## 2026-06-06 — S5 Orchestrator Iteration (R40)
+
+### Diagnosed Constraint
+**System 3 (Audit/Control) / S3→S1 channel — boundary-guardian.sh and structural-guardian.sh have zero test coverage**: Both hooks are registered in `~/.kimi/config.toml` as PreToolUse hooks running on every file write. `boundary-guardian.sh` enforces Rule 2 (Phase 6/7 Boundary Discipline) by blocking inline fixes when `synthesis-integration.md` exists but `re-audit-report.md` does not. `structural-guardian.sh` enforces Rule 3 (Structural Mutation Discipline) by blocking changes to `SKILL.md`, `vsm-main.yaml`, and `/agents/*.md` unless `.kimi/.structural-mutation-approved` exists. Despite being Tier A enforcement, both had zero tests.
+
+### Change Made
+**Refinement mutation R40**: Added comprehensive test coverage for both hooks.
+- Syntax checks in Preliminary section for both scripts
+- 3 boundary-guardian tests: block source write during boundary, allow source write after re-audit, allow non-source files
+- 4 structural-guardian tests: block SKILL.md without marker, block agent file without marker, allow when marker exists, allow non-structural files
+- Updated active mutation count test to reflect new mutation (56)
+
+### Test Results
+- `bash hooks/test-automation.sh`: **110 passed, 0 failed** (was 101 passed, 0 failed)
+- All 7 new hook behavior tests pass
+- All 2 new syntax checks pass
+
+### Files Modified
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- Hash: 468c994cf12d73e93df67f2d0c168751c7ebed2a
+
+### Next Highest-Leverage Constraint
+**System 3 (Audit/Control) / S3→S1 channel — decision-enforcer.sh and context-pressure.sh have zero test coverage**: Both are registered in `~/.kimi/config.toml` (PostToolUse and PreCompact respectively). The `decision-enforcer.sh` verifies decisions are logged in `references/decisions.md` when plan.md or approval markers are written. The `context-pressure.sh` warns when context compaction exceeds 200k tokens. Neither has tests. Additionally, `knowledge-broker.sh` is registered but deprecated (the file itself notes it has a "known regex bug in legacy hook" and `auto-broker-update.sh` should be used instead). The `diagnostic-router.sh` has a self-test (`--test`) but is not integrated into `test-automation.sh`.
+
