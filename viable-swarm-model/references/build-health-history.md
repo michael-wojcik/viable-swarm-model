@@ -1509,7 +1509,7 @@ Without a fitness build or additional S5 iteration cycles, the organism has reac
 - `viable-swarm-model/references/build-health-history.md`
 
 ### Git Commit
-- Hash: [to be filled after commit]
+- Hash: 8636826
 
 ### Next Highest-Leverage Constraint
 **System 5 (Policy) / S5→S1 channel — test-automation.sh is now 156KB+ and 5100+ lines**: While all 134 tests pass, the script is becoming unwieldy. A test suite refactoring (splitting into sub-files by system, adding a test runner with selective execution) would improve maintainability. The script has grown from ~50 tests to 134 tests over multiple S5 iterations. Alternatively, **System 5 (Policy) / S5→S5 channel — active mutations at 62 exceed target of 50**: The organism is accumulating effective mutations faster than they're being promoted to historical. This is not yet critical (all other metrics are green), but it warrants attention. A future iteration could promote R31-R46 to historical once they reach 5 builds tested, or consolidate related mutations.
