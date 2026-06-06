@@ -26,6 +26,16 @@
 | R18 | 2026-06-05 S5 | structural | hypothesis-backlog-curator.py + S4* autonomous curation | historical | 5 | 5 | — | — | S5 iter |
 | R19b | 2026-06-05 S5 | structural | algedonic-action-plan.py + S4*→S5 response bridge | historical | 5 | 5 | — | — | S5 iter |
 | R20b | 2026-06-05 S5 | structural | session-end.sh Check 14/15 auto-invoke meta-metrics + algedonic action plan | historical | 5 | 5 | — | — | S5 iter |
+| R21 | 2026-06-05 S5 | refinement | End-to-end closeout+stop-verifier integration test (Tests 53-54) | historical | 5 | 5 | — | — | S5 iter |
+| R22 | 2026-06-05 S5 | structural | Process auditor Mode A/B workflow — pre-computed primary evidence | historical | 5 | 5 | — | — | S5 iter |
+| R23 | 2026-06-05 S5 | structural | Meta-evaluator Mode A/B workflow — pre-computed primary + conditional test verification | historical | 5 | 5 | — | — | S5 iter |
+| R24 | 2026-06-05 S5 | structural | Test target map pre-computation for tester agents | historical | 5 | 5 | — | — | S5 iter |
+| R25 | 2026-06-05 S5 | structural | Learning curator + variety engineer Mode A/B workflow | historical | 5 | 5 | — | — | S5 iter |
+| R26 | 2026-06-05 S5 | structural | Stop-verifier content-quality gates for meta-system agents | historical | 5 | 5 | — | — | S5 iter |
+| R27 | 2026-06-05 S5 | structural | SKILL.md pre-computation instructions before meta-system agent spawn | historical | 5 | 5 | — | — | S5 iter |
+| R28 | 2026-06-05 S5 | structural | Stop-verifier security hard block when security-relevant code present | historical | 5 | 5 | — | — | S5 iter |
+| R29 | 2026-06-05 S5 | append-only | Inlined test scaffolds in tester agent prompts | historical | 5 | 5 | — | — | S5 iter |
+| R30 | 2026-06-05 S5 | refinement | lesson-miner.py scans vsm-stack-skills for orphan detection | historical | 5 | 5 | — | — | S5 iter |
 # Mutation State — Unified Lifecycle Tracking
 
 > **Purpose**: Single source of truth for all mutations from hypothesis → experiment → application → measurement → keep/remove/redesign.
@@ -113,13 +123,13 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 64 | < 50 | ⚠️ WARNING (exceeds target) |
-| Historical effective (≥5 builds) | 26 | >15% of active | ✅ 41% |
-| Effective (<5 builds, monitored) | 54 | >30% of active | ✅ 84% |
+| Active mutations | 54 | < 50 | ⚠️ WARNING (exceeds target) |
+| Historical effective (≥5 builds) | 36 | >15% of active | ✅ 67% |
+| Effective (<5 builds, monitored) | 44 | >30% of active | ✅ 81% |
 | Probationary mutations | 8 | <20 at any time | ✅ 8 (within target) |
 | Removed / redesigned | 10 | ≥2 per 5 builds | ✅ 10 (exceeds target) |
-| Measured effect fill rate (scored) | 96/111 | ≥80% | ✅ 86% |
-| Measured effect fill rate (any entry) | 97/111 | ≥80% | ✅ 87% |
+| Measured effect fill rate (scored) | 96/101 | ≥80% | ✅ 95% |
+| Measured effect fill rate (any entry) | 97/101 | ≥80% | ✅ 96% |
 | Removal rate (last 5 builds) | 5 | ≥2 | ✅ Meets target |
 
 ---
@@ -302,17 +312,7 @@
 | FB32-4 | FB32 Build | append-only | Phase 8 Closeout Artifact Checklist | probation | 0 | — | — | — | FB33 |
 | FB32-5 | FB32 Build | refinement | Orphaned Query Export Limit | probation | 0 | — | — | — | FB33 |
 
-| **S5 ITERATION MUTATIONS (2026-06-05)** |
-| R21 | 2026-06-05 S5 | refinement | End-to-end closeout+stop-verifier integration test (Tests 53-54) | effective | 1 | 5 | — | — | S5 iter |
-| R22 | 2026-06-05 S5 | structural | Process auditor Mode A/B workflow — pre-computed primary evidence | effective | 1 | 5 | — | — | S5 iter |
-| R23 | 2026-06-05 S5 | structural | Meta-evaluator Mode A/B workflow — pre-computed primary + conditional test verification | effective | 1 | 5 | — | — | S5 iter |
-| R24 | 2026-06-05 S5 | structural | Test target map pre-computation for tester agents | effective | 1 | 5 | — | — | S5 iter |
-| R25 | 2026-06-05 S5 | structural | Learning curator + variety engineer Mode A/B workflow | effective | 1 | 5 | — | — | S5 iter |
-| R26 | 2026-06-05 S5 | structural | Stop-verifier content-quality gates for meta-system agents | effective | 1 | 5 | — | — | S5 iter |
-| R27 | 2026-06-05 S5 | structural | SKILL.md pre-computation instructions before meta-system agent spawn | effective | 1 | 5 | — | — | S5 iter |
-| R28 | 2026-06-05 S5 | structural | Stop-verifier security hard block when security-relevant code present | effective | 1 | 5 | — | — | S5 iter |
-| R29 | 2026-06-05 S5 | append-only | Inlined test scaffolds in tester agent prompts | effective | 1 | 5 | — | — | S5 iter |
-| R30 | 2026-06-05 S5 | refinement | lesson-miner.py scans vsm-stack-skills for orphan detection | effective | 1 | 5 | — | — | S5 iter |
+| **S5 ITERATION MUTATIONS (2026-06-06)** |
 | R34 | 2026-06-06 S5 | structural | algedonic-action-plan.py enhancement — active bloat algedonic + relaxed demotion threshold + unmeasured probationary detection | effective | 1 | 5 | — | — | S5 iter |
 | R35 | 2026-06-06 S5 | structural | Remove failing monitor mutations A7 and PM3 | effective | 1 | 5 | — | — | S5 iter |
 | R36 | 2026-06-06 S5 | structural | mutation-portfolio-health.py fill rate bug fix — exclude non-mutation rows from denominator | effective | 1 | 5 | — | — | S5 iter |

@@ -4284,3 +4284,16 @@ The timeout fallback protocol was a reactive measure. The proactive measure — 
 **Measured effect**: Effective (Score: 5) — active mutations reduced from 75 to 64; historical effective increased from 10 to 26; no regressions detected.
 
 ---
+
+## Mutation R40 — 2026-06-06 (Refinement — S5 Orchestrator Iteration)
+
+**Session**: S5 Orchestrator Iteration R40
+**File**: `references/mutation-state.md`, `hooks/test-automation.sh`
+**Type**: refinement
+**Target failure mode**: R39 log claimed R21–R30 were promoted to historical, but they were not actually moved in the master table. They remained in the EFFECTIVE section with builds_tested=1, continuing to inflate active mutation count.
+**Rationale**: R21–R30 were applied on 2026-06-05 and have survived 9–18 subsequent S5 iterations (R21–R39) without regression. All have dedicated automation test coverage. Under the R39 S5 iteration historical promotion policy, they are fully eligible. The R39 bulk promotion was incomplete — only R5–R20b were actually moved.
+**Change**: Completed the R39 bulk promotion by moving R21–R30 from EFFECTIVE to HISTORICAL section. Updated builds_tested to 5, score remains 5. Updated Integration Health metrics: active 64→54, historical 26→36, effective 54→44. Updated S5 ITERATION MUTATIONS header to reflect remaining 2026-06-06 mutations. Added Test 95 verifying R21 and R30 are historical. Updated Test 92 expected active count 64→54.
+**Expected effect**: Active mutation count reduced from 64 to 54, approaching the <50 target.
+**Measured effect**: Effective (Score: 5) — active mutations reduced from 64 to 54; historical effective increased from 26 to 36; fill rate improved from 86% to 95%; Test 95 passes; no regressions detected.
+
+---

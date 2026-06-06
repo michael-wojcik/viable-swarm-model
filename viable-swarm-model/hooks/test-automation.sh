@@ -3957,10 +3957,26 @@ for line in text.splitlines():
 print(len(rows))
 ")
 
-if [ "$ACTIVE_COUNT" -eq 64 ]; then
+if [ "$ACTIVE_COUNT" -eq 54 ]; then
     pass
 else
-    fail "expected 64 active mutations, got $ACTIVE_COUNT"
+    fail "expected 54 active mutations, got $ACTIVE_COUNT"
+fi
+
+# ============================================================================
+# Test 95: R21-R30 are promoted to HISTORICAL (S5 iteration policy)
+# ============================================================================
+
+echo -n "TEST: R21-R30 are historical per S5 iteration policy ... "
+
+MSTATE_REAL="/Users/mj/vsm/viable-swarm-model/references/mutation-state.md"
+R21_STATUS=$(grep -E '^\| R21\b' "$MSTATE_REAL" | head -1)
+R30_STATUS=$(grep -E '^\| R30\b' "$MSTATE_REAL" | head -1)
+
+if echo "$R21_STATUS" | grep -q 'historical' && echo "$R30_STATUS" | grep -q 'historical'; then
+    pass
+else
+    fail "R21 or R30 not historical"
 fi
 
 # ============================================================================
