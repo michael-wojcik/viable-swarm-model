@@ -1080,3 +1080,44 @@ Alternatively, **System 4→S4 channel**: The organism now has 4 pre-computation
 ### Next Highest-Leverage Constraint
 **System 5 (Policy) / S5→S5 channel — active mutation bloat persists at 76** (target <50). Even after removing 2 ineffective mutations, the count remains 52% above target. The 65 effective mutations are mostly S5 iteration infrastructure (R5–R33) that need ≥5 fitness builds to reach historical. Without an actual fitness build, further reduction requires either: (a) consolidate overlapping S5 iteration mutations into fewer broader rules, (b) remove more monitor mutations (FB28-S5 score 2 with 1 build; FB31-5 score 3 with 1 build), or (c) revise the <50 target. Alternatively, **System 4→S4 channel**: The `vsm_learning_curator` and `vsm_variety_engineer` still have **0% empirical exercise rate** despite all enforcement mechanisms being in place.
 
+
+---
+
+## 2026-06-06 — S5 Orchestrator Iteration (R36)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 channel — false measured fill rate WARNING**: The Integration Health table reported **Measured effect fill rate (scored): 73/99 = 74%** (target ≥80%), triggering a persistent ⚠️ WARNING. Investigation revealed that `mutation-portfolio-health.py` counted ALL deduplicated pipe-separated rows (118 total) in the fill rate denominator, including **15 capability matrix rows** from the "Capability Matrix" table in mutation-state.md. These rows have unrecognized statuses like "2 timeouts in FB30" and do not contribute to the numerator, deflating the fill rate by ~12 percentage points. The actual tracked mutation count is 103, with 88 scored = **85.4%**. The WARNING was completely false and had been distracting S5 from real constraints for multiple iterations.
+
+### Change Made
+**Data integrity fix R36**: Corrected mutation-portfolio-health.py fill rate calculation.
+- Added `tracked_count` counter that only increments for rows with recognized mutation statuses (`probation`, `effective`, `monitor`, `ineffective`, `removed`, `historical`, `redesigned`)
+- Changed fill rate denominator from `len(rows)` (all parsed rows = 118) to `tracked_count` (actual mutations = 103)
+- Fixed `datetime.utcnow()` deprecation warning (Python 3.14) by using `datetime.now(timezone.utc)`
+- Updated Integration Health table in `mutation-state.md`: scored fill rate **85%** ✅, any entry **86%** ✅
+- Added Test 91: verifies fill rate excludes capability matrix rows using a mock mutation-state.md with embedded capability matrix
+- Fixed Test 90 bug: `$HOME` was polluted by earlier tests (Test 77 modified it); changed to use absolute path `/Users/mj/vsm/...`
+
+### Test Results
+- `bash hooks/test-automation.sh`: **91 passed, 0 failed** (was 90 passed, 0 failed)
+- Test 90: A7 and PM3 are properly REMOVED (fixed $HOME pollution bug)
+- Test 91: Fill rate correctly excludes non-mutation rows (50.0% for 1 scored out of 2 tracked, not 1/3)
+- `validate-mutation-state.sh`: ✅ PASS
+- Portfolio health recomputed: scored fill rate **85.4%** (was 73.9%), any entry **86.4%** (was 74.8%)
+
+### Files Modified
+- `viable-swarm-model/scripts/mutation-portfolio-health.py`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 5 (Policy) / S5→S5 channel — active mutation bloat at 76** (target <50) remains the primary CRITICAL constraint. With the false fill rate WARNING resolved, S5 can now focus on real portfolio reduction. The 3 remaining monitor mutations have mixed evidence:
+- **FB28-S5** (score 2, 1 build): "5 timeouts in FB30; fallback protocol insufficient" — strong qualitative failure evidence
+- **M-FB30-1** (score 3, 1 build): "Architect task splitting" — borderline, needs more builds
+- **FB31-5** (score 3, 1 build): "Knowledge broker auto-update reminder" — borderline
+
+Without a fitness build, the organism cannot promote effective mutations to historical (≥5 builds). The remaining paths to reduce active mutations are: (a) remove FB28-S5 (clear failure evidence), (b) consolidate overlapping S5 iteration mutations (R5–R33 = 29 mutations), or (c) revise the <50 target to reflect the organism's actual infrastructure complexity.
+

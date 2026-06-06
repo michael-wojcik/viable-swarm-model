@@ -3866,17 +3866,52 @@ fi
 
 echo -n "TEST: A7 and PM3 are redesignated as REMOVED in mutation-state.md ... "
 
-REAL_HOME="${HOME:-}"
-A7_STATUS=$(HOME="$REAL_HOME" grep -E '^\| ~~A7~~' "$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md" | head -1)
-PM3_STATUS=$(HOME="$REAL_HOME" grep -E '^\| ~~PM3~~' "$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md" | head -1)
+# Use absolute path; do NOT rely on $HOME which may have been modified by earlier tests
+MSTATE_REAL="/Users/mj/vsm/viable-swarm-model/references/mutation-state.md"
+A7_STATUS=$(grep -E '^\| ~~A7~~' "$MSTATE_REAL" | head -1)
+PM3_STATUS=$(grep -E '^\| ~~PM3~~' "$MSTATE_REAL" | head -1)
 
 if echo "$A7_STATUS" | grep -q 'REMOVED' && \
    echo "$PM3_STATUS" | grep -q 'REMOVED' && \
-   ! HOME="$REAL_HOME" grep -E '^\| A7\b' "$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md" | grep -qv 'REMOVED' && \
-   ! HOME="$REAL_HOME" grep -E '^\| PM3\b' "$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md" | grep -qv 'REMOVED'; then
+   ! grep -E '^\| A7\b' "$MSTATE_REAL" | grep -qv 'REMOVED' && \
+   ! grep -E '^\| PM3\b' "$MSTATE_REAL" | grep -qv 'REMOVED'; then
     pass
 else
     fail "A7 or PM3 not properly redesignated as REMOVED"
+fi
+
+# ============================================================================
+# Test 91: mutation-portfolio-health.py excludes non-mutation rows from fill rate
+# ============================================================================
+
+echo -n "TEST: mutation-portfolio-health.py fill rate excludes capability matrix rows ... "
+
+cat > "$TMPDIR/mock-mutation-state-91.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| M1 | Test | append-only | Test failure | effective | 5 | 5 | — | — | — |
+| M2 | Test | append-only | Test failure | probation | 0 | — | — | — | — |
+
+## Capability Matrix
+| Agent | Domain | Success Rate | Last 3 Scores | Known Failure Modes | Recommended Max Task Size |
+|---|---|---|---|---|---|
+| vsm_backend_coder | Python/FastAPI | 85% | 4, 4, 4 | 2 timeouts in FB30 | 500 lines |
+EOF
+
+mkdir -p "$TMPDIR/build91/.kimi"
+
+RC=0
+python3 "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" \
+  --build-dir "$TMPDIR/build91" \
+  --mutation-state "$TMPDIR/mock-mutation-state-91.md" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && \
+   grep -q '"measured_fill_rate_scored": 50.0' "$TMPDIR/build91/.kimi/mutation-portfolio-health.json" && \
+   grep -q '"measured_fill_rate_any": 50.0' "$TMPDIR/build91/.kimi/mutation-portfolio-health.json"; then
+    pass
+else
+    fail "fill rate incorrectly counted capability matrix rows in denominator"
 fi
 
 # ============================================================================

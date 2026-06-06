@@ -150,7 +150,7 @@ def parse_mutation_state(path: Path) -> tuple[list[MutationRow], list[str]]:
 
 
 def compute_portfolio_health(rows: list[MutationRow]) -> PortfolioHealth:
-    from datetime import datetime
+    from datetime import datetime, timezone
 
     total_active = 0
     probationary = 0
@@ -159,6 +159,7 @@ def compute_portfolio_health(rows: list[MutationRow]) -> PortfolioHealth:
     ineffective = 0
     removed = 0
     historical_effective = 0
+    tracked_count = 0
     scored_count = 0
     any_entry_count = 0
 
@@ -169,6 +170,14 @@ def compute_portfolio_health(rows: list[MutationRow]) -> PortfolioHealth:
     historical_promotions = []
 
     for row in rows:
+        # Only count recognized mutation statuses for fill rate denominator.
+        # Skip capability matrix rows and other non-mutation tables that happen
+        # to have 6+ pipe-separated fields.
+        if row.status not in ("probation", "effective", "monitor", "ineffective",
+                               "removed", "historical", "redesigned"):
+            continue
+        tracked_count += 1
+
         # Categorize by status
         if row.status in ("probation", "effective", "monitor", "ineffective"):
             total_active += 1
@@ -254,9 +263,9 @@ def compute_portfolio_health(rows: list[MutationRow]) -> PortfolioHealth:
     # Probationary ratio
     prob_ratio = round((probationary / total_active) * 100, 1) if total_active > 0 else 0.0
 
-    # Measured fill rates
-    scored_rate = round((scored_count / len(rows)) * 100, 1) if rows else 0.0
-    any_rate = round((any_entry_count / len(rows)) * 100, 1) if rows else 0.0
+    # Measured fill rates — denominator is tracked mutations only, not all parsed rows
+    scored_rate = round((scored_count / tracked_count) * 100, 1) if tracked_count else 0.0
+    any_rate = round((any_entry_count / tracked_count) * 100, 1) if tracked_count else 0.0
 
     # Removal rate last 5 builds — count removed mutations with source from recent builds
     # Heuristic: look for "FB30", "FB31", "FB32", etc. in source or build-derived IDs
@@ -284,7 +293,7 @@ def compute_portfolio_health(rows: list[MutationRow]) -> PortfolioHealth:
         consolidations_suggested=consolidations,
         removal_rate_last_5=recent_removed,
         data_integrity_errors=[],
-        computed_at=datetime.utcnow().isoformat() + "Z",
+        computed_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
     )
 
 
