@@ -4877,3 +4877,25 @@ These gaps represent a System 3 (Audit/Control) → System 1 (Implementation) ch
 
 **Measured effect**: **5/5** — Variety score 0.71→0.76. All 163 automation suite tests pass. organism-vitals.py variety breakdown is now accurate.
 
+
+---
+
+## Mutation R63 — 2026-06-06
+
+**Session**: S5 Orchestrator Iteration — lesson-miner.py append bug fix + data quality restoration
+**File**: `scripts/lesson-miner.py`, `references/lesson-patterns.md`
+**Type**: bug fix
+**Rationale**: **System 4 (Adaptation/Intelligence) / S4→S4 channel — corrupted longitudinal pattern data**: During R61/R62 investigation of the organism state, `references/lesson-patterns.md` was discovered to contain 3 duplicate copies of the full report. Root cause: `lesson-miner.py` opened the output file in append mode (`"a"`) instead of write mode (`"w"`), causing each run to append rather than replace the report. This corrupted the longitudinal pattern data used by S4* agents for environmental scanning, inflating occurrence counts and producing confusing duplicate sections.
+
+**Expected effect**:
+- lesson-miner.py now overwrites `lesson-patterns.md` on each run, producing a single clean report.
+- Re-running lesson-miner restored clean data: 27 builds scanned, 227 lessons, 4 patterns, 0 orphans.
+- Future lesson-miner runs will no longer produce duplicate output.
+
+**Files modified**:
+- `scripts/lesson-miner.py` — Changed `OUTPUT_FILE.open("a", ...)` to `OUTPUT_FILE.open("w", ...)`; updated log message from "Appended" to "Wrote".
+- `references/lesson-patterns.md` — Regenerated with single clean report (was 3 duplicate copies).
+- `hooks/test-automation.sh` — Test 82 verifies lesson-miner overwrites (not appends) output file.
+
+**Measured effect**: **5/5** — lesson-patterns.md now contains exactly 1 report copy. All 164 automation suite tests pass.
+

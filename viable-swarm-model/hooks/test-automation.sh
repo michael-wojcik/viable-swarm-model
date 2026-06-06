@@ -3850,6 +3850,59 @@ else
 fi
 
 # ============================================================================
+# Test 82: lesson-miner.py overwrites (not appends) lesson-patterns.md
+# ============================================================================
+
+echo -n "TEST: lesson-miner.py overwrites lesson-patterns.md instead of appending ... "
+
+mkdir -p "$TMPDIR/build82/vsm-fitness-builds/coach/FB82/.kimi"
+mkdir -p "$TMPDIR/build82/vsm/viable-swarm-model/references"
+mkdir -p "$TMPDIR/build82/vsm/viable-swarm-model/scripts"
+
+# Pre-seed the output file with dummy content
+cat > "$TMPDIR/build82/vsm/viable-swarm-model/references/lesson-patterns.md" << 'EOF'
+OLD DUMMY CONTENT THAT SHOULD BE REPLACED
+EOF
+
+cp "$SCRIPT_DIR/../scripts/lesson-miner.py" "$TMPDIR/build82/vsm/viable-swarm-model/scripts/"
+
+# Create a minimal lessons.md
+mkdir -p "$TMPDIR/build82/vsm-fitness-builds/coach/FB82/.kimi"
+cat > "$TMPDIR/build82/vsm-fitness-builds/coach/FB82/.kimi/lessons.md" << 'EOF'
+# Lessons
+## Lesson 1
+**Source**: test.py
+**Finding**: Test finding one.
+**Fix**: Test fix one.
+**Verification**: Verified.
+
+## Lesson 2
+**Source**: test2.py
+**Finding**: Test finding two.
+**Fix**: Test fix two.
+**Verification**: Verified.
+EOF
+
+PREV_HOME="$HOME"
+PREV_CWD="$(pwd)"
+export HOME="$TMPDIR/build82"
+cd "$TMPDIR/build82"
+python3 "$TMPDIR/build82/vsm/viable-swarm-model/scripts/lesson-miner.py" >/dev/null 2>&1
+export HOME="$PREV_HOME"
+cd "$PREV_CWD"
+
+OUTPUT=$(cat "$TMPDIR/build82/vsm/viable-swarm-model/references/lesson-patterns.md" 2>/dev/null)
+HAS_OLD=$(echo "$OUTPUT" | grep -c "OLD DUMMY CONTENT" || true)
+HAS_NEW=$(echo "$OUTPUT" | grep -c "Lesson Patterns Report" || true)
+SECTION_COUNT=$(echo "$OUTPUT" | grep -c "^# Lesson Patterns" || true)
+
+if [ "$HAS_OLD" -eq 0 ] && [ "$HAS_NEW" -ge 1 ] && [ "$SECTION_COUNT" -eq 1 ]; then
+    pass
+else
+    fail "lesson-miner should overwrite (not append) lesson-patterns.md"
+fi
+
+# ============================================================================
 # Test 90: Removed monitor mutations A7 and PM3 are in REMOVED/REDESIGNED
 # ============================================================================
 

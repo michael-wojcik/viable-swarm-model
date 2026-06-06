@@ -683,10 +683,10 @@ def main() -> int:
     report = generate_report(entries, patterns, orphans, correlation, agent_risks)
 
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
-    with OUTPUT_FILE.open("a", encoding="utf-8") as f:
+    with OUTPUT_FILE.open("w", encoding="utf-8") as f:
         f.write(report)
 
-    eprint(f"[lesson-miner] Appended report to {OUTPUT_FILE}")
+    eprint(f"[lesson-miner] Wrote report to {OUTPUT_FILE}")
 
     print("Lesson Mining Complete")
     print(f"  Builds scanned: {len({e['build_id'] for e in entries})}")

@@ -2027,3 +2027,34 @@ Without a fitness build or additional S5 iteration cycles, the organism has reac
 ### Next Highest-Leverage Constraint
 **System 4 (Adaptation/Intelligence) / S4→S5 channel — skill variety at 0.75 with 4 unused Full skills**: architecture-patterns, frontend-patterns, integration-patterns, and research-patterns have 0 builds in the effectiveness log. Unlike agent variety (which was a documentation fix), skill variety requires actual build exercise. The next fitness build that uses these skills would push skill variety to 1.0 (16/16) and the composite variety score to ~0.83. Alternatively, **System 4 (Adaptation/Intelligence) / S4→S4 channel — meta-system agents still unmeasured**: 6 agents (the 4 newly added to Capability Matrix plus vsm_variety_engineer and vsm_learning_curator) have never been empirically exercised. The stop-verifier content-quality gates exist but lack validation.
 
+
+---
+
+## 2026-06-06 — S5 Orchestrator Iteration (R63)
+
+### Diagnosed Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — corrupted longitudinal pattern data**: `references/lesson-patterns.md` contained 3 duplicate copies of the full report. Root cause: `lesson-miner.py` used `open("a")` (append mode) instead of `open("w")` (write mode), causing each run to append rather than replace. This inflated occurrence counts and produced duplicate "Recurring Patterns", "Lesson Orphans", and "Agent Risk" sections, degrading the quality of data consumed by the variety engineer and learning curator agents.
+
+### Change Made
+**Bug fix mutation R63**: Fixed lesson-miner.py file write mode.
+- `scripts/lesson-miner.py`: Changed `OUTPUT_FILE.open("a", encoding="utf-8")` to `OUTPUT_FILE.open("w", encoding="utf-8")`. Updated eprint log message from "Appended report" to "Wrote report".
+- `references/lesson-patterns.md`: Regenerated with single clean report (27 builds, 227 lessons, 4 patterns, 0 orphans).
+
+### Test Results
+- `bash hooks/test-automation.sh`: **164 passed, 0 failed** (was 163/0)
+- Test 82: lesson-miner overwrites pre-seeded dummy content with a single clean report → PASS
+- `grep -c "^# Lesson Patterns" references/lesson-patterns.md`: 1 (was 3)
+
+### Files Modified
+- `viable-swarm-model/scripts/lesson-miner.py`
+- `viable-swarm-model/references/lesson-patterns.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4 (Adaptation/Intelligence) / S4→S5 channel — skill variety at 0.75 with 4 unused Full skills**: architecture-patterns, frontend-patterns, integration-patterns, and research-patterns have 0 builds in the effectiveness log. Unlike agent variety (which was fixable via documentation), skill variety requires actual build exercise. With agent variety now at 1.0 and temporal variety at 1.0, skill variety is the last sub-component below 1.0. Alternatively, **System 4 (Adaptation/Intelligence) / S4→S5 channel — 6 untested hypotheses** remain, though the variety score at 0.76 now has healthy headroom.
+
