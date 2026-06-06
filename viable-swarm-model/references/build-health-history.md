@@ -1477,7 +1477,7 @@ Without a fitness build or additional S5 iteration cycles, the organism has reac
 - `viable-swarm-model/references/build-health-history.md`
 
 ### Git Commit
-- Hash: [to be filled after commit]
+- Hash: 3adabc4
 
 ### Next Highest-Leverage Constraint
 **System 3 (Audit/Control) / S3→S1 channel — skill-effectiveness-tracker.py has syntax check but no behavior tests.** This script scans fitness build outputs and correlates skill usage with build scores. It writes to `references/skill-effectiveness-log.md` which is read by the learning curator for skill portfolio decisions. Without tests, incorrect score parsing or skill counting could mislead skill selection. Alternatively, **System 5 (Policy) / S5→S1 channel — test-automation.sh is now 153KB+ and 5000+ lines**: While all 132 tests pass, the script is becoming unwieldy. A test suite refactoring (splitting into sub-files by system, adding a test runner) would improve maintainability.
