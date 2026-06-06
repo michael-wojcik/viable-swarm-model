@@ -142,8 +142,9 @@ def extract_skill_variety(path: Path) -> tuple[int, int]:
                 status = parts[-1] if len(parts) == 5 else parts[-2] if len(parts) == 4 else ""
                 if status in ("Full", "Planned", "Icebox", "Deprecated"):
                     full_skills += 1
-    # Count used skills from skill-effectiveness-log
+    # Count used skills from skill-effectiveness-log (deduplicate across date sections)
     skill_log = REFS_DIR / "skill-effectiveness-log.md"
+    seen_skills = set()
     if skill_log.exists():
         log_text = skill_log.read_text()
         for line in log_text.splitlines():
@@ -153,10 +154,12 @@ def extract_skill_variety(path: Path) -> tuple[int, int]:
                 if len(parts) >= 3:
                     try:
                         builds_used = int(parts[1])
-                        if builds_used > 0:
-                            used_skills += 1
+                        skill_name = parts[0]
+                        if builds_used > 0 and skill_name not in seen_skills:
+                            seen_skills.add(skill_name)
                     except ValueError:
                         pass
+    used_skills = len(seen_skills)
     return used_skills, full_skills
 
 

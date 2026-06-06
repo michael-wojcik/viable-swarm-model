@@ -5377,6 +5377,184 @@ else
     fail "test_script did not handle unknown script name correctly"
 fi
 
+# ============================================================================
+# Test 145: organism-vitals.py — skill variety from registry + deduplication
+# ============================================================================
+
+echo -n "TEST: organism-vitals.py skill variety uses registry total and deduplicates ... "
+
+mkdir -p "$TMPDIR/build145/.kimi"
+mkdir -p "$TMPDIR/vsm/viable-swarm-model/scripts"
+mkdir -p "$TMPDIR/vsm/vsm-stack-skills"
+
+cp "$SCRIPT_DIR/../scripts/organism-vitals.py" "$TMPDIR/vsm/viable-swarm-model/scripts/"
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+EOF
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/hypotheses.md" << 'EOF'
+# Hypotheses
+EOF
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/knowledge-broker.md" << 'EOF'
+# Broker
+> **Last updated**: 2026-06-01
+EOF
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/build-health-history.md" << 'EOF'
+# Build Health History
+EOF
+
+# Create skill registry with 4 skills (mix of pattern and pitfall formats)
+cat > "$TMPDIR/vsm/vsm-stack-skills/SKILL-REGISTRY.md" << 'EOF'
+# Stack Skills Registry
+## Pattern Skills
+| Skill | Description | Relevant Agents | Depends On | Status |
+|---|---|---|---|---|
+| python-pitfalls | Python pitfalls | backend_coder | — | Full |
+| typescript-pitfalls | TS pitfalls | frontend_coder | — | Full |
+## Pitfall Skills
+| Skill | Language | Status | Description |
+|---|---|---|---|
+| docker-pitfalls | Docker | Full | Container traps |
+| go-pitfalls | Go | Icebox | Awaiting data |
+EOF
+
+# Create skill-effectiveness-log with DUPLICATE sections
+cat > "$TMPDIR/vsm/viable-swarm-model/references/skill-effectiveness-log.md" << 'EOF'
+# Skill Effectiveness Log
+## 2026-06-04
+| Skill | Builds Used | Avg Score (with) | Avg Score (without) | Delta | Flag |
+|-------|-------------|------------------|---------------------|-------|------|
+| python-pitfalls | 5 | 4.0 | — | — | INSUFFICIENT_DATA |
+| typescript-pitfalls | 0 | — | 3.5 | — | INSUFFICIENT_DATA |
+| docker-pitfalls | 3 | 3.8 | — | — | INSUFFICIENT_DATA |
+| go-pitfalls | 0 | — | 3.5 | — | INSUFFICIENT_DATA |
+
+## 2026-06-06
+| Skill | Builds Used | Avg Score (with) | Avg Score (without) | Delta | Flag |
+|-------|-------------|------------------|---------------------|-------|------|
+| python-pitfalls | 5 | 4.0 | — | — | INSUFFICIENT_DATA |
+| typescript-pitfalls | 0 | — | 3.5 | — | INSUFFICIENT_DATA |
+| docker-pitfalls | 3 | 3.8 | — | — | INSUFFICIENT_DATA |
+| go-pitfalls | 0 | — | 3.5 | — | INSUFFICIENT_DATA |
+EOF
+
+cat > "$TMPDIR/build145/plan.md" << 'EOF'
+# Build Plan — FB145
+EOF
+
+RC=0
+python3 "$SCRIPT_DIR/../scripts/organism-vitals.py" --build-dir "$TMPDIR/build145" >/dev/null 2>&1 || RC=$?
+
+OUTPUT=$(cat "$TMPDIR/build145/.kimi/organism-vitals.md" 2>/dev/null || echo "")
+if [ "$RC" -eq 0 ] && \
+   echo "$OUTPUT" | grep -q "Skill variety.*0.5.*2/4" && \
+   ! echo "$OUTPUT" | grep -q "Skill variety.*0.5.*4/8" && \
+   ! echo "$OUTPUT" | grep -q "Skill variety.*0.5.*4/4"; then
+    pass
+else
+    fail "skill variety should be 2/4 (deduplicated), got: $(echo "$OUTPUT" | grep 'Skill variety' || echo 'missing')"
+fi
+
+# ============================================================================
+# Test 146: algedonic-action-plan.py — skill variety deduplication
+# ============================================================================
+
+echo -n "TEST: algedonic-action-plan.py skill variety deduplicates across log sections ... "
+
+mkdir -p "$TMPDIR/build146/.kimi"
+mkdir -p "$TMPDIR/vsm/viable-swarm-model/scripts"
+mkdir -p "$TMPDIR/vsm/vsm-stack-skills"
+
+cp "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" "$TMPDIR/vsm/viable-swarm-model/scripts/"
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+EOF
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/hypotheses.md" << 'EOF'
+# Hypotheses
+EOF
+
+# Reuse registry and log from test 145 (same TMPDIR)
+
+RC=0
+python3 "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" --build-dir "$TMPDIR/build146" >/dev/null 2>&1 || RC=$?
+
+OUTPUT=$(cat "$TMPDIR/build146/.kimi/algedonic-action-plan.md" 2>/dev/null || echo "")
+if [ "$RC" -eq 0 ] && \
+   echo "$OUTPUT" | grep -q "Skill variety.*0.5.*2/4" && \
+   ! echo "$OUTPUT" | grep -q "Skill variety.*1.0.*4/4"; then
+    pass
+else
+    fail "skill variety should be 2/4 (deduplicated), got: $(echo "$OUTPUT" | grep 'Skill variety' || echo 'missing')"
+fi
+
+# ============================================================================
+# Test 147: skill-effectiveness-tracker.py — replaces existing date section
+# ============================================================================
+
+echo -n "TEST: skill-effectiveness-tracker.py replaces existing date section instead of appending ... "
+
+mkdir -p "$TMPDIR/build147/.kimi"
+mkdir -p "$TMPDIR/vsm/viable-swarm-model/scripts"
+mkdir -p "$TMPDIR/vsm/viable-swarm-model/references"
+mkdir -p "$TMPDIR/vsm-fitness-builds/coach"
+mkdir -p "$TMPDIR/vsm/vsm-stack-skills"
+
+cp "$SCRIPT_DIR/../scripts/skill-effectiveness-tracker.py" "$TMPDIR/vsm/viable-swarm-model/scripts/"
+
+# Create a minimal skill registry
+cat > "$TMPDIR/vsm/vsm-stack-skills/SKILL-REGISTRY.md" << 'EOF'
+# Stack Skills Registry
+| Skill | Description | Relevant Agents | Depends On | Status |
+|---|---|---|---|---|
+| python-pitfalls | Python | Full | — | vsm_backend_coder |
+EOF
+
+# Create a pre-existing log with today's date section
+TODAY=$(date -u +%Y-%m-%d)
+cat > "$TMPDIR/vsm/viable-swarm-model/references/skill-effectiveness-log.md" << EOF
+# Skill Effectiveness Log
+
+## $TODAY
+
+| Skill | Builds Used | Avg Score (with) | Avg Score (without) | Delta | Flag |
+|-------|-------------|------------------|---------------------|-------|------|
+| python-pitfalls | 1 | 3.50 | — | — | OLD |
+EOF
+
+# Create a mock build directory
+mkdir -p "$TMPDIR/vsm-fitness-builds/coach/FB147/.kimi"
+cat > "$TMPDIR/vsm-fitness-builds/coach/FB147/.kimi/meta-reflection.md" << 'EOF'
+# Meta Reflection
+**Overall Score**: 4.2/5.0
+EOF
+
+# Run tracker with modified paths
+export HOME="$TMPDIR"
+cd "$TMPDIR"
+python3 "$TMPDIR/vsm/viable-swarm-model/scripts/skill-effectiveness-tracker.py" 2>/dev/null || true
+unset HOME
+
+# Count date sections
+SECTION_COUNT=$(python3 -c "import sys,re; text=open(sys.argv[1]).read(); print(len(re.findall(r'^## ' + sys.argv[2], text, re.M)))" "$TMPDIR/vsm/viable-swarm-model/references/skill-effectiveness-log.md" "$TODAY" 2>/dev/null)
+SECTION_COUNT=${SECTION_COUNT:-0}
+HAS_OLD=$(python3 -c "import sys; text=open(sys.argv[1]).read(); print(1 if 'OLD' in text else 0)" "$TMPDIR/vsm/viable-swarm-model/references/skill-effectiveness-log.md" 2>/dev/null)
+HAS_OLD=${HAS_OLD:-0}
+
+if [ "$SECTION_COUNT" -eq 1 ] && [ "$HAS_OLD" -eq 0 ]; then
+    pass
+else
+    fail "expected 1 section for $TODAY with no OLD flag, got $SECTION_COUNT sections, OLD=$HAS_OLD"
+fi
+
 echo ""
 echo "========================================"
 echo "Results: $PASSED passed, $FAILED failed"

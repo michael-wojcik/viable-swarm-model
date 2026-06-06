@@ -36,6 +36,7 @@ MUTATION_STATE = REFS_DIR / "mutation-state.md"
 HYPOTHESES = REFS_DIR / "hypotheses.md"
 BROKER = REFS_DIR / "knowledge-broker.md"
 BUILD_HISTORY = REFS_DIR / "build-health-history.md"
+SKILL_REGISTRY = Path.home() / "vsm" / "vsm-stack-skills" / "SKILL-REGISTRY.md"
 
 
 # ---------------------------------------------------------------------------
@@ -243,21 +244,35 @@ def main() -> int:
     }
     agent_variety = round(len(agent_refs & known_agents) / len(known_agents), 2)
 
-    # --- Skill variety (heuristic from skill-effectiveness-log) ---
-    skill_log = REFS_DIR / "skill-effectiveness-log.md"
-    skills_used = 0
+    # --- Skill variety (heuristic from skill-effectiveness-log + registry) ---
+    # Count total skills from registry (ground truth)
     skills_total = 0
+    if SKILL_REGISTRY.exists():
+        reg_text = SKILL_REGISTRY.read_text()
+        for line in reg_text.splitlines():
+            if "|" in line and ("Full" in line or "Planned" in line or "Icebox" in line or "Deprecated" in line):
+                parts = [p.strip() for p in line.split("|")]
+                parts = [p for p in parts if p]
+                if len(parts) >= 4 and parts[0] not in ("Skill", ""):
+                    status = parts[-1] if len(parts) == 5 else parts[-2] if len(parts) == 4 else ""
+                    if status in ("Full", "Planned", "Icebox", "Deprecated"):
+                        skills_total += 1
+
+    # Count used skills from log (deduplicate across date sections)
+    skill_log = REFS_DIR / "skill-effectiveness-log.md"
+    seen_skills = set()
     if skill_log.exists():
         text = skill_log.read_text()
         for line in text.splitlines():
-            if "|" in line and "pitfalls" in line or "patterns" in line or "migration" in line:
+            if "|" in line and ("pitfalls" in line or "patterns" in line or "migration" in line):
                 parts = [p.strip() for p in line.split("|")]
                 parts = [p for p in parts if p]
                 if len(parts) >= 3 and parts[1].replace(".", "").isdigit():
                     builds_used = int(parts[1])
-                    if builds_used > 0:
-                        skills_used += 1
-                    skills_total += 1
+                    skill_name = parts[0]
+                    if builds_used > 0 and skill_name not in seen_skills:
+                        seen_skills.add(skill_name)
+    skills_used = len(seen_skills)
     skill_variety = round(skills_used / skills_total, 2) if skills_total else 0.0
 
     # --- Temporal variety (unique build domains in last 5 builds) ---

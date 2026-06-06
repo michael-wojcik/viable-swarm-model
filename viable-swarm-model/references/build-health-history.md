@@ -5,6 +5,41 @@
 
 ---
 
+## 2026-06-06 — S5 Orchestrator Iteration (R53)
+
+### Diagnosed Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — skill variety metric inconsistency**: `organism-vitals.py` reported **0.48 (22/46)** while `algedonic-action-plan.py` reported **0.92 (22/24)** for the same metric. This contradictory signal corrupted the S4→S4 variety assessment channel, causing the variety engineer (if ever spawned) to receive conflicting data. Root cause analysis found three compounding issues: (1) `skill-effectiveness-log.md` had duplicate date sections because `skill-effectiveness-tracker.py` blindly appended instead of replacing. (2) `organism-vitals.py` computed `skills_total` from log row count instead of `SKILL-REGISTRY.md`, and had an operator precedence bug in line matching. (3) Neither script deduplicated skills across log sections.
+
+### Change Made
+**Refinement mutation R53**: Fixed skill variety computation consistency across all three scripts.
+- `organism-vitals.py`: Reads `skills_total` from `SKILL-REGISTRY.md`, deduplicates used skills with a set, fixes operator precedence bug (`"|" in line and ("pitfalls" in line or ...)`)
+- `algedonic-action-plan.py`: Deduplicates used skills with a set when reading `skill-effectiveness-log.md`
+- `skill-effectiveness-tracker.py`: `append_log()` now checks if today's section exists and replaces it via regex instead of blindly appending
+- `skill-effectiveness-log.md`: Removed duplicate 2026-06-04 section
+
+### Test Results
+- `bash hooks/test-automation.sh`: **147 passed, 0 failed** (was 144 passed, 0 failed)
+- Test 145: organism-vitals.py skill variety uses registry total (4) and deduplicates across duplicate log sections → PASS
+- Test 146: algedonic-action-plan.py skill variety deduplicates across log sections → PASS
+- Test 147: skill-effectiveness-tracker.py replaces existing date section instead of appending → PASS
+- Both scripts now consistently report 11/24 = 0.46 skill variety
+
+### Files Modified
+- `viable-swarm-model/scripts/organism-vitals.py`
+- `viable-swarm-model/scripts/algedonic-action-plan.py`
+- `viable-swarm-model/scripts/skill-effectiveness-tracker.py`
+- `viable-swarm-model/references/skill-effectiveness-log.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — vsm_learning_curator and vsm_variety_engineer still have 0% empirical exercise rate**: With the skill variety metric now consistent, the organism's most persistent unaddressed gap remains the meta-system agents. All enforcement mechanisms exist (pre-computation scripts, stop-verifier content-quality gates, SKILL.md mandates), but the agents themselves have never been spawned in a real build. Without empirical validation, the organism cannot know whether Mode A/B workflows actually prevent agent timeouts. The next frontier requires an actual fitness build to test the full pipeline end-to-end. Alternatively, **System 5 (Policy) / S5→S5 channel — 9 untested hypotheses exceed threshold of 7**: The algedonic action plan suggests gym batches, but `/flow:vsm-fitness-gym` invocation requires human/S5 action.
+
 ## 2026-06-06 — S5 Orchestrator Iteration (R51)
 
 ### Diagnosed Constraint

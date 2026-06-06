@@ -4601,3 +4601,23 @@ Additionally, `integration-test-closeout.py` — 360 lines of critical closeout 
 **Expected effect**: Algedonic thresholds are internally consistent. integration-test-closeout.py internal functions are directly tested. The test suite is more robust against real-file state changes.
 
 **Measured effect**: 144 automation tests pass, 0 failed. Active mutations: 51 (unchanged, but now correctly below the 55 threshold).
+
+---
+
+## Mutation R53 — 2026-06-06
+
+**Session**: S5 Orchestrator Iteration
+**File**: `scripts/organism-vitals.py`, `scripts/algedonic-action-plan.py`, `scripts/skill-effectiveness-tracker.py`, `references/skill-effectiveness-log.md`, `hooks/test-automation.sh`
+**Type**: refinement
+**Rationale**: The organism's S4→S4 channel was corrupted by contradictory skill variety metrics. `organism-vitals.py` reported **0.48 (22/46)** while `algedonic-action-plan.py` reported **0.92 (22/24)**. Root cause analysis found three compounding issues: (1) `skill-effectiveness-log.md` had duplicate date sections (2026-06-04 and 2026-06-06 with identical data) because `skill-effectiveness-tracker.py` blindly appended instead of replacing existing sections. (2) `organism-vitals.py` computed `skills_total` from log file row count instead of `SKILL-REGISTRY.md`, and had an operator precedence bug (`"|" in line and "pitfalls" in line or "patterns" in line`) that could match non-table lines. (3) Neither script deduplicated skills across log sections, inflating the used count. This inconsistency produced a false WARNING algedonic that wasted S5 cognitive cycles.
+
+**Expected effect**: Both `organism-vitals.py` and `algedonic-action-plan.py` now report consistent skill variety (11/24 = 0.46). The `skill-effectiveness-tracker.py` replaces existing date sections instead of appending duplicates. The operator precedence bug in `organism-vitals.py` is fixed.
+
+**Files modified**:
+- `scripts/organism-vitals.py` — reads `skills_total` from `SKILL-REGISTRY.md`, deduplicates used skills with a set, fixes operator precedence in line matching
+- `scripts/algedonic-action-plan.py` — deduplicates used skills with a set
+- `scripts/skill-effectiveness-tracker.py` — `append_log()` replaces existing date section via regex instead of blindly appending
+- `references/skill-effectiveness-log.md` — removed duplicate 2026-06-04 section
+- `hooks/test-automation.sh` — Tests 145-147 verify the fixes
+
+**Measured effect**: **Score 5** — 147 automation tests pass (3 new). organism-vitals.py and algedonic-action-plan.py now both report 11/24 = 0.46 skill variety. skill-effectiveness-tracker.py no longer creates duplicate sections.
