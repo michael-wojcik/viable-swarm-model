@@ -4406,3 +4406,25 @@ Additionally:
 **Expected effect**: No more SessionEnd hook failures from knowledge-broker.sh. The deprecated hook is harmless but informative. auto-broker-update.sh handles all broker updates.
 
 **Measured effect**: All 124 tests pass. The hook exits 0 with deprecation notice and creates no log files.
+
+
+---
+
+## Mutation R44 — 2026-06-06
+
+**Session**: S5 Orchestrator Iteration
+**Files**: `scripts/auto-gym-trigger.py`, `hooks/session-end.sh`, `hooks/test-automation.sh`, `references/mutation-state.md`
+**Type**: structural
+**Rationale**: `auto-gym-trigger.py` was an orphaned System 4 intelligence script — it existed to auto-trigger gym experiments when hypothesis backlog exceeded 10 or monitor mutations needed testing, but nothing ever invoked it. This broke the S4→S4 learning loop: hypotheses accumulated untested (7 currently) and monitor mutations (SM3/SM7/SM8) would never be automatically flagged for experiments. Fixed by:
+1. Added env var overrides to `auto-gym-trigger.py` for all paths and thresholds (HYPOTHESES, MUTATION_STATE, GYM_DIR, OUTPUT, BACKLOG_THRESHOLD, COOLDOWN_DAYS, MONITOR_THRESHOLD) — makes the script testable without modifying real organism files
+2. Wired `auto-gym-trigger.py` into `session-end.sh` — runs silently after every session; if a trigger report is generated, session-end echoes a notice
+3. Added 4 tests to `test-automation.sh`:
+   - Syntax check (python3 -m py_compile)
+   - Test 124: no-trigger path exits 0 without writing report
+   - Test 125: hypothesis backlog > 10 + old gym dir → report written with top hypotheses
+   - Test 126: monitor mutation with builds_tested >= 3 → report written with mutation table
+4. Also added syntax checks for `mutation-predictor.py` and `skill-effectiveness-tracker.py`
+
+**Expected effect**: The organism's self-improvement loop is no longer broken. Gym experiments will be auto-triggered when conditions are met, preventing hypothesis backlog from growing indefinitely and ensuring monitor mutations get measured.
+
+**Measured effect**: All 130 tests pass. Script correctly detects no-trigger, backlog-trigger, and monitor-mutation-trigger conditions.

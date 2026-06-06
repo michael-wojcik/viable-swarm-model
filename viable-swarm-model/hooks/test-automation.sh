@@ -120,6 +120,27 @@ else
     fail "syntax error detected"
 fi
 
+echo -n "TEST: Syntax check auto-gym-trigger.py ... "
+if python3 -m py_compile "$SCRIPT_DIR/../scripts/auto-gym-trigger.py"; then
+    pass
+else
+    fail "syntax error detected"
+fi
+
+echo -n "TEST: Syntax check mutation-predictor.py ... "
+if python3 -m py_compile "$SCRIPT_DIR/../scripts/mutation-predictor.py"; then
+    pass
+else
+    fail "syntax error detected"
+fi
+
+echo -n "TEST: Syntax check skill-effectiveness-tracker.py ... "
+if python3 -m py_compile "$SCRIPT_DIR/../scripts/skill-effectiveness-tracker.py"; then
+    pass
+else
+    fail "syntax error detected"
+fi
+
 # ============================================================================
 # Test 1: update-mutation-state.sh — dry-run mode
 # ============================================================================
@@ -4038,10 +4059,10 @@ for line in text.splitlines():
 print(len(rows))
 ")
 
-if [ "$ACTIVE_COUNT" -eq 59 ]; then
+if [ "$ACTIVE_COUNT" -eq 60 ]; then
     pass
 else
-    fail "expected 59 active mutations, got $ACTIVE_COUNT"
+    fail "expected 60 active mutations, got $ACTIVE_COUNT"
 fi
 
 # ============================================================================
@@ -4631,6 +4652,253 @@ if [ ! -f "$TMPDIR/build123/.kimi/knowledge-broker-log.md" ]; then
     pass
 else
     fail "expected no log file, but knowledge-broker-log.md was created"
+fi
+
+# ============================================================================
+# Test 124: auto-gym-trigger.py — no-trigger path exits 0 without writing report
+# ============================================================================
+
+echo -n "TEST: auto-gym-trigger.py no-trigger path exits 0 without report ... "
+
+mkdir -p "$TMPDIR/build124/.kimi"
+mkdir -p "$TMPDIR/build124/gym/recent-experiment"
+touch "$TMPDIR/build124/gym/recent-experiment/.gitkeep"
+
+# Create a hypotheses.md with only 5 untested hypotheses (below threshold of 10)
+cat > "$TMPDIR/build124/hypotheses.md" << 'EOF'
+# Hypothesis Backlog
+
+| Hypothesis | Status |
+|---|---|
+| H001 | untested |
+
+---
+
+## H001: Test hypothesis one
+**Status**: untested
+**Proposed**: 2026-06-01
+**Rationale**: Test
+**Experiment**: Run a test.
+
+## H002: Test hypothesis two
+**Status**: untested
+**Proposed**: 2026-06-01
+**Rationale**: Test
+**Experiment**: Run a test.
+
+## H003: Test hypothesis three
+**Status**: testing
+**Proposed**: 2026-06-01
+**Rationale**: Test
+**Experiment**: Run a test.
+
+## H004: Test hypothesis four
+**Status**: confirmed
+**Proposed**: 2026-06-01
+**Rationale**: Test
+**Experiment**: Run a test.
+
+## H005: Test hypothesis five
+**Status**: untested
+**Proposed**: 2026-06-01
+**Rationale**: Test
+**Experiment**: Run a test.
+EOF
+
+# Create a mutation-state.md with no monitor mutations
+cat > "$TMPDIR/build124/mutation-state.md" << 'EOF'
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| T1 | Test | append-only | Test failure | effective | 5 | 4 | — | — | — |
+EOF
+
+# Make gym dir old (more than 7 days ago) by setting mtime in the past
+python3 -c "import os, time; os.utime('$TMPDIR/build124/gym/recent-experiment', (time.time() - 864000, time.time() - 864000))"
+
+AG_OUTPUT=$(AUTO_GYM_HYPOTHESES="$TMPDIR/build124/hypotheses.md" \
+    AUTO_GYM_MUTATION_STATE="$TMPDIR/build124/mutation-state.md" \
+    AUTO_GYM_GYM_DIR="$TMPDIR/build124/gym" \
+    AUTO_GYM_OUTPUT="$TMPDIR/build124/.kimi/auto-gym-trigger.md" \
+    AUTO_GYM_BACKLOG_THRESHOLD="10" \
+    AUTO_GYM_COOLDOWN_DAYS="7" \
+    AUTO_GYM_MONITOR_THRESHOLD="3" \
+    python3 "$SCRIPT_DIR/../scripts/auto-gym-trigger.py" 2>&1) || AG_RC=$?
+AG_RC=${AG_RC:-0}
+
+if [ "$AG_RC" -eq 0 ] && [ ! -f "$TMPDIR/build124/.kimi/auto-gym-trigger.md" ]; then
+    pass
+else
+    fail "expected exit 0 and no report, got RC=$AG_RC, output=$AG_OUTPUT"
+fi
+
+# ============================================================================
+# Test 125: auto-gym-trigger.py — hypothesis backlog trigger writes report
+# ============================================================================
+
+echo -n "TEST: auto-gym-trigger.py hypothesis backlog trigger writes report ... "
+
+mkdir -p "$TMPDIR/build125/.kimi"
+mkdir -p "$TMPDIR/build125/gym/old-experiment"
+touch "$TMPDIR/build125/gym/old-experiment/.gitkeep"
+python3 -c "import os, time; os.utime('$TMPDIR/build125/gym/old-experiment', (time.time() - 864000, time.time() - 864000))"
+
+# Create a hypotheses.md with 12 untested hypotheses (above threshold of 10)
+cat > "$TMPDIR/build125/hypotheses.md" << 'EOF'
+# Hypothesis Backlog
+
+| Hypothesis | Status |
+|---|---|
+| H001 | untested |
+
+---
+
+## H001: Test hypothesis one
+**Status**: untested
+**Proposed**: 2026-05-01
+**Rationale**: Test
+**Experiment**: Run a test.
+
+## H002: Test hypothesis two
+**Status**: untested
+**Proposed**: 2026-05-01
+**Rationale**: Test
+**Experiment**: Run a test.
+
+## H003: Test hypothesis three
+**Status**: untested
+**Proposed**: 2026-05-01
+**Rationale**: Test
+**Experiment**: Run a test.
+
+## H004: Test hypothesis four
+**Status**: untested
+**Proposed**: 2026-05-01
+**Rationale**: Test
+**Experiment**: Run a test.
+
+## H005: Test hypothesis five
+**Status**: untested
+**Proposed**: 2026-05-01
+**Rationale**: Test
+**Experiment**: Run a test.
+
+## H006: Test hypothesis six
+**Status**: untested
+**Proposed**: 2026-05-01
+**Rationale**: Test
+**Experiment**: Run a test.
+
+## H007: Test hypothesis seven
+**Status**: untested
+**Proposed**: 2026-05-01
+**Rationale**: Test
+**Experiment**: Run a test.
+
+## H008: Test hypothesis eight
+**Status**: untested
+**Proposed**: 2026-05-01
+**Rationale**: Test
+**Experiment**: Run a test.
+
+## H009: Test hypothesis nine
+**Status**: untested
+**Proposed**: 2026-05-01
+**Rationale**: Test
+**Experiment**: Run a test.
+
+## H010: Test hypothesis ten
+**Status**: untested
+**Proposed**: 2026-05-01
+**Rationale**: Test
+**Experiment**: Run a test.
+
+## H011: Test hypothesis eleven
+**Status**: untested
+**Proposed**: 2026-05-01
+**Rationale**: Test
+**Experiment**: Run a test.
+
+## H012: Test hypothesis twelve
+**Status**: untested
+**Proposed**: 2026-05-01
+**Rationale**: Test
+**Experiment**: Run a test.
+EOF
+
+cat > "$TMPDIR/build125/mutation-state.md" << 'EOF'
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| T1 | Test | append-only | Test failure | effective | 5 | 4 | — | — | — |
+EOF
+
+AG_OUTPUT=$(AUTO_GYM_HYPOTHESES="$TMPDIR/build125/hypotheses.md" \
+    AUTO_GYM_MUTATION_STATE="$TMPDIR/build125/mutation-state.md" \
+    AUTO_GYM_GYM_DIR="$TMPDIR/build125/gym" \
+    AUTO_GYM_OUTPUT="$TMPDIR/build125/.kimi/auto-gym-trigger.md" \
+    AUTO_GYM_BACKLOG_THRESHOLD="10" \
+    AUTO_GYM_COOLDOWN_DAYS="7" \
+    AUTO_GYM_MONITOR_THRESHOLD="3" \
+    python3 "$SCRIPT_DIR/../scripts/auto-gym-trigger.py" 2>&1) || AG_RC=$?
+AG_RC=${AG_RC:-0}
+
+if [ "$AG_RC" -eq 0 ] && [ -f "$TMPDIR/build125/.kimi/auto-gym-trigger.md" ] && \
+   grep -q "Auto-Gym Trigger" "$TMPDIR/build125/.kimi/auto-gym-trigger.md" && \
+   grep -q "H001" "$TMPDIR/build125/.kimi/auto-gym-trigger.md"; then
+    pass
+else
+    fail "expected exit 0 and report with hypotheses, got RC=$AG_RC"
+fi
+
+# ============================================================================
+# Test 126: auto-gym-trigger.py — monitor mutation trigger writes report
+# ============================================================================
+
+echo -n "TEST: auto-gym-trigger.py monitor mutation trigger writes report ... "
+
+mkdir -p "$TMPDIR/build126/.kimi"
+mkdir -p "$TMPDIR/build126/gym/recent-experiment"
+touch "$TMPDIR/build126/gym/recent-experiment/.gitkeep"
+
+# Create a hypotheses.md with 5 untested hypotheses (below backlog threshold)
+cat > "$TMPDIR/build126/hypotheses.md" << 'EOF'
+# Hypothesis Backlog
+
+| Hypothesis | Status |
+|---|---|
+| H001 | untested |
+
+---
+
+## H001: Test hypothesis one
+**Status**: untested
+**Proposed**: 2026-06-01
+**Rationale**: Test
+**Experiment**: Run a test.
+EOF
+
+# Create a mutation-state.md with a monitor mutation having builds_tested >= 3
+cat > "$TMPDIR/build126/mutation-state.md" << 'EOF'
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| M1 | FB30 | structural | Monitor mutation test | monitor | 3 | 3 | H999 | — | FB31 |
+EOF
+
+AG_OUTPUT=$(AUTO_GYM_HYPOTHESES="$TMPDIR/build126/hypotheses.md" \
+    AUTO_GYM_MUTATION_STATE="$TMPDIR/build126/mutation-state.md" \
+    AUTO_GYM_GYM_DIR="$TMPDIR/build126/gym" \
+    AUTO_GYM_OUTPUT="$TMPDIR/build126/.kimi/auto-gym-trigger.md" \
+    AUTO_GYM_BACKLOG_THRESHOLD="10" \
+    AUTO_GYM_COOLDOWN_DAYS="7" \
+    AUTO_GYM_MONITOR_THRESHOLD="3" \
+    python3 "$SCRIPT_DIR/../scripts/auto-gym-trigger.py" 2>&1) || AG_RC=$?
+AG_RC=${AG_RC:-0}
+
+if [ "$AG_RC" -eq 0 ] && [ -f "$TMPDIR/build126/.kimi/auto-gym-trigger.md" ] && \
+   grep -q "M1" "$TMPDIR/build126/.kimi/auto-gym-trigger.md" && \
+   grep -q "Monitor Mutations Requiring Experiments" "$TMPDIR/build126/.kimi/auto-gym-trigger.md"; then
+    pass
+else
+    fail "expected exit 0 and report with monitor mutation, got RC=$AG_RC"
 fi
 
 echo ""

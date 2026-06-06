@@ -701,7 +701,7 @@ The next iteration should either (a) create a script that auto-acts on algedonic
 - `viable-swarm-model/references/build-health-history.md`
 
 ### Git Commit
-- Hash: [to be filled after commit]
+- Hash: bb586a2
 
 ### Next Highest-Leverage Constraint
 **System 3* (Process Audit) agent timeout and S4→S5 learning loop closure**: The `vsm_process_auditor` agent has a 60% success rate and timed out in FB30. SM2 (process auditor HARD BLOCK) is probationary and awaits measurement. Without reliable process auditing, Phase 8b/8c compliance checks are inconsistent. Additionally, the `vsm_learning_curator` (S5* Curation, Phase 8c-iii) has never been empirically exercised — no `mutation-portfolio-review.md` artifacts exist in any build directory. This means mutations are never autonomously promoted/demoted, and portfolio health is only assessed manually by S5. The next iteration should either (a) split process auditor tasks to prevent timeout, or (b) enforce learning curator spawn via a hook or stop-verifier check, or (c) both.
@@ -1414,3 +1414,38 @@ Without a fitness build or additional S5 iteration cycles, the organism has reac
 ### Next Highest-Leverage Constraint
 **System 3 (Audit/Control) / S3→S1 channel — knowledge-broker.sh is registered but deprecated**: The `knowledge-broker.sh` hook is still registered in `~/.kimi/config.toml` as a SessionEnd hook, but the file itself says it has a "known regex bug in legacy hook" and `auto-broker-update.sh` should be used instead. The `diagnostic-router.sh` already routes knowledge-broker failures to "Run auto-broker-update.sh instead." This creates confusion and potential reliability issues. The hook should either be removed from `config.toml` or fixed. Alternatively, **System 5 (Policy) / S5→S1 channel — test-automation.sh is 143KB and growing**: The test suite has grown to 121 tests. While all pass, the script is becoming unwieldy. A test suite refactoring (splitting into sub-files, adding a test runner) could improve maintainability. However, this is lower priority than fixing deprecated infrastructure.
 
+
+
+---
+
+## 2026-06-06 — S5 Orchestrator Iteration (R44)
+
+### Diagnosed Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — auto-gym-trigger.py was orphaned dead code**. The script existed to auto-trigger gym experiments when the hypothesis backlog exceeded 10 untested hypotheses or when monitor mutations had >= 3 builds tested, but nothing ever invoked it. This broke the organism's self-improvement loop: hypotheses accumulated untested (currently 7) and monitor mutations (SM3/SM7/SM8) would never be automatically flagged for experiments. The script was essentially a sensor with no actuator.
+
+### Change Made
+**Structural mutation R44**: Wired auto-gym-trigger.py into the organism's session lifecycle and made it testable.
+- Added env var overrides to `auto-gym-trigger.py` for all paths and thresholds, enabling isolated testing without touching real organism files
+- Wired the script into `session-end.sh` (after build-health-dashboard.py) — runs silently after every session; echoes a notice if a trigger report is generated
+- Added 4 tests: syntax check, no-trigger path, hypothesis-backlog trigger, monitor-mutation trigger
+- Also added syntax checks for `mutation-predictor.py` and `skill-effectiveness-tracker.py`
+
+### Test Results
+- `bash hooks/test-automation.sh`: **130 passed, 0 failed** (was 124 passed, 0 failed)
+- Test 124: no-trigger path exits 0 without report → PASS
+- Test 125: hypothesis backlog > 10 + old gym dir → report written → PASS
+- Test 126: monitor mutation with builds_tested >= 3 → report written → PASS
+
+### Files Modified
+- `viable-swarm-model/scripts/auto-gym-trigger.py`
+- `viable-swarm-model/hooks/session-end.sh`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- Hash: [to be filled after commit]
+
+### Next Highest-Leverage Constraint
+**System 3 (Audit/Control) / S3→S1 channel — 2 remaining untested scripts**: `mutation-predictor.py` and `skill-effectiveness-tracker.py` now have syntax checks but no behavior tests. `mutation-predictor.py` is actively used by `vsm_learning_curator.md` and `vsm_meta.md` agent prompts — if it produces incorrect predictions, agents may apply low-effectiveness mutations. Adding behavior tests (e.g., testing similarity scoring, score parsing, recommendation logic) would close this gap. Alternatively, **System 5 (Policy) / S5→S1 channel — test-automation.sh is now 148KB+ and 4700+ lines**: While all 130 tests pass, the script is becoming unwieldy. A test suite refactoring (splitting into sub-files by system, adding a test runner with selective execution) would improve maintainability.

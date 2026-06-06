@@ -28,14 +28,14 @@ from pathlib import Path
 # Configuration
 # ---------------------------------------------------------------------------
 HOME = Path.home()
-HYPOTHESES_PATH = HOME / "vsm" / "viable-swarm-model" / "references" / "hypotheses.md"
-MUTATION_STATE_PATH = HOME / "vsm" / "viable-swarm-model" / "references" / "mutation-state.md"
-GYM_DIR = HOME / "vsm-fitness-builds" / "gym"
-OUTPUT_PATH = HOME / "vsm" / "viable-swarm-model" / ".kimi" / "auto-gym-trigger.md"
+HYPOTHESES_PATH = Path(os.environ.get("AUTO_GYM_HYPOTHESES", HOME / "vsm" / "viable-swarm-model" / "references" / "hypotheses.md"))
+MUTATION_STATE_PATH = Path(os.environ.get("AUTO_GYM_MUTATION_STATE", HOME / "vsm" / "viable-swarm-model" / "references" / "mutation-state.md"))
+GYM_DIR = Path(os.environ.get("AUTO_GYM_GYM_DIR", HOME / "vsm-fitness-builds" / "gym"))
+OUTPUT_PATH = Path(os.environ.get("AUTO_GYM_OUTPUT", HOME / "vsm" / "viable-swarm-model" / ".kimi" / "auto-gym-trigger.md"))
 
-HYPOTHESIS_BACKLOG_THRESHOLD = 10
-GYM_COOLDOWN_DAYS = 7
-MONITOR_BUILDS_TESTED_THRESHOLD = 3
+HYPOTHESIS_BACKLOG_THRESHOLD = int(os.environ.get("AUTO_GYM_BACKLOG_THRESHOLD", "10"))
+GYM_COOLDOWN_DAYS = int(os.environ.get("AUTO_GYM_COOLDOWN_DAYS", "7"))
+MONITOR_BUILDS_TESTED_THRESHOLD = int(os.environ.get("AUTO_GYM_MONITOR_THRESHOLD", "3"))
 
 
 def eprint(msg: str) -> None:

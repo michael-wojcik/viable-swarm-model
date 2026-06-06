@@ -268,6 +268,25 @@ if [[ -f "$CWD/plan.md" && -f "$DASHBOARD_SCRIPT" ]]; then
     }
 fi
 
+# ── Auto-Gym Trigger — S4 intelligence layer ──
+# Check if gym experiments should be auto-triggered based on hypothesis backlog
+# or monitor mutations requiring measurement. Runs silently; report written to
+# .kimi/auto-gym-trigger.md only when thresholds are met.
+AUTO_GYM_SCRIPT="$HOME/vsm/viable-swarm-model/scripts/auto-gym-trigger.py"
+if [[ -f "$AUTO_GYM_SCRIPT" ]]; then
+    python3 "$AUTO_GYM_SCRIPT" >/dev/null 2>&1 || {
+        echo "WARNING: auto-gym-trigger.py failed. S4 intelligence layer may not detect experiment needs." >&2
+    }
+    # If a trigger report was generated, notify S5
+    AUTO_GYM_REPORT="$HOME/vsm/viable-swarm-model/.kimi/auto-gym-trigger.md"
+    if [[ -f "$AUTO_GYM_REPORT" ]]; then
+        REPORT_AGE=$(( $(date +%s) - $(stat -c %Y "$AUTO_GYM_REPORT" 2>/dev/null || stat -f %m "$AUTO_GYM_REPORT" 2>/dev/null || echo 0) ))
+        if [[ "$REPORT_AGE" -lt 60 ]]; then
+            echo "NOTICE: Auto-gym trigger report generated. Review $AUTO_GYM_REPORT for recommended experiments." >&2
+        fi
+    fi
+fi
+
 # ── Self-Healing Hook Diagnostic — verify infrastructure ──
 # Run diagnostic-router in test mode to ensure the self-healing layer is functional.
 DIAGNOSTIC_ROUTER="$HOME/vsm/viable-swarm-model/hooks/diagnostic-router.sh"
