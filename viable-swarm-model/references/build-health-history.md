@@ -1931,3 +1931,34 @@ Without a fitness build or additional S5 iteration cycles, the organism has reac
 ### Next Highest-Leverage Constraint
 **System 5 (Policy) / S5→S5 channel — R54 is at builds_tested=4 (borderline)**: With one more stable iteration, R54 would be eligible for historical promotion (threshold ≥5), further reducing active mutation pressure from 49 to 48. The established protocol handles this automatically. Alternatively, **System 4 (Adaptation/Intelligence) / S4→S4 channel — vsm_learning_curator and vsm_variety_engineer still have 0% empirical exercise rate**: With the hypothesis backlog clean, mutation lifecycle automated, and skill tracker false alarms fixed, the organism's most persistent gap remains the meta-system agents. All infrastructure exists but they have never been spawned in a real build.
 
+
+---
+
+## 2026-06-06 — S5 Orchestrator Iteration (R60)
+
+### Diagnosed Constraint
+**System 5 (Policy) / S5→S5 channel — protocol compliance for mutation lifecycle**: R57 had reached `builds_tested=4` after the R59 iteration. Per the established protocol (R57), each S5 iteration must begin with `increment-s5-iteration-counter.py` to increment effective S5 mutations, followed by promotion of any mutations reaching the `builds_tested >= 5` threshold. Missing this step would leave eligible mutations in `effective` status indefinitely, inflating active mutation count and reducing portfolio headroom.
+
+### Change Made
+**Structural mutation R60**: Ran `increment-s5-iteration-counter.py` per protocol, then promoted R57 to `historical`.
+- `increment-s5-iteration-counter.py`: R57 4→5, R58 3→4
+- `references/mutation-state.md`: Promoted R57 from `effective` → `historical`; updated Integration Health (active=46)
+- `hooks/test-automation.sh`: Added Test 156d verifying R57 historical promotion
+
+### Test Results
+- `bash hooks/test-automation.sh`: **161 passed, 0 failed** (was 160 passed, 0 failed)
+- Test 156d: R57 promoted to historical with builds_tested=5 → PASS
+- `mutation-portfolio-health.py`: Confirms total_active=46, probationary_ratio=6.5%, all metrics green
+
+### Files Modified
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4 (Adaptation/Intelligence) / S4→S5 channel — Variety Score at 0.71, barely above WARNING threshold**: Hypothesis variety remains at 0.33 (6/9 untested), the single biggest drag on the composite variety score. With one more untested hypothesis, the variety score would drop below 0.70 and trigger a WARNING algedonic. Testing even one hypothesis (e.g., H152 or H156 via a minimal gym experiment) would raise hypothesis variety to ~0.44 and push the composite score to ~0.73, creating healthy headroom. Alternatively, **System 3 (Audit/Control) / S3→S1 channel — auditor WriteFile tool presence**: H202 documented that `vsm_auditor.yaml` includes `WriteFile` in its tool list, contrary to the read-only boundary design. While prompt-level boundaries have worked empirically, tool-enforced boundaries remain unvalidated.
+

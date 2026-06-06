@@ -4805,3 +4805,25 @@ These gaps represent a System 3 (Audit/Control) → System 1 (Implementation) ch
 **Measured effect**: **5/5** — Active mutations dropped from 50 to 49. All 155 automation suite tests pass. Skill tracker no longer produces false NEGATIVE flags on n<3.
 
 ---
+
+---
+
+## Mutation R60 — 2026-06-06
+
+**Session**: S5 Orchestrator Iteration — R57 historical promotion + S5 protocol compliance
+**File**: `references/mutation-state.md`, `hooks/test-automation.sh`
+**Type**: structural
+**Rationale**: **System 5 (Policy) / S5→S5 channel — protocol compliance and mutation lifecycle automation**: The established S5 iteration protocol (R57) mandates running `increment-s5-iteration-counter.py` at the start of each iteration, then promoting eligible mutations. R57 had reached `builds_tested=4` after R59; running the counter incremented it to 5, making it eligible for historical promotion. Following the protocol maintains the organism's self-managing mutation lifecycle and prevents eligible promotions from being missed.
+
+**Expected effect**:
+- R57 promoted from `effective` → `historical`, reducing active mutations from 47 to 46.
+- R58 incremented from 3 → 4, approaching eligibility.
+- Test suite expanded to verify R57 promotion.
+- Portfolio health metrics remain well within targets.
+
+**Files modified**:
+- `references/mutation-state.md` — Promoted R57 to `historical`; updated Integration Health (active=46, historical=61)
+- `hooks/test-automation.sh` — Test 156d verifies R57 historical promotion
+
+**Measured effect**: **5/5** — Active mutations dropped from 47 to 46. All 161 automation suite tests pass. mutation-portfolio-health.py confirms total_active=46, all metrics green.
+

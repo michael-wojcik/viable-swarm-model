@@ -5853,6 +5853,21 @@ else
 fi
 
 # ============================================================================
+# Test 156d: R57 promoted to historical after auto-increment
+# ============================================================================
+
+echo -n "TEST: R57 promoted to historical after fifth auto-increment ... "
+
+R57_HIST=$(grep "^| R57 " "$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md" | grep "historical" | wc -l)
+R57_COUNT=$(grep "^| R57 " "$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md" | awk -F'|' '{print $7}' | tr -d ' ')
+
+if [ "$R57_HIST" -eq 1 ] && [ "$R57_COUNT" -ge 5 ]; then
+    pass
+else
+    fail "R57 should be historical with builds_tested >= 5 (got $R57_COUNT)"
+fi
+
+# ============================================================================
 # Test 157: organism-vitals.py skill variety excludes Icebox/Planned skills
 # ============================================================================
 
