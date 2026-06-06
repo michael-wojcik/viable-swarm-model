@@ -5698,6 +5698,40 @@ else
     fail "increment should change R99 3->4, R98 unchanged (monitor), R97 1->2"
 fi
 
+# ============================================================================
+# Test 152: S5 iteration lifecycle — auto-increment + historical promotion
+# ============================================================================
+
+echo -n "TEST: R51 and R52 promoted to historical after auto-increment ... "
+
+R51_HIST=$(grep "^| R51 " "$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md" | grep "historical" | wc -l)
+R52_HIST=$(grep "^| R52 " "$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md" | grep "historical" | wc -l)
+R51_COUNT=$(grep "^| R51 " "$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md" | awk -F'|' '{print $7}' | tr -d ' ')
+R52_COUNT=$(grep "^| R52 " "$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md" | awk -F'|' '{print $7}' | tr -d ' ')
+
+if [ "$R51_HIST" -eq 1 ] && [ "$R52_HIST" -eq 1 ] && [ "$R51_COUNT" -ge 5 ] && [ "$R52_COUNT" -ge 5 ]; then
+    pass
+else
+    fail "R51/R52 should be historical with builds_tested >= 5 (R51=$R51_COUNT, R52=$R52_COUNT)"
+fi
+
+# ============================================================================
+# Test 153: hypothesis-backlog-curator.py archives confirmed/rejected hypotheses
+# ============================================================================
+
+echo -n "TEST: hypothesis-backlog-curator.py removed archived hypotheses from active backlog ... "
+
+H201_GONE=$(grep "^## H201:" "$REAL_HOME/vsm/viable-swarm-model/references/hypotheses.md" 2>/dev/null | wc -l; true)
+H213_GONE=$(grep "^## H213:" "$REAL_HOME/vsm/viable-swarm-model/references/hypotheses.md" 2>/dev/null | wc -l; true)
+H155_GONE=$(grep "^## H155:" "$REAL_HOME/vsm/viable-swarm-model/references/hypotheses.md" 2>/dev/null | wc -l; true)
+ARCHIVE_HAS_H201=$(grep "^## H201:" "$REAL_HOME/vsm/viable-swarm-model/references/hypotheses-archive.md" 2>/dev/null | wc -l; true)
+
+if [ "$H201_GONE" -eq 0 ] && [ "$H213_GONE" -eq 0 ] && [ "$H155_GONE" -eq 0 ] && [ "$ARCHIVE_HAS_H201" -ge 1 ]; then
+    pass
+else
+    fail "H155/H201/H213 should be archived, not in hypotheses.md"
+fi
+
 echo ""
 echo "========================================"
 echo "Results: $PASSED passed, $FAILED failed"

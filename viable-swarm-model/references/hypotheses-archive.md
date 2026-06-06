@@ -645,3 +645,79 @@ effective. No skill mutation needed.
 **Source**: Fitness build FB31
 **Experiment**: Run FB32 with 3-sub-wave tester. Measure timeout rate.
 **Expected**: All 3 tester spawns complete within timeout
+
+---
+
+## H155: Exhaustive module-level settings audit across ALL Python files (not just `main.py`) would catch 100% of import-time env side effects
+**Archived**: 2026-06-06 18:57 UTC
+**Final Status**: rejected (from main)
+## H155: Exhaustive module-level settings audit across ALL Python files (not just `main.py`) would catch 100% of import-time env side effects
+
+**Status**: rejected
+**Proposed**: 2026-05-26
+**Rationale**: FB23 wiring agent audited only `main.py`, `main.tsx`, `App.tsx` and missed `celery_app.py` module-level instantiation.
+**Source**: Fitness build FB23
+**Experiment**: Update `vsm_wiring` checklist to grep for `get_settings()` and `Settings()` in all `*.py` files.
+**Expected**: Zero module-level instantiation orphans in next build.
+**Tested by**: E23
+**Result**: REJECTED — `vsm_wiring` agent already performs exhaustive audit across ALL `*.py` files. Module-level `Settings()` in `celery_app.py` was correctly flagged as BLOCKER. No skill mutation needed.
+
+---
+
+
+---
+
+
+---
+
+## H201: Custom agent files reduce per-subagent context usage by >30% vs prompt injection
+**Archived**: 2026-06-06 18:57 UTC
+**Final Status**: confirmed (from main)
+## H201: Custom agent files reduce per-subagent context usage by >30% vs prompt injection
+
+**Status**: confirmed
+**Proposed**: 2026-05-26
+**Rationale**: In the old architecture, the entire agent definition (role, job, 16 gotchas, tool list) was embedded as a user prompt into `subagent_type="coder"`. With custom agent files, this content becomes a system prompt loaded once at agent initialization. The task prompt only needs the specific task context. This should significantly reduce input tokens per subagent turn.
+**Source**: Custom agent file migration
+**Experiment**: Compare subagent turn token usage in FB23 (custom agent files) vs FB22 (prompt injection). Measure input tokens for comparable backend coder tasks.
+**Expected**: >30% reduction in per-subagent input tokens.
+**Tested by**: E22
+**Result**: CONFIRMED — 85.2% reduction in task prompt character count (332 vs 2248 chars). Custom agent file architecture validated.
+
+---
+
+
+---
+
+
+---
+
+## H213: `mutation-state.md` is not updated because S5 lacks a concrete, copy-pasteable command/template
+**Archived**: 2026-06-06 18:57 UTC
+**Final Status**: confirmed (from main)
+## H213: `mutation-state.md` is not updated because S5 lacks a concrete, copy-pasteable command/template
+
+**Status**: confirmed
+**Proposed**: 2026-06-03
+**Rationale**: FB26 meta-report noted mutation-state.md has no measured effects from this build's S5. The backfill table exists in the fitness report but S5 must manually transcribe it. A template or hook would automate this.
+**Source**: Fitness build FB26, Phase 8b
+**Experiment**: Add a concrete shell command or template to SKILL.md Phase 8c-ii that S5 can copy-paste. Run next build and check if mutation-state.md is updated.
+**Expected**: mutation-state.md updated within 5 minutes of mutations-applied.md creation.
+**Tested by**: FB33
+**Result**: CONFIRMED — S5 did NOT update mutation-state.md during Phase 8b. Update only happened after process auditor (30/100) explicitly flagged the gap. Even with `mutations-applied.md` present, S5 skipped the step under time pressure. Tool-enforced gate needed, not just a template.
+
+
+---
+
+## FB28 Hypothesis Updates
+
+### H213 Update
+**Status**: confirmed
+**Tested by**: FB33
+**Result**: S5 updated mutation-state.md and causal-index.md only AFTER process audit flagged them missing. Prompt-only/template-based discipline insufficient. Need tool-enforced gate.
+
+---
+
+
+---
+

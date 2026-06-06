@@ -4,6 +4,8 @@
 | R46 | 2026-06-06 S5 | refinement | skill-effectiveness-tracker.py env var overrides for testability + 2 behavior tests (full pipeline + /100 normalization) | historical | 5 | 5 | — | — | S5 iter |
 | R47 | 2026-06-06 S5 | refinement | Remove broken legacy test-hooks.sh + update README + add resurrection-prevention test | historical | 5 | 5 | — | — | S5 iter |
 | R48 | 2026-06-06 S5 | refinement | test-automation.sh maintainability — syntax check loop + section grouping | historical | 5 | 5 | — | — | S5 iter |
+| R51 | 2026-06-06 S5 | refinement | auto-gym-trigger.py bracket-hypothesis parsing fix + threshold alignment 10→7 | historical | 6 | 5 | — | — | S5 iter |
+| R52 | 2026-06-06 S5 | refinement | algedonic-action-plan.py threshold fix 50→55 + integration-test-closeout.py test coverage expansion (6 new tests) | historical | 5 | 5 | — | — | S5 iter |
 | FB25-S1 | FB25 Coach | structural | False hook claim removal | historical | 5 | 5 | H300 | E17 | — |
 | FB24-1 | FB24 Build | append-only | Phase 4 gate bypass when 1 test fails | historical | 6 | 5 | H154 | — | — |
 | FB24-2 | FB24 Build | append-only | Enum type safety audit | historical | 6 | 5 | H203 | — | — |
@@ -142,13 +144,13 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 51 | < 55 | ✅ OK (within target) |
-| Historical effective (≥5 builds) | 54 | >15% of active | ✅ 108% |
+| Active mutations | 50 | < 55 | ✅ OK (within target) |
+| Historical effective (≥5 builds) | 56 | >15% of active | ✅ 112% |
 | Effective (<5 builds, monitored) | 45 | >30% of active | ✅ 90% |
 | Probationary mutations | 3 | <20 at any time | ✅ 3 (within target) |
 | Removed / redesigned | 19 | ≥2 per 5 builds | ✅ 19 (exceeds target) |
-| Measured effect fill rate (scored) | 91.1% | ≥80% | ✅ 91.1% |
-| Measured effect fill rate (any entry) | 92.7% | ≥80% | ✅ 92.7% |
+| Measured effect fill rate (scored) | 91.2% | ≥80% | ✅ 91.2% |
+| Measured effect fill rate (any entry) | 92.8% | ≥80% | ✅ 92.8% |
 | Removal rate (last 5 builds) | 6 | ≥2 | ✅ Meets target |
 
 ---
@@ -173,6 +175,12 @@
 3. This applies ONLY to infrastructure mutations (type: structural, refinement, append-only) that do NOT modify build output artifacts. Build-derived mutations (FB[N]-[M]) MUST be validated in a real fitness build.
 4. S5 batch-promotes eligible mutations at the end of an iteration and records the promotion in `mutation-log.md`
 5. Infrastructure mutations that FAIL to meet their success criteria (e.g., agent still times out after timeout-prevention fix) should be scored 3–4 and moved to `monitor`, not `effective`
+
+**When an S5 iteration begins**:
+1. Run `python3 scripts/increment-s5-iteration-counter.py` to update `builds_tested` for all effective S5 iteration mutations
+2. Check `mutation-portfolio-health.py` output for `historical_promotions_ready` candidates
+3. Batch-promote eligible mutations to `historical` before diagnosing constraints
+4. If `hypothesis-backlog-curator.py --dry-run` reports confirmed/rejected/superseded hypotheses, run it without `--dry-run` to archive them
 
 **When an S5 iteration mutation reaches historical eligibility**:
 1. Effective S5 iteration mutations that remain stable for **≥5 S5 iterations** without regression are eligible for promotion to `historical`
@@ -331,9 +339,8 @@
 | FB32-5 | FB32 Build | refinement | Orphaned Query Export Limit | **effective** | 1 | 5 | — | — | — |
 
 | **S5 ITERATION MUTATIONS (2026-06-06)** |
-| R51 | 2026-06-06 S5 | refinement | auto-gym-trigger.py bracket-hypothesis parsing fix + threshold alignment 10→7 | effective | 5 | 5 | — | — | S5 iter |
-| R52 | 2026-06-06 S5 | refinement | algedonic-action-plan.py threshold fix 50→55 + integration-test-closeout.py test coverage expansion (6 new tests) | effective | 4 | 5 | — | — | S5 iter |
-| R53 | 2026-06-06 S5 | refinement | Skill variety metric consistency fix — organism-vitals.py + algedonic-action-plan.py + skill-effectiveness-tracker.py | effective | 3 | 5 | — | — | S5 iter |
-| R54 | 2026-06-06 S5 | refinement | organism-vitals.py parse_mutation_state filters invalid status rows + fill rate accuracy + utcnow deprecation fix | effective | 2 | 5 | — | — | S5 iter |
-| R55 | 2026-06-06 S5 | refinement | validate-skills.py count_rules() numbered-list fix + skill agent-reference gaps + automation suite integration | effective | 1 | 5 | — | — | S5 iter |
-| R56 | 2026-06-06 S5 | structural | increment-s5-iteration-counter.py + S5 builds_tested backfill (R44-R48→historical) + agent quick-reference enrichment | effective | 1 | 5 | — | — | S5 iter |
+| R53 | 2026-06-06 S5 | refinement | Skill variety metric consistency fix — organism-vitals.py + algedonic-action-plan.py + skill-effectiveness-tracker.py | effective | 4 | 5 | — | — | S5 iter |
+| R54 | 2026-06-06 S5 | refinement | organism-vitals.py parse_mutation_state filters invalid status rows + fill rate accuracy + utcnow deprecation fix | effective | 3 | 5 | — | — | S5 iter |
+| R55 | 2026-06-06 S5 | refinement | validate-skills.py count_rules() numbered-list fix + skill agent-reference gaps + automation suite integration | effective | 2 | 5 | — | — | S5 iter |
+| R56 | 2026-06-06 S5 | structural | increment-s5-iteration-counter.py + S5 builds_tested backfill (R44-R48→historical) + agent quick-reference enrichment | effective | 2 | 5 | — | — | S5 iter |
+| R57 | 2026-06-06 S5 | structural | S5 iteration lifecycle automation — auto-increment + historical promotion + hypothesis curation protocol | effective | 1 | 5 | — | — | S5 iter |

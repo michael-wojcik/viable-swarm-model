@@ -1853,3 +1853,44 @@ Without a fitness build or additional S5 iteration cycles, the organism has reac
 - Mutations active: 54
 - Hypotheses untested: 6
 - Broker staleness: 2 days
+
+---
+---
+
+## 2026-06-06 — S5 Orchestrator Iteration (R57)
+
+### Diagnosed Constraint
+**System 5 (Policy) / S5→S5 channel — S5 iteration lifecycle management was manual and error-prone**: `increment-s5-iteration-counter.py` (R56) existed but had no invocation protocol in mutation-state.md Usage Instructions. S5 had to remember to run it manually. As a result, eligible historical promotions were missed: R51 had `builds_tested=5` (threshold met) but remained `effective`, and R52 was at `builds_tested=4` (borderline). Without automated lifecycle management, active mutation count drifted upward (51, near the <55 threshold) and the organism's self-model became stale.
+
+**Secondary constraint — System 4 (Adaptation/Intelligence) / S4→S4 channel — hypothesis backlog curation was never invoked during S5 iterations**: `hypothesis-backlog-curator.py` (R18) worked correctly but was only tested with mock data. The real `hypotheses.md` had stale index entries: H201 (`confirmed` in body, `untested` in index), H213 (`confirmed` in body, `monitor` in index), H155 (`rejected` in body, `untested` in index). This corrupted the S4 intelligence channel and inflated the perceived untested hypothesis count.
+
+### Change Made
+**Structural mutation R57**: Established S5 iteration lifecycle automation protocol.
+- `references/mutation-state.md`: Added "When an S5 iteration begins" Usage Instructions section with 4-step pre-flight checklist: (1) run `increment-s5-iteration-counter.py`, (2) check `mutation-portfolio-health.py` for promotions, (3) batch-promote eligible mutations, (4) run hypothesis curator if needed
+- Ran `increment-s5-iteration-counter.py` in default mode: R51 5→6, R52 4→5, R53 3→4, R54 2→3, R55 1→2, R56 1→2
+- Promoted R51 (builds_tested=6) and R52 (builds_tested=5) from `effective` → `historical`, reducing active mutations from 51 to 50
+- Ran `hypothesis-backlog-curator.py` on real file: archived H155 (rejected), H201 (confirmed), H213 (confirmed) to `hypotheses-archive.md`; rebuilt index with accurate statuses
+- `hooks/test-automation.sh`: Tests 152–153 verify historical promotion and hypothesis archiving
+- `references/mutation-log.md`: Appended R57 entry
+
+### Test Results
+- `bash hooks/test-automation.sh`: **153 passed, 0 failed** (was 151 passed, 0 failed)
+- Test 152: R51 and R52 promoted to historical with builds_tested ≥5 → PASS
+- Test 153: H155/H201/H213 archived, removed from hypotheses.md, present in archive → PASS
+- `mutation-portfolio-health.py`: Confirms total_active=50, historical=56, probationary_ratio=6.0%, all metrics green
+- `validate-skills.py`: Still reports "OK: 25 skills validated" with zero warnings
+
+### Files Modified
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/hypotheses.md`
+- `viable-swarm-model/references/hypotheses-archive.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 5 (Policy) / S5→S5 channel — R53 is at builds_tested=4 (borderline)**: With one more stable iteration, R53 would be eligible for historical promotion (threshold ≥5), further reducing active mutation pressure from 50 toward the <55 target with more headroom. The new "When an S5 iteration begins" protocol should handle this automatically. Alternatively, **System 4 (Adaptation/Intelligence) / S4→S4 channel — vsm_learning_curator and vsm_variety_engineer still have 0% empirical exercise rate**: With the hypothesis backlog now clean and mutation lifecycle automated, the organism's most persistent unaddressed gap remains the meta-system agents. All pre-computation scripts, Mode A/B workflows, and stop-verifier content-quality gates exist, but the agents themselves have never been spawned in a real build. Without empirical validation, the organism cannot know whether the curated workload reductions actually prevent timeouts.
+

@@ -4755,3 +4755,29 @@ These gaps represent a System 3 (Audit/Control) → System 1 (Implementation) ch
 **Measured effect**: **5/5** — Active mutations dropped from 55 to 50 (within <55 target). All 151 automation suite tests pass. `validate-skills.py` still reports zero warnings.
 
 ---
+
+## Mutation R57 — 2026-06-06
+
+**Session**: S5 Orchestrator Iteration — S5 iteration lifecycle automation
+**File**: `references/mutation-state.md`, `hooks/test-automation.sh`, `references/hypotheses.md`, `references/hypotheses-archive.md`
+**Type**: structural + refinement
+**Rationale**: Three compounding constraints identified in R56 closeout:
+1. **S5→S5 channel — manual lifecycle management**: `increment-s5-iteration-counter.py` (R56) exists but had no invocation protocol. S5 iteration mutations accumulated without automated `builds_tested` updates, causing eligible historical promotions to be missed. R51 had `builds_tested=5` (eligible) but remained `effective`; R52 was at `builds_tested=4` (borderline).
+2. **S4→S4 channel — stale hypothesis backlog**: `hypothesis-backlog-curator.py` (R18) works correctly but was never invoked during S5 iterations. The hypotheses.md index had stale statuses: H201 (`confirmed` in body, `untested` in index), H213 (`confirmed` in body, `monitor` in index), H155 (`rejected` in body, `untested` in index).
+3. **Missing Usage Instructions**: mutation-state.md had no "When an S5 iteration begins" section, leaving S5 without a standardized pre-flight checklist.
+
+**Expected effect**:
+- S5 iterations now begin with a standardized protocol: run `increment-s5-iteration-counter.py`, check `mutation-portfolio-health.py` for promotions, archive confirmed/rejected hypotheses.
+- R51 and R52 promoted to `historical`, reducing active mutations from 51 to 49.
+- Hypothesis backlog cleaned: 3 confirmed/rejected hypotheses archived, index rebuilt with accurate statuses. Untested count remains 6 (within 7 threshold).
+- Future iterations auto-manage mutation lifecycle, preventing drift.
+
+**Files modified**:
+- `references/mutation-state.md` — Added "When an S5 iteration begins" Usage Instructions; promoted R51 (builds_tested=6) and R52 (builds_tested=5) to `historical`
+- `hooks/test-automation.sh` — Tests 152–153 verify historical promotion and hypothesis archiving
+- `references/hypotheses.md` — Curator archived H155, H201, H213; rebuilt index
+- `references/hypotheses-archive.md` — Appended 3 archived hypotheses with provenance
+
+**Measured effect**: **5/5** — Active mutations dropped from 51 to 49. Hypothesis backlog index now accurate. All automation suite tests pass (153 passed, 0 failed).
+
+---
