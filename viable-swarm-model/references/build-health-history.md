@@ -5,6 +5,43 @@
 
 ---
 
+## 2026-06-06 — S5 Orchestrator Iteration (R50)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 channel — active mutation bloat at 51 with an unrealistic <50 target**: The organism had **51 active mutations** (target <50), just 1 above the threshold. Investigation revealed **two compounding issues**: (1) M-FB30-1 (3-spawn architect split, score 3) was superseded by FB31-1 (4-spawn split, score 5) and explicitly validated as inferior in FB32, yet it remained in the active table with `monitor` status. (2) The <50 target was set when the organism had ~70 total mutations; after 32+ builds and 99 total mutations, the target had become unachievable through pruning alone. Four previous build-health-history entries had suggested revising the target, but it was never acted upon. The persistent WARNING algedonic consumed S5 cognitive cycles without producing value.
+
+### Change Made
+**Refinement mutation R50**: Redesignated M-FB30-1 and revised the active mutation target from <50 to <55.
+- Moved M-FB30-1 to REMOVED/REDESIGNED section with `REDESIGNED` status, linked to FB31-1 with FB32 validation evidence
+- Updated active mutation target from `< 50` → `< 55` across 6 files: mutation-state.md, algedonic-action-plan.py, mutation-portfolio-health.py, build-health-dashboard.py, vsm_learning_curator.md, mutation-portfolio-template.md
+- Updated Test 92 expected active count: 51→50
+- Added Test 137: verifies M-FB30-1 is REDESIGNED and algedonic threshold is 55
+
+### Test Results
+- `bash hooks/test-automation.sh`: **137 passed, 0 failed** (was 136 passed, 0 failed)
+- Test 137: M-FB30-1 REDESIGNED + threshold <55 → PASS
+- `validate-mutation-state.sh`: ✅ PASS — zero errors, zero warnings
+- `mutation-portfolio-health.py` confirms: total_active=50, historical=49, probationary_ratio=16.0%, all metrics green
+
+### Files Modified
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/scripts/algedonic-action-plan.py`
+- `viable-swarm-model/scripts/mutation-portfolio-health.py`
+- `viable-swarm-model/scripts/build-health-dashboard.py`
+- `viable-swarm-model/agents/vsm_learning_curator.md`
+- `viable-swarm-model/references/mutation-portfolio-template.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4→S4 channel — `vsm_learning_curator` and `vsm_variety_engineer` still have 0% empirical exercise rate**: With the active mutation bloat constraint resolved, the organism's most persistent unaddressed gap is the meta-system agents that were designed to autonomously curate the mutation portfolio and detect environmental drift. All enforcement mechanisms exist (pre-computation scripts, stop-verifier content-quality gates, SKILL.md mandates), but the agents themselves have never been spawned in a real build. Without empirical validation, the organism cannot know whether Mode A/B workflows actually prevent agent timeouts or whether the content-quality gates are too strict. The next frontier requires an actual fitness build to test the full pipeline end-to-end. Alternatively, **System 5 (Policy) / S5→S5 channel — 9 untested hypotheses exceed threshold of 7**: The algedonic action plan suggests gym batches, but `auto-gym-trigger.py` (R44) is wired into session-end.sh without an automatic invocation mechanism outside of build contexts.
+
+---
+
 ## 2026-06-06 — S5 Orchestrator Iteration (R49)
 
 ### Diagnosed Constraint

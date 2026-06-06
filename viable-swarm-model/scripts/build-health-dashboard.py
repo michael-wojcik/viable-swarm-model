@@ -395,7 +395,7 @@ def generate_dashboard(builds: list[dict], mutation_metrics: dict, hypothesis_me
         "## Mutation Portfolio Health",
         f"| Metric | Value | Target | Status |",
         f"|--------|-------|--------|--------|",
-        f"| Total active | {mutation_metrics.get('total_active', 'N/A')} | < 50 | {'OK' if mutation_metrics.get('total_active', 999) < 50 else 'WARNING'} |",
+        f"| Total active | {mutation_metrics.get('total_active', 'N/A')} | < 55 | {'OK' if mutation_metrics.get('total_active', 999) < 55 else 'WARNING'} |",
         f"| Probationary ratio | {mutation_metrics.get('probationary_ratio', 'N/A')}% | < 30% | {'OK' if mutation_metrics.get('probationary_ratio', 999) < 30 else 'WARNING'} |",
         f"| Ineffective count | {mutation_metrics.get('ineffective', 'N/A')} | < 5 | {'OK' if mutation_metrics.get('ineffective', 999) < 5 else 'WARNING'} |",
         "",

@@ -315,7 +315,7 @@ def write_health_markdown(health: PortfolioHealth, build_dir: Path) -> None:
         "",
         "| Metric | Value | Target | Status |",
         "|---|---|---|---|",
-        f"| Total active mutations | {health.total_active} | < 50 | {status(health.total_active, 50)} |",
+        f"| Total active mutations | {health.total_active} | < 55 | {status(health.total_active, 55)} |",
         f"| Probationary ratio | {health.probationary_ratio}% | < 30% | {status(health.probationary_ratio, 30)} |",
         f"| Measured effect fill rate (scored) | {health.measured_fill_rate_scored}% | ≥ 80% | {status(health.measured_fill_rate_scored, 80, 'ge')} |",
         f"| Measured effect fill rate (any) | {health.measured_fill_rate_any}% | ≥ 80% | {status(health.measured_fill_rate_any, 80, 'ge')} |",

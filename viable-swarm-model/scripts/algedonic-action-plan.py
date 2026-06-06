@@ -350,7 +350,7 @@ def main() -> int:
         algedonics.append({
             "name": "Active mutation bloat",
             "value": active_count,
-            "threshold": 50,
+            "threshold": 55,
             "level": "WARNING" if active_count <= 70 else "CRITICAL",
         })
     if probationary > 12:

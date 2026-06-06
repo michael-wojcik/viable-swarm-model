@@ -3974,10 +3974,10 @@ for line in text.splitlines():
 print(len(rows))
 ")
 
-if [ "$ACTIVE_COUNT" -eq 51 ]; then
+if [ "$ACTIVE_COUNT" -eq 50 ]; then
     pass
 else
-    fail "expected 51 active mutations, got $ACTIVE_COUNT"
+    fail "expected 50 active mutations, got $ACTIVE_COUNT"
 fi
 
 # ============================================================================
@@ -5039,6 +5039,31 @@ done
 
 if [ "$ALL_HISTORICAL" = true ]; then
     pass
+fi
+
+# ============================================================================
+# Test 137: M-FB30-1 redesigned + active mutation threshold <55 (R50)
+# ============================================================================
+
+echo -n "TEST: M-FB30-1 is redesigned and active mutation target is <55 ... "
+
+MSTATE_REAL="/Users/mj/vsm/viable-swarm-model/references/mutation-state.md"
+
+# Verify M-FB30-1 is in REMOVED/REDESIGNED section with redesigned status
+MFB30_LINE=$(grep -E '^\| ~~M-FB30-1~~' "$MSTATE_REAL" || true)
+MFB30_STATUS=$(echo "$MFB30_LINE" | awk -F'|' '{print $6}' | sed 's/^ *//;s/ *$//;s/\*\*//g')
+if [ -z "$MFB30_LINE" ]; then
+    fail "M-FB30-1 not found in REMOVED/REDESIGNED section"
+elif [ "$MFB30_STATUS" != "REDESIGNED" ]; then
+    fail "M-FB30-1 expected REDESIGNED, got '$MFB30_STATUS'"
+fi
+
+# Verify algedonic threshold is 55
+ALG_SCRIPT="$SCRIPT_DIR/../scripts/algedonic-action-plan.py"
+if grep -q '"threshold": 55' "$ALG_SCRIPT"; then
+    pass
+else
+    fail "algedonic-action-plan.py threshold is not 55"
 fi
 
 echo ""

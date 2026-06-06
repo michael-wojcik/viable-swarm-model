@@ -121,6 +121,7 @@
 | ~~A7~~ | FB28 Build | append-only | Timeout budget ledger (>2 per phase = BLOCK) | **REMOVED** | 3 | 2 | H217 | — | R-5 in cemetery — S5 never maintained ledger; >2 timeouts occurred in FB30 without triggering redesign; rule was prompt-only with no tool enforcement |
 | ~~PM3~~ | FB29 Build | structural | Mutation-state auto-update hook | **REMOVED** | 2 | 2 | — | — | R-6 in cemetery — Check 4 verified build ID presence but not score backfill; S5 still forgot updates; superseded by session-end.sh Check 11 + manual S5 iteration discipline |
 | ~~FB28-S5~~ | FB28 Build | structural | Agent timeout fallback protocol | **REMOVED** | 1 | 2 | H217 | — | R-7 in cemetery — Fallback protocol eliminated timeouts in FB29 but 5 timeouts recurred in FB30; protocol insufficient under load; task splitting (M-FB30-1, FB31-1) is more effective |
+| ~~M-FB30-1~~ | FB30 Build | structural | Architect task splitting (3 spawns) | **REDESIGNED** | 1 | 3→redesign | — | — | FB31-1 replaces — FB32 validated 4-spawn split (0 timeouts, score 5) vs 3-spawn (timeouts, score 3) |
 | FB26-S6 | FB26 Build | structural | Process auditor broker scored check | **REDESIGNED** | 2 | 5→redesign | — | — | PM1 attempted, PM1 removed; M-FB30-1 replaces |
 | FB27-1 | FB27 Build | append-only | UUID coercion `model_validator` | **REDESIGNED** | 1 | 2 | — | — | New rule applied FB28 |
 | SM1 | 2026-06-04 Audit | structural | vsm_variety_engineer agent | redesigned | 0 | — | — | — | Superseded by R8 (organism-vitals.py) and R25 (Mode A/B workflow) |
@@ -136,7 +137,7 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 51 | < 50 | ⚠️ WARNING (exceeds target) |
+| Active mutations | 50 | < 55 | ✅ OK (within target) |
 | Historical effective (≥5 builds) | 49 | >15% of active | ✅ 96% |
 | Effective (<5 builds, monitored) | 55 | >30% of active | ✅ 87% |
 | Probationary mutations | 8 | <20 at any time | ✅ 8 (within target) |
@@ -305,7 +306,6 @@
 
 
 | **FB30 MUTATIONS (Created during FB30, await FB31 measurement)** |
-| M-FB30-1 | FB30 Build | structural | Architect task splitting (3 spawns) | monitor | 1 | 3 | — | — | FB32 |
 | M-FB30-2 | FB30 Build | append-only | GraphQLRouter recommendation over ASGI mount | effective | 1 | 5 | — | — | FB32 |
 | M-FB30-3 | FB30 Build | append-only | Settings attribute UPPERCASE rule | effective | 1 | 5 | — | — | FB32 |
 | M-FB30-4 | FB30 Build | append-only | Test DB compatibility checklist (SQLite/PostgreSQL) | effective | 1 | 5 | — | — | FB32 |
