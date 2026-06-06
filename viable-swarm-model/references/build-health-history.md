@@ -5,6 +5,42 @@
 
 ---
 
+## 2026-06-06 — S5 Orchestrator Iteration (R31)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 channel — corrupted self-model**: `validate-mutation-state.sh` detected duplicate mutation IDs (R19, R20) in the organism's single source of truth. S5 iteration mutations (2026-06-05) had unknowingly reused IDs from FB23 Build mutations. The portfolio health script's deduplication logic silently overwrote the older entries, causing:
+- **Active mutation count inflation**: 89 computed vs ~79 actual (10 historical rows misclassified as "effective")
+- **Historical mutation undercount**: 0 computed vs 10 actual
+- **Data loss**: FB23 R19/R20 metrics invisible to the learning curator
+- **Validation bypass**: `test-automation.sh` only tested validation with mock data, not the real file
+
+### Change Made
+**Structural mutation R31**: Fixed mutation-state.md data integrity and added real-file validation.
+- Renamed S5 iteration R19→R19b, R20→R20b to eliminate ID collision
+- Changed 10 HISTORICAL EFFECTIVE rows from status `effective`→`historical`
+- Updated `session-end.sh`, `mutation-log.md`, and `build-health-history.md` cross-references
+- Added Test 87 to `test-automation.sh`: validates the REAL mutation-state.md, catching duplicate IDs, malformed rows, and missing log entries
+
+### Test Results
+- `bash hooks/test-automation.sh`: **87 passed, 0 failed** (was 86 passed, 0 failed)
+- Test 87: `validate-mutation-state.sh` passes on real mutation-state.md with zero errors
+- Portfolio health recomputed: 81 active (was 89), 10 historical (was 0), 0 duplicate IDs
+
+### Files Modified
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/hooks/session-end.sh`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 5 (Policy) / S5→S5 channel — probationary mutation bloat**: Despite fixing the count inflation, active mutations remain at 81 (target <50). The probationary count is 33 (target <20). Many S5 iteration mutations (R5–R30) are probationary with 0 builds tested in a real fitness build context. The organism cannot reduce this without either (a) an actual fitness build to validate them, or (b) a policy decision to mark infrastructure-tested mutations as "effective" after passing the automation suite. Alternatively, **System 4→S4 channel**: The `vsm_learning_curator` and `vsm_variety_engineer` still have 0% empirical exercise rate despite now having manageable workloads, Mode A/B workflows, and stop-verifier content-quality gates (R25, R26). The organism still cannot autonomously curate its mutation portfolio or detect environmental drift.
+
+---
+
 ## 2026-06-05 — S5 Orchestrator Iteration (R25)
 
 ### Diagnosed Constraint
@@ -77,7 +113,7 @@
 - See `git log` for commit hash
 
 ### Next Highest-Leverage Constraint
-**System 1 (Implementation) / S5→S1 channel**: The tester timeout problem has now been addressed on THREE fronts: (1) spawn plan compliance (R15) splits tasks by domain, (2) adaptive task sizing limits output to 300 lines, (3) test target map (R24) eliminates discovery phase. If testers STILL time out after R24, the root cause is likely that the actual test-writing task (code generation) exceeds the agent's capacity regardless of preparation. The next frontier would be creating a `tester-patterns.md` skill with copy-pasteable test templates (e.g., FastAPI client fixture + auth header pattern, React Testing Library render pattern) that the agent loads on demand, reducing cognitive overhead per test. Alternatively, **System 4→S4 channel**: The `vsm_learning_curator` and `vsm_variety_engineer` still have **0% empirical exercise rate**. With R7, R8, R18, and R19 creating pre-computation scripts and action plans, the organism has all the data needed for these agents to operate, but S5 never spawns them. A SKILL.md Phase 8c-iii requirement making vsm_learning_curator mandatory when probationary mutations > 12 could close this gap.
+**System 1 (Implementation) / S5→S1 channel**: The tester timeout problem has now been addressed on THREE fronts: (1) spawn plan compliance (R15) splits tasks by domain, (2) adaptive task sizing limits output to 300 lines, (3) test target map (R24) eliminates discovery phase. If testers STILL time out after R24, the root cause is likely that the actual test-writing task (code generation) exceeds the agent's capacity regardless of preparation. The next frontier would be creating a `tester-patterns.md` skill with copy-pasteable test templates (e.g., FastAPI client fixture + auth header pattern, React Testing Library render pattern) that the agent loads on demand, reducing cognitive overhead per test. Alternatively, **System 4→S4 channel**: The `vsm_learning_curator` and `vsm_variety_engineer` still have **0% empirical exercise rate**. With R7, R8, R18, and R19b creating pre-computation scripts and action plans, the organism has all the data needed for these agents to operate, but S5 never spawns them. A SKILL.md Phase 8c-iii requirement making vsm_learning_curator mandatory when probationary mutations > 12 could close this gap.
 
 ---
 
@@ -112,7 +148,7 @@
 - See `git log` for commit hash
 
 ### Next Highest-Leverage Constraint
-**System 1 (Implementation) / S5→S1 channel**: The `vsm_backend_tester` (65% success) and `vsm_frontend_tester` (60% success) consistently time out in Tier 2+ builds. R10's `test-split-orchestrator.py` and R15's spawn plan compliance are structural improvements, but the agents still time out. The root cause may be that the agents spend excessive time reading source code to understand what to test. A `test-target-map.py` script that analyzes the codebase and outputs "which functions/endpoints need tests" could eliminate this discovery phase. Alternatively, **System 4→S4 channel**: The `vsm_learning_curator` and `vsm_variety_engineer` still have **0% empirical exercise rate**. Pre-computation scripts exist (R7, R8, R18, R19) but the agents themselves are never spawned. The organism cannot autonomously promote mutations or detect environmental drift.
+**System 1 (Implementation) / S5→S1 channel**: The `vsm_backend_tester` (65% success) and `vsm_frontend_tester` (60% success) consistently time out in Tier 2+ builds. R10's `test-split-orchestrator.py` and R15's spawn plan compliance are structural improvements, but the agents still time out. The root cause may be that the agents spend excessive time reading source code to understand what to test. A `test-target-map.py` script that analyzes the codebase and outputs "which functions/endpoints need tests" could eliminate this discovery phase. Alternatively, **System 4→S4 channel**: The `vsm_learning_curator` and `vsm_variety_engineer` still have **0% empirical exercise rate**. Pre-computation scripts exist (R7, R8, R18, R19b) but the agents themselves are never spawned. The organism cannot autonomously promote mutations or detect environmental drift.
 
 ---
 
@@ -180,13 +216,13 @@
 
 ---
 
-## 2026-06-05 — S5 Orchestrator Iteration (R20)
+## 2026-06-05 — S5 Orchestrator Iteration (R20b)
 
 ### Diagnosed Constraint
-**System 5 (Policy) / S5→S1 closeout pipeline gap**: The organism created 9 pre-computation/orchestration scripts (R6–R10, R14, R18, R19) but only 5 were auto-invoked at closeout. **meta-metrics-precompute.py** (R14) and **algedonic-action-plan.py** (R19) required S5 to remember to run them manually — a reliability failure under time pressure. When S5 forgets, vsm_meta makes false TBD claims (no pre-computed metrics) and the variety engineer has no structured action plan to verify. This is a systemic pattern: new scripts are created but not wired into the automated pipeline.
+**System 5 (Policy) / S5→S1 closeout pipeline gap**: The organism created 9 pre-computation/orchestration scripts (R6–R10, R14, R18, R19b) but only 5 were auto-invoked at closeout. **meta-metrics-precompute.py** (R14) and **algedonic-action-plan.py** (R19b) required S5 to remember to run them manually — a reliability failure under time pressure. When S5 forgets, vsm_meta makes false TBD claims (no pre-computed metrics) and the variety engineer has no structured action plan to verify. This is a systemic pattern: new scripts are created but not wired into the automated pipeline.
 
 ### Change Made
-**Structural mutation R20**: Wired missing pre-computation scripts into `session-end.sh`.
+**Structural mutation R20b**: Wired missing pre-computation scripts into `session-end.sh`.
 - **Check 14**: If `meta-report.md` exists but `meta-metrics-precomputed.md` is missing, flag the omission and auto-invoke `meta-metrics-precompute.py`. Prevents vsm_meta false TBD claims.
 - **Check 15**: If `meta-report.md` exists but `algedonic-action-plan.md` is missing, flag the omission and auto-invoke `algedonic-action-plan.py`. Gives S5 a concrete action plan for next iteration.
 - Both checks follow the proven pattern from Checks 8–10 (flag → auto-generate fallback).
@@ -214,13 +250,13 @@
 
 ---
 
-## 2026-06-05 — S5 Orchestrator Iteration (R19)
+## 2026-06-05 — S5 Orchestrator Iteration (R19b)
 
 ### Diagnosed Constraint
 **System 4* (Variety Engineer) / S4*→S5 response channel**: The `vsm_variety_engineer` has a **0% exercise rate** — no `variety-assessment.md` artifacts exist in any build directory. While `organism-vitals.py` (R8) pre-computes health metrics and algedonic signals, there is **no bridge between sensing and acting**. When organism-vitals.py reports "CRITICAL: Probationary mutations 21" or "WARNING: Skill variety 0.48," S5 must manually diagnose what to do. The variety engineer's prompt instructs it to "emit algedonic signals" and "write recommendations," but without a concrete tool for translating signals into specific actions, the S4*→S5 channel is one-way: S4* senses problems, but S5 has no structured input for decision-making. This reactive-only pattern wastes S5 cognitive capacity and delays intervention.
 
 ### Change Made
-**Structural mutation R19**: Created `scripts/algedonic-action-plan.py` — an S4*→S5 response bridge.
+**Structural mutation R19b**: Created `scripts/algedonic-action-plan.py` — an S4*→S5 response bridge.
 - `algedonic-action-plan.py`: Reads organism state (mutation-state.md, hypotheses.md, skill registry, build history), identifies triggered algedonics, and generates SPECIFIC actions per signal:
   - **Mutation actions**: Lists specific demotion/promotion candidates with IDs, scores, and build counts. Skips HISTORICAL and REMOVED sections to avoid false positives.
   - **Hypothesis actions**: Categorizes untested hypotheses by domain (frontend/backend/infra/arch) and suggests specific gym batches.

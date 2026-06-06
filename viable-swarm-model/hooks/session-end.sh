@@ -206,7 +206,7 @@ if [[ -f "$CWD/.kimi/meta-report.md" && ! -f "$CWD/.kimi/meta-metrics-precompute
 fi
 
 # Check 15: Algedonic action plan generation (NEW — closes S4*→S5 action gap)
-# R19 created algedonic-action-plan.py to translate algedonic signals into specific actions.
+# R19b created algedonic-action-plan.py to translate algedonic signals into specific actions.
 # If build reached Phase 8 but action plan was never generated, flag and auto-generate.
 if [[ -f "$CWD/.kimi/meta-report.md" && ! -f "$CWD/.kimi/algedonic-action-plan.md" ]]; then
     AUDIT_WARNINGS="${AUDIT_WARNINGS}- Phase 8b complete but algedonic-action-plan.md missing. S5 has no structured action plan for next iteration.\n"

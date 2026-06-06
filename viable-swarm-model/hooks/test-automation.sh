@@ -231,6 +231,21 @@ else
 fi
 
 # ============================================================================
+# Test 87: validate-mutation-state.sh — real file has zero data integrity errors
+# ============================================================================
+
+echo -n "TEST: validate-mutation-state.sh passes on real mutation-state.md ... "
+
+RC=0
+OUTPUT=$(bash "$SCRIPT_DIR/validate-mutation-state.sh" 2>&1) || RC=$?
+
+if [ "$RC" -eq 0 ] && echo "$OUTPUT" | grep -q "PASS — Mutation state is healthy"; then
+    pass
+else
+    fail "real mutation-state.md has data integrity errors (rc=$RC): $(echo "$OUTPUT" | grep -E 'ERROR|WARNING' | head -5)"
+fi
+
+# ============================================================================
 # Test 5: auto-broker-update.sh — appends entry for valid build directory
 # ============================================================================
 

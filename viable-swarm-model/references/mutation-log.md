@@ -3620,7 +3620,7 @@ Additionally, the dashboard was never automatically invoked — it only ran when
 
 ---
 
-## Mutation R19 — 2026-06-05
+## Mutation R19b — 2026-06-05
 
 **Session**: S5 Orchestrator Iteration
 **File**: `scripts/algedonic-action-plan.py`, `agents/vsm_variety_engineer.md`
@@ -3647,19 +3647,19 @@ Additionally, the dashboard was never automatically invoked — it only ran when
 
 ---
 
-## Mutation R20 — 2026-06-05
+## Mutation R20b — 2026-06-05
 
 **Session**: S5 Orchestrator Iteration
 **File**: `hooks/session-end.sh`
 **Type**: structural
-**Rationale**: The organism has created 9 pre-computation/orchestration scripts (R6–R10, R14, R18, R19) but only 5 are auto-invoked at closeout:
+**Rationale**: The organism has created 9 pre-computation/orchestration scripts (R6–R10, R14, R18, R19b) but only 5 are auto-invoked at closeout:
 - ✅ build-health-dashboard.py (end of session-end.sh)
 - ✅ mutation-portfolio-health.py (Check 8)
 - ✅ organism-vitals.py (Check 9)
 - ✅ process-compliance-precompute.py (Check 10)
 - ❌ meta-metrics-precompute.py (R14) — NOT auto-invoked
 - ❌ hypothesis-backlog-curator.py (R18) — NOT auto-invoked (correctly; it's global maintenance)
-- ❌ algedonic-action-plan.py (R19) — NOT auto-invoked
+- ❌ algedonic-action-plan.py (R19b) — NOT auto-invoked
 
 This creates a **closeout pipeline gap**: S5 must remember to manually run meta-metrics-precompute.py before spawning vsm_meta, and must remember to run algedonic-action-plan.py after organism-vitals.py. Under time pressure, these omissions are likely. The proven pattern from R7–R10 is to auto-invoke pre-computation scripts via session-end.sh checks when the corresponding artifact is missing.
 
@@ -4034,3 +4034,38 @@ if STACK_SKILLS_DIR.exists():
 ```
 
 **Measured effect**: **AWAITING_BUILD**
+
+---
+
+## Mutation R31 — 2026-06-06
+
+**Session**: S5 Orchestrator Iteration
+**File**: `references/mutation-state.md`, `hooks/session-end.sh`, `references/mutation-log.md`, `references/build-health-history.md`
+**Type**: structural (data integrity fix)
+**Rationale**: `validate-mutation-state.sh` (existing since FB23) detected **🔴 ERROR: Duplicate mutation IDs** for R19 and R20. Investigation revealed:
+1. **Duplicate IDs**: S5 iteration mutations (2026-06-05) reused IDs R19 and R20 that were already assigned to FB23 Build mutations. The `mutation-portfolio-health.py` script deduplicates by ID (keeping last occurrence), which **silently overwrote** the FB23 entries. This caused data loss: the portfolio health script reported 0 historical-effective mutations when 10 existed, and inflated the active count from ~79 to 89.
+2. **Stale statuses**: All 10 rows in the "HISTORICAL EFFECTIVE" section had status `"effective"` instead of `"historical"`, causing them to be counted as active.
+3. **Validation bypass**: `test-automation.sh` Tests 3–4 tested `validate-mutation-state.sh` with **mock data**, not the real file. The real file had been corrupted for at least 1 iteration without detection.
+
+This is a **System 5 (Policy) channel failure**: the organism's self-model was corrupted, distorting portfolio health metrics, learning curator recommendations, and stop-verifier decisions.
+
+**Expected effect**: Zero duplicate IDs in mutation-state.md. Historical-effective mutations correctly excluded from active count. Real-file validation enforced in test suite.
+
+**Files modified**:
+- `references/mutation-state.md` — Renamed S5 iteration R19→R19b, R20→R20b. Changed 10 HISTORICAL EFFECTIVE rows from status `effective`→`historical`. Updated Integration Health metrics to computed values.
+- `hooks/session-end.sh` — Updated comment "R19 created..." → "R19b created..."
+- `references/mutation-log.md` — Updated 2026-06-05 entry headers to R19b/R20b.
+- `references/build-health-history.md` — Updated cross-references to R19b/R20b for consistency.
+- `hooks/test-automation.sh` — Added Test 87: validates the REAL mutation-state.md via `validate-mutation-state.sh`, catching duplicate IDs, malformed rows, and missing log entries in production data.
+
+**Before**:
+- `validate-mutation-state.sh` on real file: `🔴 FAILED — Critical data integrity issues detected.` (Errors: 1 | duplicate R19, R20)
+- Portfolio health computed: 89 active mutations, 0 historical, 8 historical promotions ready (but 10 actual)
+
+**After**:
+- `validate-mutation-state.sh` on real file: `✅ PASS — Mutation state is healthy.`
+- Portfolio health computed: 81 active mutations, 10 historical, 0 duplicate IDs
+
+**Measured effect**: **Awaiting measurement** — Success criteria: (1) zero validation errors for 3 consecutive iterations, (2) historical promotion count matches actual proven mutations, (3) no future ID collisions detected by Test 87.
+
+---
