@@ -278,6 +278,10 @@
 | vsm_process_auditor | Process compliance | 60% | 3, 2, 2 | Timed out in FB30; compliance 85/100 despite timeout | 300 lines |
 | vsm_variety_engineer | Environmental scanning | — | — | New agent — unmeasured | 400 lines |
 | vsm_learning_curator | Portfolio management | — | — | New agent — unmeasured | 400 lines |
+| vsm_backend_fix_agent | Backend surgical fixes | — | — | New agent — unmeasured | 300 lines |
+| vsm_frontend_fix_agent | Frontend surgical fixes | — | — | New agent — unmeasured | 300 lines |
+| vsm_explore | Read-only exploration | — | — | New agent — unmeasured | 400 lines |
+| vsm_synthesizer | Multi-report synthesis | — | — | New agent — unmeasured | 400 lines |
 
 ### Known Unknowns (with confidence)
 | Hypothesis | Confidence | Last Tested | Priority | Status |

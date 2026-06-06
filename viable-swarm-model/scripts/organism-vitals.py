@@ -127,8 +127,8 @@ def list_untested_hypotheses(path: Path) -> list[str]:
         return []
     text = path.read_text()
     untested: list[str] = []
-    # Find each hypothesis header and its status
-    for match in re.finditer(r"^## (H\S+):.*?\n\*\*Status\*\*:\s*untested", text, re.MULTILINE | re.DOTALL):
+    # Find each hypothesis header and its status, but don't cross section boundaries
+    for match in re.finditer(r"^## (H\S+):(?:(?!^## ).)*?\n\*\*Status\*\*:\s*untested", text, re.MULTILINE | re.DOTALL):
         hid = match.group(1)
         untested.append(hid)
     return untested

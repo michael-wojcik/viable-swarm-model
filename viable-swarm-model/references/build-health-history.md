@@ -1997,3 +1997,33 @@ Without a fitness build or additional S5 iteration cycles, the organism has reac
 ### Next Highest-Leverage Constraint
 **System 4 (Adaptation/Intelligence) / S4→S4 channel — meta-system agents still at 0% empirical exercise rate**: With all S5 iteration mutations now historical and the variety score fragility partially addressed through better visibility, the organism's most persistent structural gap remains that vsm_learning_curator, vsm_variety_engineer, vsm_backend_fix_agent, vsm_frontend_fix_agent, vsm_explore, and vsm_synthesizer have never been spawned in a real build. The infrastructure exists (agent files, Mode A/B workflows, stop-verifier content-quality gates) but lacks empirical validation. Alternatively, **System 5 (Policy) / S5→S4 channel — 6 untested hypotheses**: Testing even one hypothesis (e.g., H152 pre-build smoke test via a minimal gym experiment) would raise hypothesis variety from 0.33 to ~0.44 and push the composite variety score to ~0.73, creating healthy headroom.
 
+
+---
+
+## 2026-06-06 — S5 Orchestrator Iteration (R62)
+
+### Diagnosed Constraint
+**System 4 (Adaptation/Intelligence) / S4→S5 channel — variety score fragility compounded by data quality bug**: During R61, the variety breakdown showed H202 as "untested" despite its actual status being "tested — not confirmed". Root cause: `list_untested_hypotheses()` in organism-vitals.py used a regex with `re.DOTALL` that matched across section boundaries, causing H202's header to pair with H[N+3]'s `**Status**: untested` line. This corrupted both the untested count and the variety breakdown. Additionally, the Capability Matrix only documented 14 of 19 agents, artificially suppressing agent variety.
+
+### Change Made
+**Bug fix + refinement mutation R62**: Fixed the cross-section regex bug and completed the Capability Matrix.
+- `scripts/organism-vitals.py`: Fixed `list_untested_hypotheses()` regex from `r"^## (H\S+):.*?\n\*\*Status\*\*:\s*untested"` to `r"^## (H\S+):(?:(?!^## ).)*?\n\*\*Status\*\*:\s*untested"` using negative lookahead to prevent matching across hypothesis section boundaries.
+- `references/mutation-state.md`: Added vsm_backend_fix_agent, vsm_frontend_fix_agent, vsm_explore, and vsm_synthesizer to Capability Matrix with "New agent — unmeasured" status, consistent with vsm_variety_engineer and vsm_learning_curator.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **163 passed, 0 failed**
+- Test 159: Variety breakdown shows correct untested hypotheses (H104, H152, H153, H156, H[N+3], H[N+4]) — H202 no longer falsely included → PASS
+- `organism-vitals.py`: Variety Score improved from 0.71 to 0.76; Agent variety from 0.79 to 1.0
+
+### Files Modified
+- `viable-swarm-model/scripts/organism-vitals.py`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4 (Adaptation/Intelligence) / S4→S5 channel — skill variety at 0.75 with 4 unused Full skills**: architecture-patterns, frontend-patterns, integration-patterns, and research-patterns have 0 builds in the effectiveness log. Unlike agent variety (which was a documentation fix), skill variety requires actual build exercise. The next fitness build that uses these skills would push skill variety to 1.0 (16/16) and the composite variety score to ~0.83. Alternatively, **System 4 (Adaptation/Intelligence) / S4→S4 channel — meta-system agents still unmeasured**: 6 agents (the 4 newly added to Capability Matrix plus vsm_variety_engineer and vsm_learning_curator) have never been empirically exercised. The stop-verifier content-quality gates exist but lack validation.
+

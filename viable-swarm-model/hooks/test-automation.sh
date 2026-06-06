@@ -6021,9 +6021,10 @@ HAS_UNUSED=$(echo "$OV159" | grep -c "Unused skills" || true)
 HAS_UNTESTED=$(echo "$OV159" | grep -c "Untested hypotheses" || true)
 
 # Check specific values:
-# - backend_fix_agent should be MISSING (not referenced in mutation state)
 # - frontend-patterns should be UNUSED (0 builds in log)
 # - H001 should be UNTESTED
+# - All agents should be referenced in the real mutation state, so in the mock
+#   state with only backend_coder and frontend_coder, backend_fix_agent is missing
 HAS_FIX_AGENT_MISSING=$(echo "$OV159" | grep "Missing agents" | grep -c "vsm_backend_fix_agent" || true)
 HAS_FRONTEND_SKILL=$(echo "$OV159" | grep "Unused skills" | grep -c "frontend-patterns" || true)
 HAS_H001=$(echo "$OV159" | grep "Untested hypotheses" | grep -c "H001" || true)

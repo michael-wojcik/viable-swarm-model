@@ -4852,3 +4852,28 @@ These gaps represent a System 3 (Audit/Control) → System 1 (Implementation) ch
 
 **Measured effect**: **5/5** — Active mutations dropped from 46 to 45. All 163 automation suite tests pass. organism-vitals.py now produces actionable variety breakdowns.
 
+
+---
+
+## Mutation R62 — 2026-06-06
+
+**Session**: S5 Orchestrator Iteration — organism-vitals.py hypothesis parsing bug fix + Capability Matrix completeness + variety score improvement
+**File**: `scripts/organism-vitals.py`, `references/mutation-state.md`
+**Type**: bug fix + refinement
+**Rationale**: **System 4 (Adaptation/Intelligence) / S4→S5 channel — variety score fragility AND data quality bug**: Two issues were identified during R61 follow-up:
+1. **Bug in `list_untested_hypotheses()`**: The regex `^## (H\S+):.*?\n\*\*Status\*\*:\s*untested` with `re.DOTALL` incorrectly matched across hypothesis section boundaries. H202 (status: "tested — not confirmed") was falsely reported as untested because the regex matched from `## H202:` all the way to the `**Status**: untested` of H[N+3]. This meant H[N+3] was missing from the untested list while H202 was incorrectly included, corrupting the variety breakdown.
+2. **Capability Matrix incompleteness**: The matrix documented 14 of 19 agents. The 5 missing agents (vsm_backend_fix_agent, vsm_frontend_fix_agent, vsm_explore, vsm_synthesizer, plus vsm_product which was only referenced in a mutation description) were not tracked, artificially depressing agent variety from what the organism actually possesses.
+
+**Expected effect**:
+- Variety score improves from 0.71 to 0.76, creating healthy headroom above the 0.70 WARNING threshold.
+- Agent variety improves from 0.79 (15/19) to 1.0 (19/19).
+- Variety breakdown now correctly identifies H[N+3] and H[N+4] as untested; H202 is no longer falsely reported.
+- Capability Matrix documents all 19 agents, including the 4 fix/explore/synthesis agents that were previously undocumented.
+
+**Files modified**:
+- `scripts/organism-vitals.py` — Fixed `list_untested_hypotheses()` regex to use negative lookahead `(?!^## )` to prevent cross-section matching.
+- `references/mutation-state.md` — Added 4 new rows to Capability Matrix: vsm_backend_fix_agent, vsm_frontend_fix_agent, vsm_explore, vsm_synthesizer (all marked "New agent — unmeasured").
+- `hooks/test-automation.sh` — Test 159 verifies variety breakdown output.
+
+**Measured effect**: **5/5** — Variety score 0.71→0.76. All 163 automation suite tests pass. organism-vitals.py variety breakdown is now accurate.
+
