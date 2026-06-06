@@ -137,13 +137,13 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 53 | < 55 | ✅ OK (within target) |
-| Historical effective (≥5 builds) | 49 | >15% of active | ✅ 92% |
-| Effective (<5 builds, monitored) | 44 | >30% of active | ✅ 83% |
+| Active mutations | 54 | < 55 | ✅ OK (within target) |
+| Historical effective (≥5 builds) | 49 | >15% of active | ✅ 91% |
+| Effective (<5 builds, monitored) | 45 | >30% of active | ✅ 83% |
 | Probationary mutations | 8 | <20 at any time | ✅ 8 (within target) |
 | Removed / redesigned | 19 | ≥2 per 5 builds | ✅ 19 (exceeds target) |
-| Measured effect fill rate (scored) | 86.8% | ≥80% | ✅ 86.8% |
-| Measured effect fill rate (any entry) | 88.4% | ≥80% | ✅ 88.4% |
+| Measured effect fill rate (scored) | 86.9% | ≥80% | ✅ 86.9% |
+| Measured effect fill rate (any entry) | 88.5% | ≥80% | ✅ 88.5% |
 | Removal rate (last 5 builds) | 6 | ≥2 | ✅ Meets target |
 
 ---
@@ -334,3 +334,4 @@
 | R51 | 2026-06-06 S5 | refinement | auto-gym-trigger.py bracket-hypothesis parsing fix + threshold alignment 10→7 | effective | 1 | 5 | — | — | S5 iter |
 | R52 | 2026-06-06 S5 | refinement | algedonic-action-plan.py threshold fix 50→55 + integration-test-closeout.py test coverage expansion (6 new tests) | effective | 1 | 5 | — | — | S5 iter |
 | R53 | 2026-06-06 S5 | refinement | Skill variety metric consistency fix — organism-vitals.py + algedonic-action-plan.py + skill-effectiveness-tracker.py | effective | 1 | 5 | — | — | S5 iter |
+| R54 | 2026-06-06 S5 | refinement | organism-vitals.py parse_mutation_state filters invalid status rows + fill rate accuracy + utcnow deprecation fix | effective | 1 | 5 | — | — | S5 iter |

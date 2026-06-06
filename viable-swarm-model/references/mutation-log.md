@@ -4621,3 +4621,20 @@ Additionally, `integration-test-closeout.py` — 360 lines of critical closeout 
 - `hooks/test-automation.sh` — Tests 145-147 verify the fixes
 
 **Measured effect**: **Score 5** — 147 automation tests pass (3 new). organism-vitals.py and algedonic-action-plan.py now both report 11/24 = 0.46 skill variety. skill-effectiveness-tracker.py no longer creates duplicate sections.
+
+---
+
+## Mutation R54 — 2026-06-06
+
+**Session**: S5 Orchestrator Iteration
+**File**: `scripts/organism-vitals.py`, `hooks/test-automation.sh`
+**Type**: refinement
+**Rationale**: After fixing the skill variety inconsistency (R53), running `organism-vitals.py` against real data revealed it was still reporting **76.6%** measured effect fill rate while `mutation-portfolio-health.py` reported **86.8%**. Root cause: `parse_mutation_state()` in `organism-vitals.py` was parsing the **Capability Matrix** table (under Skill State Sections) as mutation rows because it lacked status validation. The Capability Matrix has 16 rows with "status" values like "2 timeouts in FB30" and "new agent — unmeasured" — none of which are valid mutation statuses. This inflated `total_mutations` from 121 to 137, depressing the fill rate by 10.2 percentage points. Additionally, `datetime.utcnow()` emitted a DeprecationWarning on Python 3.13.
+
+**Expected effect**: `organism-vitals.py` now correctly reports 121 total tracked mutations and 86.8% fill rate, consistent with `mutation-portfolio-health.py`. No more DeprecationWarning noise.
+
+**Files modified**:
+- `scripts/organism-vitals.py` — added valid-status filter in `parse_mutation_state()`, replaced `datetime.utcnow()` with `datetime.now(timezone.utc)`
+- `hooks/test-automation.sh` — Test 148 verifies Capability Matrix rows are excluded from fill rate and total count
+
+**Measured effect**: **Score 5** — 148 automation tests pass (1 new). organism-vitals.py now reports 121 total mutations and 86.8% fill rate, matching mutation-portfolio-health.py.

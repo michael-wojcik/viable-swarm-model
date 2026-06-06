@@ -4,6 +4,35 @@
 > **Updated by**: build-health-dashboard.py
 
 ---
+---
+
+## 2026-06-06 — S5 Orchestrator Iteration (R54)
+
+### Diagnosed Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — fill rate metric inaccuracy in organism-vitals.py**: After R53 fixed the skill variety inconsistency, `organism-vitals.py` still reported **76.6%** measured effect fill rate while `mutation-portfolio-health.py` reported **86.8%**. Investigation revealed that `parse_mutation_state()` was parsing the **Capability Matrix** table (16 rows under Skill State Sections) as mutation rows because it lacked status validation. These rows had "status" values like "2 timeouts in FB30" and "new agent — unmeasured" — none of which are valid mutation statuses. This inflated `total_mutations` from 121 to 137, depressing the fill rate by 10.2 percentage points and corrupting the S4 intelligence channel.
+
+### Change Made
+**Refinement mutation R54**: Fixed `parse_mutation_state()` in organism-vitals.py to filter by valid mutation statuses.
+- Added `valid_statuses = {"probation", "effective", "monitor", "ineffective", "removed", "historical", "redesigned"}` filter before appending rows
+- Replaced deprecated `datetime.utcnow()` with `datetime.now(timezone.utc)` to eliminate DeprecationWarning on Python 3.13
+
+### Test Results
+- `bash hooks/test-automation.sh`: **148 passed, 0 failed** (was 147 passed, 0 failed)
+- Test 148: organism-vitals.py excludes Capability Matrix from fill rate (50% = 1/2) and total count (2) → PASS
+- organism-vitals.py now reports 121 total mutations and 86.8% fill rate, matching mutation-portfolio-health.py
+
+### Files Modified
+- `viable-swarm-model/scripts/organism-vitals.py`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — vsm_learning_curator and vsm_variety_engineer still have 0% empirical exercise rate**: With both skill variety and fill rate metrics now accurate and consistent, the organism's most persistent unaddressed gap remains the meta-system agents. All enforcement mechanisms exist, but the agents themselves have never been spawned in a real build. Without empirical validation, the organism cannot know whether Mode A/B workflows actually prevent agent timeouts. The next frontier requires an actual fitness build to test the full pipeline end-to-end. Alternatively, **System 5 (Policy) / S5→S5 channel — 9 untested hypotheses exceed threshold of 7**: The algedonic action plan suggests gym batches, but `/flow:vsm-fitness-gym` invocation requires human/S5 action.
 
 ## 2026-06-06 — S5 Orchestrator Iteration (R53)
 

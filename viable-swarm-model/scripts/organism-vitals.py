@@ -89,6 +89,11 @@ def parse_mutation_state(path: Path) -> list[MutationRow]:
                 pass
         status_raw = parts[4].lower() if len(parts) > 4 else ""
         status_raw = re.sub(r"\*\*", "", status_raw).strip()
+        # Filter out non-mutation rows (e.g., Capability Matrix, other tables)
+        valid_statuses = {"probation", "effective", "monitor", "ineffective",
+                          "removed", "historical", "redesigned"}
+        if status_raw not in valid_statuses:
+            continue
         rows.append(MutationRow(
             id=clean_id, source=parts[1], type=parts[2] if len(parts) > 2 else "",
             target_failure=parts[3] if len(parts) > 3 else "",
@@ -168,7 +173,7 @@ def days_since_last_fitness_build() -> int:
                 latest = mtime
     if latest is None:
         return 999
-    return (datetime.utcnow().date() - latest).days
+    return (datetime.now(timezone.utc).date() - latest).days
 
 
 # ---------------------------------------------------------------------------

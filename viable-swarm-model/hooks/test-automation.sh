@@ -5497,6 +5497,63 @@ else
 fi
 
 # ============================================================================
+# Test 148: organism-vitals.py — filters non-mutation rows (e.g., Capability Matrix)
+# ============================================================================
+
+echo -n "TEST: organism-vitals.py excludes Capability Matrix from fill rate and total count ... "
+
+mkdir -p "$TMPDIR/build148/.kimi"
+mkdir -p "$TMPDIR/vsm/viable-swarm-model/scripts"
+mkdir -p "$TMPDIR/vsm/vsm-stack-skills"
+
+cp "$SCRIPT_DIR/../scripts/organism-vitals.py" "$TMPDIR/vsm/viable-swarm-model/scripts/"
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| M1 | Test | append-only | Test failure | effective | 5 | 4 | — | — | — |
+| M2 | Test | structural | Test bypass | probation | 1 | — | — | — | — |
+
+## Capability Matrix
+| Agent | Domain | Success Rate | Last 3 Scores | Known Failure Modes | Recommended Max Task Size |
+|-------|--------|-------------|---------------|---------------------|--------------------------|
+| vsm_backend_coder | Python/FastAPI | 85% | 4, 4, 4 | 2 timeouts in FB30 | 500 lines |
+EOF
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/hypotheses.md" << 'EOF'
+# Hypotheses
+## H1
+**Status**: confirmed
+EOF
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/knowledge-broker.md" << 'EOF'
+# Broker
+> **Last updated**: 2026-06-01
+EOF
+
+cat > "$TMPDIR/vsm/viable-swarm-model/references/build-health-history.md" << 'EOF'
+# Build Health History
+EOF
+
+cat > "$TMPDIR/build148/plan.md" << 'EOF'
+# Build Plan — FB148
+EOF
+
+RC=0
+python3 "$SCRIPT_DIR/../scripts/organism-vitals.py" --build-dir "$TMPDIR/build148" >/dev/null 2>&1 || RC=$?
+
+OUTPUT=$(cat "$TMPDIR/build148/.kimi/organism-vitals.md" 2>/dev/null || echo "")
+if [ "$RC" -eq 0 ] && \
+   echo "$OUTPUT" | grep -q "Total mutations tracked.*2" && \
+   echo "$OUTPUT" | grep -q "Measured effect fill rate.*50.0" && \
+   ! echo "$OUTPUT" | grep -q "vsm_backend_coder"; then
+    pass
+else
+    fail "fill rate should be 50% (1/2) and total 2, excluding Capability Matrix; got: $(echo "$OUTPUT" | grep -E 'Total mutations|fill rate' || echo 'missing')"
+fi
+
+# ============================================================================
 # Test 147: skill-effectiveness-tracker.py — replaces existing date section
 # ============================================================================
 
