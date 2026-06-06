@@ -1962,3 +1962,38 @@ Without a fitness build or additional S5 iteration cycles, the organism has reac
 ### Next Highest-Leverage Constraint
 **System 4 (Adaptation/Intelligence) / S4→S5 channel — Variety Score at 0.71, barely above WARNING threshold**: Hypothesis variety remains at 0.33 (6/9 untested), the single biggest drag on the composite variety score. With one more untested hypothesis, the variety score would drop below 0.70 and trigger a WARNING algedonic. Testing even one hypothesis (e.g., H152 or H156 via a minimal gym experiment) would raise hypothesis variety to ~0.44 and push the composite score to ~0.73, creating healthy headroom. Alternatively, **System 3 (Audit/Control) / S3→S1 channel — auditor WriteFile tool presence**: H202 documented that `vsm_auditor.yaml` includes `WriteFile` in its tool list, contrary to the read-only boundary design. While prompt-level boundaries have worked empirically, tool-enforced boundaries remain unvalidated.
 
+
+---
+
+## 2026-06-06 — S5 Orchestrator Iteration (R61)
+
+### Diagnosed Constraint
+**System 4 (Adaptation/Intelligence) / S4→S5 channel — Variety Score at 0.71, dangerously close to WARNING threshold**: Hypothesis variety (0.33, 6/9 untested) is the primary drag on the composite score. However, the more immediate operational constraint was that the variety engineer agent lacked actionable pre-computed guidance — organism-vitals.py only showed aggregate metrics (e.g., "Agent variety: 0.79"), not WHICH specific 4 agents were unreferenced or WHICH 4 skills were unused. This forced manual cross-referencing across mutation-state.md, skill-effectiveness-log.md, and hypotheses.md.
+
+**Secondary constraint — System 5 (Policy) / S5→S5 channel — R58 at builds_tested=4**: Following the established S5 iteration protocol, R58 was incremented to 5 and promoted to historical. All S5 iteration mutations (R55-R58) are now historical.
+
+### Change Made
+**Refinement mutation R61**: Enhanced organism-vitals.py with actionable variety breakdown and near-threshold early warning.
+- `scripts/organism-vitals.py`: Added `list_untested_hypotheses()` to extract specific untested hypothesis IDs. Added "Variety Breakdown" section listing missing agents, unused skills, and untested hypotheses by name. Added "Variety watch" proactive recommendation when 0.70 ≤ variety_score < 0.75. Fixed recommendation numbering to be sequential.
+- `references/mutation-state.md`: Promoted R58 to `historical`; active mutations now 45.
+- `hooks/test-automation.sh`: Test 159 verifies variety breakdown completeness.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **163 passed, 0 failed** (was 161 passed, 0 failed)
+- Test 156e: R58 promoted to historical with builds_tested=5 → PASS
+- Test 159: Variety breakdown shows missing agents, unused skills, untested hypotheses → PASS
+- `mutation-portfolio-health.py`: Confirms total_active=45, all metrics green
+
+### Files Modified
+- `viable-swarm-model/scripts/organism-vitals.py`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — meta-system agents still at 0% empirical exercise rate**: With all S5 iteration mutations now historical and the variety score fragility partially addressed through better visibility, the organism's most persistent structural gap remains that vsm_learning_curator, vsm_variety_engineer, vsm_backend_fix_agent, vsm_frontend_fix_agent, vsm_explore, and vsm_synthesizer have never been spawned in a real build. The infrastructure exists (agent files, Mode A/B workflows, stop-verifier content-quality gates) but lacks empirical validation. Alternatively, **System 5 (Policy) / S5→S4 channel — 6 untested hypotheses**: Testing even one hypothesis (e.g., H152 pre-build smoke test via a minimal gym experiment) would raise hypothesis variety from 0.33 to ~0.44 and push the composite variety score to ~0.73, creating healthy headroom.
+

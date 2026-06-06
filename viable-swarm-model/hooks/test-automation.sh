@@ -5868,6 +5868,21 @@ else
 fi
 
 # ============================================================================
+# Test 156e: R58 promoted to historical after auto-increment
+# ============================================================================
+
+echo -n "TEST: R58 promoted to historical after fifth auto-increment ... "
+
+R58_HIST=$(grep "^| R58 " "$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md" | grep "historical" | wc -l)
+R58_COUNT=$(grep "^| R58 " "$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md" | awk -F'|' '{print $7}' | tr -d ' ')
+
+if [ "$R58_HIST" -eq 1 ] && [ "$R58_COUNT" -ge 5 ]; then
+    pass
+else
+    fail "R58 should be historical with builds_tested >= 5 (got $R58_COUNT)"
+fi
+
+# ============================================================================
 # Test 157: organism-vitals.py skill variety excludes Icebox/Planned skills
 # ============================================================================
 
@@ -5931,6 +5946,94 @@ if [ "$AA_VARIETY" = "1/3" ]; then
     pass
 else
     fail "expected 1/3 (only Full skills counted), got $AA_VARIETY"
+fi
+
+# ============================================================================
+# Test 159: organism-vitals.py variety breakdown lists missing agents, unused skills, untested hypotheses
+# ============================================================================
+
+echo -n "TEST: organism-vitals.py variety breakdown is actionable and complete ... "
+
+mkdir -p "$TMPDIR/build159/.kimi"
+mkdir -p "$TMPDIR/build159/vsm/viable-swarm-model/references"
+
+# Minimal mutation state with some agent references
+cat > "$TMPDIR/build159/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target | Status | Builds | Score |
+|---|---|---|---|---|---|---|
+| M1 | Test | append | Test | effective | 5 | 4 |
+
+## Capability Matrix
+| Agent | Domain | Success Rate |
+|-------|--------|-------------|
+| vsm_backend_coder | Python | 85% |
+| vsm_frontend_coder | React | 80% |
+EOF
+
+cat > "$TMPDIR/build159/vsm/viable-swarm-model/references/hypotheses.md" << 'EOF'
+# Hypotheses
+## H001: Test hypothesis one
+**Status**: untested
+## H002: Test hypothesis two
+**Status**: untested
+## H003: Confirmed hypothesis
+**Status**: confirmed
+EOF
+
+cat > "$TMPDIR/build159/vsm/viable-swarm-model/references/build-health-history.md" << 'EOF'
+# Build Health History
+EOF
+
+cat > "$TMPDIR/build159/vsm/viable-swarm-model/references/knowledge-broker.md" << 'EOF'
+# Broker
+> **Last updated**: 2026-06-05
+EOF
+
+cat > "$TMPDIR/build159/vsm/viable-swarm-model/references/skill-effectiveness-log.md" << 'EOF'
+# Skill Effectiveness Log
+## 2026-06-06
+| Skill | Builds Used | Avg Score (with) | Avg Score (without) | Delta | Flag |
+|-------|-------------|------------------|---------------------|-------|------|
+| backend-patterns | 1 | 4.0 | — | — | |
+EOF
+
+mkdir -p "$TMPDIR/build159/vsm/vsm-stack-skills"
+cat > "$TMPDIR/build159/vsm/vsm-stack-skills/SKILL-REGISTRY.md" << 'EOF'
+## Pattern Skills
+| Skill | Description | Relevant Agents | Depends On | Status |
+|---|---|---|---|---|
+| backend-patterns | Backend | backend_coder | — | Full |
+| frontend-patterns | Frontend | frontend_coder | — | Full |
+EOF
+
+# Create a mock fitness build to improve temporal variety
+mkdir -p "$TMPDIR/build159/vsm-fitness-builds/coach/FB999"
+touch "$TMPDIR/build159/vsm-fitness-builds/coach/FB999/.kimi"
+
+OV159=$(HOME="$TMPDIR/build159" VSM_SKILL_REGISTRY="$TMPDIR/build159/vsm/vsm-stack-skills/SKILL-REGISTRY.md" \
+    python3 "$SCRIPT_DIR/../scripts/organism-vitals.py" --build-dir "$TMPDIR/build159" 2>/dev/null)
+
+# Check that variety breakdown section exists
+HAS_BREAKDOWN=$(echo "$OV159" | grep -c "Variety Breakdown" || true)
+HAS_MISSING=$(echo "$OV159" | grep -c "Missing agents" || true)
+HAS_UNUSED=$(echo "$OV159" | grep -c "Unused skills" || true)
+HAS_UNTESTED=$(echo "$OV159" | grep -c "Untested hypotheses" || true)
+
+# Check specific values:
+# - backend_fix_agent should be MISSING (not referenced in mutation state)
+# - frontend-patterns should be UNUSED (0 builds in log)
+# - H001 should be UNTESTED
+HAS_FIX_AGENT_MISSING=$(echo "$OV159" | grep "Missing agents" | grep -c "vsm_backend_fix_agent" || true)
+HAS_FRONTEND_SKILL=$(echo "$OV159" | grep "Unused skills" | grep -c "frontend-patterns" || true)
+HAS_H001=$(echo "$OV159" | grep "Untested hypotheses" | grep -c "H001" || true)
+
+if [ "$HAS_BREAKDOWN" -ge 1 ] && [ "$HAS_MISSING" -ge 1 ] && [ "$HAS_UNUSED" -ge 1 ] && \
+   [ "$HAS_UNTESTED" -ge 1 ] && [ "$HAS_FIX_AGENT_MISSING" -ge 1 ] && [ "$HAS_FRONTEND_SKILL" -ge 1 ] && \
+   [ "$HAS_H001" -ge 1 ]; then
+    pass
+else
+    fail "variety breakdown missing expected elements"
 fi
 
 echo ""

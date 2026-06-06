@@ -4827,3 +4827,28 @@ These gaps represent a System 3 (Audit/Control) → System 1 (Implementation) ch
 
 **Measured effect**: **5/5** — Active mutations dropped from 47 to 46. All 161 automation suite tests pass. mutation-portfolio-health.py confirms total_active=46, all metrics green.
 
+
+---
+
+## Mutation R61 — 2026-06-06
+
+**Session**: S5 Orchestrator Iteration — organism-vitals.py variety breakdown + R58 historical promotion + S5 protocol compliance
+**File**: `scripts/organism-vitals.py`, `references/mutation-state.md`, `hooks/test-automation.sh`
+**Type**: refinement + structural
+**Rationale**: **System 4 (Adaptation/Intelligence) / S4→S5 channel — Variety Score at 0.71, barely above WARNING threshold**: The composite variety score (0.71) provides only 0.01 of headroom above the 0.70 WARNING threshold. Hypothesis variety at 0.33 is the primary drag. While the root cause (6 untested hypotheses) requires gym experiments or fitness builds to fully resolve, the variety engineer agent lacked actionable detail about WHICH specific agents, skills, and hypotheses needed attention. The pre-computed organism vitals only showed aggregate metrics, forcing the variety engineer to manually scan multiple reference files.
+
+**Secondary constraint — System 5 (Policy) / S5→S5 channel — protocol compliance**: R58 had reached `builds_tested=4` after R60. Per protocol, running `increment-s5-iteration-counter.py` incremented it to 5, making it eligible for historical promotion. All S5 iteration mutations (R55-R58) are now historical.
+
+**Expected effect**:
+- organism-vitals.py now outputs a "Variety Breakdown" section listing: missing agents, unused skills, untested hypotheses.
+- Proactive recommendations now include a "Variety watch" caution when the score is within 0.05 of the WARNING threshold (0.70–0.75 range), giving S5 early warning before algedonic escalation.
+- R58 promoted to `historical`, reducing active mutations from 46 to 45.
+- Active S5 iteration mutations: none (all historical).
+
+**Files modified**:
+- `scripts/organism-vitals.py` — Added `list_untested_hypotheses()` function; added variety breakdown computation; added "Variety watch" proactive recommendation for 0.70 ≤ variety_score < 0.75; fixed recommendation numbering to be sequential.
+- `references/mutation-state.md` — Promoted R58 to `historical`; updated Integration Health (active=45); S5 iteration section now shows "(none — all S5 iteration mutations are now historical)".
+- `hooks/test-automation.sh` — Test 156e verifies R58 promotion; Test 159 verifies variety breakdown output.
+
+**Measured effect**: **5/5** — Active mutations dropped from 46 to 45. All 163 automation suite tests pass. organism-vitals.py now produces actionable variety breakdowns.
+

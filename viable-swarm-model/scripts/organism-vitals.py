@@ -121,6 +121,19 @@ def count_untested_hypotheses(path: Path) -> int:
     return len(re.findall(r"\*\*Status\*\*:\s*untested", text))
 
 
+def list_untested_hypotheses(path: Path) -> list[str]:
+    """Return list of untested hypothesis IDs (e.g., ['H104', 'H152'])."""
+    if not path.exists():
+        return []
+    text = path.read_text()
+    untested: list[str] = []
+    # Find each hypothesis header and its status
+    for match in re.finditer(r"^## (H\S+):.*?\n\*\*Status\*\*:\s*untested", text, re.MULTILINE | re.DOTALL):
+        hid = match.group(1)
+        untested.append(hid)
+    return untested
+
+
 # ---------------------------------------------------------------------------
 # Knowledge broker staleness
 # ---------------------------------------------------------------------------
@@ -301,6 +314,11 @@ def main() -> int:
     # --- Compute variety score ---
     variety_score = compute_variety_score(agent_variety, hypothesis_variety, skill_variety, temporal_variety)
 
+    # --- Variety breakdown (for actionable recommendations) ---
+    missing_agents = sorted(known_agents - agent_refs)
+    unused_skills = sorted(full_skills - seen_skills)
+    untested_hypos = list_untested_hypotheses(HYPOTHESES)
+
     # --- Algedonic checks ---
     def status(value, warning, critical, mode="gt"):
         if mode == "gt":
@@ -367,6 +385,12 @@ def main() -> int:
         f"- **Skill variety**: {skill_variety} ({skills_used}/{skills_total} skills exercised)",
         f"- **Temporal variety**: {temporal_variety}",
         "",
+        "## Variety Breakdown",
+        "",
+        f"**Missing agents** ({len(missing_agents)}): {', '.join(missing_agents) if missing_agents else 'None'}",
+        f"**Unused skills** ({len(unused_skills)}): {', '.join(unused_skills) if unused_skills else 'None'}",
+        f"**Untested hypotheses** ({len(untested_hypos)}): {', '.join(untested_hypos) if untested_hypos else 'None'}",
+        "",
     ]
 
     if algedonics:
@@ -418,16 +442,21 @@ def main() -> int:
         "",
     ])
 
+    recs = []
     if probationary > 12:
-        lines.append(f"1. **Mutation consolidation needed**: {probationary} probationary mutations exceed threshold. Trigger portfolio review.")
+        recs.append(f"**Mutation consolidation needed**: {probationary} probationary mutations exceed threshold. Trigger portfolio review.")
     if untested > 7:
-        lines.append(f"2. **Gym batch needed**: {untested} untested hypotheses. Run vsm-fitness-gym to validate backlog.")
+        recs.append(f"**Gym batch needed**: {untested} untested hypotheses. Run vsm-fitness-gym to validate backlog.")
     if broker_age > 5:
-        lines.append(f"3. **Broker update needed**: Knowledge broker is {broker_age} days stale. Run auto-broker-update.sh.")
+        recs.append(f"**Broker update needed**: Knowledge broker is {broker_age} days stale. Run auto-broker-update.sh.")
     if variety_score < 0.70:
-        lines.append(f"4. **Variety deficit**: Score {variety_score} < 0.70. Consider spawning underutilized agents or running gym experiments.")
-    if not any([probationary > 12, untested > 7, broker_age > 5, variety_score < 0.70]):
-        lines.append("1. No proactive actions required. Organism health is stable.")
+        recs.append(f"**Variety deficit**: Score {variety_score} < 0.70. Consider spawning underutilized agents or running gym experiments.")
+    elif variety_score < 0.75:
+        recs.append(f"**Variety watch**: Score {variety_score} is within 0.05 of WARNING threshold (0.70). Prioritize exercising missing agents, unused skills, or testing hypotheses to build headroom.")
+    if not recs:
+        recs.append("No proactive actions required. Organism health is stable.")
+    for i, rec in enumerate(recs, 1):
+        lines.append(f"{i}. {rec}")
 
     lines.append("")
 

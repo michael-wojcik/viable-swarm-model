@@ -11,6 +11,7 @@
 | R55 | 2026-06-06 S5 | refinement | validate-skills.py count_rules() numbered-list fix + skill agent-reference gaps + automation suite integration | historical | 5 | 5 | — | — | S5 iter |
 | R56 | 2026-06-06 S5 | structural | increment-s5-iteration-counter.py + S5 builds_tested backfill (R44-R48→historical) + agent quick-reference enrichment | historical | 5 | 5 | — | — | S5 iter |
 | R57 | 2026-06-06 S5 | structural | S5 iteration lifecycle automation — auto-increment + historical promotion + hypothesis curation protocol | historical | 5 | 5 | — | — | S5 iter |
+| R58 | 2026-06-06 S5 | refinement | skill-effectiveness-tracker.py MIN_BUILDS_FOR_EFFECTIVENESS=3 threshold prevents false NEGATIVE flags on tiny samples | historical | 5 | 5 | — | — | S5 iter |
 | FB25-S1 | FB25 Coach | structural | False hook claim removal | historical | 5 | 5 | H300 | E17 | — |
 | FB24-1 | FB24 Build | append-only | Phase 4 gate bypass when 1 test fails | historical | 6 | 5 | H154 | — | — |
 | FB24-2 | FB24 Build | append-only | Enum type safety audit | historical | 6 | 5 | H203 | — | — |
@@ -149,7 +150,7 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 46 | < 55 | ✅ OK (within target) |
+| Active mutations | 45 | < 55 | ✅ OK (within target) |
 | Historical effective (≥5 builds) | 58 | >15% of active | ✅ 121% |
 | Effective (<5 builds, monitored) | 45 | >30% of active | ✅ 90% |
 | Probationary mutations | 3 | <20 at any time | ✅ 3 (within target) |
@@ -344,4 +345,4 @@
 | FB32-5 | FB32 Build | refinement | Orphaned Query Export Limit | **effective** | 1 | 5 | — | — | — |
 
 | **S5 ITERATION MUTATIONS (2026-06-06)** |
-| R58 | 2026-06-06 S5 | refinement | skill-effectiveness-tracker.py MIN_BUILDS_FOR_EFFECTIVENESS=3 threshold prevents false NEGATIVE flags on tiny samples | effective | 4 | 5 | — | — | S5 iter |
+| *(none — all S5 iteration mutations are now historical)* |
