@@ -4330,3 +4330,19 @@ The timeout fallback protocol was a reactive measure. The proactive measure — 
 
 **Measured effect**: **TO BE FILLED** — validate in next fitness build that no fraudulent gate passes occur.
 
+
+---
+
+## Mutation R40 — 2026-06-06
+
+**Session**: S5 Orchestrator Iteration
+**File**: `hooks/test-automation.sh`
+**Type**: refinement
+**Rationale**: The `boundary-guardian.sh` and `structural-guardian.sh` hooks are both registered in `~/.kimi/config.toml` as PreToolUse hooks running on every file write, enforcing Rule 2 (Phase 6/7 boundary) and Rule 3 (Structural mutation discipline). Both had zero test coverage despite being Tier A enforcement infrastructure. Added 7 behavior tests and 2 syntax checks:
+- boundary-guardian: block source write when synthesis exists but re-audit missing; allow when re-audit exists; allow non-source files
+- structural-guardian: block SKILL.md without marker; block agent files without marker; allow when marker exists; allow non-structural files
+
+**Expected effect**: Both critical enforcement hooks now have verified behavior, preventing regressions in inline-fix blocking and structural mutation approval.
+
+**Measured effect**: **TO BE FILLED** — validate in next fitness build that no boundary violations or unapproved structural mutations occur.
+

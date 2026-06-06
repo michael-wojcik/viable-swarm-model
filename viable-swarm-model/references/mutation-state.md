@@ -322,3 +322,4 @@
 | R32 | 2026-06-06 S5 | structural | S5 iteration validation policy + bulk promote R12-R30 to effective | effective | 1 | 5 | — | — | — |
 | R33 | 2026-06-06 S5 | structural | Redesign superseded SM1-SM9 audit mutations (6 of 9) | effective | 1 | 5 | — | — | — |
 | R39 | 2026-06-06 S5 | refinement | gate-guardian.sh reliability — remove redundant find check, add npm pattern parity, fix missing .kimi/ crash, add 4 tests | effective | 1 | 5 | — | — | S5 iter |
+| R40 | 2026-06-06 S5 | refinement | boundary-guardian.sh + structural-guardian.sh test coverage — 7 tests + 2 syntax checks | effective | 1 | 5 | — | — | S5 iter |

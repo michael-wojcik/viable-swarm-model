@@ -78,6 +78,20 @@ else
     fail "syntax error detected"
 fi
 
+echo -n "TEST: Syntax check boundary-guardian.sh ... "
+if bash -n "$SCRIPT_DIR/boundary-guardian.sh"; then
+    pass
+else
+    fail "syntax error detected"
+fi
+
+echo -n "TEST: Syntax check structural-guardian.sh ... "
+if bash -n "$SCRIPT_DIR/structural-guardian.sh"; then
+    pass
+else
+    fail "syntax error detected"
+fi
+
 # ============================================================================
 # Test 1: update-mutation-state.sh — dry-run mode
 # ============================================================================
@@ -3964,10 +3978,10 @@ for line in text.splitlines():
 print(len(rows))
 ")
 
-if [ "$ACTIVE_COUNT" -eq 54 ]; then
+if [ "$ACTIVE_COUNT" -eq 56 ]; then
     pass
 else
-    fail "expected 54 active mutations, got $ACTIVE_COUNT"
+    fail "expected 56 active mutations, got $ACTIVE_COUNT"
 fi
 
 # ============================================================================
@@ -4165,6 +4179,179 @@ if [ "$RC" -eq 0 ]; then
     pass
 else
     fail "expected exit code 0 for non-PASS gate, got $RC"
+fi
+
+# ============================================================================
+# Test 101: boundary-guardian.sh blocks inline fix during Phase 6/7 boundary
+# ============================================================================
+
+echo -n "TEST: boundary-guardian blocks source write when synthesis exists but re-audit missing ... "
+
+BOUND_BUILD="$TMPDIR/bound101"
+mkdir -p "$BOUND_BUILD/.kimi"
+touch "$BOUND_BUILD/.kimi/synthesis-integration.md"
+
+PAYLOAD=$(jq -n \
+    --arg path "$BOUND_BUILD/backend/app.py" \
+    --arg content "print('fix')" \
+    --arg cwd "$BOUND_BUILD" \
+    '{tool_input: {path: $path, content: $content}, cwd: $cwd}')
+
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/boundary-guardian.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 2 ] && [ -f "$BOUND_BUILD/.kimi/.boundary-guardian-blocks.log" ]; then
+    pass
+else
+    fail "expected exit code 2 and block log, got $RC"
+fi
+
+# ============================================================================
+# Test 102: boundary-guardian.sh allows source write when re-audit exists
+# ============================================================================
+
+echo -n "TEST: boundary-guardian allows source write when re-audit report exists ... "
+
+BOUND_BUILD="$TMPDIR/bound102"
+mkdir -p "$BOUND_BUILD/.kimi"
+touch "$BOUND_BUILD/.kimi/synthesis-integration.md"
+touch "$BOUND_BUILD/.kimi/re-audit-report.md"
+
+PAYLOAD=$(jq -n \
+    --arg path "$BOUND_BUILD/backend/app.py" \
+    --arg content "print('fix')" \
+    --arg cwd "$BOUND_BUILD" \
+    '{tool_input: {path: $path, content: $content}, cwd: $cwd}')
+
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/boundary-guardian.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ]; then
+    pass
+else
+    fail "expected exit code 0, got $RC"
+fi
+
+# ============================================================================
+# Test 103: boundary-guardian.sh allows non-source file writes
+# ============================================================================
+
+echo -n "TEST: boundary-guardian allows non-source file write during boundary ... "
+
+BOUND_BUILD="$TMPDIR/bound103"
+mkdir -p "$BOUND_BUILD/.kimi"
+touch "$BOUND_BUILD/.kimi/synthesis-integration.md"
+
+PAYLOAD=$(jq -n \
+    --arg path "$BOUND_BUILD/README.md" \
+    --arg content "# updated" \
+    --arg cwd "$BOUND_BUILD" \
+    '{tool_input: {path: $path, content: $content}, cwd: $cwd}')
+
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/boundary-guardian.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ]; then
+    pass
+else
+    fail "expected exit code 0 for non-source file, got $RC"
+fi
+
+# ============================================================================
+# Test 104: structural-guardian.sh blocks SKILL.md without approval marker
+# ============================================================================
+
+echo -n "TEST: structural-guardian blocks SKILL.md write without approval marker ... "
+
+STRUCT_BUILD="$TMPDIR/struct104"
+mkdir -p "$STRUCT_BUILD/.kimi"
+
+PAYLOAD=$(jq -n \
+    --arg path "$STRUCT_BUILD/SKILL.md" \
+    --arg content "# Updated skill" \
+    --arg cwd "$STRUCT_BUILD" \
+    '{tool_input: {path: $path, content: $content}, cwd: $cwd}')
+
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/structural-guardian.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 2 ] && [ -f "$STRUCT_BUILD/.kimi/.structural-guardian-blocks.log" ]; then
+    pass
+else
+    fail "expected exit code 2 and block log, got $RC"
+fi
+
+# ============================================================================
+# Test 105: structural-guardian.sh blocks agent file without approval marker
+# ============================================================================
+
+echo -n "TEST: structural-guardian blocks agent file write without approval marker ... "
+
+STRUCT_BUILD="$TMPDIR/struct105"
+mkdir -p "$STRUCT_BUILD/.kimi"
+
+PAYLOAD=$(jq -n \
+    --arg path "$STRUCT_BUILD/agents/vsm_security.md" \
+    --arg content "# Updated agent" \
+    --arg cwd "$STRUCT_BUILD" \
+    '{tool_input: {path: $path, content: $content}, cwd: $cwd}')
+
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/structural-guardian.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 2 ]; then
+    pass
+else
+    fail "expected exit code 2, got $RC"
+fi
+
+# ============================================================================
+# Test 106: structural-guardian.sh allows structural write when marker exists
+# ============================================================================
+
+echo -n "TEST: structural-guardian allows SKILL.md write when approval marker exists ... "
+
+STRUCT_BUILD="$TMPDIR/struct106"
+mkdir -p "$STRUCT_BUILD/.kimi"
+touch "$STRUCT_BUILD/.kimi/.structural-mutation-approved"
+
+PAYLOAD=$(jq -n \
+    --arg path "$STRUCT_BUILD/SKILL.md" \
+    --arg content "# Updated skill" \
+    --arg cwd "$STRUCT_BUILD" \
+    '{tool_input: {path: $path, content: $content}, cwd: $cwd}')
+
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/structural-guardian.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ]; then
+    pass
+else
+    fail "expected exit code 0, got $RC"
+fi
+
+# ============================================================================
+# Test 107: structural-guardian.sh allows non-structural file writes
+# ============================================================================
+
+echo -n "TEST: structural-guardian allows non-structural file write without marker ... "
+
+STRUCT_BUILD="$TMPDIR/struct107"
+mkdir -p "$STRUCT_BUILD/.kimi"
+
+PAYLOAD=$(jq -n \
+    --arg path "$STRUCT_BUILD/references/security-lessons.md" \
+    --arg content "# Updated lessons" \
+    --arg cwd "$STRUCT_BUILD" \
+    '{tool_input: {path: $path, content: $content}, cwd: $cwd}')
+
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/structural-guardian.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ]; then
+    pass
+else
+    fail "expected exit code 0 for non-structural file, got $RC"
 fi
 
 # ============================================================================
