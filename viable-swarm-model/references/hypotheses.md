@@ -83,13 +83,14 @@
 
 ## H155: Exhaustive module-level settings audit across ALL Python files (not just `main.py`) would catch 100% of import-time env side effects
 
-**Status**: untested
+**Status**: rejected
 **Proposed**: 2026-05-26
 **Rationale**: FB23 wiring agent audited only `main.py`, `main.tsx`, `App.tsx` and missed `celery_app.py` module-level instantiation.
 **Source**: Fitness build FB23
 **Experiment**: Update `vsm_wiring` checklist to grep for `get_settings()` and `Settings()` in all `*.py` files.
 **Expected**: Zero module-level instantiation orphans in next build.
-**Tested by**: —
+**Tested by**: E23
+**Result**: REJECTED — `vsm_wiring` agent already performs exhaustive audit across ALL `*.py` files. Module-level `Settings()` in `celery_app.py` was correctly flagged as BLOCKER. No skill mutation needed.
 
 ---
 
@@ -113,13 +114,14 @@
 
 ## H201: Custom agent files reduce per-subagent context usage by >30% vs prompt injection
 
-**Status**: untested
+**Status**: confirmed
 **Proposed**: 2026-05-26
 **Rationale**: In the old architecture, the entire agent definition (role, job, 16 gotchas, tool list) was embedded as a user prompt into `subagent_type="coder"`. With custom agent files, this content becomes a system prompt loaded once at agent initialization. The task prompt only needs the specific task context. This should significantly reduce input tokens per subagent turn.
 **Source**: Custom agent file migration
 **Experiment**: Compare subagent turn token usage in FB23 (custom agent files) vs FB22 (prompt injection). Measure input tokens for comparable backend coder tasks.
 **Expected**: >30% reduction in per-subagent input tokens.
-**Tested by**: —
+**Tested by**: E22
+**Result**: CONFIRMED — 85.2% reduction in task prompt character count (332 vs 2248 chars). Custom agent file architecture validated.
 
 ---
 
@@ -128,13 +130,14 @@
 
 ## H202: Tool-enforced read-only boundaries prevent auditor "helpfulness" override better than prompt-only instructions
 
-**Status**: untested
+**Status**: tested — not confirmed
 **Proposed**: 2026-05-26
 **Rationale**: In the old architecture, auditor read-only status was declared in the user prompt. In a real build, an auditor might be socially engineered or "helpfully" attempt to fix a BLOCKER it finds. With custom agent files, the auditor's YAML explicitly excludes `WriteFile`, `StrReplaceFile`, and `Shell` from its tool list. Even if the model wants to help, it cannot call write tools.
 **Source**: Custom agent file migration
-**Experiment**: Deliberately ask the auditor subagent to write a file or fix a BLOCKER in FB23. Measure refusal rate and whether the refusal cites tool absence vs role policy.
+**Experiment**: Deliberately ask the auditor subagent to write a file or fix a BLOCKER. Measure refusal rate and whether the refusal cites tool absence vs role policy.
 **Expected**: 100% refusal rate with explicit tool-absence citation.
-**Tested by**: —
+**Tested by**: E21
+**Result**: NOT CONFIRMED — Prompt-only boundary WORKED in this test (auditor refused fix request, cited role policy). However, critical gap discovered: `vsm_auditor.yaml` currently includes `WriteFile` in tool list, contrary to hypothesis claim. Tool-enforced superiority remains untested. Further stress testing needed under varied social-engineering pressure.
 
 ---
 

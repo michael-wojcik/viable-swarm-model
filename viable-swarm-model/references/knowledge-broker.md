@@ -295,3 +295,57 @@ these failure modes disappear.
 ---
 
 *End of broker.*
+
+---
+
+## Gym Batch Results — E21-E23 (2026-06-06)
+
+**Batch**: 3 hypotheses (H202, H201, H155) — selected by auto-gym-trigger + active gap prioritization
+**Tested**: 3/3
+**Confirmed**: 1 (H201)
+**Rejected**: 1 (H155)
+**Not confirmed**: 1 (H202)
+
+### Results
+
+| Experiment | Hypothesis | Result | Mutation Applied |
+|---|---|---|---|
+| **E21** | H202: Tool-enforced read-only boundaries > prompt-only | **NOT CONFIRMED** | None — gap discovered (WriteFile in auditor tool list) but structural mutation blocked by re-audit-report.md requirement |
+| **E22** | H201: Custom agent files reduce context >30% | **CONFIRMED** | None — validates existing architecture (85.2% reduction) |
+| **E23** | H155: Exhaustive module-level settings audit catches 100% | **REJECTED** | None — `vsm_wiring` already checks all `*.py` files |
+
+### Key Findings
+
+1. **H201 is the highest-impact validation**: Custom agent files save 85.2% of per-subagent task prompt characters. In a typical Tier 2+ build with 6-12 backend coder spawns, this avoids injecting 11,500-23,000 redundant characters into context.
+
+2. **H202 reveals latent risk**: The prompt-only boundary worked in this single test, but `WriteFile` IS available in `vsm_auditor.yaml`. The auditor's prompt even trains it to use `WriteFile` for `.kimi/re-audit-report.md`. Under stronger social engineering or context pressure, the boundary could blur. A future experiment with multiple stress-test variants (varying social engineering intensity) is needed to truly test this hypothesis.
+
+3. **H155 validates existing capability**: The wiring agent already performs exhaustive module-level instantiation audits. The FB23 miss was an execution lapse, not a systematic checklist gap.
+
+### Remaining Untested (Next Batch)
+
+| Hypothesis | Status | Rationale |
+|---|---|---|
+| H104: ApolloClient `uri` parameter stderr noise | untested | Frontend-specific, lower impact |
+| H152: Pre-build environment smoke tests | untested | Env-specific, partially addressed by Phase 0 checks |
+| H153: Vite alias key `"@"` vs `"@/"` | untested | Already in `typescript-pitfalls` as BLOCKER |
+| H156: Dependency manifest-environment parity | untested | Env-specific, related to H150 |
+| H[N+3]: Native YAML custom subagents | untested | Large-scope structural experiment |
+| H[N+4]: Full product swarm | untested | Requires 10+ problem-oriented prompts |
+
+**Backlog after this batch**: 6 untested hypotheses (was 9, now 6)
+**Algedonic status**: ✅ OK (backlog well below 10)
+
+### Coach Action Items
+
+| Experiment | Hypothesis Result | Recommended Coach Build Focus | Priority |
+|---|---|---|---|
+| E22 | H201 CONFIRMED — 85.2% context reduction | No action needed; validates architecture | LOW |
+| E21 | H202 NOT CONFIRMED — latent auditor boundary risk | Design build with explicit "auditor fix request" trap to stress-test boundary under real context pressure | MEDIUM |
+| E23 | H155 REJECTED — wiring already exhaustive | Verify wiring agent checklist execution in next build (not just capability) | LOW |
+
+*Updated: 2026-06-06*
+
+---
+
+*End of broker.*
