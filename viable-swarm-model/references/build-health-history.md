@@ -5,6 +5,37 @@
 
 ---
 
+## 2026-06-06 — S5 Orchestrator Iteration (R51)
+
+### Diagnosed Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — untested hypotheses at 9**: The organism's sole remaining WARNING algedonic was **untested hypotheses: 9 > 7**. Investigation of `auto-gym-trigger.py` revealed it was failing to trigger gym experiments despite the backlog exceeding the threshold. Root cause analysis found **two compounding bugs**: (1) The hypothesis parsing regex `r"(H[\w+\-]+)"` silently skipped hypothesis IDs containing brackets (`H[N+3]`, `H[N+4]`), causing a 22% undercount (7 reported vs 9 actual). (2) The script's default threshold was `10`, but the algedonic system triggers at `7` — a threshold mismatch that meant the gym trigger never fired even when the true count exceeded the warning level.
+
+### Change Made
+**Refinement mutation R51**: Fixed auto-gym-trigger.py regex bug and aligned threshold with algedonic system.
+- Fixed regex to explicitly match `[` and `]` characters: `r"(H[\w\[\]+\-]+)\s*:\s*(.+)"`
+- Lowered default `HYPOTHESIS_BACKLOG_THRESHOLD` from `10` to `7` to match organism-vitals.py and algedonic-action-plan.py
+- Added Test 138: verifies `H001`, `H[N+3]`, `H[N+4]` are all correctly counted (3 total)
+
+### Test Results
+- `bash hooks/test-automation.sh`: **138 passed, 0 failed** (was 137 passed, 0 failed)
+- Test 138: bracket hypothesis ID parsing → PASS
+- `auto-gym-trigger.py` now correctly reports 9 untested hypotheses (was 7)
+
+### Files Modified
+- `viable-swarm-model/scripts/auto-gym-trigger.py`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — auto-gym-trigger.py fires but gym experiments are not automatically executed**: With R51, auto-gym-trigger.py correctly identifies 9 untested hypotheses and would generate a trigger report during build closeout. However, the organism still lacks an **automatic execution mechanism** for gym experiments outside of build contexts. The `/flow:vsm-fitness-gym` invocation requires human/S5 action. The next frontier is either (a) wiring auto-gym-trigger.py output into a deterministic S5 iteration action (e.g., "If auto-gym-trigger.md exists, run gym batch before next build"), or (b) addressing the **0% empirical exercise rate** of `vsm_learning_curator` and `vsm_variety_engineer` through an actual fitness build. Alternatively, **System 3 (Audit/Control) / S3→S1 channel**: `integration-test-closeout.py` has only **1 behavior test** (Test 30, exit-code only) despite being 360 lines of critical closeout pipeline integration code.
+
+---
+
 ## 2026-06-06 — S5 Orchestrator Iteration (R50)
 
 ### Diagnosed Constraint

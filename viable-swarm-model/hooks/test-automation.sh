@@ -4817,6 +4817,59 @@ else
 fi
 
 # ============================================================================
+# Test 138: auto-gym-trigger.py parses bracket hypothesis IDs (H[N+3], H[N+4]) (R51)
+# ============================================================================
+
+echo -n "TEST: auto-gym-trigger.py counts bracket hypothesis IDs correctly ... "
+
+mkdir -p "$TMPDIR/build138/.kimi"
+mkdir -p "$TMPDIR/build138/gym"
+
+# Create hypotheses.md with bracket IDs and plain IDs
+cat > "$TMPDIR/build138/hypotheses.md" << 'EOF'
+# Hypothesis Backlog
+
+| Hypothesis | Status |
+|---|---|
+| H001 | untested |
+
+---
+
+## H001: Plain hypothesis
+**Status**: untested
+**Proposed**: 2026-06-01
+**Rationale**: Test
+**Experiment**: Run a test.
+
+## H[N+3]: Bracket hypothesis one
+**Status**: untested
+**Proposed**: 2026-06-01
+**Rationale**: Test bracket ID parsing
+**Experiment**: Run a test.
+
+## H[N+4]: Bracket hypothesis two
+**Status**: untested
+**Proposed**: 2026-06-01
+**Rationale**: Test bracket ID parsing
+**Experiment**: Run a test.
+EOF
+
+AG_COUNT=$(AUTO_GYM_HYPOTHESES="$TMPDIR/build138/hypotheses.md" \
+    AUTO_GYM_MUTATION_STATE="$TMPDIR/build138/mutation-state.md" \
+    AUTO_GYM_GYM_DIR="$TMPDIR/build138/gym" \
+    AUTO_GYM_OUTPUT="$TMPDIR/build138/.kimi/auto-gym-trigger.md" \
+    AUTO_GYM_BACKLOG_THRESHOLD="2" \
+    AUTO_GYM_COOLDOWN_DAYS="0" \
+    AUTO_GYM_MONITOR_THRESHOLD="99" \
+    python3 "$SCRIPT_DIR/../scripts/auto-gym-trigger.py" 2>&1 | grep -o "Found [0-9]* untested" | awk '{print $2}')
+
+if [ "$AG_COUNT" = "3" ]; then
+    pass
+else
+    fail "expected 3 untested hypotheses (H001, H[N+3], H[N+4]), got $AG_COUNT"
+fi
+
+# ============================================================================
 # Test 127: mutation-predictor.py — finds similar mutations and predicts effectiveness
 # ============================================================================
 

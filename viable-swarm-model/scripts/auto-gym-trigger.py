@@ -33,7 +33,7 @@ MUTATION_STATE_PATH = Path(os.environ.get("AUTO_GYM_MUTATION_STATE", HOME / "vsm
 GYM_DIR = Path(os.environ.get("AUTO_GYM_GYM_DIR", HOME / "vsm-fitness-builds" / "gym"))
 OUTPUT_PATH = Path(os.environ.get("AUTO_GYM_OUTPUT", HOME / "vsm" / "viable-swarm-model" / ".kimi" / "auto-gym-trigger.md"))
 
-HYPOTHESIS_BACKLOG_THRESHOLD = int(os.environ.get("AUTO_GYM_BACKLOG_THRESHOLD", "10"))
+HYPOTHESIS_BACKLOG_THRESHOLD = int(os.environ.get("AUTO_GYM_BACKLOG_THRESHOLD", "7"))
 GYM_COOLDOWN_DAYS = int(os.environ.get("AUTO_GYM_COOLDOWN_DAYS", "7"))
 MONITOR_BUILDS_TESTED_THRESHOLD = int(os.environ.get("AUTO_GYM_MONITOR_THRESHOLD", "3"))
 
@@ -62,7 +62,7 @@ def parse_hypotheses(path: Path) -> list[dict]:
         # Skip table-of-contents lines and update subsections
         if not section.strip() or section.startswith("# "):
             continue
-        header_match = re.match(r"(H[\w+\-]+)\s*:\s*(.+)", section.strip(), re.IGNORECASE)
+        header_match = re.match(r"(H[\w\[\]+\-]+)\s*:\s*(.+)", section.strip(), re.IGNORECASE)
         if not header_match:
             continue
 

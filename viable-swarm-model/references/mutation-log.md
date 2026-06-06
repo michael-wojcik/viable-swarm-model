@@ -4551,3 +4551,25 @@ Additionally:
 **Expected effect**: Active mutation count drops to 50 (within <55 target). The persistent WARNING algedonic is eliminated. S5 can focus on genuine constraints (untested hypotheses, agent success rates) rather than arbitrary metric chasing.
 
 **Measured effect**: `mutation-portfolio-health.py` confirms: total_active=50, historical=49, probationary_ratio=16.0%. All metrics now green. Test 137 verifies M-FB30-1 is REDESIGNED and threshold is 55.
+
+---
+
+## Mutation R51 — 2026-06-06
+
+**Session**: S5 Orchestrator Iteration
+**Files**: `scripts/auto-gym-trigger.py`, `hooks/test-automation.sh`
+**Type**: refinement (bug fix + policy alignment)
+**Rationale**: The organism's sole remaining WARNING algedonic was **untested hypotheses: 9 > 7**. Investigation of `auto-gym-trigger.py` — the script meant to automatically trigger gym experiments when the hypothesis backlog grows — revealed **two bugs**:
+
+1. **Regex bug**: The hypothesis parsing regex `r"(H[\w+\-]+)\s*:\s*(.+)"` could not match hypothesis IDs containing brackets, such as `H[N+3]` and `H[N+4]`. The character class `[\w+\-]` omitted `[` and `]`, causing these two hypotheses to be silently skipped during counting. This produced a **22% undercount** (7 reported vs 9 actual).
+
+2. **Threshold mismatch**: The script's default `HYPOTHESIS_BACKLOG_THRESHOLD` was `10`, but the organism's algedonic system (organism-vitals.py, algedonic-action-plan.py) triggers a WARNING at `> 7`. With the buggy undercount of 7, the script never fired even when the true count was 9. With a correct count of 9, the script still wouldn't fire until the backlog reached 10 — allowing hypotheses to accumulate untested for longer than intended.
+
+**Changes**:
+1. Fixed regex to `r"(H[\w\[\]+\-]+)\s*:\s*(.+)"` — explicitly includes `[` and `]` in the character class
+2. Lowered default threshold from `10` to `7` to align with algedonic thresholds
+3. Added Test 138: creates mock hypotheses.md with `H001`, `H[N+3]`, `H[N+4]` and verifies all 3 are counted
+
+**Expected effect**: auto-gym-trigger.py correctly counts all untested hypotheses including bracket IDs. The gym trigger fires at the same threshold (7) as the algedonic WARNING, ensuring timely experiment recommendations.
+
+**Measured effect**: auto-gym-trigger.py now reports 9 untested hypotheses (was 7). Test 138 passes. All 138 automation tests pass.

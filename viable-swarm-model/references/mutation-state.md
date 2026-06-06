@@ -137,7 +137,7 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 50 | < 55 | ✅ OK (within target) |
+| Active mutations | 51 | < 55 | ✅ OK (within target) |
 | Historical effective (≥5 builds) | 49 | >15% of active | ✅ 96% |
 | Effective (<5 builds, monitored) | 55 | >30% of active | ✅ 87% |
 | Probationary mutations | 8 | <20 at any time | ✅ 8 (within target) |
@@ -331,3 +331,4 @@
 | R46 | 2026-06-06 S5 | refinement | skill-effectiveness-tracker.py env var overrides for testability + 2 behavior tests (full pipeline + /100 normalization) | effective | 1 | 5 | — | — | S5 iter |
 | R47 | 2026-06-06 S5 | refinement | Remove broken legacy test-hooks.sh + update README + add resurrection-prevention test | effective | 1 | 5 | — | — | S5 iter |
 | R48 | 2026-06-06 S5 | refinement | test-automation.sh maintainability — syntax check loop + section grouping | effective | 1 | 5 | — | — | S5 iter |
+| R51 | 2026-06-06 S5 | refinement | auto-gym-trigger.py bracket-hypothesis parsing fix + threshold alignment 10→7 | effective | 1 | 5 | — | — | S5 iter |
