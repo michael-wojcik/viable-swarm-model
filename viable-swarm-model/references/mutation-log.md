@@ -4001,3 +4001,36 @@ async def test_graphql_create_item(client, auth_header): ...
 (Same pattern for frontend tester with React render and localStorage mock scaffolds.)
 
 **Measured effect**: **AWAITING_BUILD**
+
+---
+
+## Mutation R30 — 2026-06-05
+
+**Session**: S5 Orchestrator Iteration R30
+**File**: `scripts/lesson-miner.py`, `hooks/test-automation.sh`
+**Type**: refinement
+**Rationale**: The lesson-patterns.md report (dated 2026-06-04) listed 3 orphaned prevention rules. Investigation revealed ALL 3 were false positives — the rules already existed in stack skill files but the lesson-miner never checked those files. Root cause: `SKILL_FILES` in `lesson-miner.py` only contained 4 files from the `references/` directory (security-lessons.md, pattern-library.md, anti-patterns.md, integration-checklist.md). It did NOT include any files from `~/vsm/vsm-stack-skills/` where the actual stack skills live (docker-pitfalls, graphql-pitfalls, testing-patterns, etc.). This meant the orphan detection algorithm had a 100% false-positive rate for rules that existed in stack skills.
+
+**Expected effect**: Future lesson-miner runs will scan all `~/vsm/vsm-stack-skills/*/SKILL.md` files in addition to the 4 reference files. Prevention rules that exist in stack skills will be correctly identified as present, eliminating false orphans. This restores the S1/S2/S3→S5 knowledge feedback channel's sensor accuracy.
+
+**Before**:
+```python
+SKILL_FILES = [
+    Path.home() / "vsm" / "viable-swarm-model" / "references" / "security-lessons.md",
+    Path.home() / "vsm" / "viable-swarm-model" / "references" / "pattern-library.md",
+    Path.home() / "vsm" / "viable-swarm-model" / "references" / "anti-patterns.md",
+    Path.home() / "vsm" / "viable-swarm-model" / "references" / "integration-checklist.md",
+]
+```
+
+**After**:
+```python
+SKILL_FILES = [
+    # ... 4 reference files ...
+]
+STACK_SKILLS_DIR = Path.home() / "vsm" / "vsm-stack-skills"
+if STACK_SKILLS_DIR.exists():
+    SKILL_FILES.extend(sorted(STACK_SKILLS_DIR.glob("*/SKILL.md")))
+```
+
+**Measured effect**: **AWAITING_BUILD**

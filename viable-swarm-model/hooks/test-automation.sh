@@ -3718,6 +3718,83 @@ else
 fi
 
 # ============================================================================
+# Test 80: lesson-miner.py includes stack skills in SKILL_FILES (R30)
+# ============================================================================
+
+echo -n "TEST: lesson-miner.py includes vsm-stack-skills in SKILL_FILES ... "
+
+# Verify the script contains the stack skills glob logic
+LM_SCRIPT="$SCRIPT_DIR/../scripts/lesson-miner.py"
+if [[ ! -f "$LM_SCRIPT" ]]; then
+    fail "lesson-miner.py not found"
+else
+    if grep -q "vsm-stack-skills" "$LM_SCRIPT" && \
+       grep -q "STACK_SKILLS_DIR" "$LM_SCRIPT" && \
+       grep -q "glob.*SKILL.md" "$LM_SCRIPT"; then
+        pass
+    else
+        fail "lesson-miner.py missing stack skills scan"
+    fi
+fi
+
+# ============================================================================
+# Test 81: lesson-miner orphan detection finds rules in stack skills (R30)
+# ============================================================================
+
+echo -n "TEST: lesson-miner detects stack-skill rules as non-orphans ... "
+
+# Create a minimal mock build directory with a lesson whose prevention rule
+# matches content in an existing stack skill (docker-pitfalls has "COPY syntax purity")
+mkdir -p "$TMPDIR/build81/.kimi"
+mkdir -p "$TMPDIR/vsm-fitness-builds/FB81-Test/.kimi"
+
+cat > "$TMPDIR/vsm-fitness-builds/FB81-Test/.kimi/lessons.md" << 'EOF'
+# Lessons — FB81-Test
+
+## Lesson 1
+**Source**: FB81-Test, Phase 4
+**Agent**: vsm_backend_tester
+**Finding**: Dockerfile COPY syntax error caused build failure
+**Fix**: Removed invalid COPY syntax
+**Verification**: Build passes
+**Prevention rule**: docker-pitfalls COPY syntax purity check
+EOF
+
+# Run lesson-miner in a controlled way: import the detect_lesson_orphans function
+# and test it with our mock data. Use REAL_HOME so Path.home() finds actual skills.
+HOME="$REAL_HOME" python3 -c "
+import sys
+import importlib.util
+spec = importlib.util.spec_from_file_location('lesson_miner', '$SCRIPT_DIR/../scripts/lesson-miner.py')
+lm = importlib.util.module_from_spec(spec)
+sys.modules['lesson_miner'] = lm
+spec.loader.exec_module(lm)
+
+entries = [{
+    'build_id': 'FB81-Test',
+    'phase': 'Phase 4',
+    'agent': 'vsm_backend_tester',
+    'finding': 'Dockerfile COPY syntax error',
+    'fix': 'Removed invalid COPY syntax',
+    'prevention_rule': 'docker-pitfalls COPY syntax purity check',
+    'source_file': 'lessons.md',
+}]
+
+orphans = lm.detect_lesson_orphans(entries)
+if len(orphans) == 0:
+    sys.exit(0)
+else:
+    print(f'FAIL: Expected 0 orphans, got {len(orphans)}')
+    sys.exit(1)
+" >/dev/null 2>&1
+
+if [ "$?" -eq 0 ]; then
+    pass
+else
+    fail "lesson-miner falsely reported stack-skill rule as orphan"
+fi
+
+# ============================================================================
 # Summary
 # ============================================================================
 

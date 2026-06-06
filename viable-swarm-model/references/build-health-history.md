@@ -905,3 +905,35 @@ Alternatively, **System 4→S4 channel**: The organism now has 4 pre-computation
 
 ### Next Highest-Leverage Constraint
 **System 1 (Implementation) / S5→S1 channel**: The tester timeout problem has now been addressed on FOUR fronts: (1) task splitting (R10), (2) spawn plan compliance (R15), (3) target map pre-computation (R24), (4) inlined scaffolds (R29). If testers STILL time out in the next build, the root cause is likely fundamental: generating test code is inherently time-consuming for an LLM regardless of preparation. The next frontier would be either (a) reducing the minimum meaningful test count for lower-tier builds, or (b) designing builds with fewer testable surfaces per spawn. Alternatively, **System 4→S4 channel**: The lesson-miner produces 100% false-positive orphans because its substring matching can't handle skill-name prefixes or paraphrased rules. Fixing the orphan detection algorithm would prevent wasted curation attention.
+
+---
+
+## 2026-06-05 — S5 Orchestrator Iteration (R30)
+
+### Diagnosed Constraint
+**System 4→S4 channel / S1/S2/S3→S5 knowledge feedback — broken orphan sensor**: The lesson-patterns.md report listed **3 orphaned prevention rules**. Investigation revealed ALL 3 were **false positives** — the rules already existed in stack skill files but the lesson-miner never checked those files. Root cause: `SKILL_FILES` in `lesson-miner.py` only contained 4 files from the `references/` directory. It did NOT include any files from `~/vsm/vsm-stack-skills/` where the actual stack skills live (docker-pitfalls, graphql-pitfalls, testing-patterns, etc.). The orphan detection algorithm had a **100% false-positive rate** for rules in stack skills. A broken sensor in the knowledge feedback channel means curation attention is wasted on non-issues and real orphans might be missed.
+
+### Change Made
+**Refinement mutation R30**: Fixed lesson-miner.py to scan stack skills for orphan detection.
+- Added `STACK_SKILLS_DIR = Path.home() / "vsm" / "vsm-stack-skills"` to `lesson-miner.py`.
+- If the directory exists, extend `SKILL_FILES` with all `*/SKILL.md` files found in the stack skills directory.
+- This ensures prevention rules that exist in docker-pitfalls, graphql-pitfalls, testing-patterns, etc. are correctly identified as present.
+- Added Tests 80–81: Test 80 verifies the script contains stack skills scan logic; Test 81 creates a mock lesson with a rule matching docker-pitfalls content and verifies the orphan detection returns 0 orphans.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **86 passed, 0 failed** (was 84 passed, 0 failed)
+- Test 80: lesson-miner.py includes vsm-stack-skills in SKILL_FILES
+- Test 81: lesson-miner correctly detects stack-skill rules as non-orphans (0 orphans for "docker-pitfalls COPY syntax purity check")
+
+### Files Modified
+- `viable-swarm-model/scripts/lesson-miner.py`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 1 (Implementation) / S5→S1 channel**: The `vsm_backend_tester` (65%) and `vsm_frontend_tester` (60%) still have the lowest success rates, but they have now been addressed on five fronts: task splitting (R10), spawn plan compliance (R15), target map pre-computation (R24), inlined scaffolds (R29), and stack skill templates (pre-existing). If testers still time out in the next real build, the constraint is likely fundamental LLM capacity for code generation. The organism's infrastructure layer (scripts, hooks, agent prompts, pre-computation, stop-verifier enforcement) is now substantially complete after 6 iterations (R25–R30). The remaining frontier requires empirical validation in a real fitness build rather than further infrastructure changes.

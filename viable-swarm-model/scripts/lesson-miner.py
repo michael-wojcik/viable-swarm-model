@@ -26,12 +26,19 @@ from typing import Any
 BUILDS_ROOT = Path.home() / "vsm-fitness-builds" / "coach"
 OUTPUT_FILE = Path.home() / "vsm" / "viable-swarm-model" / "references" / "lesson-patterns.md"
 
+# Base skill files in references/
 SKILL_FILES = [
     Path.home() / "vsm" / "viable-swarm-model" / "references" / "security-lessons.md",
     Path.home() / "vsm" / "viable-swarm-model" / "references" / "pattern-library.md",
     Path.home() / "vsm" / "viable-swarm-model" / "references" / "anti-patterns.md",
     Path.home() / "vsm" / "viable-swarm-model" / "references" / "integration-checklist.md",
 ]
+
+# Also scan all stack skills in vsm-stack-skills/*/SKILL.md
+# R30 fix: lesson-miner was not checking stack skills, causing 100% false-positive orphans.
+STACK_SKILLS_DIR = Path.home() / "vsm" / "vsm-stack-skills"
+if STACK_SKILLS_DIR.exists():
+    SKILL_FILES.extend(sorted(STACK_SKILLS_DIR.glob("*/SKILL.md")))
 
 STOP_WORDS = {
     "the", "and", "for", "are", "but", "not", "you", "all", "can", "had", "her", "was",
