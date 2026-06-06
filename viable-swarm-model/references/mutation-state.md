@@ -323,3 +323,4 @@
 | R33 | 2026-06-06 S5 | structural | Redesign superseded SM1-SM9 audit mutations (6 of 9) | effective | 1 | 5 | — | — | — |
 | R39 | 2026-06-06 S5 | refinement | gate-guardian.sh reliability — remove redundant find check, add npm pattern parity, fix missing .kimi/ crash, add 4 tests | effective | 1 | 5 | — | — | S5 iter |
 | R40 | 2026-06-06 S5 | refinement | boundary-guardian.sh + structural-guardian.sh test coverage — 7 tests + 2 syntax checks | effective | 1 | 5 | — | — | S5 iter |
+| R41 | 2026-06-06 S5 | refinement | decision-enforcer + context-pressure + diagnostic-router test coverage — 6 tests + 3 syntax checks + HOME restoration fix in test 77 | effective | 1 | 5 | — | — | S5 iter |

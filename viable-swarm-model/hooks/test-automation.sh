@@ -92,6 +92,27 @@ else
     fail "syntax error detected"
 fi
 
+echo -n "TEST: Syntax check decision-enforcer.sh ... "
+if bash -n "$SCRIPT_DIR/decision-enforcer.sh"; then
+    pass
+else
+    fail "syntax error detected"
+fi
+
+echo -n "TEST: Syntax check context-pressure.sh ... "
+if bash -n "$SCRIPT_DIR/context-pressure.sh"; then
+    pass
+else
+    fail "syntax error detected"
+fi
+
+echo -n "TEST: Syntax check diagnostic-router.sh ... "
+if bash -n "$SCRIPT_DIR/diagnostic-router.sh"; then
+    pass
+else
+    fail "syntax error detected"
+fi
+
 # ============================================================================
 # Test 1: update-mutation-state.sh — dry-run mode
 # ============================================================================
@@ -3756,6 +3777,9 @@ PAYLOAD='{"session_id":"test-session-77","cwd":"'$TMPDIR/build77'","reason":"sto
 RC=0
 OUTPUT=$(echo "$PAYLOAD" | bash "$SCRIPT_DIR/stop-verifier.sh" 2>/dev/null) || RC=$?
 
+# Restore HOME so subsequent tests use the correct temp directory
+export HOME="$TMPDIR"
+
 if [ "$RC" -eq 0 ] && ! echo "$OUTPUT" | grep -q '"permissionDecision":"deny"'; then
     pass
 else
@@ -3978,10 +4002,10 @@ for line in text.splitlines():
 print(len(rows))
 ")
 
-if [ "$ACTIVE_COUNT" -eq 56 ]; then
+if [ "$ACTIVE_COUNT" -eq 57 ]; then
     pass
 else
-    fail "expected 56 active mutations, got $ACTIVE_COUNT"
+    fail "expected 57 active mutations, got $ACTIVE_COUNT"
 fi
 
 # ============================================================================
@@ -4352,6 +4376,156 @@ if [ "$RC" -eq 0 ]; then
     pass
 else
     fail "expected exit code 0 for non-structural file, got $RC"
+fi
+
+# ============================================================================
+# Test 108: decision-enforcer.sh warns when plan.md written but no matching decision
+# ============================================================================
+
+echo -n "TEST: decision-enforcer warns when plan.md written without matching decision ... "
+
+mkdir -p "$TMPDIR/vsm/viable-swarm-model/references"
+cat > "$TMPDIR/vsm/viable-swarm-model/references/decisions.md" << 'EOF'
+# Decisions
+EOF
+
+PAYLOAD=$(jq -n \
+    --arg path "$TMPDIR/build108/plan.md" \
+    --arg content "# Plan" \
+    --arg cwd "$TMPDIR/build108" \
+    --arg session_id "test-session-108" \
+    '{tool_input: {path: $path, content: $content}, cwd: $cwd, session_id: $session_id}')
+
+WARN_OUTPUT=$(echo "$PAYLOAD" | bash "$SCRIPT_DIR/decision-enforcer.sh" 2>&1) || true
+
+if echo "$WARN_OUTPUT" | grep -q "DECISION ENFORCER WARNING"; then
+    pass
+else
+    fail "expected warning output, got: $WARN_OUTPUT"
+fi
+
+# ============================================================================
+# Test 109: decision-enforcer.sh silent when decisions.md has matching entry
+# ============================================================================
+
+echo -n "TEST: decision-enforcer silent when decisions.md has matching entry ... "
+
+mkdir -p "$TMPDIR/vsm/viable-swarm-model/references"
+cat > "$TMPDIR/vsm/viable-swarm-model/references/decisions.md" << 'EOF'
+# Decisions
+## D1 — 2026-06-06 00:00:00
+**Session**: test-session-109
+**Decision**: Approve plan
+**Rationale**: Testing
+EOF
+
+# Verify file was created
+if [ ! -f "$TMPDIR/vsm/viable-swarm-model/references/decisions.md" ]; then
+    fail "decisions.md was not created"
+fi
+
+PAYLOAD=$(jq -n \
+    --arg path "$TMPDIR/build109/plan.md" \
+    --arg content "# Plan" \
+    --arg cwd "$TMPDIR/build109" \
+    --arg session_id "test-session-109" \
+    '{tool_input: {path: $path, content: $content}, cwd: $cwd, session_id: $session_id}')
+
+# (HOME restored after test 77)
+
+WARN_OUTPUT=$(echo "$PAYLOAD" | bash "$SCRIPT_DIR/decision-enforcer.sh" 2>&1) || true
+
+if [ -z "$WARN_OUTPUT" ]; then
+    pass
+else
+    fail "expected no warning, got: $WARN_OUTPUT"
+fi
+
+# ============================================================================
+# Test 110: decision-enforcer.sh silent for non-plan non-approval files
+# ============================================================================
+
+echo -n "TEST: decision-enforcer silent for non-plan non-approval files ... "
+
+mkdir -p "$TMPDIR/vsm/viable-swarm-model/references"
+cat > "$TMPDIR/vsm/viable-swarm-model/references/decisions.md" << 'EOF'
+# Decisions
+EOF
+
+PAYLOAD=$(jq -n \
+    --arg path "$TMPDIR/build110/README.md" \
+    --arg content "# README" \
+    --arg cwd "$TMPDIR/build110" \
+    --arg session_id "test-session-110" \
+    '{tool_input: {path: $path, content: $content}, cwd: $cwd, session_id: $session_id}')
+
+WARN_OUTPUT=$(echo "$PAYLOAD" | bash "$SCRIPT_DIR/decision-enforcer.sh" 2>&1) || true
+
+if [ -z "$WARN_OUTPUT" ]; then
+    pass
+else
+    fail "expected no warning for non-plan file, got: $WARN_OUTPUT"
+fi
+
+# ============================================================================
+# Test 111: context-pressure.sh logs compaction event
+# ============================================================================
+
+echo -n "TEST: context-pressure logs compaction event ... "
+
+PAYLOAD=$(jq -n \
+    --arg session_id "test-session-111" \
+    --arg cwd "$TMPDIR/build111" \
+    --arg trigger "auto" \
+    --argjson token_count 50000 \
+    '{session_id: $session_id, cwd: $cwd, trigger: $trigger, token_count: $token_count}')
+
+RC=0
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/context-pressure.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ] && [ -f "$HOME/.vsm-telemetry/context-compactions.jsonl" ]; then
+    if grep -q "test-session-111" "$HOME/.vsm-telemetry/context-compactions.jsonl"; then
+        pass
+    else
+        fail "expected log entry for session test-session-111"
+    fi
+else
+    fail "expected exit 0 and log file, got RC=$RC"
+fi
+
+# ============================================================================
+# Test 112: context-pressure.sh warns when tokens exceed threshold
+# ============================================================================
+
+echo -n "TEST: context-pressure warns when token count exceeds threshold ... "
+
+PAYLOAD=$(jq -n \
+    --arg session_id "test-session-112" \
+    --arg cwd "$TMPDIR/build112" \
+    --arg trigger "manual" \
+    --argjson token_count 250000 \
+    '{session_id: $session_id, cwd: $cwd, trigger: $trigger, token_count: $token_count}')
+
+WARN_OUTPUT=$(echo "$PAYLOAD" | bash "$SCRIPT_DIR/context-pressure.sh" 2>&1) || true
+
+if echo "$WARN_OUTPUT" | grep -q "CONTEXT PRESSURE ALERT"; then
+    pass
+else
+    fail "expected pressure alert, got: $WARN_OUTPUT"
+fi
+
+# ============================================================================
+# Test 113: diagnostic-router.sh self-test passes
+# ============================================================================
+
+echo -n "TEST: diagnostic-router self-test passes ... "
+
+SELFTEST_OUTPUT=$(bash "$SCRIPT_DIR/diagnostic-router.sh" --test 2>&1) || true
+
+if echo "$SELFTEST_OUTPUT" | grep -q "All tests passed"; then
+    pass
+else
+    fail "expected self-test to pass, got: $SELFTEST_OUTPUT"
 fi
 
 # ============================================================================

@@ -4346,3 +4346,22 @@ The timeout fallback protocol was a reactive measure. The proactive measure — 
 
 **Measured effect**: **TO BE FILLED** — validate in next fitness build that no boundary violations or unapproved structural mutations occur.
 
+
+---
+
+## Mutation R41 — 2026-06-06
+
+**Session**: S5 Orchestrator Iteration
+**File**: `hooks/test-automation.sh`
+**Type**: refinement
+**Rationale**: Three more hooks registered in `~/.kimi/config.toml` had zero test coverage: `decision-enforcer.sh` (PostToolUse, verifies decisions.md logging), `context-pressure.sh` (PreCompact, warns on token pressure), and `diagnostic-router.sh` (diagnostic routing with self-test). Added 6 behavior tests and 3 syntax checks. During testing, discovered that test 77 changed `export HOME="$TMPDIR/build77"` and never restored it, causing all subsequent tests that depend on `$HOME` to use the wrong directory. This was a latent bug that caused false positives in test 108 (passed for wrong reason) and test 109 failure. Fixed by restoring `$HOME="$TMPDIR"` after test 77.
+
+Tests added:
+- decision-enforcer: warns when plan.md written without matching decision; silent when decisions.md has matching entry; silent for non-plan files
+- context-pressure: logs compaction event; warns when tokens exceed 200k threshold
+- diagnostic-router: self-test (`--test`) passes
+
+**Expected effect**: All registered hooks in `~/.kimi/config.toml` now have verified behavior. No latent HOME-directory bugs in test suite.
+
+**Measured effect**: **TO BE FILLED** — validate in next fitness build that no hook regressions occur.
+
