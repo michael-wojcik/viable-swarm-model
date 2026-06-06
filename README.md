@@ -70,7 +70,7 @@ viable-swarm-model/                    ← the repo
 │   │   ├── session-start.sh
 │   │   ├── session-end.sh
 │   │   ├── knowledge-broker.sh
-│   │   └── test-hooks.sh
+│   │   └── test-automation.sh  ← canonical test suite (134 tests)
 │   ├── references/
 │   │   ├── acquired-wisdom.md
 │   │   ├── anti-patterns.md
@@ -219,7 +219,7 @@ After editing `~/.kimi/config.toml`, launch a new kimi session and run:
 You should see all 8 VSM hooks listed. Then run the validation suite:
 
 ```bash
-bash ~/vsm/viable-swarm-model/hooks/test-hooks.sh
+bash ~/vsm/viable-swarm-model/hooks/test-automation.sh
 ```
 
 Expected output: `7 passed, 0 failed`.

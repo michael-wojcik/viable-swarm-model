@@ -4059,10 +4059,10 @@ for line in text.splitlines():
 print(len(rows))
 ")
 
-if [ "$ACTIVE_COUNT" -eq 62 ]; then
+if [ "$ACTIVE_COUNT" -eq 63 ]; then
     pass
 else
-    fail "expected 62 active mutations, got $ACTIVE_COUNT"
+    fail "expected 63 active mutations, got $ACTIVE_COUNT"
 fi
 
 # ============================================================================
@@ -5090,6 +5090,19 @@ if [ "$ST_RC" -eq 0 ] && [ -f "$TMPDIR/build130/skill-effectiveness-log.md" ] &&
     pass
 else
     fail "expected normalized score 4.00 in log, got RC=$ST_RC"
+fi
+
+
+# ============================================================================
+# Test 131: Legacy test-hooks.sh removed — prevents confusion with canonical suite
+# ============================================================================
+
+echo -n "TEST: Legacy test-hooks.sh removed ... "
+
+if [ ! -f "$SCRIPT_DIR/test-hooks.sh" ]; then
+    pass
+else
+    fail "test-hooks.sh should have been removed; use test-automation.sh instead"
 fi
 
 echo ""

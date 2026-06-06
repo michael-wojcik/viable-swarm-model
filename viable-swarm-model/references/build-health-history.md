@@ -1513,3 +1513,35 @@ Without a fitness build or additional S5 iteration cycles, the organism has reac
 
 ### Next Highest-Leverage Constraint
 **System 5 (Policy) / S5→S1 channel — test-automation.sh is now 156KB+ and 5100+ lines**: While all 134 tests pass, the script is becoming unwieldy. A test suite refactoring (splitting into sub-files by system, adding a test runner with selective execution) would improve maintainability. The script has grown from ~50 tests to 134 tests over multiple S5 iterations. Alternatively, **System 5 (Policy) / S5→S5 channel — active mutations at 62 exceed target of 50**: The organism is accumulating effective mutations faster than they're being promoted to historical. This is not yet critical (all other metrics are green), but it warrants attention. A future iteration could promote R31-R46 to historical once they reach 5 builds tested, or consolidate related mutations.
+
+
+---
+
+## 2026-06-06 — S5 Orchestrator Iteration (R47)
+
+### Diagnosed Constraint
+**System 3 (Audit/Control) / S3→S1 channel — `test-hooks.sh` was a broken legacy test suite creating false signals and confusion.** The 255-line suite had 1 failing test (Test 7 tried to invoke the deprecated `session-start.sh` hook), and all 9 passing tests were fully superseded by `test-automation.sh` (134 tests). Its existence in the repo created ambiguity about which suite was canonical and could mislead developers into running a broken suite.
+
+### Change Made
+**Refinement mutation R47**: Removed the broken legacy test suite.
+- Deleted `hooks/test-hooks.sh`
+- Updated `README.md` to reference `test-automation.sh` instead
+- Added Test 131: verifies `test-hooks.sh` no longer exists, preventing accidental resurrection
+
+### Test Results
+- `bash hooks/test-automation.sh`: **135 passed, 0 failed** (was 134 passed, 0 failed)
+- Test 131: legacy suite removed → PASS
+
+### Files Modified
+- `viable-swarm-model/hooks/test-hooks.sh` (deleted)
+- `README.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- Hash: [to be filled after commit]
+
+### Next Highest-Leverage Constraint
+**System 5 (Policy) / S5→S1 channel — test-automation.sh is now 157KB+ and 5200+ lines**: While all 135 tests pass, the script is genuinely unwieldy. A minimal refactoring (extracting repetitive syntax checks into a helper loop, splitting tests into logical sections with section headers) would improve maintainability without a full rewrite. Alternatively, **System 5 (Policy) / S5→S5 channel — active mutations at 63 exceed target of 50**: With R31-R47 all effective after a single S5 iteration each, the organism is accumulating effective mutations faster than historical promotion. Once any of R31-R47 reach 5 builds tested, they should be promoted to historical to keep active count under control.

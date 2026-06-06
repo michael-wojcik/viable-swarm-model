@@ -4462,3 +4462,20 @@ Additionally:
 **Expected effect**: The learning curator can trust skill-effectiveness-log.md because the generation pipeline is continuously validated.
 
 **Measured effect**: All 134 tests pass. Score extraction, skill mention scanning, and /100→/5 normalization all work correctly.
+
+
+---
+
+## Mutation R47 — 2026-06-06
+
+**Session**: S5 Orchestrator Iteration
+**Files**: `hooks/test-hooks.sh`, `README.md`, `hooks/test-automation.sh`
+**Type**: refinement
+**Rationale**: `test-hooks.sh` was a legacy test suite (255 lines, 10 tests) that predated `test-automation.sh`. It had 1 failing test (Test 7 tested the deprecated `session-start.sh` hook which no longer exists), and all its passing tests were fully superseded by `test-automation.sh` (134 tests). The existence of a broken, redundant test suite created confusion about which suite was canonical and generated false signals about infrastructure health. Fixed by:
+1. Removed `hooks/test-hooks.sh` entirely
+2. Updated `README.md` to reference `test-automation.sh` instead of `test-hooks.sh`
+3. Added Test 131: verifies `test-hooks.sh` no longer exists, preventing accidental resurrection
+
+**Expected effect**: No more confusion about which test suite to run. The canonical suite is unambiguously `test-automation.sh`.
+
+**Measured effect**: All 135 tests pass. The legacy suite is gone.
