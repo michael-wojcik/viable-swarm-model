@@ -6,8 +6,8 @@
 
 | Skill | Builds Used | Avg Score (with) | Avg Score (without) | Delta | Flag |
 |-------|-------------|------------------|---------------------|-------|------|
-| dependency-drift-pitfalls | 1 | 3.60 | 3.93 | -0.33 | NEGATIVE |
-| kimi-code-migration | 1 | 3.80 | 3.89 | -0.09 | NEGATIVE |
+| dependency-drift-pitfalls | 1 | 3.60 | 3.93 | -0.33 | INSUFFICIENT_DATA |
+| kimi-code-migration | 1 | 3.80 | 3.89 | -0.09 | INSUFFICIENT_DATA |
 | graphql-pitfalls | 6 | 3.88 | — | — | INSUFFICIENT_DATA |
 | python-pitfalls | 6 | 3.88 | — | — | INSUFFICIENT_DATA |
 | architecture-patterns | 0 | — | 3.88 | — | INSUFFICIENT_DATA |
@@ -16,6 +16,7 @@
 | elixir-pitfalls | 0 | — | 3.88 | — | INSUFFICIENT_DATA |
 | frontend-patterns | 0 | — | 3.88 | — | INSUFFICIENT_DATA |
 | go-pitfalls | 0 | — | 3.88 | — | INSUFFICIENT_DATA |
+| integration-patterns | 0 | — | 3.88 | — | INSUFFICIENT_DATA |
 | java-pitfalls | 0 | — | 3.88 | — | INSUFFICIENT_DATA |
 | kotlin-pitfalls | 0 | — | 3.88 | — | INSUFFICIENT_DATA |
 | research-patterns | 0 | — | 3.88 | — | INSUFFICIENT_DATA |
@@ -28,5 +29,5 @@
 | security-patterns | 5 | 3.93 | 3.60 | 0.33 |  |
 | typescript-pitfalls | 5 | 3.93 | 3.60 | 0.33 |  |
 | backend-patterns | 3 | 4.08 | 3.67 | 0.41 |  |
-| database-patterns | 1 | 4.40 | 3.77 | 0.63 |  |
-| tester-backend | 1 | 4.40 | 3.77 | 0.63 |  |
+| database-patterns | 1 | 4.40 | 3.77 | 0.63 | INSUFFICIENT_DATA |
+| tester-backend | 1 | 4.40 | 3.77 | 0.63 | INSUFFICIENT_DATA |

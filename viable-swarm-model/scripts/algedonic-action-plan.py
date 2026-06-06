@@ -14,6 +14,7 @@ If --build-dir is provided, writes:
 """
 
 import argparse
+import os
 import re
 import sys
 from dataclasses import dataclass
@@ -26,7 +27,7 @@ REFS_DIR = VSM_ROOT / "references"
 MUTATION_STATE = REFS_DIR / "mutation-state.md"
 HYPOTHESES = REFS_DIR / "hypotheses.md"
 BUILD_HISTORY = REFS_DIR / "build-health-history.md"
-SKILL_REGISTRY = Path.home() / "vsm" / "vsm-stack-skills" / "SKILL-REGISTRY.md"
+SKILL_REGISTRY = Path(os.environ.get("VSM_SKILL_REGISTRY", Path.home() / "vsm" / "vsm-stack-skills" / "SKILL-REGISTRY.md"))
 
 
 # ---------------------------------------------------------------------------
@@ -127,40 +128,42 @@ def extract_latest_score(path: Path) -> float | None:
 
 
 def extract_skill_variety(path: Path) -> tuple[int, int]:
-    """Return (skills_used, skills_total) from skill registry."""
+    """Return (skills_used, skills_total) from skill registry.
+
+    Only counts skills with status 'Full' as part of the denominator.
+    Excludes Planned, Icebox, and Deprecated skills which are not actionable.
+    """
     if not path.exists():
         return 0, 0
     text = path.read_text()
-    full_skills = 0
-    used_skills = 0
+    full_skill_names: set[str] = set()
     for line in text.splitlines():
-        if "|" in line and ("Full" in line or "Planned" in line or "Icebox" in line or "Deprecated" in line):
+        if "|" in line and "Full" in line:
             parts = [p.strip() for p in line.split("|")]
             parts = [p for p in parts if p]
             # Pattern skill rows have 5 columns; pitfall rows have 4
             if len(parts) >= 4 and parts[0] not in ("Skill", ""):
                 status = parts[-1] if len(parts) == 5 else parts[-2] if len(parts) == 4 else ""
-                if status in ("Full", "Planned", "Icebox", "Deprecated"):
-                    full_skills += 1
-    # Count used skills from skill-effectiveness-log (deduplicate across date sections)
+                if status == "Full":
+                    full_skill_names.add(parts[0])
+    # Count used skills from skill-effectiveness-log (match registry names)
     skill_log = REFS_DIR / "skill-effectiveness-log.md"
-    seen_skills = set()
+    seen_skills: set[str] = set()
     if skill_log.exists():
         log_text = skill_log.read_text()
         for line in log_text.splitlines():
-            if "|" in line and ("pitfalls" in line or "patterns" in line or "migration" in line):
-                parts = [p.strip() for p in line.split("|")]
-                parts = [p for p in parts if p]
-                if len(parts) >= 3:
-                    try:
-                        builds_used = int(parts[1])
-                        skill_name = parts[0]
-                        if builds_used > 0 and skill_name not in seen_skills:
-                            seen_skills.add(skill_name)
-                    except ValueError:
-                        pass
-    used_skills = len(seen_skills)
-    return used_skills, full_skills
+            if not line.startswith("|"):
+                continue
+            parts = [p.strip() for p in line.split("|")]
+            parts = [p for p in parts if p]
+            if len(parts) >= 3 and parts[0] in full_skill_names:
+                try:
+                    builds_used = int(parts[1])
+                    if builds_used > 0 and parts[0] not in seen_skills:
+                        seen_skills.add(parts[0])
+                except ValueError:
+                    pass
+    return len(seen_skills), len(full_skill_names)
 
 
 # ---------------------------------------------------------------------------

@@ -21,6 +21,7 @@ If --build-dir is provided, writes:
 
 import argparse
 import json
+import os
 import re
 import sys
 from dataclasses import dataclass
@@ -36,7 +37,7 @@ MUTATION_STATE = REFS_DIR / "mutation-state.md"
 HYPOTHESES = REFS_DIR / "hypotheses.md"
 BROKER = REFS_DIR / "knowledge-broker.md"
 BUILD_HISTORY = REFS_DIR / "build-health-history.md"
-SKILL_REGISTRY = Path.home() / "vsm" / "vsm-stack-skills" / "SKILL-REGISTRY.md"
+SKILL_REGISTRY = Path(os.environ.get("VSM_SKILL_REGISTRY", Path.home() / "vsm" / "vsm-stack-skills" / "SKILL-REGISTRY.md"))
 
 
 # ---------------------------------------------------------------------------
@@ -250,33 +251,39 @@ def main() -> int:
     agent_variety = round(len(agent_refs & known_agents) / len(known_agents), 2)
 
     # --- Skill variety (heuristic from skill-effectiveness-log + registry) ---
-    # Count total skills from registry (ground truth)
-    skills_total = 0
+    # Parse registry to get the set of actionable (Full) skill names
+    full_skills: set[str] = set()
     if SKILL_REGISTRY.exists():
         reg_text = SKILL_REGISTRY.read_text()
         for line in reg_text.splitlines():
-            if "|" in line and ("Full" in line or "Planned" in line or "Icebox" in line or "Deprecated" in line):
+            if "|" in line and "Full" in line:
                 parts = [p.strip() for p in line.split("|")]
                 parts = [p for p in parts if p]
                 if len(parts) >= 4 and parts[0] not in ("Skill", ""):
                     status = parts[-1] if len(parts) == 5 else parts[-2] if len(parts) == 4 else ""
-                    if status in ("Full", "Planned", "Icebox", "Deprecated"):
-                        skills_total += 1
+                    if status == "Full":
+                        full_skills.add(parts[0])
 
-    # Count used skills from log (deduplicate across date sections)
+    # Count used skills from log (match against registry-derived names)
     skill_log = REFS_DIR / "skill-effectiveness-log.md"
-    seen_skills = set()
+    seen_skills: set[str] = set()
     if skill_log.exists():
         text = skill_log.read_text()
         for line in text.splitlines():
-            if "|" in line and ("pitfalls" in line or "patterns" in line or "migration" in line):
-                parts = [p.strip() for p in line.split("|")]
-                parts = [p for p in parts if p]
-                if len(parts) >= 3 and parts[1].replace(".", "").isdigit():
+            if not line.startswith("|"):
+                continue
+            parts = [p.strip() for p in line.split("|")]
+            parts = [p for p in parts if p]
+            # Data rows: skill_name | builds_used | ... (skip header)
+            if len(parts) >= 3 and parts[0] in full_skills:
+                try:
                     builds_used = int(parts[1])
-                    skill_name = parts[0]
-                    if builds_used > 0 and skill_name not in seen_skills:
-                        seen_skills.add(skill_name)
+                    if builds_used > 0 and parts[0] not in seen_skills:
+                        seen_skills.add(parts[0])
+                except ValueError:
+                    pass
+
+    skills_total = len(full_skills)
     skills_used = len(seen_skills)
     skill_variety = round(skills_used / skills_total, 2) if skills_total else 0.0
 

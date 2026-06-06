@@ -7,6 +7,9 @@
 | R51 | 2026-06-06 S5 | refinement | auto-gym-trigger.py bracket-hypothesis parsing fix + threshold alignment 10→7 | historical | 6 | 5 | — | — | S5 iter |
 | R52 | 2026-06-06 S5 | refinement | algedonic-action-plan.py threshold fix 50→55 + integration-test-closeout.py test coverage expansion (6 new tests) | historical | 5 | 5 | — | — | S5 iter |
 | R53 | 2026-06-06 S5 | refinement | Skill variety metric consistency fix — organism-vitals.py + algedonic-action-plan.py + skill-effectiveness-tracker.py | historical | 5 | 5 | — | — | S5 iter |
+| R54 | 2026-06-06 S5 | refinement | organism-vitals.py parse_mutation_state filters invalid status rows + fill rate accuracy + utcnow deprecation fix | historical | 5 | 5 | — | — | S5 iter |
+| R55 | 2026-06-06 S5 | refinement | validate-skills.py count_rules() numbered-list fix + skill agent-reference gaps + automation suite integration | historical | 5 | 5 | — | — | S5 iter |
+| R56 | 2026-06-06 S5 | structural | increment-s5-iteration-counter.py + S5 builds_tested backfill (R44-R48→historical) + agent quick-reference enrichment | historical | 5 | 5 | — | — | S5 iter |
 | FB25-S1 | FB25 Coach | structural | False hook claim removal | historical | 5 | 5 | H300 | E17 | — |
 | FB24-1 | FB24 Build | append-only | Phase 4 gate bypass when 1 test fails | historical | 6 | 5 | H154 | — | — |
 | FB24-2 | FB24 Build | append-only | Enum type safety audit | historical | 6 | 5 | H203 | — | — |
@@ -145,8 +148,8 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 49 | < 55 | ✅ OK (within target) |
-| Historical effective (≥5 builds) | 57 | >15% of active | ✅ 116% |
+| Active mutations | 47 | < 55 | ✅ OK (within target) |
+| Historical effective (≥5 builds) | 58 | >15% of active | ✅ 121% |
 | Effective (<5 builds, monitored) | 45 | >30% of active | ✅ 90% |
 | Probationary mutations | 3 | <20 at any time | ✅ 3 (within target) |
 | Removed / redesigned | 19 | ≥2 per 5 builds | ✅ 19 (exceeds target) |
@@ -340,8 +343,5 @@
 | FB32-5 | FB32 Build | refinement | Orphaned Query Export Limit | **effective** | 1 | 5 | — | — | — |
 
 | **S5 ITERATION MUTATIONS (2026-06-06)** |
-| R54 | 2026-06-06 S5 | refinement | organism-vitals.py parse_mutation_state filters invalid status rows + fill rate accuracy + utcnow deprecation fix | effective | 4 | 5 | — | — | S5 iter |
-| R55 | 2026-06-06 S5 | refinement | validate-skills.py count_rules() numbered-list fix + skill agent-reference gaps + automation suite integration | effective | 3 | 5 | — | — | S5 iter |
-| R56 | 2026-06-06 S5 | structural | increment-s5-iteration-counter.py + S5 builds_tested backfill (R44-R48→historical) + agent quick-reference enrichment | effective | 3 | 5 | — | — | S5 iter |
-| R57 | 2026-06-06 S5 | structural | S5 iteration lifecycle automation — auto-increment + historical promotion + hypothesis curation protocol | effective | 2 | 5 | — | — | S5 iter |
-| R58 | 2026-06-06 S5 | refinement | skill-effectiveness-tracker.py MIN_BUILDS_FOR_EFFECTIVENESS=3 threshold prevents false NEGATIVE flags on tiny samples | effective | 1 | 5 | — | — | S5 iter |
+| R57 | 2026-06-06 S5 | structural | S5 iteration lifecycle automation — auto-increment + historical promotion + hypothesis curation protocol | effective | 4 | 5 | — | — | S5 iter |
+| R58 | 2026-06-06 S5 | refinement | skill-effectiveness-tracker.py MIN_BUILDS_FOR_EFFECTIVENESS=3 threshold prevents false NEGATIVE flags on tiny samples | effective | 3 | 5 | — | — | S5 iter |

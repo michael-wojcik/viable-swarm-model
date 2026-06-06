@@ -2021,17 +2021,17 @@ cat > "$TMPDIR/algedonic-test/vsm/vsm-stack-skills/SKILL-REGISTRY.md" << 'EOF'
 | Skill | Description | Relevant Agents | Depends On | Status |
 |---|---|---|---|---|
 | python-pitfalls | Python traps | backend_coder | — | Full |
-| go-pitfalls | Go traps | backend_coder | — | Planned |
-| rust-pitfalls | Rust traps | backend_coder | — | Planned |
-| java-pitfalls | Java traps | backend_coder | — | Icebox |
+| go-pitfalls | Go traps | backend_coder | — | Full |
+| rust-pitfalls | Rust traps | backend_coder | — | Full |
+| java-pitfalls | Java traps | backend_coder | — | Full |
 
 ## Pitfall Skills
 | Skill | Language | Status | Description |
 |---|---|---|---|
 | python-pitfalls | Python | Full | Module-level instantiation |
-| go-pitfalls | Go | Planned | Awaiting empirical data |
-| rust-pitfalls | Rust | Planned | Awaiting empirical data |
-| java-pitfalls | Java | Icebox | Placeholder |
+| go-pitfalls | Go | Full | Awaiting empirical data |
+| rust-pitfalls | Rust | Full | Awaiting empirical data |
+| java-pitfalls | Java | Full | Placeholder |
 EOF
 
 # Mock skill-effectiveness-log (only python-pitfalls used)
@@ -2053,7 +2053,8 @@ cat > "$TMPDIR/algedonic-test/vsm/viable-swarm-model/references/build-health-his
 EOF
 
 export HOME="$TMPDIR/algedonic-test"
-python3 "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" \
+VSM_SKILL_REGISTRY="$TMPDIR/algedonic-test/vsm/vsm-stack-skills/SKILL-REGISTRY.md" \
+    python3 "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" \
     --build-dir "$TMPDIR/algedonic-test" 2>/dev/null
 
 OUTPUT="$TMPDIR/algedonic-test/.kimi/algedonic-action-plan.md"
@@ -5448,16 +5449,17 @@ cat > "$TMPDIR/build145/plan.md" << 'EOF'
 EOF
 
 RC=0
-python3 "$SCRIPT_DIR/../scripts/organism-vitals.py" --build-dir "$TMPDIR/build145" >/dev/null 2>&1 || RC=$?
+VSM_SKILL_REGISTRY="$TMPDIR/vsm/vsm-stack-skills/SKILL-REGISTRY.md" \
+    python3 "$SCRIPT_DIR/../scripts/organism-vitals.py" --build-dir "$TMPDIR/build145" >/dev/null 2>&1 || RC=$?
 
 OUTPUT=$(cat "$TMPDIR/build145/.kimi/organism-vitals.md" 2>/dev/null || echo "")
 if [ "$RC" -eq 0 ] && \
-   echo "$OUTPUT" | grep -q "Skill variety.*0.5.*2/4" && \
+   echo "$OUTPUT" | grep -q "Skill variety.*0.67.*2/3" && \
    ! echo "$OUTPUT" | grep -q "Skill variety.*0.5.*4/8" && \
    ! echo "$OUTPUT" | grep -q "Skill variety.*0.5.*4/4"; then
     pass
 else
-    fail "skill variety should be 2/4 (deduplicated), got: $(echo "$OUTPUT" | grep 'Skill variety' || echo 'missing')"
+    fail "skill variety should be 2/3 (only Full skills counted), got: $(echo "$OUTPUT" | grep 'Skill variety' || echo 'missing')"
 fi
 
 # ============================================================================
@@ -5485,15 +5487,16 @@ EOF
 # Reuse registry and log from test 145 (same TMPDIR)
 
 RC=0
-python3 "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" --build-dir "$TMPDIR/build146" >/dev/null 2>&1 || RC=$?
+VSM_SKILL_REGISTRY="$TMPDIR/vsm/vsm-stack-skills/SKILL-REGISTRY.md" \
+    python3 "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" --build-dir "$TMPDIR/build146" >/dev/null 2>&1 || RC=$?
 
 OUTPUT=$(cat "$TMPDIR/build146/.kimi/algedonic-action-plan.md" 2>/dev/null || echo "")
 if [ "$RC" -eq 0 ] && \
-   echo "$OUTPUT" | grep -q "Skill variety.*0.5.*2/4" && \
+   echo "$OUTPUT" | grep -q "Skill variety.*0.67.*2/3" && \
    ! echo "$OUTPUT" | grep -q "Skill variety.*1.0.*4/4"; then
     pass
 else
-    fail "skill variety should be 2/4 (deduplicated), got: $(echo "$OUTPUT" | grep 'Skill variety' || echo 'missing')"
+    fail "skill variety should be 2/3 (only Full skills counted), got: $(echo "$OUTPUT" | grep 'Skill variety' || echo 'missing')"
 fi
 
 # ============================================================================
@@ -5802,6 +5805,117 @@ if [ "$ST_RC" -eq 0 ] && [ "$TINY_FLAG" = "INSUFFICIENT_DATA" ]; then
     pass
 else
     fail "tiny-skill with 1 build used should be INSUFFICIENT_DATA, not NEGATIVE (flag=$TINY_FLAG)"
+fi
+
+# ============================================================================
+# Test 156: R54 promoted to historical after auto-increment
+# ============================================================================
+
+echo -n "TEST: R54 promoted to historical after third auto-increment ... "
+
+R54_HIST=$(grep "^| R54 " "$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md" | grep "historical" | wc -l)
+R54_COUNT=$(grep "^| R54 " "$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md" | awk -F'|' '{print $7}' | tr -d ' ')
+
+if [ "$R54_HIST" -eq 1 ] && [ "$R54_COUNT" -ge 5 ]; then
+    pass
+else
+    fail "R54 should be historical with builds_tested >= 5 (got $R54_COUNT)"
+fi
+
+# ============================================================================
+# Test 156b: R55 promoted to historical after auto-increment
+# ============================================================================
+
+echo -n "TEST: R55 promoted to historical after fourth auto-increment ... "
+
+R55_HIST=$(grep "^| R55 " "$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md" | grep "historical" | wc -l)
+R55_COUNT=$(grep "^| R55 " "$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md" | awk -F'|' '{print $7}' | tr -d ' ')
+
+if [ "$R55_HIST" -eq 1 ] && [ "$R55_COUNT" -ge 5 ]; then
+    pass
+else
+    fail "R55 should be historical with builds_tested >= 5 (got $R55_COUNT)"
+fi
+
+# ============================================================================
+# Test 156c: R56 promoted to historical after auto-increment
+# ============================================================================
+
+echo -n "TEST: R56 promoted to historical after fourth auto-increment ... "
+
+R56_HIST=$(grep "^| R56 " "$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md" | grep "historical" | wc -l)
+R56_COUNT=$(grep "^| R56 " "$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md" | awk -F'|' '{print $7}' | tr -d ' ')
+
+if [ "$R56_HIST" -eq 1 ] && [ "$R56_COUNT" -ge 5 ]; then
+    pass
+else
+    fail "R56 should be historical with builds_tested >= 5 (got $R56_COUNT)"
+fi
+
+# ============================================================================
+# Test 157: organism-vitals.py skill variety excludes Icebox/Planned skills
+# ============================================================================
+
+echo -n "TEST: organism-vitals.py skill variety counts only Full skills ... "
+
+mkdir -p "$TMPDIR/vsm/viable-swarm-model/references"
+mkdir -p "$TMPDIR/build157/.kimi"
+
+# Create a minimal registry with Full, Planned, and Icebox skills
+cat > "$TMPDIR/vsm/vsm-stack-skills/SKILL-REGISTRY.md" << 'EOF'
+## Pattern Skills
+| Skill | Description | Relevant Agents | Depends On | Status |
+|---|---|---|---|---|
+| backend-patterns | Server architecture | backend_coder | python-pitfalls | Full |
+| frontend-patterns | Component architecture | frontend_coder | typescript-pitfalls | Full |
+| go-pitfalls | Go | Planned | (Awaiting empirical data) |
+
+## Pitfall Skills
+| Skill | Language | Status | Description |
+|---|---|---|---|
+| python-pitfalls | Python | Full | Module-level instantiation |
+| java-pitfalls | Java | Icebox | (Placeholder) |
+EOF
+
+# Create a skill log where only python-pitfalls is used
+cat > "$TMPDIR/vsm/viable-swarm-model/references/skill-effectiveness-log.md" << 'EOF'
+# Skill Effectiveness Log
+## 2026-06-06
+| Skill | Builds Used | Avg Score (with) | Avg Score (without) | Delta | Flag |
+|-------|-------------|------------------|---------------------|-------|------|
+| python-pitfalls | 3 | 4.00 | 3.50 | 0.50 | |
+| backend-patterns | 0 | — | 3.50 | — | INSUFFICIENT_DATA |
+| frontend-patterns | 0 | — | 3.50 | — | INSUFFICIENT_DATA |
+| go-pitfalls | 0 | — | 3.50 | — | INSUFFICIENT_DATA |
+| java-pitfalls | 0 | — | 3.50 | — | INSUFFICIENT_DATA |
+EOF
+
+OV_OUTPUT=$(HOME="$TMPDIR" VSM_SKILL_REGISTRY="$TMPDIR/vsm/vsm-stack-skills/SKILL-REGISTRY.md" \
+    python3 "$SCRIPT_DIR/../scripts/organism-vitals.py" --build-dir "$TMPDIR/build157" 2>/dev/null)
+
+SKILL_VARIETY=$(echo "$OV_OUTPUT" | grep "Skill variety" | grep -oE '[0-9]+/[0-9]+')
+
+if [ "$SKILL_VARIETY" = "1/3" ]; then
+    pass
+else
+    fail "expected 1/3 (only Full skills counted), got $SKILL_VARIETY"
+fi
+
+# ============================================================================
+# Test 158: algedonic-action-plan.py skill variety excludes Icebox/Planned
+# ============================================================================
+
+echo -n "TEST: algedonic-action-plan.py skill variety excludes Icebox/Planned skills ... "
+
+AA_OUTPUT=$(HOME="$TMPDIR" VSM_SKILL_REGISTRY="$TMPDIR/vsm/vsm-stack-skills/SKILL-REGISTRY.md" \
+    python3 "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" --build-dir "$TMPDIR/build157" 2>/dev/null)
+
+AA_VARIETY=$(echo "$AA_OUTPUT" | grep "Skill variety" | grep -oE '[0-9]+/[0-9]+')
+
+if [ "$AA_VARIETY" = "1/3" ]; then
+    pass
+else
+    fail "expected 1/3 (only Full skills counted), got $AA_VARIETY"
 fi
 
 echo ""
