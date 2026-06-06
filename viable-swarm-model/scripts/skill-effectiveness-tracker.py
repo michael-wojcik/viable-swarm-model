@@ -170,11 +170,19 @@ def find_skills_in_build(build_dir: Path, skills: list[str]) -> set[str]:
 # Correlation analysis
 # ---------------------------------------------------------------------------
 
+MIN_BUILDS_FOR_EFFECTIVENESS = 3
+
+
 def analyze_skill_effectiveness(
     skills: list[str],
     build_data: list[dict],
 ) -> list[dict]:
-    """For each skill, compute avg score with/without and flag negative deltas."""
+    """For each skill, compute avg score with/without and flag negative deltas.
+
+    Skills used in fewer than MIN_BUILDS_FOR_EFFECTIVENESS builds are flagged as
+    INSUFFICIENT_DATA regardless of computed delta, to prevent false alarms from
+    tiny sample sizes.
+    """
     results = []
     for skill in skills:
         with_scores = [b["score"] for b in build_data if skill in b["skills"] and b["score"] is not None]
@@ -185,7 +193,10 @@ def analyze_skill_effectiveness(
 
         if avg_with is not None and avg_without is not None:
             delta = round(avg_with - avg_without, 2)
-            flag = "NEGATIVE" if delta < 0 else ""
+            if len(with_scores) < MIN_BUILDS_FOR_EFFECTIVENESS:
+                flag = "INSUFFICIENT_DATA"
+            else:
+                flag = "NEGATIVE" if delta < 0 else ""
         else:
             delta = None
             flag = "INSUFFICIENT_DATA"

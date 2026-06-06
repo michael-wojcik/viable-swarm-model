@@ -5732,6 +5732,78 @@ else
     fail "H155/H201/H213 should be archived, not in hypotheses.md"
 fi
 
+# ============================================================================
+# Test 154: R53 promoted to historical after auto-increment
+# ============================================================================
+
+echo -n "TEST: R53 promoted to historical after second auto-increment ... "
+
+R53_HIST=$(grep "^| R53 " "$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md" | grep "historical" | wc -l)
+R53_COUNT=$(grep "^| R53 " "$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md" | awk -F'|' '{print $7}' | tr -d ' ')
+
+if [ "$R53_HIST" -eq 1 ] && [ "$R53_COUNT" -ge 5 ]; then
+    pass
+else
+    fail "R53 should be historical with builds_tested >= 5 (got $R53_COUNT)"
+fi
+
+# ============================================================================
+# Test 155: skill-effectiveness-tracker.py — small sample not flagged NEGATIVE
+# ============================================================================
+
+echo -n "TEST: skill-effectiveness-tracker.py does NOT flag NEGATIVE for skills with < 3 builds ... "
+
+mkdir -p "$TMPDIR/build155/coach/FB301/.kimi"
+mkdir -p "$TMPDIR/build155/coach/FB302/.kimi"
+mkdir -p "$TMPDIR/build155/coach/FB303/.kimi"
+mkdir -p "$TMPDIR/build155/coach/FB304/.kimi"
+
+# Registry with one skill
+cat > "$TMPDIR/build155/SKILL-REGISTRY.md" << 'EOF'
+## Pattern Skills
+| Skill | Description | Relevant Agents |
+|---|---|---|
+| tiny-skill | A skill | vsm_backend_coder |
+EOF
+
+# FB301: score 2.0/5, uses tiny-skill (only build with the skill)
+cat > "$TMPDIR/build155/coach/FB301/.kimi/fitness-report.md" << 'EOF'
+# Fitness Report
+Overall Score: 2.0 / 5
+tiny-skill was used.
+EOF
+
+# FB302-304: score 5.0/5, no skill mentioned
+cat > "$TMPDIR/build155/coach/FB302/.kimi/fitness-report.md" << 'EOF'
+# Fitness Report
+Overall Score: 5.0 / 5
+No skills.
+EOF
+cat > "$TMPDIR/build155/coach/FB303/.kimi/fitness-report.md" << 'EOF'
+# Fitness Report
+Overall Score: 5.0 / 5
+No skills.
+EOF
+cat > "$TMPDIR/build155/coach/FB304/.kimi/fitness-report.md" << 'EOF'
+# Fitness Report
+Overall Score: 5.0 / 5
+No skills.
+EOF
+
+SKILL_TRACKER_REGISTRY="$TMPDIR/build155/SKILL-REGISTRY.md" \
+    SKILL_TRACKER_COACH_DIR="$TMPDIR/build155/coach" \
+    SKILL_TRACKER_OUTPUT="$TMPDIR/build155/skill-effectiveness-log.md" \
+    python3 "$SCRIPT_DIR/../scripts/skill-effectiveness-tracker.py" >/dev/null 2>&1 || ST_RC=$?
+ST_RC=${ST_RC:-0}
+
+TINY_FLAG=$(grep "tiny-skill" "$TMPDIR/build155/skill-effectiveness-log.md" | awk -F'|' '{print $7}' | tr -d ' ')
+
+if [ "$ST_RC" -eq 0 ] && [ "$TINY_FLAG" = "INSUFFICIENT_DATA" ]; then
+    pass
+else
+    fail "tiny-skill with 1 build used should be INSUFFICIENT_DATA, not NEGATIVE (flag=$TINY_FLAG)"
+fi
+
 echo ""
 echo "========================================"
 echo "Results: $PASSED passed, $FAILED failed"

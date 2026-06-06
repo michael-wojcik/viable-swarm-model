@@ -1894,3 +1894,40 @@ Without a fitness build or additional S5 iteration cycles, the organism has reac
 ### Next Highest-Leverage Constraint
 **System 5 (Policy) / S5→S5 channel — R53 is at builds_tested=4 (borderline)**: With one more stable iteration, R53 would be eligible for historical promotion (threshold ≥5), further reducing active mutation pressure from 50 toward the <55 target with more headroom. The new "When an S5 iteration begins" protocol should handle this automatically. Alternatively, **System 4 (Adaptation/Intelligence) / S4→S4 channel — vsm_learning_curator and vsm_variety_engineer still have 0% empirical exercise rate**: With the hypothesis backlog now clean and mutation lifecycle automated, the organism's most persistent unaddressed gap remains the meta-system agents. All pre-computation scripts, Mode A/B workflows, and stop-verifier content-quality gates exist, but the agents themselves have never been spawned in a real build. Without empirical validation, the organism cannot know whether the curated workload reductions actually prevent timeouts.
 
+
+---
+---
+
+## 2026-06-06 — S5 Orchestrator Iteration (R58)
+
+### Diagnosed Constraint
+**System 4 (Adaptation/Intelligence) / S4→S5 channel — false NEGATIVE flags from tiny sample sizes in skill-effectiveness-tracker.py**: The tracker flagged `dependency-drift-pitfalls` (delta=-0.33) and `kimi-code-migration` (delta=-0.09) as NEGATIVE despite both having only `builds_used=1`. With n=1, the delta is statistically meaningless — a single difficult build where the skill happened to be referenced does not constitute evidence of harm. False NEGATIVE flags could lead to erroneous skill deprecation, degrading the organism's capability over time.
+
+**Secondary constraint — System 5 (Policy) / S5→S5 channel — protocol compliance test**: The "When an S5 iteration begins" protocol (R57) mandates running `increment-s5-iteration-counter.py` before diagnosing. R53 had `builds_tested=4` (borderline); after protocol-compliant increment, it reached 5 and was eligible for historical promotion.
+
+### Change Made
+**Refinement mutation R58**: Added minimum sample size threshold to skill-effectiveness-tracker.py.
+- `scripts/skill-effectiveness-tracker.py`: Added `MIN_BUILDS_FOR_EFFECTIVENESS = 3` constant. Skills used in fewer than 3 builds are flagged as `INSUFFICIENT_DATA` regardless of computed delta. Only skills with ≥3 builds can be flagged `NEGATIVE`.
+- Ran `increment-s5-iteration-counter.py` per protocol: R53 4→5, R54 3→4, R55 2→3, R56 2→3, R57 2→3
+- Promoted R53 (builds_tested=5) from `effective` → `historical`, reducing active mutations from 50 to 49
+- `hooks/test-automation.sh`: Tests 154–155 verify R53 promotion and small-sample threshold behavior
+
+### Test Results
+- `bash hooks/test-automation.sh`: **155 passed, 0 failed** (was 153 passed, 0 failed)
+- Test 154: R53 promoted to historical with builds_tested=5 → PASS
+- Test 155: Skill with 1 build used and negative delta flagged as INSUFFICIENT_DATA, not NEGATIVE → PASS
+- `mutation-portfolio-health.py`: Confirms total_active=49, historical=57, all metrics green
+
+### Files Modified
+- `viable-swarm-model/scripts/skill-effectiveness-tracker.py`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 5 (Policy) / S5→S5 channel — R54 is at builds_tested=4 (borderline)**: With one more stable iteration, R54 would be eligible for historical promotion (threshold ≥5), further reducing active mutation pressure from 49 to 48. The established protocol handles this automatically. Alternatively, **System 4 (Adaptation/Intelligence) / S4→S4 channel — vsm_learning_curator and vsm_variety_engineer still have 0% empirical exercise rate**: With the hypothesis backlog clean, mutation lifecycle automated, and skill tracker false alarms fixed, the organism's most persistent gap remains the meta-system agents. All infrastructure exists but they have never been spawned in a real build.
+

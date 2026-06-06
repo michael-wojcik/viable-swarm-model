@@ -4781,3 +4781,27 @@ These gaps represent a System 3 (Audit/Control) → System 1 (Implementation) ch
 **Measured effect**: **5/5** — Active mutations dropped from 51 to 49. Hypothesis backlog index now accurate. All automation suite tests pass (153 passed, 0 failed).
 
 ---
+
+## Mutation R58 — 2026-06-06
+
+**Session**: S5 Orchestrator Iteration — skill effectiveness tracker false-alarm prevention + S5 protocol compliance
+**File**: `scripts/skill-effectiveness-tracker.py`, `references/mutation-state.md`, `hooks/test-automation.sh`
+**Type**: refinement + structural
+**Rationale**: Two constraints identified during R57 follow-up:
+1. **System 5 (Policy) / S5→S5 channel — protocol compliance**: The newly established "When an S5 iteration begins" protocol (R57) mandates running `increment-s5-iteration-counter.py` before diagnosing. Following this protocol, R53 incremented from 4→5, becoming eligible for historical promotion. Without protocol adherence, eligible promotions would continue to be missed.
+2. **System 4 (Adaptation/Intelligence) / S4→S5 channel — false NEGATIVE flags from tiny samples**: `skill-effectiveness-tracker.py` flagged `dependency-drift-pitfalls` (delta=-0.33) and `kimi-code-migration` (delta=-0.09) as NEGATIVE despite both having only `builds_used=1`. With n=1, the comparison against the "without" group is statistically meaningless and could lead to erroneous skill deprecation decisions. The organism should not treat single-build observations as reliable effectiveness signals.
+
+**Expected effect**:
+- S5 iteration protocol is self-consistent: each iteration begins with counter increment + promotion check.
+- R53 promoted to `historical`, reducing active mutations from 50 to 49.
+- Skills used in < 3 builds are flagged as `INSUFFICIENT_DATA` regardless of computed delta, preventing false alarms.
+- Future negative deltas require at least 3 builds of evidence before triggering algedonic escalation.
+
+**Files modified**:
+- `scripts/skill-effectiveness-tracker.py` — Added `MIN_BUILDS_FOR_EFFECTIVENESS = 3` constant; updated `analyze_skill_effectiveness()` to require ≥3 builds before flagging `NEGATIVE`
+- `references/mutation-state.md` — Promoted R53 to `historical`; updated Integration Health (active=49, historical=57); added R58 entry
+- `hooks/test-automation.sh` — Tests 154–155 verify R53 promotion and small-sample threshold
+
+**Measured effect**: **5/5** — Active mutations dropped from 50 to 49. All 155 automation suite tests pass. Skill tracker no longer produces false NEGATIVE flags on n<3.
+
+---
