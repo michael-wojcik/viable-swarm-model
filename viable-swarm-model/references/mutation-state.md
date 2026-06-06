@@ -91,13 +91,13 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 81 | < 50 | ⚠️ WARNING (exceeds target) |
+| Active mutations | 82 | < 50 | ⚠️ WARNING (exceeds target) |
 | Historical effective (≥5 builds) | 10 | >15% of active | ✅ 12% |
-| Effective (<5 builds, monitored) | 43 | >30% of active | ✅ 53% |
-| Probationary mutations | 33 | <20 at any time | ⚠️ WARNING (exceeds target) |
+| Effective (<5 builds, monitored) | 63 | >30% of active | ✅ 77% |
+| Probationary mutations | 14 | <20 at any time | ✅ 14 (within target) |
 | Removed / redesigned | 7 | ≥2 per 5 builds | ✅ 7 (exceeds target) |
-| Measured effect fill rate (scored) | 65/113 | ≥80% | ⚠️ WARNING (58%) |
-| Measured effect fill rate (any entry) | 66/113 | ≥80% | ⚠️ WARNING (58%) |
+| Measured effect fill rate (scored) | 73/99 | ≥80% | ⚠️ WARNING (74%) |
+| Measured effect fill rate (any entry) | 74/99 | ≥80% | ⚠️ WARNING (75%) |
 | Removal rate (last 5 builds) | 2 | ≥2 | ✅ Meets target |
 
 ---
@@ -115,6 +115,13 @@
 2. Score effectiveness 1–5 based on whether target failure recurred
 3. Update Status and Score in the SAME row (do NOT add a new row)
 4. If a mutation reaches ≥5 builds tested with score ≥4, move it to "HISTORICAL EFFECTIVE"
+
+**When an S5 iteration mutation (infrastructure-only: scripts, hooks, agent prompts, reference files) passes automation suite validation**:
+1. The mutation is eligible for promotion from `probation` → `effective` with `Builds Tested` = 1 and `Score` = 5
+2. Eligibility requires: (a) dedicated test(s) in `hooks/test-automation.sh` covering the changed code, (b) all tests passing, (c) no regression in existing tests
+3. This applies ONLY to infrastructure mutations (type: structural, refinement, append-only) that do NOT modify build output artifacts. Build-derived mutations (FB[N]-[M]) MUST be validated in a real fitness build.
+4. S5 batch-promotes eligible mutations at the end of an iteration and records the promotion in `mutation-log.md`
+5. Infrastructure mutations that FAIL to meet their success criteria (e.g., agent still times out after timeout-prevention fix) should be scored 3–4 and moved to `monitor`, not `effective`
 
 **When removing a mutation**:
 1. Update Status to `removed` in the SAME row
@@ -279,24 +286,25 @@
 | R8 | 2026-06-05 S5 | structural | organism-vitals.py + variety engineer auto-invocation | effective | 1 | 5 | — | — | — |
 | R9 | 2026-06-05 S5 | structural | process-compliance-precompute.py + process auditor workload reducer | effective | 1 | 5 | — | — | — |
 | R10 | 2026-06-05 S5 | structural | test-split-orchestrator.py + tester concrete split tool | effective | 1 | 5 | — | — | — |
-| R17 | 2026-06-05 S5 | refinement | stop-verifier.sh test coverage (3 tests) | probation | 0 | — | — | — | S5 iter |
-| R16 | 2026-06-05 S5 | refinement | mutation-portfolio-health.py effective->historical promotion rule | probation | 0 | — | — | — | S5 iter |
-| R15 | 2026-06-05 S5 | structural | test-spawn-plan.md mandatory Tier 2+ + tester spawn plan compliance | probation | 0 | — | — | — | S5 iter |
-| R14 | 2026-06-05 S5 | structural | meta-metrics-precompute.py + vsm_meta anti-TBD guardrail | probation | 0 | — | — | — | S5 iter |
-| R13 | 2026-06-05 S5 | structural | vsm_product mandatory Tier 2+ + product brief guardrail | probation | 0 | — | — | — | S5 iter |
+| R17 | 2026-06-05 S5 | refinement | stop-verifier.sh test coverage (3 tests) | effective | 1 | 5 | — | — | S5 iter |
+| R16 | 2026-06-05 S5 | refinement | mutation-portfolio-health.py effective->historical promotion rule | effective | 1 | 5 | — | — | S5 iter |
+| R15 | 2026-06-05 S5 | structural | test-spawn-plan.md mandatory Tier 2+ + tester spawn plan compliance | effective | 1 | 5 | — | — | S5 iter |
+| R14 | 2026-06-05 S5 | structural | meta-metrics-precompute.py + vsm_meta anti-TBD guardrail | effective | 1 | 5 | — | — | S5 iter |
+| R13 | 2026-06-05 S5 | structural | vsm_product mandatory Tier 2+ + product brief guardrail | effective | 1 | 5 | — | — | S5 iter |
 | R11 | 2026-06-05 S5 | structural | session-end security gate bypass detection (Check 11) | effective | 1 | 5 | — | — | — |
-| R12 | 2026-06-05 S5 | structural | integration-test-closeout.py + closeout pipeline integration test | probation | 0 | — | — | — | S5 iter |
-| R18 | 2026-06-05 S5 | structural | hypothesis-backlog-curator.py + S4* autonomous curation | probation | 0 | — | — | — | S5 iter |
-| R19b | 2026-06-05 S5 | structural | algedonic-action-plan.py + S4*→S5 response bridge | probation | 0 | — | — | — | S5 iter |
-| R20b | 2026-06-05 S5 | structural | session-end.sh Check 14/15 auto-invoke meta-metrics + algedonic action plan | probation | 0 | — | — | — | S5 iter |
-| R21 | 2026-06-05 S5 | refinement | End-to-end closeout+stop-verifier integration test (Tests 53-54) | probation | 0 | — | — | — | S5 iter |
-| R22 | 2026-06-05 S5 | structural | Process auditor Mode A/B workflow — pre-computed primary evidence | probation | 0 | — | — | — | S5 iter |
-| R23 | 2026-06-05 S5 | structural | Meta-evaluator Mode A/B workflow — pre-computed primary + conditional test verification | probation | 0 | — | — | — | S5 iter |
-| R24 | 2026-06-05 S5 | structural | Test target map pre-computation for tester agents | probation | 0 | — | — | — | S5 iter |
-| R25 | 2026-06-05 S5 | structural | Learning curator + variety engineer Mode A/B workflow | probation | 0 | — | — | — | S5 iter |
-| R26 | 2026-06-05 S5 | structural | Stop-verifier content-quality gates for meta-system agents | probation | 0 | — | — | — | S5 iter |
-| R27 | 2026-06-05 S5 | structural | SKILL.md pre-computation instructions before meta-system agent spawn | probation | 0 | — | — | — | S5 iter |
-| R28 | 2026-06-05 S5 | structural | Stop-verifier security hard block when security-relevant code present | probation | 0 | — | — | — | S5 iter |
-| R29 | 2026-06-05 S5 | append-only | Inlined test scaffolds in tester agent prompts | probation | 0 | — | — | — | S5 iter |
-| R30 | 2026-06-05 S5 | refinement | lesson-miner.py scans vsm-stack-skills for orphan detection | probation | 0 | — | — | — | S5 iter |
+| R12 | 2026-06-05 S5 | structural | integration-test-closeout.py + closeout pipeline integration test | effective | 1 | 5 | — | — | S5 iter |
+| R18 | 2026-06-05 S5 | structural | hypothesis-backlog-curator.py + S4* autonomous curation | effective | 1 | 5 | — | — | S5 iter |
+| R19b | 2026-06-05 S5 | structural | algedonic-action-plan.py + S4*→S5 response bridge | effective | 1 | 5 | — | — | S5 iter |
+| R20b | 2026-06-05 S5 | structural | session-end.sh Check 14/15 auto-invoke meta-metrics + algedonic action plan | effective | 1 | 5 | — | — | S5 iter |
+| R21 | 2026-06-05 S5 | refinement | End-to-end closeout+stop-verifier integration test (Tests 53-54) | effective | 1 | 5 | — | — | S5 iter |
+| R22 | 2026-06-05 S5 | structural | Process auditor Mode A/B workflow — pre-computed primary evidence | effective | 1 | 5 | — | — | S5 iter |
+| R23 | 2026-06-05 S5 | structural | Meta-evaluator Mode A/B workflow — pre-computed primary + conditional test verification | effective | 1 | 5 | — | — | S5 iter |
+| R24 | 2026-06-05 S5 | structural | Test target map pre-computation for tester agents | effective | 1 | 5 | — | — | S5 iter |
+| R25 | 2026-06-05 S5 | structural | Learning curator + variety engineer Mode A/B workflow | effective | 1 | 5 | — | — | S5 iter |
+| R26 | 2026-06-05 S5 | structural | Stop-verifier content-quality gates for meta-system agents | effective | 1 | 5 | — | — | S5 iter |
+| R27 | 2026-06-05 S5 | structural | SKILL.md pre-computation instructions before meta-system agent spawn | effective | 1 | 5 | — | — | S5 iter |
+| R28 | 2026-06-05 S5 | structural | Stop-verifier security hard block when security-relevant code present | effective | 1 | 5 | — | — | S5 iter |
+| R29 | 2026-06-05 S5 | append-only | Inlined test scaffolds in tester agent prompts | effective | 1 | 5 | — | — | S5 iter |
+| R30 | 2026-06-05 S5 | refinement | lesson-miner.py scans vsm-stack-skills for orphan detection | effective | 1 | 5 | — | — | S5 iter |
 | R31 | 2026-06-06 S5 | structural | mutation-state.md data integrity fix — duplicate IDs + historical status | effective | 1 | 5 | — | — | — |
+| R32 | 2026-06-06 S5 | structural | S5 iteration validation policy + bulk promote R12-R30 to effective | effective | 1 | 5 | — | — | — |

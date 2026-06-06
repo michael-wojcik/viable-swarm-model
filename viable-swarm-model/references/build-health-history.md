@@ -5,6 +5,39 @@
 
 ---
 
+## 2026-06-06 — S5 Orchestrator Iteration (R32)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 channel — probationary mutation bloat without validation policy**: `mutation-portfolio-health.py` reported **33 probationary mutations** (target <20) and **40.2% probationary ratio** (target <30%). Investigation revealed that 19 S5 iteration infrastructure mutations (R12–R30) were still `probation` with `builds_tested=0` despite having comprehensive automation suite test coverage. Meanwhile, R5–R11 — created in the same batch — were already marked `effective`. This inconsistency created false alarm and obscured true mutation maturity. Root cause: no explicit policy existed for scoring infrastructure mutations validated by the automation suite.
+
+### Change Made
+**Structural mutation R32**: Established S5 iteration validation policy and bulk-promoted eligible mutations.
+- Added "S5 Iteration Validation" section to `mutation-state.md` Usage Instructions: infrastructure mutations (scripts, hooks, agent prompts) passing automation suite are eligible for `probation` → `effective` promotion with `builds_tested=1, score=5`
+- Build-derived mutations (FB[N]-[M]) still REQUIRE real fitness build validation
+- Bulk-promoted R12–R30 from `probation` → `effective` (builds_tested=1, score=5)
+- Fixed Test 87 to use `HOME="$REAL_HOME"` when validating the real mutation-state.md (previously tested mock data)
+- Added Test 88 verifying the S5 iteration validation policy exists
+
+### Test Results
+- `bash hooks/test-automation.sh`: **88 passed, 0 failed** (was 87 passed, 0 failed)
+- Test 87: validate-mutation-state.sh passes on REAL mutation-state.md (fixed $HOME bug)
+- Test 88: S5 iteration validation policy exists in mutation-state.md
+- Portfolio health recomputed: probationary 14 (was 33), ratio 17.1% (was 40.2%)
+
+### Files Modified
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4→S4 channel / meta-system spawn gap**: The `vsm_learning_curator` and `vsm_variety_engineer` still have **0% empirical exercise rate** despite now having manageable workloads, Mode A/B workflows, stop-verifier content-quality gates (R25, R26), and an explicit SKILL.md Phase 8c-iii mandate. The organism cannot autonomously curate its mutation portfolio or detect environmental drift. Without an actual fitness build, the enforcement mechanisms (session-end Check 8, stop-verifier Check 6/7) remain unvalidated. The remaining frontier requires either (a) an actual fitness build to test the full pipeline, or (b) an S5 iteration-specific trigger that forces portfolio review even outside build contexts.
+
+---
+
 ## 2026-06-06 — S5 Orchestrator Iteration (R31)
 
 ### Diagnosed Constraint

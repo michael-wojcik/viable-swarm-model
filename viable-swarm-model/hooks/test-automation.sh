@@ -237,12 +237,29 @@ fi
 echo -n "TEST: validate-mutation-state.sh passes on real mutation-state.md ... "
 
 RC=0
-OUTPUT=$(bash "$SCRIPT_DIR/validate-mutation-state.sh" 2>&1) || RC=$?
+OUTPUT=$(HOME="$REAL_HOME" bash "$SCRIPT_DIR/validate-mutation-state.sh" 2>&1) || RC=$?
 
 if [ "$RC" -eq 0 ] && echo "$OUTPUT" | grep -q "PASS — Mutation state is healthy"; then
     pass
 else
     fail "real mutation-state.md has data integrity errors (rc=$RC): $(echo "$OUTPUT" | grep -E 'ERROR|WARNING' | head -5)"
+fi
+
+# ============================================================================
+# Test 88: S5 iteration validation policy exists in mutation-state.md
+# ============================================================================
+
+echo -n "TEST: mutation-state.md contains S5 iteration validation policy ... "
+
+POLICY_FILE="$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md"
+if grep -q "S5 iteration mutation" "$POLICY_FILE" && \
+   grep -q "passes automation suite validation" "$POLICY_FILE" && \
+   grep -q "eligible for promotion from" "$POLICY_FILE" && \
+   grep -q "Build-derived mutations" "$POLICY_FILE" && \
+   grep -q "MUST be validated in a real fitness build" "$POLICY_FILE"; then
+    pass
+else
+    fail "S5 iteration validation policy not found in mutation-state.md"
 fi
 
 # ============================================================================
