@@ -1445,7 +1445,7 @@ Without a fitness build or additional S5 iteration cycles, the organism has reac
 - `viable-swarm-model/references/build-health-history.md`
 
 ### Git Commit
-- Hash: [to be filled after commit]
+- Hash: d1fe690
 
 ### Next Highest-Leverage Constraint
 **System 3 (Audit/Control) / S3→S1 channel — 2 remaining untested scripts**: `mutation-predictor.py` and `skill-effectiveness-tracker.py` now have syntax checks but no behavior tests. `mutation-predictor.py` is actively used by `vsm_learning_curator.md` and `vsm_meta.md` agent prompts — if it produces incorrect predictions, agents may apply low-effectiveness mutations. Adding behavior tests (e.g., testing similarity scoring, score parsing, recommendation logic) would close this gap. Alternatively, **System 5 (Policy) / S5→S1 channel — test-automation.sh is now 148KB+ and 4700+ lines**: While all 130 tests pass, the script is becoming unwieldy. A test suite refactoring (splitting into sub-files by system, adding a test runner with selective execution) would improve maintainability.
