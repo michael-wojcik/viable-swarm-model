@@ -113,6 +113,13 @@ else
     fail "syntax error detected"
 fi
 
+echo -n "TEST: Syntax check knowledge-broker.sh ... "
+if bash -n "$SCRIPT_DIR/knowledge-broker.sh"; then
+    pass
+else
+    fail "syntax error detected"
+fi
+
 # ============================================================================
 # Test 1: update-mutation-state.sh — dry-run mode
 # ============================================================================
@@ -4031,10 +4038,10 @@ for line in text.splitlines():
 print(len(rows))
 ")
 
-if [ "$ACTIVE_COUNT" -eq 58 ]; then
+if [ "$ACTIVE_COUNT" -eq 59 ]; then
     pass
 else
-    fail "expected 58 active mutations, got $ACTIVE_COUNT"
+    fail "expected 59 active mutations, got $ACTIVE_COUNT"
 fi
 
 # ============================================================================
@@ -4580,6 +4587,51 @@ fi
 # ============================================================================
 # Summary
 # ============================================================================
+
+# ============================================================================
+# Test 122: knowledge-broker.sh exits 0 and prints deprecation notice
+# ============================================================================
+
+echo -n "TEST: knowledge-broker.sh exits 0 with deprecation notice ... "
+
+mkdir -p "$TMPDIR/build122/.kimi"
+
+PAYLOAD=$(jq -n \
+    --arg session_id "test-session-122" \
+    --arg cwd "$TMPDIR/build122" \
+    --arg trigger "auto" \
+    '{session_id: $session_id, cwd: $cwd, trigger: $trigger}')
+
+KB_OUTPUT=$(echo "$PAYLOAD" | bash "$SCRIPT_DIR/knowledge-broker.sh" 2>&1) || KB_RC=$?
+KB_RC=${KB_RC:-0}
+
+if [ "$KB_RC" -eq 0 ] && echo "$KB_OUTPUT" | grep -qi "DEPRECATED"; then
+    pass
+else
+    fail "expected exit 0 and deprecation notice, got RC=$KB_RC, output=$KB_OUTPUT"
+fi
+
+# ============================================================================
+# Test 123: knowledge-broker.sh does not write to knowledge-broker-log.md
+# ============================================================================
+
+echo -n "TEST: knowledge-broker.sh does not write to knowledge-broker-log.md ... "
+
+mkdir -p "$TMPDIR/build123/.kimi"
+
+PAYLOAD=$(jq -n \
+    --arg session_id "test-session-123" \
+    --arg cwd "$TMPDIR/build123" \
+    --arg trigger "auto" \
+    '{session_id: $session_id, cwd: $cwd, trigger: $trigger}')
+
+echo "$PAYLOAD" | bash "$SCRIPT_DIR/knowledge-broker.sh" >/dev/null 2>&1 || true
+
+if [ ! -f "$TMPDIR/build123/.kimi/knowledge-broker-log.md" ]; then
+    pass
+else
+    fail "expected no log file, but knowledge-broker-log.md was created"
+fi
 
 echo ""
 echo "========================================"

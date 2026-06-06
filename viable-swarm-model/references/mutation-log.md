@@ -4383,3 +4383,26 @@ Tests added:
 
 **Measured effect**: **TO BE FILLED** — validate in next fitness build that metrics stay in sync.
 
+
+
+---
+
+## Mutation R43 — 2026-06-06
+
+**Session**: S5 Orchestrator Iteration
+**Files**: `hooks/knowledge-broker.sh`, `hooks/diagnostic-router.sh`, `hooks/test-automation.sh`, `references/mutation-state.md`
+**Type**: refinement
+**Rationale**: `knowledge-broker.sh` was a legacy SessionEnd hook registered in `~/.kimi/config.toml` with a known regex bug. The `diagnostic-router.sh` routed failures to "Run auto-broker-update.sh instead." Rather than fixing the regex bug in a deprecated hook, the hook was converted to a no-op stub that:
+1. Exits 0 immediately (no failure)
+2. Prints a deprecation notice to stderr
+3. Does NOT write to `knowledge-broker-log.md`
+4. Delegates all broker functionality to `auto-broker-update.sh` (already in session-end.sh)
+
+Additionally:
+- `diagnostic-router.sh` was updated to remove the `knowledge-broker.sh` case and add `auto-broker-update.sh` as a proper diagnostic case
+- `test-automation.sh` gained 3 new tests: syntax check for knowledge-broker.sh, exit-0 + deprecation notice test, and no-log-write test
+- Integration Health metrics updated: active 59, effective 51
+
+**Expected effect**: No more SessionEnd hook failures from knowledge-broker.sh. The deprecated hook is harmless but informative. auto-broker-update.sh handles all broker updates.
+
+**Measured effect**: All 124 tests pass. The hook exits 0 with deprecation notice and creates no log files.

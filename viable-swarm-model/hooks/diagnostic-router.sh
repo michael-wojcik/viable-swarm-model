@@ -104,11 +104,11 @@ lookup_failure() {
             _PRIORITY="LOW"
             _NEXT_STEPS=$'1. Open the Phase 0 manual checklist.\n2. Execute pre-session setup steps manually.\n3. Remove session-start.sh from ~/.kimi/config.toml if still present.'
             ;;
-        knowledge-broker.sh)
-            _DIAGNOSIS="Known regex bug in legacy hook."
-            _ACTION="Run auto-broker-update.sh instead."
+        auto-broker-update.sh)
+            _DIAGNOSIS="auto-broker-update.sh encountered an error during broker update."
+            _ACTION="Check auto-broker-update.sh logs for pipefail or grep errors."
             _PRIORITY="MEDIUM"
-            _NEXT_STEPS=$'1. Verify auto-broker-update.sh is present in ~/.kimi/config.toml.\n2. Remove or disable knowledge-broker.sh.\n3. Run a test session to confirm broker updates propagate.'
+            _NEXT_STEPS=$'1. Check hooks/auto-broker-update.sh for syntax errors.\n2. Verify mutation-log.md exists and is readable.\n3. Run auto-broker-update.sh manually to reproduce.'
             ;;
         update-mutation-state.sh)
             _DIAGNOSIS="Possible format mismatch in mutation-state update."
@@ -159,7 +159,7 @@ cmd_list_known() {
 
     local hooks=(
         "session-start.sh:LOW:Hook DEPRECATED"
-        "knowledge-broker.sh:MEDIUM:Known regex bug in legacy hook"
+        "auto-broker-update.sh:MEDIUM:auto-broker-update.sh encountered an error during broker update"
         "update-mutation-state.sh:HIGH:Possible format mismatch"
         "stop-verifier.sh:CRITICAL:Mutation checkpoint may be incomplete"
         "gate-guardian.sh:CRITICAL:Phase 4 gate verification failed"
@@ -222,7 +222,7 @@ cmd_test() {
 
     # Known hooks — simulate non-zero failure
     run_case "session-start.sh" 1 "Hook DEPRECATED" "LOW"
-    run_case "knowledge-broker.sh" 1 "Known regex bug" "MEDIUM"
+    run_case "auto-broker-update.sh" 1 "auto-broker-update.sh encountered" "MEDIUM"
     run_case "update-mutation-state.sh" 1 "Possible format mismatch" "HIGH"
     run_case "stop-verifier.sh" 1 "Mutation checkpoint may be incomplete" "CRITICAL"
     run_case "gate-guardian.sh" 1 "Phase 4 gate verification failed" "CRITICAL"
