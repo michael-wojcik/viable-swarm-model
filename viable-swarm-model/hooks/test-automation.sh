@@ -4421,6 +4421,52 @@ else
 fi
 
 # ============================================================================
+# Test 107b: check-zero-defaults.sh blocks insecure env var defaults
+# ============================================================================
+
+echo -n "TEST: check-zero-defaults.sh blocks Python files with insecure env defaults ... "
+
+ZERO_BUILD="$TMPDIR/zero107"
+mkdir -p "$ZERO_BUILD/.kimi"
+
+# Payload with insecure default fallback for JWT_SECRET
+BAD_PAYLOAD=$(jq -n \
+    --arg path "$ZERO_BUILD/app/config.py" \
+    --arg content 'jwt_secret = os.environ.get("JWT_SECRET", "default-secret")' \
+    --arg cwd "$ZERO_BUILD" \
+    '{tool_input: {path: $path, content: $content}, cwd: $cwd}')
+
+RC=0
+echo "$BAD_PAYLOAD" | bash "$SCRIPT_DIR/check-zero-defaults.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 2 ]; then
+    pass
+else
+    fail "expected exit code 2 for insecure default, got $RC"
+fi
+
+# ============================================================================
+# Test 107c: check-zero-defaults.sh allows safe env var access
+# ============================================================================
+
+echo -n "TEST: check-zero-defaults.sh allows Python files with safe env access ... "
+
+GOOD_PAYLOAD=$(jq -n \
+    --arg path "$ZERO_BUILD/app/config.py" \
+    --arg content 'jwt_secret = os.environ["JWT_SECRET"]' \
+    --arg cwd "$ZERO_BUILD" \
+    '{tool_input: {path: $path, content: $content}, cwd: $cwd}')
+
+RC=0
+echo "$GOOD_PAYLOAD" | bash "$SCRIPT_DIR/check-zero-defaults.sh" >/dev/null 2>&1 || RC=$?
+
+if [ "$RC" -eq 0 ]; then
+    pass
+else
+    fail "expected exit code 0 for safe env access, got $RC"
+fi
+
+# ============================================================================
 # Test 108: decision-enforcer.sh warns when plan.md written but no matching decision
 # ============================================================================
 

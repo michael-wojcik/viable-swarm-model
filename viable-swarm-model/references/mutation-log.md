@@ -4899,3 +4899,23 @@ These gaps represent a System 3 (Audit/Control) → System 1 (Implementation) ch
 
 **Measured effect**: **5/5** — lesson-patterns.md now contains exactly 1 report copy. All 164 automation suite tests pass.
 
+
+---
+
+## Mutation R64 — 2026-06-06
+
+**Session**: S5 Orchestrator Iteration — check-zero-defaults.sh test coverage
+**File**: `hooks/test-automation.sh`
+**Type**: refinement
+**Rationale**: **System 3 (Audit/Control) / S3→S1 channel — security hook without test coverage**: `check-zero-defaults.sh` is a tool-enforced security hook (FB33-1) that blocks writes of Python files containing insecure default fallbacks for security-critical environment variables (JWT_SECRET, DATABASE_URL, etc.). It replaced the ineffective prompt-only mutation FB32-1. However, the hook had zero test coverage, meaning a syntax error or logic change could silently break the security boundary without detection. With 166 total tests passing and all major systems green, closing test gaps in security infrastructure is the highest-ROI remaining work.
+
+**Expected effect**:
+- `check-zero-defaults.sh` now has 2 behavior tests: blocking insecure defaults (exit 2) and allowing safe access (exit 0).
+- Security boundary is protected against regression.
+- Test suite: 166 passed, 0 failed.
+
+**Files modified**:
+- `hooks/test-automation.sh` — Tests 107b–107c verify check-zero-defaults.sh behavior.
+
+**Measured effect**: **5/5** — Both behavior tests pass. No regressions in existing 164 tests.
+
