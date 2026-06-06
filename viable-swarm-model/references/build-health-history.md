@@ -5,6 +5,37 @@
 
 ---
 
+## 2026-06-06 — S5 Orchestrator Iteration (R48)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S1 channel — test-automation.sh bloat**: `test-automation.sh` had grown to **5116 lines** with 135 tests. The Preliminary section alone contained 15 repetitive syntax-check blocks using identical `if bash -n ... pass ... fail` boilerplate. This created a compounding maintainability tax: every new script addition required copy-pasting another 8-line block, and the total line count made navigation and review slow. The constraint had been flagged as the "next highest-leverage" issue in three consecutive iterations (R45, R46, R47) but was repeatedly deferred in favor of adding more behavior tests.
+
+### Change Made
+**Refinement mutation R48**: Extracted repetitive syntax checks into a `check_syntax()` helper and two `for` loops.
+- Added `check_syntax(name, file, cmd)` helper that prints the test label, runs the command, and calls `pass()` or `fail()`
+- Replaced 15 individual syntax-check blocks with: one loop over 12 shell scripts (`bash -n`) and one loop over 3 Python scripts (`python3 -m py_compile`)
+- Added `# Section: Mutation State Management` header after Preliminary to begin logical grouping of the 135 tests
+- Line count reduced from 5116 to 5031 (saved 85 lines, ~1.7%)
+
+### Test Results
+- `bash hooks/test-automation.sh`: **135 passed, 0 failed** (no regression)
+- Syntax check helper verified with all 15 scripts (12 shell + 3 Python)
+- Zero behavioral changes — all test logic, ordering, and numbering preserved
+
+### Files Modified
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 5 (Policy) / S5→S5 channel — active mutations at 64 exceed target of 50**: With R48 added, active mutations are now 64 (was 63). The organism continues to accumulate effective infrastructure mutations faster than they can be promoted to historical. R5–R30 (created 2026-06-05) have been through ~20+ S5 iterations and are approaching the ≥5-iteration threshold for historical promotion. Promoting eligible mutations would reduce active count and relieve the persistent WARNING algedonic. Alternatively, **System 4→S4 channel**: `vsm_learning_curator` and `vsm_variety_engineer` still have **0% empirical exercise rate** despite all enforcement mechanisms being in place. Without an actual fitness build, the organism cannot validate whether Mode A/B workflows, stop-verifier content gates, and pre-computation scripts actually improve meta-system agent success rates.
+
+---
+
 ## 2026-06-06 — S5 Orchestrator Iteration (R33)
 
 ### Diagnosed Constraint

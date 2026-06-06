@@ -33,114 +33,29 @@ fail() {
 }
 
 # ============================================================================
-# Preliminary: Syntax checks for all .sh scripts in this directory
+# Preliminary: Syntax checks for all scripts
 # ============================================================================
 
-echo -n "TEST: Syntax check update-mutation-state.sh ... "
-if bash -n "$SCRIPT_DIR/update-mutation-state.sh"; then
-    pass
-else
-    fail "syntax error detected"
-fi
+check_syntax() {
+    local name="$1" file="$2" cmd="$3"
+    echo -n "TEST: Syntax check $name ... "
+    if $cmd "$file"; then
+        pass
+    else
+        fail "syntax error detected in $name"
+    fi
+}
 
-echo -n "TEST: Syntax check validate-mutation-state.sh ... "
-if bash -n "$SCRIPT_DIR/validate-mutation-state.sh"; then
-    pass
-else
-    fail "syntax error detected"
-fi
+for script in update-mutation-state.sh validate-mutation-state.sh auto-broker-update.sh update-causal-index.sh stop-verifier.sh gate-guardian.sh boundary-guardian.sh structural-guardian.sh decision-enforcer.sh context-pressure.sh diagnostic-router.sh knowledge-broker.sh; do
+    check_syntax "$script" "$SCRIPT_DIR/$script" "bash -n"
+done
 
-echo -n "TEST: Syntax check auto-broker-update.sh ... "
-if bash -n "$SCRIPT_DIR/auto-broker-update.sh"; then
-    pass
-else
-    fail "syntax error detected"
-fi
+for pyscript in auto-gym-trigger.py mutation-predictor.py skill-effectiveness-tracker.py; do
+    check_syntax "$pyscript" "$SCRIPT_DIR/../scripts/$pyscript" "python3 -m py_compile"
+done
 
-echo -n "TEST: Syntax check update-causal-index.sh ... "
-if bash -n "$SCRIPT_DIR/update-causal-index.sh"; then
-    pass
-else
-    fail "syntax error detected"
-fi
-
-echo -n "TEST: Syntax check stop-verifier.sh ... "
-if bash -n "$SCRIPT_DIR/stop-verifier.sh"; then
-    pass
-else
-    fail "syntax error detected"
-fi
-
-echo -n "TEST: Syntax check gate-guardian.sh ... "
-if bash -n "$SCRIPT_DIR/gate-guardian.sh"; then
-    pass
-else
-    fail "syntax error detected"
-fi
-
-echo -n "TEST: Syntax check boundary-guardian.sh ... "
-if bash -n "$SCRIPT_DIR/boundary-guardian.sh"; then
-    pass
-else
-    fail "syntax error detected"
-fi
-
-echo -n "TEST: Syntax check structural-guardian.sh ... "
-if bash -n "$SCRIPT_DIR/structural-guardian.sh"; then
-    pass
-else
-    fail "syntax error detected"
-fi
-
-echo -n "TEST: Syntax check decision-enforcer.sh ... "
-if bash -n "$SCRIPT_DIR/decision-enforcer.sh"; then
-    pass
-else
-    fail "syntax error detected"
-fi
-
-echo -n "TEST: Syntax check context-pressure.sh ... "
-if bash -n "$SCRIPT_DIR/context-pressure.sh"; then
-    pass
-else
-    fail "syntax error detected"
-fi
-
-echo -n "TEST: Syntax check diagnostic-router.sh ... "
-if bash -n "$SCRIPT_DIR/diagnostic-router.sh"; then
-    pass
-else
-    fail "syntax error detected"
-fi
-
-echo -n "TEST: Syntax check knowledge-broker.sh ... "
-if bash -n "$SCRIPT_DIR/knowledge-broker.sh"; then
-    pass
-else
-    fail "syntax error detected"
-fi
-
-echo -n "TEST: Syntax check auto-gym-trigger.py ... "
-if python3 -m py_compile "$SCRIPT_DIR/../scripts/auto-gym-trigger.py"; then
-    pass
-else
-    fail "syntax error detected"
-fi
-
-echo -n "TEST: Syntax check mutation-predictor.py ... "
-if python3 -m py_compile "$SCRIPT_DIR/../scripts/mutation-predictor.py"; then
-    pass
-else
-    fail "syntax error detected"
-fi
-
-echo -n "TEST: Syntax check skill-effectiveness-tracker.py ... "
-if python3 -m py_compile "$SCRIPT_DIR/../scripts/skill-effectiveness-tracker.py"; then
-    pass
-else
-    fail "syntax error detected"
-fi
-
+# ============================================================================
+# Section: Mutation State Management
 # ============================================================================
 # Test 1: update-mutation-state.sh — dry-run mode
 # ============================================================================
@@ -4059,10 +3974,10 @@ for line in text.splitlines():
 print(len(rows))
 ")
 
-if [ "$ACTIVE_COUNT" -eq 63 ]; then
+if [ "$ACTIVE_COUNT" -eq 64 ]; then
     pass
 else
-    fail "expected 63 active mutations, got $ACTIVE_COUNT"
+    fail "expected 64 active mutations, got $ACTIVE_COUNT"
 fi
 
 # ============================================================================

@@ -4479,3 +4479,20 @@ Additionally:
 **Expected effect**: No more confusion about which test suite to run. The canonical suite is unambiguously `test-automation.sh`.
 
 **Measured effect**: All 135 tests pass. The legacy suite is gone.
+
+---
+
+## Mutation R48 — 2026-06-06
+
+**Session**: S5 Orchestrator Iteration
+**Files**: `hooks/test-automation.sh`
+**Type**: refinement
+**Rationale**: `test-automation.sh` had grown to 5116 lines with 135 tests. The Preliminary section contained 15 repetitive syntax-check blocks (12 shell scripts + 3 Python scripts), each using 6-8 lines of identical boilerplate. This created a maintainability tax: adding a new script required copy-pasting another 8-line block, and the total line count made navigation slow. Additionally, no section grouping existed to help orient developers within the 5000+ line file. Fixed by:
+1. Extracted `check_syntax()` helper function that takes name/file/command arguments
+2. Replaced 15 individual syntax-check blocks with two `for` loops (shell scripts and Python scripts)
+3. Added `# Section: Mutation State Management` header after the Preliminary block to begin logical grouping
+4. Saved 85 lines (5116 → 5031) with zero behavioral change
+
+**Expected effect**: Future script additions require only appending to a loop array, not copy-pasting boilerplate. The reduced line count improves navigation velocity for all future S5 iterations.
+
+**Measured effect**: All 135 tests pass after refactoring. Script line count reduced from 5116 to 5031.
