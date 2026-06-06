@@ -3915,6 +3915,55 @@ else
 fi
 
 # ============================================================================
+# Test 92: algedonic-action-plan.py parser counts bold-status data rows
+# ============================================================================
+
+echo -n "TEST: algedonic-action-plan.py counts bold-status rows correctly ... "
+
+# Verify on the REAL mutation-state.md that FB28-S5 (status **monitor**) is counted.
+# Before the fix, the parser treated any line containing '**' as a section header,
+# causing data rows with bold status to be skipped. After the fix, only rows where
+# the FIRST column starts with '**' are treated as headers.
+REAL_MSTATE="/Users/mj/vsm/viable-swarm-model/references/mutation-state.md"
+ACTIVE_COUNT=$(python3 -c "
+import re
+from pathlib import Path
+
+text = Path('$REAL_MSTATE').read_text()
+rows = []
+skip = False
+for line in text.splitlines():
+    s = line.strip()
+    ph = [p.strip() for p in line.split('|')]
+    ph = [p for p in ph if p]
+    if s.startswith('|') and ph and ph[0].startswith('**'):
+        if 'HISTORICAL' in ph[0] or 'REMOVED' in ph[0] or 'REDESIGNED' in ph[0]:
+            skip = True
+            continue
+        else:
+            skip = False
+            continue
+    if not s.startswith('|') or s.startswith('|---|'):
+        continue
+    parts = [p.strip() for p in line.split('|')]
+    parts = [p for p in parts if p]
+    if len(parts) < 6 or parts[0].startswith('**') or parts[0] == 'ID' or parts[1] in ('Source', '', '-'):
+        continue
+    if skip:
+        continue
+    status = re.sub(r'\*\*', '', parts[4]).lower().strip() if len(parts) > 4 else ''
+    if status in ('probation', 'effective', 'monitor', 'ineffective'):
+        rows.append(parts[0])
+print(len(rows))
+")
+
+if [ "$ACTIVE_COUNT" -eq 76 ]; then
+    pass
+else
+    fail "expected 76 active mutations (including FB28-S5), got $ACTIVE_COUNT"
+fi
+
+# ============================================================================
 # Summary
 # ============================================================================
 

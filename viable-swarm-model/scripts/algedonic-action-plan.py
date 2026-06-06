@@ -41,10 +41,15 @@ def parse_mutation_rows(path: Path) -> list[dict]:
     skip_section = False
     for line in text.splitlines():
         stripped = line.strip()
-        # Track section headers to skip historical/removed
-        if stripped.startswith("|") and "**" in stripped:
-            # Any bold header row is a section boundary
-            if "HISTORICAL" in stripped or "REMOVED" in stripped or "REDESIGNED" in stripped:
+        # Track section headers to skip historical/removed/redesigned.
+        # Section headers have the section name in the FIRST column (e.g., "**HISTORICAL**").
+        # Data rows with bold status in later columns (e.g., "**REMOVED**", "**monitor**")
+        # must NOT be treated as section headers.
+        parts_header = [p.strip() for p in line.split("|")]
+        parts_header = [p for p in parts_header if p]
+        if stripped.startswith("|") and parts_header and parts_header[0].startswith("**"):
+            header_text = parts_header[0]
+            if "HISTORICAL" in header_text or "REMOVED" in header_text or "REDESIGNED" in header_text:
                 skip_section = True
                 continue
             else:

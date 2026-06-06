@@ -1121,3 +1121,40 @@ Alternatively, **System 4→S4 channel**: The organism now has 4 pre-computation
 
 Without a fitness build, the organism cannot promote effective mutations to historical (≥5 builds). The remaining paths to reduce active mutations are: (a) remove FB28-S5 (clear failure evidence), (b) consolidate overlapping S5 iteration mutations (R5–R33 = 29 mutations), or (c) revise the <50 target to reflect the organism's actual infrastructure complexity.
 
+
+---
+
+## 2026-06-06 — S5 Orchestrator Iteration (R37)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 channel — parser bug hiding mutations from algedonic action plan**: The `algedonic-action-plan.py` parser used `if stripped.startswith("|") and "**" in stripped:` to detect section headers. This incorrectly matched **data rows with bold status formatting** (e.g., `**monitor**`, `**REMOVED**`) because they contain `**` anywhere in the line. The effect:
+- `~~FB28-S5~~` with `**monitor**` was treated as a section header and skipped entirely
+- `~~A7~~` and `~~PM3~~` with `**REMOVED**` in the REMOVED section were treated as section headers (first row triggered skip, subsequent rows skipped)
+- All removed/redesigned mutations with bold formatting were miscounted
+- The algedonic action plan reported **75 active mutations** instead of **76**, hiding FB28-S5 from S5's view
+
+This bug meant that mutations with bold status formatting were invisible to the variety engineer and S5, preventing their evaluation for demotion or promotion.
+
+### Change Made
+**Bug fix R37**: Fixed section header detection in `algedonic-action-plan.py`.
+- Changed detection from `"**" in stripped` (matches any `**` anywhere in line) to `parts_header[0].startswith("**")` (matches only when the FIRST column is bold, which is true for section headers like `**HISTORICAL EFFECTIVE**` but false for data rows like `~~FB28-S5~~ | ... | **monitor**`)
+- After fix: algedonic action plan correctly reports **76 active mutations** (was 75)
+- FB28-S5 is now visible in the active mutation count
+- Added Test 92: verifies the parser correctly counts data rows with bold status by checking the real mutation-state.md produces 76 active mutations
+
+### Test Results
+- `bash hooks/test-automation.sh`: **92 passed, 0 failed** (was 91 passed, 0 failed)
+- Test 92: algedonic parser correctly counts bold-status rows (76 active mutations including FB28-S5)
+- `validate-mutation-state.sh`: ✅ PASS
+
+### Files Modified
+- `viable-swarm-model/scripts/algedonic-action-plan.py`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 5 (Policy) / S5→S5 channel — active mutation bloat at 76** (target <50) remains CRITICAL. With FB28-S5 now visible (score 2, 1 build, note: "5 timeouts in FB30; fallback protocol insufficient"), it is a clear removal candidate. Removing it would reduce active to 75. The 8 unmeasured probationary mutations (SM3, SM7, SM8, FB32-1..5) still need fitness build validation. Without a real fitness build, the organism cannot make meaningful progress toward the <50 target through normal lifecycle progression. The next frontier is either: (a) remove FB28-S5, (b) begin consolidating the 29 S5 iteration mutations (R5–R33) into broader meta-rules, or (c) revise the <50 target to reflect actual organism complexity.
+
