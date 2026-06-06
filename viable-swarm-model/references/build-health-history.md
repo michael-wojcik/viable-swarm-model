@@ -1340,3 +1340,38 @@ Without a fitness build or additional S5 iteration cycles, the organism has reac
 ### Next Highest-Leverage Constraint
 **System 3 (Audit/Control) / S3→S1 channel — decision-enforcer.sh and context-pressure.sh have zero test coverage**: Both are registered in `~/.kimi/config.toml` (PostToolUse and PreCompact respectively). The `decision-enforcer.sh` verifies decisions are logged in `references/decisions.md` when plan.md or approval markers are written. The `context-pressure.sh` warns when context compaction exceeds 200k tokens. Neither has tests. Additionally, `knowledge-broker.sh` is registered but deprecated (the file itself notes it has a "known regex bug in legacy hook" and `auto-broker-update.sh` should be used instead). The `diagnostic-router.sh` has a self-test (`--test`) but is not integrated into `test-automation.sh`.
 
+
+---
+
+## 2026-06-06 — S5 Orchestrator Iteration (R41)
+
+### Diagnosed Constraint
+**System 3 (Audit/Control) / S3→S1 channel — decision-enforcer.sh, context-pressure.sh, and diagnostic-router.sh have zero test coverage**: Three more hooks registered in `~/.kimi/config.toml` had no tests. `decision-enforcer.sh` (PostToolUse) verifies decisions are logged in `references/decisions.md` when plan.md or structural approval markers are written. `context-pressure.sh` (PreCompact) logs compaction events and warns when context exceeds 200k tokens. `diagnostic-router.sh` has a built-in self-test (`--test`) but it was not integrated into `test-automation.sh`. Additionally, investigation revealed a **latent test suite bug**: test 77 changed `export HOME="$TMPDIR/build77"` and never restored it, causing all subsequent tests that depend on `$HOME` to use the wrong directory. This caused test 108 to pass for the wrong reason (expected "no D[N] entries" warning but got "file doesn't exist" warning) and test 109 to fail entirely.
+
+### Change Made
+**Refinement mutation R41**: Added comprehensive test coverage for the remaining hooks and fixed the latent HOME bug.
+- 3 new syntax checks for decision-enforcer.sh, context-pressure.sh, diagnostic-router.sh
+- 3 decision-enforcer tests: warns without matching decision, silent with matching decision, silent for non-plan files
+- 2 context-pressure tests: logs compaction event, warns above 200k tokens
+- 1 diagnostic-router test: self-test (`--test`) passes
+- Fixed latent bug: restored `export HOME="$TMPDIR"` after test 77
+- Updated active mutation count test (56→57)
+
+### Test Results
+- `bash hooks/test-automation.sh`: **119 passed, 0 failed** (was 110 passed, 0 failed)
+- All 6 new hook behavior tests pass
+- All 3 new syntax checks pass
+- Latent HOME bug fixed — tests 108-109 now pass for correct reasons
+
+### Files Modified
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- Hash: 23637cc62b0c30002befd209fd0bdabd7b3973fe
+
+### Next Highest-Leverage Constraint
+**System 3 (Audit/Control) / S3→S1 channel — knowledge-broker.sh is registered but deprecated**: The `knowledge-broker.sh` hook is still registered in `~/.kimi/config.toml` as a SessionEnd hook, but the file itself says it has a "known regex bug in legacy hook" and `auto-broker-update.sh` should be used instead. This creates confusion and potential reliability issues. The hook should either be removed from `config.toml` or fixed. Additionally, `session-start.sh.DEPRECATED-FB28` exists but is still referenced in `diagnostic-router.sh` as a known hook. Cleaning up deprecated hooks would reduce cognitive load and prevent false positives in diagnostic routing. Alternatively, **System 5 (Policy) / S5→S5 channel — integration health metrics remain stale**: The mutation-state.md Integration Health table still shows 77 active mutations (actual is 57), 17.1% probationary ratio (actual is 14.0%), and 10 removed/redesigned (actual is 18). These stale metrics distort S5's perception of organism health.
+
