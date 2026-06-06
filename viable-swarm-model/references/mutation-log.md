@@ -4445,3 +4445,20 @@ Additionally:
 **Expected effect**: S3→S1 channel now verifies mutation-predictor.py behavior. Agents can trust predictions because the scoring logic is continuously validated.
 
 **Measured effect**: All 132 tests pass. Similarity scoring correctly identifies type/category matches and keyword overlap. No-match path correctly returns insufficient data.
+
+
+---
+
+## Mutation R46 — 2026-06-06
+
+**Session**: S5 Orchestrator Iteration
+**Files**: `scripts/skill-effectiveness-tracker.py`, `hooks/test-automation.sh`, `references/mutation-state.md`
+**Type**: refinement
+**Rationale**: `skill-effectiveness-tracker.py` had a syntax check but zero behavior tests, despite being the source of truth for `references/skill-effectiveness-log.md` which the learning curator reads for skill portfolio decisions. Without tests, incorrect score parsing, skill counting, or correlation logic could mislead skill selection — a silent S3→S5 intelligence failure. Fixed by:
+1. Added env var overrides for `SKILL-REGISTRY.md`, coach directory, and output log paths (`SKILL_TRACKER_REGISTRY`, `SKILL_TRACKER_COACH_DIR`, `SKILL_TRACKER_OUTPUT`) — enables isolated testing
+2. Test 129: Creates temp fixtures with 3 fake builds (FB101 score 4.0/5 with python-pitfalls+security-patterns, FB102 score 3.0/5 with security-patterns, FB103 score 5.0/5 with no skills). Verifies the script discovers builds, extracts scores, finds skill mentions, computes correlations, and writes a log containing all skills.
+3. Test 130: Creates a build with score 80/100 and verifies normalization to 4.0/5 in the output log.
+
+**Expected effect**: The learning curator can trust skill-effectiveness-log.md because the generation pipeline is continuously validated.
+
+**Measured effect**: All 134 tests pass. Score extraction, skill mention scanning, and /100→/5 normalization all work correctly.

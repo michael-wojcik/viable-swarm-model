@@ -4059,10 +4059,10 @@ for line in text.splitlines():
 print(len(rows))
 ")
 
-if [ "$ACTIVE_COUNT" -eq 61 ]; then
+if [ "$ACTIVE_COUNT" -eq 62 ]; then
     pass
 else
-    fail "expected 61 active mutations, got $ACTIVE_COUNT"
+    fail "expected 62 active mutations, got $ACTIVE_COUNT"
 fi
 
 # ============================================================================
@@ -4981,6 +4981,115 @@ if [ "$MP_RC" -eq 0 ] && \
     pass
 else
     fail "expected insufficient data message, got RC=$MP_RC, output=$MP_OUTPUT"
+fi
+
+
+# ============================================================================
+# Test 129: skill-effectiveness-tracker.py — full pipeline with temp fixtures
+# ============================================================================
+
+echo -n "TEST: skill-effectiveness-tracker.py full pipeline with temp fixtures ... "
+
+mkdir -p "$TMPDIR/build129/coach/FB101/.kimi"
+mkdir -p "$TMPDIR/build129/coach/FB102/.kimi"
+mkdir -p "$TMPDIR/build129/coach/FB103/.kimi"
+
+# Create a fake SKILL-REGISTRY.md
+cat > "$TMPDIR/build129/SKILL-REGISTRY.md" << 'EOF'
+# Skill Registry
+
+## Pattern Skills
+| Skill | Description | Relevant Agents |
+|---|---|---|
+| python-pitfalls | Python anti-patterns | vsm_backend_coder |
+| security-patterns | Security best practices | vsm_security |
+| docker-pitfalls | Docker common mistakes | vsm_devops_coder |
+
+## Pitfall Skills
+| Skill | Language | Status | Description |
+|---|---|---|---|
+| graphql-pitfalls | GraphQL | active | GraphQL traps |
+EOF
+
+# FB101: score 4.0/5, uses python-pitfalls and security-patterns
+cat > "$TMPDIR/build129/coach/FB101/.kimi/fitness-report.md" << 'EOF'
+# Fitness Report
+
+Overall Score: 4.0 / 5
+
+The build used python-pitfalls and security-patterns.
+EOF
+
+# FB102: score 3.0/5, uses security-patterns only
+cat > "$TMPDIR/build129/coach/FB102/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+
+Score: 3.0 / 5
+
+Security patterns were applied.
+EOF
+
+# FB103: score 5.0/5, no skills mentioned
+cat > "$TMPDIR/build129/coach/FB103/.kimi/fitness-report.md" << 'EOF'
+# Fitness Report
+
+Overall Score: 5.0 / 5
+
+No special skills used.
+EOF
+
+SKILL_TRACKER_REGISTRY="$TMPDIR/build129/SKILL-REGISTRY.md" \
+    SKILL_TRACKER_COACH_DIR="$TMPDIR/build129/coach" \
+    SKILL_TRACKER_OUTPUT="$TMPDIR/build129/skill-effectiveness-log.md" \
+    python3 "$SCRIPT_DIR/../scripts/skill-effectiveness-tracker.py" >/dev/null 2>&1 || ST_RC=$?
+ST_RC=${ST_RC:-0}
+
+if [ "$ST_RC" -eq 0 ] && [ -f "$TMPDIR/build129/skill-effectiveness-log.md" ] && \
+   grep -q "python-pitfalls" "$TMPDIR/build129/skill-effectiveness-log.md" && \
+   grep -q "security-patterns" "$TMPDIR/build129/skill-effectiveness-log.md" && \
+   grep -q "docker-pitfalls" "$TMPDIR/build129/skill-effectiveness-log.md" && \
+   grep -q "graphql-pitfalls" "$TMPDIR/build129/skill-effectiveness-log.md"; then
+    pass
+else
+    fail "expected exit 0 and log with all skills, got RC=$ST_RC"
+fi
+
+# ============================================================================
+# Test 130: skill-effectiveness-tracker.py — score normalization /100 → /5
+# ============================================================================
+
+echo -n "TEST: skill-effectiveness-tracker.py normalizes /100 scores to /5 ... "
+
+mkdir -p "$TMPDIR/build130/coach/FB201/.kimi"
+
+# Create a minimal registry with one skill
+cat > "$TMPDIR/build130/SKILL-REGISTRY.md" << 'EOF'
+## Pattern Skills
+| Skill | Description | Relevant Agents |
+|---|---|---|
+| python-pitfalls | Python anti-patterns | vsm_backend_coder |
+EOF
+
+# FB201: score 80/100 = 4.0/5, uses python-pitfalls
+cat > "$TMPDIR/build130/coach/FB201/.kimi/fitness-report.md" << 'EOF'
+# Fitness Report
+
+Overall Score: 80 / 100
+
+python-pitfalls skill was loaded.
+EOF
+
+SKILL_TRACKER_REGISTRY="$TMPDIR/build130/SKILL-REGISTRY.md" \
+    SKILL_TRACKER_COACH_DIR="$TMPDIR/build130/coach" \
+    SKILL_TRACKER_OUTPUT="$TMPDIR/build130/skill-effectiveness-log.md" \
+    python3 "$SCRIPT_DIR/../scripts/skill-effectiveness-tracker.py" >/dev/null 2>&1 || ST_RC=$?
+ST_RC=${ST_RC:-0}
+
+if [ "$ST_RC" -eq 0 ] && [ -f "$TMPDIR/build130/skill-effectiveness-log.md" ] && \
+   grep -q "4.00" "$TMPDIR/build130/skill-effectiveness-log.md"; then
+    pass
+else
+    fail "expected normalized score 4.00 in log, got RC=$ST_RC"
 fi
 
 echo ""

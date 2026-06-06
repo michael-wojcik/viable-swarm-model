@@ -27,9 +27,9 @@ from statistics import mean
 # Configuration
 # ---------------------------------------------------------------------------
 HOME = Path.home()
-SKILL_REGISTRY_PATH = HOME / "vsm" / "vsm-stack-skills" / "SKILL-REGISTRY.md"
-COACH_DIR = HOME / "vsm-fitness-builds" / "coach"
-OUTPUT_LOG_PATH = HOME / "vsm" / "viable-swarm-model" / "references" / "skill-effectiveness-log.md"
+SKILL_REGISTRY_PATH = Path(os.environ.get("SKILL_TRACKER_REGISTRY", HOME / "vsm" / "vsm-stack-skills" / "SKILL-REGISTRY.md"))
+COACH_DIR = Path(os.environ.get("SKILL_TRACKER_COACH_DIR", HOME / "vsm-fitness-builds" / "coach"))
+OUTPUT_LOG_PATH = Path(os.environ.get("SKILL_TRACKER_OUTPUT", HOME / "vsm" / "viable-swarm-model" / "references" / "skill-effectiveness-log.md"))
 
 
 def eprint(msg: str) -> None:

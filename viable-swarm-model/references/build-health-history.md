@@ -1481,3 +1481,35 @@ Without a fitness build or additional S5 iteration cycles, the organism has reac
 
 ### Next Highest-Leverage Constraint
 **System 3 (Audit/Control) / S3→S1 channel — skill-effectiveness-tracker.py has syntax check but no behavior tests.** This script scans fitness build outputs and correlates skill usage with build scores. It writes to `references/skill-effectiveness-log.md` which is read by the learning curator for skill portfolio decisions. Without tests, incorrect score parsing or skill counting could mislead skill selection. Alternatively, **System 5 (Policy) / S5→S1 channel — test-automation.sh is now 153KB+ and 5000+ lines**: While all 132 tests pass, the script is becoming unwieldy. A test suite refactoring (splitting into sub-files by system, adding a test runner) would improve maintainability.
+
+
+---
+
+## 2026-06-06 — S5 Orchestrator Iteration (R46)
+
+### Diagnosed Constraint
+**System 3 (Audit/Control) / S3→S1 channel — skill-effectiveness-tracker.py had syntax check but no behavior tests.** This script scans fitness build outputs, extracts scores, counts skill mentions, and computes with/without correlations. It writes to `references/skill-effectiveness-log.md` which the learning curator reads for skill portfolio decisions. Without behavior tests, bugs in score parsing (e.g., /100 normalization), skill counting, or correlation logic could silently mislead skill selection — a S3→S5 intelligence failure.
+
+### Change Made
+**Refinement mutation R46**: Made skill-effectiveness-tracker.py testable and added behavior tests.
+- Added env var overrides (`SKILL_TRACKER_REGISTRY`, `SKILL_TRACKER_COACH_DIR`, `SKILL_TRACKER_OUTPUT`) for all paths, enabling isolated testing
+- Test 129: Creates temp fixtures with 3 fake builds: FB101 (4.0/5, uses python-pitfalls + security-patterns), FB102 (3.0/5, uses security-patterns), FB103 (5.0/5, no skills). Verifies full pipeline: build discovery, score extraction, skill mention scanning, correlation computation, and log output containing all 4 skills.
+- Test 130: Creates a build with score 80/100 and verifies normalization to 4.0/5 appears in the output log.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **134 passed, 0 failed** (was 132 passed, 0 failed)
+- Test 129: full pipeline with temp fixtures → PASS
+- Test 130: /100 score normalization → PASS
+
+### Files Modified
+- `viable-swarm-model/scripts/skill-effectiveness-tracker.py`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- Hash: [to be filled after commit]
+
+### Next Highest-Leverage Constraint
+**System 5 (Policy) / S5→S1 channel — test-automation.sh is now 156KB+ and 5100+ lines**: While all 134 tests pass, the script is becoming unwieldy. A test suite refactoring (splitting into sub-files by system, adding a test runner with selective execution) would improve maintainability. The script has grown from ~50 tests to 134 tests over multiple S5 iterations. Alternatively, **System 5 (Policy) / S5→S5 channel — active mutations at 62 exceed target of 50**: The organism is accumulating effective mutations faster than they're being promoted to historical. This is not yet critical (all other metrics are green), but it warrants attention. A future iteration could promote R31-R46 to historical once they reach 5 builds tested, or consolidate related mutations.
