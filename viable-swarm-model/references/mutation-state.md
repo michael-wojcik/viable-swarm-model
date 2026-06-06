@@ -84,6 +84,12 @@
 | ~~PM7~~ | FB29 Build | append-only | S5 manual work cap (≤1 file) | **REMOVED** | 1 | 1 | — | — | Prompt-only rules cannot prevent boundary violations under pressure |
 | FB26-S6 | FB26 Build | structural | Process auditor broker scored check | **REDESIGNED** | 2 | 5→redesign | — | — | PM1 attempted, PM1 removed; M-FB30-1 replaces |
 | FB27-1 | FB27 Build | append-only | UUID coercion `model_validator` | **REDESIGNED** | 1 | 2 | — | — | New rule applied FB28 |
+| SM1 | 2026-06-04 Audit | structural | vsm_variety_engineer agent | redesigned | 0 | — | — | — | Superseded by R8 (organism-vitals.py) and R25 (Mode A/B workflow) |
+| SM2 | 2026-06-04 Audit | structural | Process auditor HARD BLOCK | redesigned | 0 | — | — | — | Superseded by R9 (process-compliance-precompute.py) and R22 (Mode A/B workflow) |
+| SM4 | 2026-06-04 Audit | structural | Auto-broker-update hook | redesigned | 0 | — | — | — | Superseded by R5 (auto-broker-update.sh pipefail fix) |
+| SM5 | 2026-06-04 Audit | refinement | skill-state→mutation-state merge | redesigned | 0 | — | — | — | Superseded by R31 (skill-state→mutation-state merge completed) |
+| SM6 | 2026-06-04 Audit | structural | Build health dashboard | redesigned | 0 | — | — | — | Superseded by R6 (build-health-dashboard.py accuracy + auto-invocation) |
+| SM9 | 2026-06-04 Audit | structural | vsm_learning_curator agent | redesigned | 0 | — | — | — | Superseded by R7 (mutation-portfolio-health.py) and R25 (Mode A/B workflow) |
 
 ---
 
@@ -91,10 +97,10 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 82 | < 50 | ⚠️ WARNING (exceeds target) |
-| Historical effective (≥5 builds) | 10 | >15% of active | ✅ 12% |
-| Effective (<5 builds, monitored) | 63 | >30% of active | ✅ 77% |
-| Probationary mutations | 14 | <20 at any time | ✅ 14 (within target) |
+| Active mutations | 77 | < 50 | ⚠️ WARNING (exceeds target) |
+| Historical effective (≥5 builds) | 10 | >15% of active | ✅ 13% |
+| Effective (<5 builds, monitored) | 64 | >30% of active | ✅ 83% |
+| Probationary mutations | 8 | <20 at any time | ✅ 8 (within target) |
 | Removed / redesigned | 7 | ≥2 per 5 builds | ✅ 7 (exceeds target) |
 | Measured effect fill rate (scored) | 73/99 | ≥80% | ⚠️ WARNING (74%) |
 | Measured effect fill rate (any entry) | 74/99 | ≥80% | ⚠️ WARNING (75%) |
@@ -247,15 +253,9 @@
 *Skill state merged during comprehensive audit: 2026-06-04*
 
 | **2026-06-04 AUDIT MUTATIONS (Awaiting Measurement)** |
-| SM1 | 2026-06-04 Audit | structural | vsm_variety_engineer agent | probation | 0 | — | — | — | FB30 |
-| SM2 | 2026-06-04 Audit | structural | Process auditor HARD BLOCK | probation | 0 | — | — | — | FB30 |
 | SM3 | 2026-06-04 Audit | structural | Causal tracing automation | probation | 0 | — | — | — | FB30 |
-| SM4 | 2026-06-04 Audit | structural | Auto-broker-update hook | probation | 0 | — | — | — | FB30 |
-| SM5 | 2026-06-04 Audit | refinement | skill-state→mutation-state merge | probation | 0 | — | — | — | FB30 |
-| SM6 | 2026-06-04 Audit | structural | Build health dashboard | probation | 0 | — | — | — | FB30 |
 | SM7 | 2026-06-04 Audit | structural | Coach heartbeat mode | probation | 0 | — | — | — | FB30 |
 | SM8 | 2026-06-04 Audit | refinement | kimi-code-migration skill | probation | 0 | — | — | — | FB30 |
-| SM9 | 2026-06-04 Audit | structural | vsm_learning_curator agent | probation | 0 | — | — | — | FB30 |
 
 
 | **FB30 MUTATIONS (Created during FB30, await FB31 measurement)** |
@@ -308,3 +308,4 @@
 | R30 | 2026-06-05 S5 | refinement | lesson-miner.py scans vsm-stack-skills for orphan detection | effective | 1 | 5 | — | — | S5 iter |
 | R31 | 2026-06-06 S5 | structural | mutation-state.md data integrity fix — duplicate IDs + historical status | effective | 1 | 5 | — | — | — |
 | R32 | 2026-06-06 S5 | structural | S5 iteration validation policy + bulk promote R12-R30 to effective | effective | 1 | 5 | — | — | — |
+| R33 | 2026-06-06 S5 | structural | Redesign superseded SM1-SM9 audit mutations (6 of 9) | effective | 1 | 5 | — | — | — |

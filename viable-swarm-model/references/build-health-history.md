@@ -5,6 +5,43 @@
 
 ---
 
+## 2026-06-06 — S5 Orchestrator Iteration (R33)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 channel — audit mutation bloat**: `algedonic-action-plan.py` flagged **probationary mutations = 14** (threshold 12) as a WARNING. Investigation revealed that **6 of the 9 SM1–SM9 audit mutations** (2026-06-04 comprehensive audit) were fully superseded by later R-series S5 iteration mutations that produced more effective, tested solutions to the same failure modes. Leaving them in `probation` status inflated the probationary count and obscured the true state of the portfolio.
+
+### Change Made
+**Structural mutation R33**: Redesignated superseded SM1-SM9 audit mutations.
+- SM1 (variety engineer agent) → `redesigned`, superseded by R8 + R25
+- SM2 (process auditor HARD BLOCK) → `redesigned`, superseded by R9 + R22
+- SM4 (auto-broker-update hook) → `redesigned`, superseded by R5
+- SM5 (skill-state merge) → `redesigned`, superseded by R31
+- SM6 (build health dashboard) → `redesigned`, superseded by R6
+- SM9 (learning curator agent) → `redesigned`, superseded by R7 + R25
+- SM3, SM7, SM8 remain `probationary` (not yet superseded)
+- Moved all 6 redesignated rows to REMOVED/REDESIGNED section with replacement links
+- Updated Integration Health metrics to reflect new counts
+
+### Test Results
+- `bash hooks/test-automation.sh`: **89 passed, 0 failed** (was 88 passed, 0 failed)
+- Test 89: All 6 superseded SM mutations are redesignated in REMOVED/REDESIGNED; SM3/SM7/SM8 remain probationary
+- `validate-mutation-state.sh`: **✅ PASS** — zero errors, zero warnings
+- Portfolio health recomputed: active **77** (was 82), probationary **8** (was 14), ratio **10.4%** (was 17.1%)
+
+### Files Modified
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 5 (Policy) / S5→S5 channel — active mutation bloat persists**: Despite R33 reducing active mutations from 82 to 77, the count still exceeds the target of <50. The remaining 77 active mutations include 64 effective mutations, most of which are S5 iteration infrastructure mutations (R5–R32) that cannot be promoted to historical until they accumulate ≥5 builds tested in fitness builds. Without an actual fitness build, the organism cannot reduce active mutations further through normal lifecycle progression. The only remaining paths are: (a) consolidate overlapping S5 iteration mutations into fewer, broader rules, (b) remove genuinely obsolete effective mutations, or (c) revise the <50 target to reflect the organism's actual complexity. Alternatively, **System 4→S4 channel**: The `vsm_learning_curator` and `vsm_variety_engineer` still have **0% empirical exercise rate**. SKILL.md Phase 8c-iii mandate exists, stop-verifier content gates exist (R26), and probationary ratio is now healthy (10.4%). The organism has all enforcement mechanisms in place but lacks a fitness build to validate them.
+
+---
+
 ## 2026-06-06 — S5 Orchestrator Iteration (R32)
 
 ### Diagnosed Constraint

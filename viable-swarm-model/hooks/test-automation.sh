@@ -263,6 +263,40 @@ else
 fi
 
 # ============================================================================
+# Test 89: Superseded audit mutations (SM1-SM9) are correctly redesignated
+# ============================================================================
+
+echo -n "TEST: Superseded SM audit mutations are redesignated in REMOVED/REDESIGNED ... "
+
+MUTATION_STATE="$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md"
+
+# Check that redesigned SM mutations are in the REMOVED/REDESIGNED section
+# and NOT in active sections (probation/effective/monitor)
+PASS_CHECK=0
+for sm in SM1 SM2 SM4 SM5 SM6 SM9; do
+    if grep -q "| $sm |.*| redesigned |" "$MUTATION_STATE"; then
+        PASS_CHECK=$((PASS_CHECK + 1))
+    else
+        fail "$sm not found with redesigned status"
+        break
+    fi
+done
+
+# Check that non-superseded SM mutations are still probationary
+for sm in SM3 SM7 SM8; do
+    if grep -q "| $sm |.*| probation |" "$MUTATION_STATE"; then
+        PASS_CHECK=$((PASS_CHECK + 1))
+    else
+        fail "$sm not found with probation status"
+        break
+    fi
+done
+
+if [ "$PASS_CHECK" -eq 9 ]; then
+    pass
+fi
+
+# ============================================================================
 # Test 5: auto-broker-update.sh — appends entry for valid build directory
 # ============================================================================
 

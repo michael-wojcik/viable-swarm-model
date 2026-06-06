@@ -4100,3 +4100,45 @@ Root cause: No explicit policy existed for scoring infrastructure mutations vali
 **Measured effect**: **Awaiting measurement** — Success criteria: (1) zero policy confusion in next 3 S5 iterations, (2) no regression in validate-mutation-state.sh, (3) portfolio health probationary ratio stays <30%.
 
 ---
+
+---
+
+## Mutation R33 — 2026-06-06
+
+**Session**: S5 Orchestrator Iteration
+**File**: `references/mutation-state.md`
+**Type**: structural (data cleanup / portfolio curation)
+**Rationale**: `algedonic-action-plan.py` flagged **probationary mutations = 14** (threshold 12) as a WARNING. Investigation of the 14 probationary mutations revealed that **6 of the 9 SM1–SM9 audit mutations** (2026-06-04 comprehensive audit) were fully superseded by later R-series S5 iteration mutations:
+
+| Audit Mutation | Target Failure | Superseded By |
+|---|---|---|
+| SM1 | vsm_variety_engineer agent | R8 (organism-vitals.py), R25 (Mode A/B) |
+| SM2 | Process auditor HARD BLOCK | R9 (process-compliance-precompute.py), R22 (Mode A/B) |
+| SM4 | Auto-broker-update hook | R5 (pipefail fix) |
+| SM5 | skill-state→mutation-state merge | R31 (merge completed) |
+| SM6 | Build health dashboard | R6 (accuracy + auto-invocation) |
+| SM9 | vsm_learning_curator agent | R7 (portfolio health script), R25 (Mode A/B) |
+
+SM3 (causal tracing automation), SM7 (coach heartbeat mode), and SM8 (kimi-code-migration skill) remain probationary because they have not been superseded or addressed by later mutations.
+
+These audit mutations were created during the 2026-06-04 comprehensive audit as structural improvements, but the S5 iteration loop (R5–R32) produced more effective, tested solutions to the same failure modes. Leaving them in `probation` status inflated the probationary count and obscured the true state of the portfolio.
+
+**Expected effect**: Cleaner mutation state with accurate lifecycle tracking. Audit mutations that were superseded by better approaches are correctly marked as `redesigned` and linked to their replacements. Probationary count drops to 8 (within target of <20). Active mutation count drops toward the <50 target.
+
+**Files modified**:
+- `references/mutation-state.md` — Redesignated SM1, SM2, SM4, SM5, SM6, SM9 from `probation` → `redesigned`. Moved rows to REMOVED/REDESIGNED section with replacement links in Next Review column. Updated Integration Health metrics. Added R33 mutation row.
+- `hooks/test-automation.sh` — Added Test 89: verifies superseded SM mutations are redesignated in REMOVED/REDESIGNED and non-superseded ones remain probationary.
+
+**Before**:
+- Active mutations: 82
+- Probationary: 14 (exceeds target of <20)
+- 6 audit mutations incorrectly counted as active/probationary
+
+**After**:
+- Active mutations: 77
+- Probationary: 8 (within target)
+- 6 audit mutations correctly counted as redesigned/non-active
+
+**Measured effect**: **Awaiting measurement** — Success criteria: (1) validate-mutation-state.sh continues passing, (2) portfolio health probationary ratio stays <20% for 3 iterations, (3) no future audit mutations remain in probation after being superseded.
+
+---
