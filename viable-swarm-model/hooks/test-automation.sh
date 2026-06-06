@@ -3861,6 +3861,25 @@ else
 fi
 
 # ============================================================================
+# Test 90: Removed monitor mutations A7 and PM3 are in REMOVED/REDESIGNED
+# ============================================================================
+
+echo -n "TEST: A7 and PM3 are redesignated as REMOVED in mutation-state.md ... "
+
+REAL_HOME="${HOME:-}"
+A7_STATUS=$(HOME="$REAL_HOME" grep -E '^\| ~~A7~~' "$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md" | head -1)
+PM3_STATUS=$(HOME="$REAL_HOME" grep -E '^\| ~~PM3~~' "$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md" | head -1)
+
+if echo "$A7_STATUS" | grep -q 'REMOVED' && \
+   echo "$PM3_STATUS" | grep -q 'REMOVED' && \
+   ! HOME="$REAL_HOME" grep -E '^\| A7\b' "$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md" | grep -qv 'REMOVED' && \
+   ! HOME="$REAL_HOME" grep -E '^\| PM3\b' "$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md" | grep -qv 'REMOVED'; then
+    pass
+else
+    fail "A7 or PM3 not properly redesignated as REMOVED"
+fi
+
+# ============================================================================
 # Summary
 # ============================================================================
 

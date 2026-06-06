@@ -64,12 +64,10 @@
 | S6 | FB28 Build | append-only | GraphQL context builder fail-closed | effective | 1 | 5 | — | — | FB31 |
 | A6 | FB28 Build | structural | Knowledge broker manual update requirement | effective | 1 | 4 | H213 | — | FB31 |
 | R3 | FB28 Build | refinement | Process audit ≥80 fitness bar threshold | effective | 1 | 5 | — | — | FB31 |
-| A7 | FB28 Build | append-only | Timeout budget ledger (>2 per phase = BLOCK) | monitor | 3 | 2 | H217 | — | FB32 |
 | A8 | FB28 Build | append-only | Vite config must not contain `test` property | effective | 2 | 5 | — | — | FB31 |
 | R4 | FB28 Build | refinement | Phase 3c coordinator MANDATORY for Tier 2+ | effective | 1 | 5 | — | — | FB31 |
 | A9 | FB28 Build | append-only | Pydantic V2 + SQLAlchemy ORM test fixture pattern | effective | 1 | 5 | — | — | FB31 |
 | **FB29 MUTATIONS (Measured in FB30)** |
-| PM3 | FB29 Build | structural | Mutation-state auto-update hook | monitor | 2 | 2 | — | — | FB32 |
 | PM4 | FB29 Build | append-only | GraphQL parity admin override specificity | effective | 1 | 5 | — | — | FB31 |
 | PM5 | FB29 Build | append-only | Enum `.value` in conftest.py | effective | 1 | 5 | — | — | FB31 |
 | C1 | FB29 Build | append-only | FastAPI lifespan context manager for DB init | effective | 1 | 5 | — | — | FB31 |
@@ -82,6 +80,8 @@
 | ~~FB19-7~~ | FB19 Build | append-only | Cross-skill mutation log review | **REMOVED** | 7 | 1 | — | — | R-1 in cemetery |
 | ~~PM1~~ | FB29 Build | structural | Hook-enforced process auditor spawn | **REMOVED** | 1 | 1 | H300 | — | Hooks don't fire for background agents; superseded by M-FB30-1 |
 | ~~PM7~~ | FB29 Build | append-only | S5 manual work cap (≤1 file) | **REMOVED** | 1 | 1 | — | — | Prompt-only rules cannot prevent boundary violations under pressure |
+| ~~A7~~ | FB28 Build | append-only | Timeout budget ledger (>2 per phase = BLOCK) | **REMOVED** | 3 | 2 | H217 | — | R-5 in cemetery — S5 never maintained ledger; >2 timeouts occurred in FB30 without triggering redesign; rule was prompt-only with no tool enforcement |
+| ~~PM3~~ | FB29 Build | structural | Mutation-state auto-update hook | **REMOVED** | 2 | 2 | — | — | R-6 in cemetery — Check 4 verified build ID presence but not score backfill; S5 still forgot updates; superseded by session-end.sh Check 11 + manual S5 iteration discipline |
 | FB26-S6 | FB26 Build | structural | Process auditor broker scored check | **REDESIGNED** | 2 | 5→redesign | — | — | PM1 attempted, PM1 removed; M-FB30-1 replaces |
 | FB27-1 | FB27 Build | append-only | UUID coercion `model_validator` | **REDESIGNED** | 1 | 2 | — | — | New rule applied FB28 |
 | SM1 | 2026-06-04 Audit | structural | vsm_variety_engineer agent | redesigned | 0 | — | — | — | Superseded by R8 (organism-vitals.py) and R25 (Mode A/B workflow) |
@@ -97,14 +97,14 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 77 | < 50 | ⚠️ WARNING (exceeds target) |
+| Active mutations | 76 | < 50 | ⚠️ WARNING (exceeds target) |
 | Historical effective (≥5 builds) | 10 | >15% of active | ✅ 13% |
-| Effective (<5 builds, monitored) | 64 | >30% of active | ✅ 83% |
+| Effective (<5 builds, monitored) | 65 | >30% of active | ✅ 85% |
 | Probationary mutations | 8 | <20 at any time | ✅ 8 (within target) |
-| Removed / redesigned | 7 | ≥2 per 5 builds | ✅ 7 (exceeds target) |
+| Removed / redesigned | 9 | ≥2 per 5 builds | ✅ 9 (exceeds target) |
 | Measured effect fill rate (scored) | 73/99 | ≥80% | ⚠️ WARNING (74%) |
 | Measured effect fill rate (any entry) | 74/99 | ≥80% | ⚠️ WARNING (75%) |
-| Removal rate (last 5 builds) | 2 | ≥2 | ✅ Meets target |
+| Removal rate (last 5 builds) | 4 | ≥2 | ✅ Meets target |
 
 ---
 

@@ -1043,3 +1043,40 @@ Alternatively, **System 4→S4 channel**: The organism now has 4 pre-computation
 
 ### Next Highest-Leverage Constraint
 **System 1 (Implementation) / S5→S1 channel**: The `vsm_backend_tester` (65%) and `vsm_frontend_tester` (60%) still have the lowest success rates, but they have now been addressed on five fronts: task splitting (R10), spawn plan compliance (R15), target map pre-computation (R24), inlined scaffolds (R29), and stack skill templates (pre-existing). If testers still time out in the next real build, the constraint is likely fundamental LLM capacity for code generation. The organism's infrastructure layer (scripts, hooks, agent prompts, pre-computation, stop-verifier enforcement) is now substantially complete after 6 iterations (R25–R30). The remaining frontier requires empirical validation in a real fitness build rather than further infrastructure changes.
+
+---
+
+## 2026-06-06 — S5 Orchestrator Iteration (R35)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 channel — active mutation bloat with ineffective rules**: The organism had **78 active mutations** (target <50) and **5 monitor mutations**. Two of these monitor mutations — **A7** (timeout budget ledger, score 2, 3 builds) and **PM3** (mutation-state auto-update hook, score 2, 2 builds) — had accumulated sufficient build evidence to demonstrate ineffectiveness. Both were prompt-only rules without tool enforcement. A7's timeout ledger was never maintained by S5 across any build. PM3's stop-verifier Check 4 verified build ID *presence* but not actual score backfill, so S5 still forgot updates. Leaving ineffective mutations in `monitor` status inflated the active count and created false confidence in the portfolio.
+
+### Change Made
+**Structural mutation R35**: Removed failing monitor mutations A7 and PM3.
+- **A7** (`monitor` → `REMOVED`): Timeout Budget Ledger rule removed from `SKILL.md` (lines 828–847). Rationale: S5 never maintained the ledger; FB30 had >2 timeouts without triggering redesign; rule was prompt-only with no hook enforcement.
+- **PM3** (`monitor` → `REMOVED`): Check 4 removed from `stop-verifier.sh` (lines 149–161). Rationale: Verified build ID presence but not score backfill; S5 still forgot updates; superseded by session-end.sh Check 11 + manual S5 iteration discipline.
+- Both rows moved to REMOVED/REDESIGNED section in `mutation-state.md` with strikethrough IDs and removal rationale in Next Review column.
+- Removal entries appended to `mutation-log.md` with full failure evidence and file change records.
+- Integration Health metrics updated: active **76** (was 78), removed/redesigned **9** (was 7), removal rate **4** (last 5 builds).
+
+### Test Results
+- `bash hooks/test-automation.sh`: **90 passed, 0 failed** (was 89 passed, 0 failed)
+- Test 90: A7 and PM3 are properly redesignated as REMOVED in the real mutation-state.md
+- `validate-mutation-state.sh`: **✅ PASS** — zero errors, zero warnings
+- `stop-verifier.sh` syntax check: PASS
+- Portfolio health recomputed: active 76, monitor 3, probationary 8, ratio 10.5%
+
+### Files Modified
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/SKILL.md`
+- `viable-swarm-model/hooks/stop-verifier.sh`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 5 (Policy) / S5→S5 channel — active mutation bloat persists at 76** (target <50). Even after removing 2 ineffective mutations, the count remains 52% above target. The 65 effective mutations are mostly S5 iteration infrastructure (R5–R33) that need ≥5 fitness builds to reach historical. Without an actual fitness build, further reduction requires either: (a) consolidate overlapping S5 iteration mutations into fewer broader rules, (b) remove more monitor mutations (FB28-S5 score 2 with 1 build; FB31-5 score 3 with 1 build), or (c) revise the <50 target. Alternatively, **System 4→S4 channel**: The `vsm_learning_curator` and `vsm_variety_engineer` still have **0% empirical exercise rate** despite all enforcement mechanisms being in place.
+

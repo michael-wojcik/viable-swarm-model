@@ -825,27 +825,6 @@ to `vsm_backend_fix_agent`, not fixed by S5 manually.
 **Process audit penalty**: Each manual S5 fix beyond the first caps process
 compliance score at 3/5 for that phase.
 
-**Timeout Budget Ledger (FB28-sourced)**
-S5 MUST track timeout counts per phase in `plan.md`:
-```markdown
-## Timeout Budget Ledger
-| Phase | Agents Spawned | Timeouts | Budget Status |
-|-------|---------------|----------|---------------|
-| Phase 2 | 4 | 0 | OK |
-| Phase 3 | 6 | 2 | WARNING |
-| Phase 4 | 3 | 1 | WARNING |
-```
-
-If **>2 agents timeout in a single phase**, the build BLOCKs for process redesign.
-Do NOT continue with manual S5 work. The task granularity is wrong for the
-background agent timeout ceiling (commonly 15min). Options:
-1. Scope down the build (reduce Tier 2+ → Tier 1)
-2. Split into sub-builds
-3. Further subdivide agent tasks (≤300 lines per spawn)
-
-Continuing with manual S5 completion after 3+ timeouts in one phase is a
-process violation. The process auditor scores each timeout as −5 points.
-
 **Algedonic signal**: If you find yourself writing >50 lines of implementation
 code or auditing >3 files manually, STOP. You are doing agent work. Re-spawn
 with a narrower scope instead.

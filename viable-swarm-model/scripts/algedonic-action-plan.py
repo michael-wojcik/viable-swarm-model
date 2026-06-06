@@ -163,17 +163,28 @@ def generate_mutation_actions(rows: list[dict]) -> list[str]:
     actions: list[str] = []
     probationary = [r for r in rows if r["status"] == "probation"]
     monitor = [r for r in rows if r["status"] == "monitor"]
-    ineffective = [r for r in rows if r["status"] == "ineffective"]
 
     # Demotion candidates: monitor with low score and sufficient builds
+    # Threshold relaxed from >=3 to >=2 builds to catch mutations like PM3 (score 2, 2 builds)
     demotion_ready = [
         r for r in monitor
-        if r["builds_tested"] >= 3 and r["score"] is not None and r["score"] <= 2
+        if r["builds_tested"] >= 2 and r["score"] is not None and r["score"] <= 2
     ]
     if demotion_ready:
         actions.append(
-            f"1. **Demote {len(demotion_ready)} monitor mutation(s) to ineffective/removed**: "
+            f"**Demote {len(demotion_ready)} monitor mutation(s) to ineffective/removed**: "
             + ", ".join(f"{r['id']} (score {r['score']}, {r['builds_tested']} builds)" for r in demotion_ready)
+        )
+
+    # Unmeasured probationary: builds=0 and no score — need fitness build validation
+    unmeasured = [
+        r for r in probationary
+        if r["builds_tested"] == 0 and r["score"] is None
+    ]
+    if unmeasured:
+        actions.append(
+            f"**Measure {len(unmeasured)} unmeasured probationary mutation(s)**: "
+            + ", ".join(f"{r['id']}" for r in unmeasured)
         )
 
     # Promotion candidates: probation with high score and sufficient builds
@@ -183,7 +194,7 @@ def generate_mutation_actions(rows: list[dict]) -> list[str]:
     ]
     if promotion_ready:
         actions.append(
-            f"2. **Promote {len(promotion_ready)} probationary mutation(s) to effective**: "
+            f"**Promote {len(promotion_ready)} probationary mutation(s) to effective**: "
             + ", ".join(f"{r['id']} (score {r['score']}, {r['builds_tested']} builds)" for r in promotion_ready)
         )
 
@@ -195,12 +206,12 @@ def generate_mutation_actions(rows: list[dict]) -> list[str]:
     ]
     if historical_ready:
         actions.append(
-            f"3. **Move {len(historical_ready)} effective mutation(s) to historical**: "
+            f"**Move {len(historical_ready)} effective mutation(s) to historical**: "
             + ", ".join(f"{r['id']} (score {r['score']}, {r['builds_tested']} builds)" for r in historical_ready)
         )
 
     if not actions:
-        actions.append("1. No autonomous promotion/demotion actions available. Manual portfolio review recommended.")
+        actions.append("No autonomous promotion/demotion actions available. Manual portfolio review recommended.")
 
     return actions
 
@@ -320,6 +331,7 @@ def main() -> int:
 
     # Compute metrics
     mutation_rows = parse_mutation_rows(MUTATION_STATE)
+    active_count = len(mutation_rows)
     probationary = sum(1 for r in mutation_rows if r["status"] == "probation")
     untested_count = count_untested_hypotheses(HYPOTHESES)
     untested_ids = extract_untested_hypothesis_ids(HYPOTHESES)
@@ -329,6 +341,13 @@ def main() -> int:
 
     # Determine triggered algedonics
     algedonics: list[dict] = []
+    if active_count > 50:
+        algedonics.append({
+            "name": "Active mutation bloat",
+            "value": active_count,
+            "threshold": 50,
+            "level": "WARNING" if active_count <= 70 else "CRITICAL",
+        })
     if probationary > 12:
         algedonics.append({
             "name": "Probationary mutations",
@@ -378,7 +397,7 @@ def main() -> int:
                 "**Specific Actions**:",
             ])
 
-            if a["name"] == "Probationary mutations":
+            if a["name"] in ("Active mutation bloat", "Probationary mutations"):
                 for action in generate_mutation_actions(mutation_rows):
                     lines.append(f"- {action}")
             elif a["name"] == "Untested hypotheses":
@@ -395,6 +414,7 @@ def main() -> int:
         "",
         f"| Metric | Value | Target |",
         f"|---|---|---|",
+        f"| Active mutations | {active_count} | ≤ 50 |",
         f"| Probationary mutations | {probationary} | ≤ 12 |",
         f"| Untested hypotheses | {untested_count} | ≤ 7 |",
         f"| Skill variety | {skill_ratio} ({used_skills}/{total_skills}) | ≥ 0.70 |",

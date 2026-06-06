@@ -4142,3 +4142,44 @@ These audit mutations were created during the 2026-06-04 comprehensive audit as 
 **Measured effect**: **Awaiting measurement** — Success criteria: (1) validate-mutation-state.sh continues passing, (2) portfolio health probationary ratio stays <20% for 3 iterations, (3) no future audit mutations remain in probation after being superseded.
 
 ---
+
+## Mutation A7 — REMOVED 2026-06-06 (S5 Orchestrator Iteration R35)
+
+**Session**: S5 Orchestrator Iteration R35
+**Type**: removal
+**Target failure mode**: Same as original — S5 does not track timeout counts per phase
+**Rationale**: A7 was applied in FB28 as an append-only rule requiring S5 to maintain a Timeout Budget Ledger in `plan.md`. Across 3 builds (FB28, FB29, FB30), the rule scored 2/5. Evidence of failure:
+1. S5 never created the ledger format in any build's `plan.md`
+2. FB30 had 5 agent timeouts across 3 phases with no process redesign triggered
+3. The rule was prompt-only with no tool enforcement (stop-verifier had no timeout budget check)
+
+A prompt-only rule that S5 ignores under pressure is worse than no rule — it creates false confidence. Removed from SKILL.md and mutation-state.md. If timeout tracking is needed in the future, it must be tool-enforced (e.g., session-end.sh computes timeout counts from telemetry and blocks if >2 per phase).
+
+**Files modified**:
+- `references/mutation-state.md` — Status changed from `monitor` → `REMOVED`, moved to REMOVED/REDESIGNED section
+- `SKILL.md` — Timeout Budget Ledger section removed (lines 828–847)
+
+**Measured effect**: Removal validated by automation suite. Active mutations reduced by 1.
+
+---
+
+## Mutation PM3 — REMOVED 2026-06-06 (S5 Orchestrator Iteration R35)
+
+**Session**: S5 Orchestrator Iteration R35
+**Type**: removal
+**Target failure mode**: Same as original — mutation-state.md updates systematically forgotten
+**Rationale**: PM3 was applied in FB29 as a structural mutation adding Check 4 to `stop-verifier.sh`. The check verified that the current build ID appeared somewhere in `mutation-state.md`. Across 2 builds, it scored 2/5. Evidence of failure:
+1. FB31 mutation-state.md was not updated with build scores until S5 manual backfill
+2. The check only verified build ID *presence*, not that mutation scores/builds were actually updated
+3. S5 could satisfy the check by adding the build ID to any column (e.g., Next Review) without backfilling scores
+4. The auto-update script (`update-mutation-state.sh`) exists but is not integrated into session-end.sh
+
+The check created friction (stop-verifier could block on missing build ID) without ensuring the actual goal (complete mutation tracking). Superseded by existing session-end.sh Check 11 (security gate bypass detection) plus manual S5 iteration discipline. A future auto-update hook would need to actually WRITE mutation data, not just verify presence.
+
+**Files modified**:
+- `references/mutation-state.md` — Status changed from `monitor` → `REMOVED`, moved to REMOVED/REDESIGNED section
+- `hooks/stop-verifier.sh` — Check 4 removed (lines 149–161)
+
+**Measured effect**: Removal validated by automation suite. Active mutations reduced by 1.
+
+---

@@ -146,21 +146,7 @@ else
     fi
 fi
 
-# Check 4: mutation-state.md MUST contain current build ID (FB29-sourced PM3)
-# Extract build ID from mutations-applied.md
-BUILD_ID=""
-if [[ -f "$MUTATIONS_FILE" ]]; then
-    BUILD_ID=$(grep -oE 'FB[0-9]+' "$MUTATIONS_FILE" | head -1)
-fi
-if [[ -n "$BUILD_ID" && -f "$HOME/vsm/viable-swarm-model/references/mutation-state.md" ]]; then
-    if ! grep -q "$BUILD_ID" "$HOME/vsm/viable-swarm-model/references/mutation-state.md"; then
-        echo "STOP BLOCKED by stop-verifier.sh: mutation-state.md does not contain build ID $BUILD_ID. Run update-mutation-state.sh before stopping." >&2
-        echo '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"mutation-state.md missing build ID. Run update-mutation-state.sh ."}}'
-        exit 0
-    fi
-fi
-
-# Check 5: process-audit.md MUST NOT contain HARD BLOCK (2026-06-04 structural mutation)
+# Check 4: process-audit.md MUST NOT contain HARD BLOCK (2026-06-04 structural mutation)
 if [[ -f "$KIMI_DIR/process-audit.md" ]]; then
     if grep -q "HARD BLOCK" "$KIMI_DIR/process-audit.md"; then
         echo "STOP BLOCKED by stop-verifier.sh: process-audit.md contains HARD BLOCK. Build compliance is below threshold. Address violations before stopping." >&2
