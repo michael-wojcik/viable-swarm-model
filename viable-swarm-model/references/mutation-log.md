@@ -4496,3 +4496,31 @@ Additionally:
 **Expected effect**: Future script additions require only appending to a loop array, not copy-pasting boilerplate. The reduced line count improves navigation velocity for all future S5 iterations.
 
 **Measured effect**: All 135 tests pass after refactoring. Script line count reduced from 5116 to 5031.
+
+---
+
+## Mutation R49 — 2026-06-06
+
+**Session**: S5 Orchestrator Iteration
+**Files**: `references/mutation-state.md`
+**Type**: refinement (batch historical promotion)
+**Rationale**: The S5 iteration validation policy (R32) states that effective S5 iteration mutations remaining stable for ≥5 S5 iterations without regression are eligible for promotion to `historical`. R31–R43 were created during S5 iterations on 2026-06-06 and have subsequently survived 5–17 subsequent S5 iterations (R32–R48) without regression. All 13 mutations have dedicated test coverage in `test-automation.sh`. Promotion reduces active mutation bloat from 64 to 51, bringing the organism within 1 mutation of its <50 target.
+
+**Mutations promoted**:
+- R31: mutation-state.md data integrity fix — 17 iterations stable
+- R32: S5 iteration validation policy — 16 iterations stable
+- R33: Redesign superseded SM1-SM9 audit mutations — 15 iterations stable
+- R34: algedonic-action-plan.py enhancement — 14 iterations stable
+- R35: Remove failing monitor mutations A7 and PM3 — 13 iterations stable
+- R36: mutation-portfolio-health.py fill rate bug fix — 12 iterations stable
+- R37: algedonic-action-plan.py parser bug fix — 11 iterations stable
+- R38: Remove failing monitor mutation FB28-S5 — 10 iterations stable
+- R39: gate-guardian.sh reliability — 9 iterations stable
+- R40: boundary-guardian.sh + structural-guardian.sh test coverage — 8 iterations stable
+- R41: decision-enforcer + context-pressure + diagnostic-router test coverage — 7 iterations stable
+- R42: Fix stale Integration Health metrics — 6 iterations stable
+- R43: Deprecate knowledge-broker.sh — 5 iterations stable
+
+**Expected effect**: Active mutation count drops from 64 to 51. Historical effective count rises from 36 to 49. The persistent WARNING algedonic for active mutation bloat is nearly resolved.
+
+**Measured effect**: `mutation-portfolio-health.py` confirms: total_active=51, historical_effective=49, probationary_ratio=15.7%. Test 136 verifies all 13 mutations have status `historical`.

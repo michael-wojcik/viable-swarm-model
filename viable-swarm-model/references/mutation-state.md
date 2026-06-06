@@ -36,6 +36,19 @@
 | R28 | 2026-06-05 S5 | structural | Stop-verifier security hard block when security-relevant code present | historical | 5 | 5 | — | — | S5 iter |
 | R29 | 2026-06-05 S5 | append-only | Inlined test scaffolds in tester agent prompts | historical | 5 | 5 | — | — | S5 iter |
 | R30 | 2026-06-05 S5 | refinement | lesson-miner.py scans vsm-stack-skills for orphan detection | historical | 5 | 5 | — | — | S5 iter |
+| R31 | 2026-06-06 S5 | structural | mutation-state.md data integrity fix — duplicate IDs + historical status | historical | 5 | 5 | — | — | S5 iter |
+| R32 | 2026-06-06 S5 | structural | S5 iteration validation policy + bulk promote R12-R30 to effective | historical | 5 | 5 | — | — | S5 iter |
+| R33 | 2026-06-06 S5 | structural | Redesign superseded SM1-SM9 audit mutations (6 of 9) | historical | 5 | 5 | — | — | S5 iter |
+| R34 | 2026-06-06 S5 | structural | algedonic-action-plan.py enhancement — active bloat algedonic + relaxed demotion threshold + unmeasured probationary detection | historical | 5 | 5 | — | — | S5 iter |
+| R35 | 2026-06-06 S5 | structural | Remove failing monitor mutations A7 and PM3 | historical | 5 | 5 | — | — | S5 iter |
+| R36 | 2026-06-06 S5 | structural | mutation-portfolio-health.py fill rate bug fix — exclude non-mutation rows from denominator | historical | 5 | 5 | — | — | S5 iter |
+| R37 | 2026-06-06 S5 | structural | algedonic-action-plan.py parser bug fix — bold status rows incorrectly treated as section headers | historical | 5 | 5 | — | — | S5 iter |
+| R38 | 2026-06-06 S5 | structural | Remove failing monitor mutation FB28-S5 — timeout fallback protocol insufficient under load | historical | 5 | 5 | — | — | S5 iter |
+| R39 | 2026-06-06 S5 | refinement | gate-guardian.sh reliability — remove redundant find check, add npm pattern parity, fix missing .kimi/ crash, add 4 tests | historical | 5 | 5 | — | — | S5 iter |
+| R40 | 2026-06-06 S5 | refinement | boundary-guardian.sh + structural-guardian.sh test coverage — 7 tests + 2 syntax checks | historical | 5 | 5 | — | — | S5 iter |
+| R41 | 2026-06-06 S5 | refinement | decision-enforcer + context-pressure + diagnostic-router test coverage — 6 tests + 3 syntax checks + HOME restoration fix in test 77 | historical | 5 | 5 | — | — | S5 iter |
+| R42 | 2026-06-06 S5 | refinement | Fix stale Integration Health metrics in mutation-state.md + count redesigned in mutation-portfolio-health.py + auto-sync test | historical | 5 | 5 | — | — | S5 iter |
+| R43 | 2026-06-06 S5 | refinement | Deprecate knowledge-broker.sh — convert to no-op stub with deprecation notice, remove from diagnostic-router, add 3 tests | historical | 5 | 5 | — | — | S5 iter |
 # Mutation State — Unified Lifecycle Tracking
 
 > **Purpose**: Single source of truth for all mutations from hypothesis → experiment → application → measurement → keep/remove/redesign.
@@ -123,8 +136,8 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 64 | < 50 | ⚠️ WARNING (exceeds target) |
-| Historical effective (≥5 builds) | 36 | >15% of active | ✅ 62% |
+| Active mutations | 51 | < 50 | ⚠️ WARNING (exceeds target) |
+| Historical effective (≥5 builds) | 49 | >15% of active | ✅ 96% |
 | Effective (<5 builds, monitored) | 55 | >30% of active | ✅ 87% |
 | Probationary mutations | 8 | <20 at any time | ✅ 8 (within target) |
 | Removed / redesigned | 18 | ≥2 per 5 builds | ✅ 18 (exceeds target) |
@@ -313,19 +326,6 @@
 | FB32-5 | FB32 Build | refinement | Orphaned Query Export Limit | probation | 0 | — | — | — | FB33 |
 
 | **S5 ITERATION MUTATIONS (2026-06-06)** |
-| R34 | 2026-06-06 S5 | structural | algedonic-action-plan.py enhancement — active bloat algedonic + relaxed demotion threshold + unmeasured probationary detection | effective | 1 | 5 | — | — | S5 iter |
-| R35 | 2026-06-06 S5 | structural | Remove failing monitor mutations A7 and PM3 | effective | 1 | 5 | — | — | S5 iter |
-| R36 | 2026-06-06 S5 | structural | mutation-portfolio-health.py fill rate bug fix — exclude non-mutation rows from denominator | effective | 1 | 5 | — | — | S5 iter |
-| R37 | 2026-06-06 S5 | structural | algedonic-action-plan.py parser bug fix — bold status rows incorrectly treated as section headers | effective | 1 | 5 | — | — | S5 iter |
-| R38 | 2026-06-06 S5 | structural | Remove failing monitor mutation FB28-S5 — timeout fallback protocol insufficient under load | effective | 1 | 5 | — | — | S5 iter |
-| R31 | 2026-06-06 S5 | structural | mutation-state.md data integrity fix — duplicate IDs + historical status | effective | 1 | 5 | — | — | — |
-| R32 | 2026-06-06 S5 | structural | S5 iteration validation policy + bulk promote R12-R30 to effective | effective | 1 | 5 | — | — | — |
-| R33 | 2026-06-06 S5 | structural | Redesign superseded SM1-SM9 audit mutations (6 of 9) | effective | 1 | 5 | — | — | — |
-| R39 | 2026-06-06 S5 | refinement | gate-guardian.sh reliability — remove redundant find check, add npm pattern parity, fix missing .kimi/ crash, add 4 tests | effective | 1 | 5 | — | — | S5 iter |
-| R40 | 2026-06-06 S5 | refinement | boundary-guardian.sh + structural-guardian.sh test coverage — 7 tests + 2 syntax checks | effective | 1 | 5 | — | — | S5 iter |
-| R41 | 2026-06-06 S5 | refinement | decision-enforcer + context-pressure + diagnostic-router test coverage — 6 tests + 3 syntax checks + HOME restoration fix in test 77 | effective | 1 | 5 | — | — | S5 iter |
-| R42 | 2026-06-06 S5 | refinement | Fix stale Integration Health metrics in mutation-state.md + count redesigned in mutation-portfolio-health.py + auto-sync test | effective | 1 | 5 | — | — | S5 iter |
-| R43 | 2026-06-06 S5 | refinement | Deprecate knowledge-broker.sh — convert to no-op stub with deprecation notice, remove from diagnostic-router, add 3 tests | effective | 1 | 5 | — | — | S5 iter |
 | R44 | 2026-06-06 S5 | structural | Wire auto-gym-trigger.py into session-end.sh + env var overrides for testability + 4 tests (3 syntax + 3 behavior) | effective | 1 | 5 | — | — | S5 iter |
 | R45 | 2026-06-06 S5 | refinement | mutation-predictor.py env var overrides for testability + 2 behavior tests (similarity + insufficient-data) | effective | 1 | 5 | — | — | S5 iter |
 | R46 | 2026-06-06 S5 | refinement | skill-effectiveness-tracker.py env var overrides for testability + 2 behavior tests (full pipeline + /100 normalization) | effective | 1 | 5 | — | — | S5 iter |

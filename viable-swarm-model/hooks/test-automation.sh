@@ -3974,10 +3974,10 @@ for line in text.splitlines():
 print(len(rows))
 ")
 
-if [ "$ACTIVE_COUNT" -eq 64 ]; then
+if [ "$ACTIVE_COUNT" -eq 51 ]; then
     pass
 else
-    fail "expected 64 active mutations, got $ACTIVE_COUNT"
+    fail "expected 51 active mutations, got $ACTIVE_COUNT"
 fi
 
 # ============================================================================
@@ -5018,6 +5018,27 @@ if [ ! -f "$SCRIPT_DIR/test-hooks.sh" ]; then
     pass
 else
     fail "test-hooks.sh should have been removed; use test-automation.sh instead"
+fi
+
+# ============================================================================
+# Test 136: R31-R43 promoted to historical per S5 iteration policy
+# ============================================================================
+
+echo -n "TEST: R31-R43 are historical in mutation-state.md ... "
+
+MSTATE_REAL="/Users/mj/vsm/viable-swarm-model/references/mutation-state.md"
+ALL_HISTORICAL=true
+for id in R31 R32 R33 R34 R35 R36 R37 R38 R39 R40 R41 R42 R43; do
+    STATUS=$(grep -E "^\| $id\b" "$MSTATE_REAL" | head -1 | awk -F'|' '{print $6}' | tr -d ' ')
+    if [ "$STATUS" != "historical" ]; then
+        ALL_HISTORICAL=false
+        fail "$id expected historical, got '$STATUS'"
+        break
+    fi
+done
+
+if [ "$ALL_HISTORICAL" = true ]; then
+    pass
 fi
 
 echo ""
