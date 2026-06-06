@@ -1676,3 +1676,23 @@ Without a fitness build or additional S5 iteration cycles, the organism has reac
 
 ### Next Highest-Leverage Constraint
 **System 5 (Policy) / S5→S1 channel — test-automation.sh is now 157KB+ and 5200+ lines**: While all 135 tests pass, the script is genuinely unwieldy. A minimal refactoring (extracting repetitive syntax checks into a helper loop, splitting tests into logical sections with section headers) would improve maintainability without a full rewrite. Alternatively, **System 5 (Policy) / S5→S5 channel — active mutations at 63 exceed target of 50**: With R31-R47 all effective after a single S5 iteration each, the organism is accumulating effective mutations faster than historical promotion. Once any of R31-R47 reach 5 builds tested, they should be promoted to historical to keep active count under control.
+
+## 2026-06-06 — R52
+- **Score**: 5.0/5.0
+- **Active mutations**: 51 → 51
+- **Tests**: 144 passed, 0 failed
+- **Constraints resolved**:
+  1. `algedonic-action-plan.py` trigger condition `> 50` corrected to `> 55` (was causing false WARNING at 51)
+  2. `algedonic-action-plan.py` metrics table display `≤ 50` corrected to `≤ 55`
+  3. `integration-test-closeout.py` test coverage expanded from 1 to 7 behavior tests (Tests 30, 139-144)
+- **Files changed**:
+  - `viable-swarm-model/scripts/algedonic-action-plan.py`
+  - `viable-swarm-model/hooks/test-automation.sh`
+  - `viable-swarm-model/references/mutation-state.md`
+  - `viable-swarm-model/references/mutation-log.md`
+  - `viable-swarm-model/references/build-health-history.md`
+- **Git Commit**: f29d311
+- **Next highest-leverage constraint**:
+  1. **Untested hypotheses backlog: 9 > 7 threshold** — Requires `/flow:vsm-fitness-gym` invocation to run gym experiments.
+  2. **Meta-system agents 0% exercise rate** — `vsm_learning_curator` and `vsm_variety_engineer` never empirically exercised. Requires a real fitness build to validate Mode A/B workflows.
+  3. **SM3/SM7/SM8 audit mutations + FB32-1..5 build mutations** — All probationary with `builds_tested=0`. Cannot validate without fitness build.

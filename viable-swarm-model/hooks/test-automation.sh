@@ -3937,16 +3937,29 @@ fi
 
 echo -n "TEST: algedonic-action-plan.py counts bold-status rows correctly ... "
 
-# Verify on the REAL mutation-state.md that FB28-S5 (status **monitor**) is counted.
 # Before the fix, the parser treated any line containing '**' as a section header,
 # causing data rows with bold status to be skipped. After the fix, only rows where
 # the FIRST column starts with '**' are treated as headers.
-REAL_MSTATE="/Users/mj/vsm/viable-swarm-model/references/mutation-state.md"
+# Test with a controlled mock file to avoid fragility from real state changes.
+cat > "$TMPDIR/mstate92.md" << 'EOF'
+# Mutation State
+
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| M1 | FB92 | append | Test | effective | 5 | 4 | — | — | — |
+| M2 | FB92 | structural | Test | **monitor** | 3 | 3 | — | — | — |
+| M3 | FB92 | refinement | Test | probation | 2 | 3 | — | — | — |
+| **HISTORICAL EFFECTIVE** |
+| H1 | FB92 | test | Test | effective | 5 | 5 | — | — | — |
+| **REMOVED / REDESIGNED** |
+| R1 | FB92 | test | Test | **REMOVED** | 1 | 1 | — | — | — |
+EOF
+
 ACTIVE_COUNT=$(python3 -c "
 import re
 from pathlib import Path
 
-text = Path('$REAL_MSTATE').read_text()
+text = Path('$TMPDIR/mstate92.md').read_text()
 rows = []
 skip = False
 for line in text.splitlines():
@@ -3964,7 +3977,7 @@ for line in text.splitlines():
         continue
     parts = [p.strip() for p in line.split('|')]
     parts = [p for p in parts if p]
-    if len(parts) < 6 or parts[0].startswith('**') or parts[0] == 'ID' or parts[1] in ('Source', '', '-'):
+    if len(parts) < 6 or parts[0].startswith('**') or parts[0] == 'ID' or parts[1] in ('Source', '', '—'):
         continue
     if skip:
         continue
@@ -3974,10 +3987,13 @@ for line in text.splitlines():
 print(len(rows))
 ")
 
-if [ "$ACTIVE_COUNT" -eq 50 ]; then
+# M1 (effective), M2 (bold monitor), M3 (probation) = 3 active
+# H1 is in HISTORICAL section → skipped
+# R1 is in REMOVED section → skipped
+if [ "$ACTIVE_COUNT" -eq 3 ]; then
     pass
 else
-    fail "expected 50 active mutations, got $ACTIVE_COUNT"
+    fail "expected 3 active mutations (including bold-status M2), got $ACTIVE_COUNT"
 fi
 
 # ============================================================================
@@ -5117,6 +5133,248 @@ if grep -q '"threshold": 55' "$ALG_SCRIPT"; then
     pass
 else
     fail "algedonic-action-plan.py threshold is not 55"
+fi
+
+# ============================================================================
+# Test 139: algedonic-action-plan.py — no bloat warning at 51 active (R52)
+# ============================================================================
+
+echo -n "TEST: algedonic-action-plan.py does NOT warn at 51 active mutations ... "
+
+mkdir -p "$TMPDIR/build139/.kimi"
+mkdir -p "$TMPDIR/home139/vsm/viable-swarm-model/references"
+mkdir -p "$TMPDIR/home139/vsm/vsm-stack-skills"
+
+cat > "$TMPDIR/home139/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+EOF
+for i in $(seq 1 51); do
+    echo "| M$i | Test | test | none | effective | 5 | 4 | — | — | — |" >> "$TMPDIR/home139/vsm/viable-swarm-model/references/mutation-state.md"
+done
+
+cat > "$TMPDIR/home139/vsm/viable-swarm-model/references/hypotheses.md" << 'EOF'
+# Hypotheses
+
+## H1: Test
+**Status**: confirmed
+EOF
+
+cat > "$TMPDIR/home139/vsm/viable-swarm-model/references/build-health-history.md" << 'EOF'
+# Build Health History
+## 2026-06-01 — FB999
+- Score: 4.0/5.0
+EOF
+
+cat > "$TMPDIR/home139/vsm/vsm-stack-skills/SKILL-REGISTRY.md" << 'EOF'
+# Skill Registry
+| Skill | Relevant Agents |
+|---|---|
+| skill-a | all |
+EOF
+
+HOME="$TMPDIR/home139" python3 "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" --build-dir "$TMPDIR/build139" > "$TMPDIR/out139.txt" 2>&1
+
+if ! grep -q "Active mutation bloat" "$TMPDIR/out139.txt" && \
+   grep -q "| Active mutations | 51 | ≤ 55 |" "$TMPDIR/out139.txt"; then
+    pass
+else
+    fail "algedonic should NOT trigger bloat at 51 (threshold 55)"
+fi
+
+# ============================================================================
+# Test 140: integration-test-closeout.py — verbose mode produces all markers
+# ============================================================================
+
+echo -n "TEST: integration-test-closeout.py --verbose shows all success markers ... "
+
+python3 "$SCRIPT_DIR/../scripts/integration-test-closeout.py" --verbose > "$TMPDIR/out140.txt" 2>&1
+
+if grep -q "Testing: build-health-dashboard.py" "$TMPDIR/out140.txt" && \
+   grep -q "Testing: mutation-portfolio-health.py" "$TMPDIR/out140.txt" && \
+   grep -q "Testing: organism-vitals.py" "$TMPDIR/out140.txt" && \
+   grep -q "Testing: process-compliance-precompute.py" "$TMPDIR/out140.txt" && \
+   grep -q "Verifying mutual consistency" "$TMPDIR/out140.txt" && \
+   grep -q "Testing: session-end.sh" "$TMPDIR/out140.txt" && \
+   grep -q "RESULT: ALL CHECKS PASSED" "$TMPDIR/out140.txt"; then
+    pass
+else
+    fail "integration-test-closeout.py verbose output missing expected markers"
+fi
+
+# ============================================================================
+# Test 141: integration-test-closeout.py — verify_consistency catches errors
+# ============================================================================
+
+echo -n "TEST: verify_consistency detects all 5 error conditions ... "
+
+python3 -c "
+import sys, os, json, tempfile
+import importlib.util
+spec = importlib.util.spec_from_file_location('itc', '$SCRIPT_DIR/../scripts/integration-test-closeout.py')
+mod = importlib.util.module_from_spec(spec)
+sys.modules['itc'] = mod
+spec.loader.exec_module(mod)
+
+with tempfile.TemporaryDirectory() as tmpdir:
+    build_dir = os.path.join(tmpdir, 'FB999-Test')
+    home_dir = os.path.join(tmpdir, 'home')
+    os.makedirs(os.path.join(build_dir, '.kimi'))
+    os.makedirs(os.path.join(home_dir, 'vsm', 'viable-swarm-model', 'references'))
+
+    with open(os.path.join(home_dir, 'vsm', 'viable-swarm-model', 'references', 'build-health-history.md'), 'w') as f:
+        f.write('# Build Health History\nNo build entry here.\n')
+
+    with open(os.path.join(build_dir, '.kimi', 'mutation-portfolio-health.json'), 'w') as f:
+        json.dump({'total_active': 99, 'probationary_count': 99}, f)
+
+    with open(os.path.join(build_dir, '.kimi', 'organism-vitals.md'), 'w') as f:
+        f.write('All systems nominal.\n')
+
+    with open(os.path.join(build_dir, '.kimi', 'process-compliance-precomputed.md'), 'w') as f:
+        f.write('No Phase 4 Gate Compliance here.\n')
+
+    with open(os.path.join(build_dir, '.kimi', 'health-dashboard.md'), 'w') as f:
+        f.write('Dashboard unavailable.\n')
+
+    errors = mod.verify_consistency(build_dir, home_dir)
+
+    checks = [
+        'FB999' in str(errors),
+        'total_active expected 2' in str(errors),
+        'Probationary mutations' in str(errors),
+        'compliance precompute should show PASS' in str(errors),
+        'health-dashboard.md missing header' in str(errors),
+    ]
+    if all(checks) and len(errors) == 6:
+        sys.exit(0)
+    else:
+        print(f'Expected 6 errors, got {len(errors)}: {errors}')
+        sys.exit(1)
+" >/dev/null 2>&1
+
+if [ "$?" -eq 0 ]; then
+    pass
+else
+    fail "verify_consistency did not detect all 6 expected errors"
+fi
+
+# ============================================================================
+# Test 142: integration-test-closeout.py — test_session_end_hook catches false flag
+# ============================================================================
+
+echo -n "TEST: test_session_end_hook detects falsely flagged security report ... "
+
+python3 -c "
+import sys, os, tempfile
+import importlib.util
+spec = importlib.util.spec_from_file_location('itc', '$SCRIPT_DIR/../scripts/integration-test-closeout.py')
+mod = importlib.util.module_from_spec(spec)
+sys.modules['itc'] = mod
+spec.loader.exec_module(mod)
+
+with tempfile.TemporaryDirectory() as tmpdir:
+    build_dir = os.path.join(tmpdir, 'FB999-Test')
+    home_dir = os.path.join(tmpdir, 'home')
+    os.makedirs(os.path.join(build_dir, '.kimi'))
+
+    # security-report.md IS present
+    with open(os.path.join(build_dir, '.kimi', 'security-report.md'), 'w') as f:
+        f.write('# Security Report\nZero findings.\n')
+
+    # Fake session-end.sh that FALSELY claims it's missing
+    session_end = os.path.join(tmpdir, 'session-end.sh')
+    with open(session_end, 'w') as f:
+        f.write('#!/bin/bash\n')
+        f.write('echo \"# Session Telemetry\" > \"\$PWD/.kimi/session-telemetry.md\"\n')
+        f.write('echo \"CRITICAL: security-report.md missing\" >> \"\$PWD/.kimi/session-telemetry.md\"\n')
+    os.chmod(session_end, 0o755)
+
+    ok, errors = mod.test_session_end_hook(session_end, build_dir, home_dir)
+    if not ok and any('falsely flagged' in e for e in errors):
+        sys.exit(0)
+    else:
+        print(f'ok={ok}, errors={errors}')
+        sys.exit(1)
+" >/dev/null 2>&1
+
+if [ "$?" -eq 0 ]; then
+    pass
+else
+    fail "test_session_end_hook did not detect falsely flagged security report"
+fi
+
+# ============================================================================
+# Test 143: integration-test-closeout.py — test_session_end_hook passes when clean
+# ============================================================================
+
+echo -n "TEST: test_session_end_hook passes with valid telemetry ... "
+
+python3 -c "
+import sys, os, tempfile
+import importlib.util
+spec = importlib.util.spec_from_file_location('itc', '$SCRIPT_DIR/../scripts/integration-test-closeout.py')
+mod = importlib.util.module_from_spec(spec)
+sys.modules['itc'] = mod
+spec.loader.exec_module(mod)
+
+with tempfile.TemporaryDirectory() as tmpdir:
+    build_dir = os.path.join(tmpdir, 'FB999-Test')
+    home_dir = os.path.join(tmpdir, 'home')
+    os.makedirs(os.path.join(build_dir, '.kimi'))
+
+    with open(os.path.join(build_dir, '.kimi', 'security-report.md'), 'w') as f:
+        f.write('# Security Report\nZero findings.\n')
+
+    session_end = os.path.join(tmpdir, 'session-end.sh')
+    with open(session_end, 'w') as f:
+        f.write('#!/bin/bash\n')
+        f.write('echo \"# Session Telemetry\" > \"\$PWD/.kimi/session-telemetry.md\"\n')
+        f.write('echo \"All checks passed.\" >> \"\$PWD/.kimi/session-telemetry.md\"\n')
+    os.chmod(session_end, 0o755)
+
+    ok, errors = mod.test_session_end_hook(session_end, build_dir, home_dir)
+    if ok and len(errors) == 0:
+        sys.exit(0)
+    else:
+        print(f'ok={ok}, errors={errors}')
+        sys.exit(1)
+" >/dev/null 2>&1
+
+if [ "$?" -eq 0 ]; then
+    pass
+else
+    fail "test_session_end_hook failed on valid telemetry"
+fi
+
+# ============================================================================
+# Test 144: integration-test-closeout.py — test_script handles unknown scripts
+# ============================================================================
+
+echo -n "TEST: test_script returns failure for unknown script names ... "
+
+python3 -c "
+import sys, os, tempfile
+import importlib.util
+spec = importlib.util.spec_from_file_location('itc', '$SCRIPT_DIR/../scripts/integration-test-closeout.py')
+mod = importlib.util.module_from_spec(spec)
+sys.modules['itc'] = mod
+spec.loader.exec_module(mod)
+
+ok, expected = mod.test_script('/unknown/script.py', '/tmp/build', '/tmp/home')
+if not ok and expected == []:
+    sys.exit(0)
+else:
+    print(f'ok={ok}, expected={expected}')
+    sys.exit(1)
+" >/dev/null 2>&1
+
+if [ "$?" -eq 0 ]; then
+    pass
+else
+    fail "test_script did not handle unknown script name correctly"
 fi
 
 echo ""

@@ -4573,3 +4573,31 @@ Additionally:
 **Expected effect**: auto-gym-trigger.py correctly counts all untested hypotheses including bracket IDs. The gym trigger fires at the same threshold (7) as the algedonic WARNING, ensuring timely experiment recommendations.
 
 **Measured effect**: auto-gym-trigger.py now reports 9 untested hypotheses (was 7). Test 138 passes. All 138 automation tests pass.
+
+## Mutation R52 — 2026-06-06
+
+**Session**: S5 Orchestrator Iteration
+**Files**: `scripts/algedonic-action-plan.py`, `hooks/test-automation.sh`
+**Type**: refinement (bug fix + test coverage expansion)
+**Rationale**: Investigation of the organism's algedonic system revealed **two threshold inconsistencies** in `algedonic-action-plan.py`:
+
+1. **Trigger condition bug**: The active mutation bloat algedonic used `if active_count > 50:` as its trigger condition, but displayed `threshold: 55` in the output. When active mutations reached 51 (after R50 redesignation), the algedonic incorrectly triggered a WARNING even though 51 < 55.
+
+2. **Display mismatch**: The metrics table showed `| Active mutations | {active_count} | ≤ 50 |` even though the target had been revised to 55 in R50.
+
+Additionally, `integration-test-closeout.py` — 360 lines of critical closeout pipeline code — had only **1 behavior test** (Test 30, exit-code only). This meant the internal functions (`verify_consistency`, `test_session_end_hook`, `test_script`) were untested, creating a blind spot in the organism's quality infrastructure.
+
+**Changes**:
+1. Fixed algedonic trigger condition: `if active_count > 50:` → `if active_count > 55:`
+2. Fixed metrics table display: `≤ 50` → `≤ 55`
+3. Rewrote Test 92: Replaced fragile real-file-dependent count test with controlled mock input verifying bold-status row parsing
+4. Added Test 139: Verifies algedonic does NOT trigger at 51 active mutations (threshold 55)
+5. Added Test 140: Verifies integration-test-closeout.py --verbose produces all success markers
+6. Added Test 141: Verifies `verify_consistency` detects all 6 error conditions via inline Python import
+7. Added Test 142: Verifies `test_session_end_hook` detects falsely flagged security report
+8. Added Test 143: Verifies `test_session_end_hook` passes with valid telemetry
+9. Added Test 144: Verifies `test_script` returns failure for unknown script names
+
+**Expected effect**: Algedonic thresholds are internally consistent. integration-test-closeout.py internal functions are directly tested. The test suite is more robust against real-file state changes.
+
+**Measured effect**: 144 automation tests pass, 0 failed. Active mutations: 51 (unchanged, but now correctly below the 55 threshold).

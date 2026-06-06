@@ -137,14 +137,14 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 51 | < 55 | ✅ OK (within target) |
+| Active mutations | 52 | < 55 | ✅ OK (within target) |
 | Historical effective (≥5 builds) | 49 | >15% of active | ✅ 96% |
-| Effective (<5 builds, monitored) | 55 | >30% of active | ✅ 87% |
+| Effective (<5 builds, monitored) | 42 | >30% of active | ✅ 82% |
 | Probationary mutations | 8 | <20 at any time | ✅ 8 (within target) |
-| Removed / redesigned | 18 | ≥2 per 5 builds | ✅ 18 (exceeds target) |
+| Removed / redesigned | 19 | ≥2 per 5 builds | ✅ 19 (exceeds target) |
 | Measured effect fill rate (scored) | 86.6% | ≥80% | ✅ 86.6% |
-| Measured effect fill rate (any entry) | 87.5% | ≥80% | ✅ 87.5% |
-| Removal rate (last 5 builds) | 5 | ≥2 | ✅ Meets target |
+| Measured effect fill rate (any entry) | 88.2% | ≥80% | ✅ 88.2% |
+| Removal rate (last 5 builds) | 6 | ≥2 | ✅ Meets target |
 
 ---
 
@@ -332,3 +332,4 @@
 | R47 | 2026-06-06 S5 | refinement | Remove broken legacy test-hooks.sh + update README + add resurrection-prevention test | effective | 1 | 5 | — | — | S5 iter |
 | R48 | 2026-06-06 S5 | refinement | test-automation.sh maintainability — syntax check loop + section grouping | effective | 1 | 5 | — | — | S5 iter |
 | R51 | 2026-06-06 S5 | refinement | auto-gym-trigger.py bracket-hypothesis parsing fix + threshold alignment 10→7 | effective | 1 | 5 | — | — | S5 iter |
+| R52 | 2026-06-06 S5 | refinement | algedonic-action-plan.py threshold fix 50→55 + integration-test-closeout.py test coverage expansion (6 new tests) | effective | 1 | 5 | — | — | S5 iter |

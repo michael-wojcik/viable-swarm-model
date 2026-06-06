@@ -346,7 +346,7 @@ def main() -> int:
 
     # Determine triggered algedonics
     algedonics: list[dict] = []
-    if active_count > 50:
+    if active_count > 55:
         algedonics.append({
             "name": "Active mutation bloat",
             "value": active_count,
@@ -419,7 +419,7 @@ def main() -> int:
         "",
         f"| Metric | Value | Target |",
         f"|---|---|---|",
-        f"| Active mutations | {active_count} | ≤ 50 |",
+        f"| Active mutations | {active_count} | ≤ 55 |",
         f"| Probationary mutations | {probationary} | ≤ 12 |",
         f"| Untested hypotheses | {untested_count} | ≤ 7 |",
         f"| Skill variety | {skill_ratio} ({used_skills}/{total_skills}) | ≥ 0.70 |",
