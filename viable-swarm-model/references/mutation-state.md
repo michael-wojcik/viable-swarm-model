@@ -60,7 +60,6 @@
 | **PROBATION (Awaiting Measurement)** |
 | FB28-A4 | FB28 Build | append-only | Phase 4 gate strengthening | effective | 1 | 5 | H214 | — | FB31 |
 | FB28-A5 | FB28 Build | append-only | Phase 6 skip prevention | effective | 2 | 4 | H217 | — | FB32 |
-| ~~FB28-S5~~ | FB28 Build | structural | Agent timeout fallback protocol | **monitor** | 1 | 2 | H217 | — | 5 timeouts in FB30; fallback protocol insufficient |
 | S6 | FB28 Build | append-only | GraphQL context builder fail-closed | effective | 1 | 5 | — | — | FB31 |
 | A6 | FB28 Build | structural | Knowledge broker manual update requirement | effective | 1 | 4 | H213 | — | FB31 |
 | R3 | FB28 Build | refinement | Process audit ≥80 fitness bar threshold | effective | 1 | 5 | — | — | FB31 |
@@ -82,6 +81,7 @@
 | ~~PM7~~ | FB29 Build | append-only | S5 manual work cap (≤1 file) | **REMOVED** | 1 | 1 | — | — | Prompt-only rules cannot prevent boundary violations under pressure |
 | ~~A7~~ | FB28 Build | append-only | Timeout budget ledger (>2 per phase = BLOCK) | **REMOVED** | 3 | 2 | H217 | — | R-5 in cemetery — S5 never maintained ledger; >2 timeouts occurred in FB30 without triggering redesign; rule was prompt-only with no tool enforcement |
 | ~~PM3~~ | FB29 Build | structural | Mutation-state auto-update hook | **REMOVED** | 2 | 2 | — | — | R-6 in cemetery — Check 4 verified build ID presence but not score backfill; S5 still forgot updates; superseded by session-end.sh Check 11 + manual S5 iteration discipline |
+| ~~FB28-S5~~ | FB28 Build | structural | Agent timeout fallback protocol | **REMOVED** | 1 | 2 | H217 | — | R-7 in cemetery — Fallback protocol eliminated timeouts in FB29 but 5 timeouts recurred in FB30; protocol insufficient under load; task splitting (M-FB30-1, FB31-1) is more effective |
 | FB26-S6 | FB26 Build | structural | Process auditor broker scored check | **REDESIGNED** | 2 | 5→redesign | — | — | PM1 attempted, PM1 removed; M-FB30-1 replaces |
 | FB27-1 | FB27 Build | append-only | UUID coercion `model_validator` | **REDESIGNED** | 1 | 2 | — | — | New rule applied FB28 |
 | SM1 | 2026-06-04 Audit | structural | vsm_variety_engineer agent | redesigned | 0 | — | — | — | Superseded by R8 (organism-vitals.py) and R25 (Mode A/B workflow) |
@@ -97,11 +97,11 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 76 | < 50 | ⚠️ WARNING (exceeds target) |
+| Active mutations | 75 | < 50 | ⚠️ WARNING (exceeds target) |
 | Historical effective (≥5 builds) | 10 | >15% of active | ✅ 13% |
-| Effective (<5 builds, monitored) | 65 | >30% of active | ✅ 85% |
+| Effective (<5 builds, monitored) | 65 | >30% of active | ✅ 87% |
 | Probationary mutations | 8 | <20 at any time | ✅ 8 (within target) |
-| Removed / redesigned | 9 | ≥2 per 5 builds | ✅ 9 (exceeds target) |
+| Removed / redesigned | 10 | ≥2 per 5 builds | ✅ 10 (exceeds target) |
 | Measured effect fill rate (scored) | 88/103 | ≥80% | ✅ 85% |
 | Measured effect fill rate (any entry) | 89/103 | ≥80% | ✅ 86% |
 | Removal rate (last 5 builds) | 4 | ≥2 | ✅ Meets target |

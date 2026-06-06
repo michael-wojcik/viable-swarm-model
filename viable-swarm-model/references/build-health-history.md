@@ -1158,3 +1158,42 @@ This bug meant that mutations with bold status formatting were invisible to the 
 ### Next Highest-Leverage Constraint
 **System 5 (Policy) / S5→S5 channel — active mutation bloat at 76** (target <50) remains CRITICAL. With FB28-S5 now visible (score 2, 1 build, note: "5 timeouts in FB30; fallback protocol insufficient"), it is a clear removal candidate. Removing it would reduce active to 75. The 8 unmeasured probationary mutations (SM3, SM7, SM8, FB32-1..5) still need fitness build validation. Without a real fitness build, the organism cannot make meaningful progress toward the <50 target through normal lifecycle progression. The next frontier is either: (a) remove FB28-S5, (b) begin consolidating the 29 S5 iteration mutations (R5–R33) into broader meta-rules, or (c) revise the <50 target to reflect actual organism complexity.
 
+
+---
+
+## 2026-06-06 — S5 Orchestrator Iteration (R38)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 channel — active mutation bloat with visible failing monitor mutation**: Active mutations remained at **76** (target <50) after R37's parser fix made FB28-S5 visible. FB28-S5 (Agent timeout fallback protocol) had score 2, 1 build, with explicit note: "5 timeouts in FB30; fallback protocol insufficient". The protocol scored 5/5 in FB29 (0 timeouts) but the same failure mode recurred in FB30 with 5 timeouts, demonstrating the protocol was reactive and insufficient under load. More effective proactive solutions (M-FB30-1 architect task splitting, FB31-1 4-spawn split) had already been applied. Leaving FB28-S5 in `monitor` status inflated the active count and created false confidence.
+
+### Change Made
+**Structural mutation R38**: Removed failing monitor mutation FB28-S5.
+- FB28-S5 (`monitor` → `REMOVED`): Agent Timeout Fallback Protocol subsection removed from `SKILL.md` (lines 799–812)
+- Rationale: Fallback protocol was reactive; task splitting (M-FB30-1, FB31-1) is more effective at preventing timeouts proactively
+- Row moved to REMOVED/REDESIGNED section in `mutation-state.md` with strikethrough ID and removal rationale
+- Removal entry appended to `mutation-log.md` with full failure evidence
+- Integration Health metrics updated: active **75** (was 76), removed/redesigned **10** (was 9), effective+monitor ratio **87%** (was 85%)
+
+### Test Results
+- `bash hooks/test-automation.sh`: **93 passed, 0 failed** (was 92 passed, 0 failed)
+- Test 92 updated: now expects 75 active mutations (FB28-S5 removed)
+- Test 93: FB28-S5 is properly redesignated as REMOVED in the real mutation-state.md
+- `validate-mutation-state.sh`: ✅ PASS
+
+### Files Modified
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/SKILL.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 5 (Policy) / S5→S5 channel — active mutation bloat at 75** (target <50). The organism has now removed 3 failing monitor mutations (A7, PM3, FB28-S5) across R35 and R38, reducing active from 78 to 75. The remaining 2 monitor mutations have weaker removal evidence:
+- **M-FB30-1** (score 3, 1 build): "Architect task splitting (3 spawns)" — borderline, needs more builds
+- **FB31-5** (score 3, 1 build): "Knowledge broker auto-update reminder" — borderline
+
+The 8 unmeasured probationary mutations (SM3, SM7, SM8, FB32-1..5) still await fitness build validation. Without a real fitness build, the organism cannot make meaningful progress toward <50 through normal lifecycle progression. The remaining paths: (a) consolidate the 29 S5 iteration mutations (R5–R33) into broader meta-rules, (b) revise the <50 target, or (c) continue removing borderline monitor mutations once they accumulate more build evidence.
+

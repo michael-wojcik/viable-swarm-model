@@ -4183,3 +4183,26 @@ The check created friction (stop-verifier could block on missing build ID) witho
 **Measured effect**: Removal validated by automation suite. Active mutations reduced by 1.
 
 ---
+
+## Mutation FB28-S5 — REMOVED 2026-06-06 (S5 Orchestrator Iteration R38)
+
+**Session**: S5 Orchestrator Iteration R38
+**Type**: removal
+**Target failure mode**: Same as original — FB28 had 5 agent timeouts; S5 manually completed foundation audit, test writing, and main.py wiring
+**Rationale**: FB28-S5 was applied in FB28 as a structural mutation adding the "Agent Timeout Fallback Protocol" to SKILL.md. The protocol mandated re-spawning with narrower scope on first timeout, `vsm_explore` fallback on second timeout, and S5 manual work capped at ONE file.
+
+Measured evidence of failure:
+1. FB29 scored 5/5 (0 timeouts) — initial success
+2. FB30 had **5 timeouts across 3 phases** despite the protocol being active — the fallback protocol was insufficient under load
+3. The note in mutation-state.md explicitly states: "5 timeouts in FB30; fallback protocol insufficient"
+4. More effective solutions were later found: M-FB30-1 (architect task splitting, 3 spawns) and FB31-1 (architect 4-spawn split) address the root cause (task too large for single agent) rather than the symptom (timeout after the fact)
+
+The timeout fallback protocol was a reactive measure. The proactive measure — splitting tasks before spawning — has proven more effective. The protocol section is removed from SKILL.md.
+
+**Files modified**:
+- `references/mutation-state.md` — Status changed from `monitor` → `REMOVED`, moved to REMOVED/REDESIGNED section
+- `SKILL.md` — Agent Timeout Fallback Protocol subsection removed (lines 799–812)
+
+**Measured effect**: Removal validated by automation suite. Active mutations reduced by 1.
+
+---

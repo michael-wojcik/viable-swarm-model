@@ -796,21 +796,6 @@ across multiple focused spawns:
 - Testing: spawn backend tester per domain (auth, courses, uploads)
 - Auditing: ≤5 files per auditor batch (see vsm_auditor.md)
 
-**Agent Timeout Fallback Protocol (FB28-sourced — S5 structural mutation)**
-When an agent times out, **S5 MUST NOT complete the agent's work manually**.
-Manual completion by S5 violates the VSM parallelization premise and consumes
-S5 context needed for orchestration.
-
-Correct fallback sequence:
-1. **First timeout**: Re-spawn the SAME agent type with a **narrower scope**.
-   - Auditor on 15 files → 3 auditors on 5 files each
-   - Coder on full backend → 2 coders (models+schemas, then routers)
-   - Tester on entire suite → per-domain testers (auth, courses, uploads)
-2. **Second timeout** (re-spawn also fails): Spawn `vsm_explore` to do read-only
-   file mapping / import verification as a lightweight fallback.
-3. **Last resort** (explore also fails): S5 may manually verify ONE file only.
-   Anything larger must be escalated to the user or the build must be scoped down.
-
 **S5 Manual Work Cap (FB29-sourced)**
 S5 may manually fix at most **ONE file per build**. Any additional manual fixes
 MUST be routed to fix agents (`vsm_backend_fix_agent`, `vsm_frontend_fix_agent`).

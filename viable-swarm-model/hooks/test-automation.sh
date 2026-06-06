@@ -3957,10 +3957,26 @@ for line in text.splitlines():
 print(len(rows))
 ")
 
-if [ "$ACTIVE_COUNT" -eq 76 ]; then
+if [ "$ACTIVE_COUNT" -eq 75 ]; then
     pass
 else
-    fail "expected 76 active mutations (including FB28-S5), got $ACTIVE_COUNT"
+    fail "expected 75 active mutations, got $ACTIVE_COUNT"
+fi
+
+# ============================================================================
+# Test 93: FB28-S5 is redesignated as REMOVED in mutation-state.md
+# ============================================================================
+
+echo -n "TEST: FB28-S5 is redesignated as REMOVED in mutation-state.md ... "
+
+MSTATE_REAL="/Users/mj/vsm/viable-swarm-model/references/mutation-state.md"
+FB28S5_STATUS=$(grep -E '^\| ~~FB28-S5~~' "$MSTATE_REAL" | head -1)
+
+if echo "$FB28S5_STATUS" | grep -q 'REMOVED' && \
+   ! grep -E '^\| FB28-S5\b' "$MSTATE_REAL" | grep -qv 'REMOVED'; then
+    pass
+else
+    fail "FB28-S5 not properly redesignated as REMOVED"
 fi
 
 # ============================================================================
