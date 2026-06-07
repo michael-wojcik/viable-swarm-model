@@ -6,6 +6,39 @@
 ---
 ---
 
+## 2026-06-07 — S5 Orchestrator Iteration (R64)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 channel — R60 approaching historical eligibility but blocked by iteration lifecycle**: R60 was created during the R60 S5 iteration and had survived R61, R62, and R63 (plus its own creation iteration), reaching `builds_tested=4`. The S5 iteration policy requires `builds_tested >= 5` for historical promotion. Without running the increment counter at the start of R64, R60 would remain blocked at 4 indefinitely, preventing the organism from autonomously reducing active mutation pressure.
+
+### Change Made
+**Structural mutation R64**: Ran S5 iteration counter default increment, promoted R60 to historical.
+- Ran `increment-s5-iteration-counter.py`: R60→5, R61→4, R62→3.
+- Promoted R60 from `effective` → `historical` (builds_tested=5, score=5).
+- Updated Integration Health: active=56 (was 57), historical effective=64 (was 63).
+- `hooks/test-automation.sh`: Updated Tests 185-187 to verify R59/R60 both historical, R61/R62 builds_tested >= 2.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **196 passed, 0 failed** (was 195 passed, 0 failed)
+- Test 185: R59 historical with builds_tested=5 → PASS
+- Test 186: R60 historical with builds_tested=5 → PASS
+- Test 187: R61/R62 builds_tested >= 2 → PASS
+- `mutation-portfolio-health.py`: Confirms total_active=56, probationary=0, effective=56, all metrics green
+
+### Files Modified
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 channel — R61 approaching historical eligibility**: R61 is now at builds_tested=4. After one more S5 iteration with the counter run, it will reach 5 and be eligible for historical promotion. This would reduce active mutations from 56 to 55, creating even more headroom. Alternatively, **System 4 (Adaptation/Intelligence) / S4→S4 channel — 6 untested hypotheses remain**: H104, H152, H153, H156, H[N+3], H[N+4] still lack empirical validation. With active mutations now at 56 and all infrastructure solid, the organism's most valuable next step may be an actual fitness build or targeted gym experiment rather than further infrastructure tuning.
+
+---
+---
+
 ## 2026-06-07 — S5 Orchestrator Iteration (R63)
 
 ### Diagnosed Constraint
