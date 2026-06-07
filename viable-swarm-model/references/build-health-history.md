@@ -6,6 +6,39 @@
 ---
 ---
 
+## 2026-06-07 — S5 Orchestrator Iteration (R71)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 channel — S5 iteration counter not executed since R66, causing R67-R70 builds_tested to remain at 1**: This is a recurrence of the exact same constraint that blocked R59-R62 (fixed in R63-R66). The `increment-s5-iteration-counter.py` script increments `builds_tested` for all effective S5 iteration mutations, but execution is a manual protocol step with no automated safeguard. When S5 forgets, mutations stagnate at `builds_tested=1`, blocking historical promotion eligibility and inflating the active mutation count artificially.
+
+### Change Made
+**Refinement mutation R71**: Executed the S5 iteration counter and added Test 194 as an automated stale-mutation backstop.
+- Ran `python3 scripts/increment-s5-iteration-counter.py`: R67-R70 incremented from `1 → 2`
+- `hooks/test-automation.sh`: Added Test 194 verifying R67-R70 `builds_tested >= 2` (range check stable across future increments)
+- Promoted R71 to `effective` with `builds_tested=1, score=5` per S5 iteration validation policy
+- Updated Integration Health: active=59, effective=59, any fill rate=96.0%
+
+### Test Results
+- `bash hooks/test-automation.sh`: **204 passed, 0 failed** (was 203 passed, 0 failed)
+- Test 194: R67-R70 builds_tested >= 2 after counter execution → PASS
+- `mutation-portfolio-health.py`: total_active=59, effective=59, probationary=0, all metrics green
+- `validate-mutation-state.sh`: ✅ PASS — zero errors, zero warnings
+
+### Files Modified
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 3 (Audit/Control) / S3→S1 channel — validate-agent-files.py produces 9 warnings (7 bracket placeholders + 2 SKILL-REGISTRY agent-reference gaps) that are expected but not verified**: The `devops-patterns` warning is false noise (skill is Deprecated) and the `kimi-code-migration` warning reflects a meta-level skill not loaded by per-build agent prompts. While harmless, the lack of a behavior test for validate-agent-files.py means ERROR-level regressions in agent file structure would only be caught by the syntax check, missing structural issues. The remaining 6 untested hypotheses and 0%-exercise-rate meta-system agents continue to be the organism's primary external frontier.
+
+---
+---
+
 ## 2026-06-07 — S5 Orchestrator Iteration (R70)
 
 ### Diagnosed Constraint

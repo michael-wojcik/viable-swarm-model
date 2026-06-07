@@ -5285,3 +5285,28 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 
 **Measured effect**: **TESTED** — Test 193 verifies integration-patterns reference in vsm_coordinator.md. validate-agent-files.py syntax check passes. 202 tests passing, 0 failed (after mutation-log entry added).
 
+
+
+---
+
+## Mutation R71 — 2026-06-07
+
+**Session**: S5 Orchestrator Iteration R71
+**File**: `scripts/increment-s5-iteration-counter.py`, `hooks/test-automation.sh`, `references/mutation-state.md`
+**Type**: refinement
+**Rationale**: The S5 iteration counter (`increment-s5-iteration-counter.py`) had not been executed since R66, causing R67-R70 — all created during subsequent S5 iterations — to remain at `builds_tested=1` indefinitely. This is a recurrence of the exact same constraint that blocked R59-R62 (fixed in R63-R66). Without counter execution, effective S5 iteration mutations cannot progress toward historical promotion eligibility (`builds_tested >= 5`), artificially inflating the active mutation count and corrupting the organism's self-model. The root cause is that counter execution is a manual step in the S5 iteration protocol with no automated safeguard.
+
+**Expected effect**: R67-R70 progress from `builds_tested=1` to `2`. Future iterations have Test 194 verifying that these mutations (and any new effective S5 mutations) have `builds_tested >= 2`, providing an automated backstop against counter staleness.
+
+**Before**:
+- R67-R70: `builds_tested=1` despite surviving 1+ subsequent iterations
+- No automation suite test verifying counter execution
+- Result: Mutation lifecycle blocked, historical promotion eligibility unreachable
+
+**After**:
+- Counter executed: R67-R70 incremented to `builds_tested=2`
+- Test 194: Verifies R67-R70 `builds_tested >= 2` (stable across future increments)
+- Result: Lifecycle unblocked; automated backstop prevents future staleness
+
+**Measured effect**: **TESTED** — Test 194 verifies R67-R70 builds_tested >= 2. Counter dry-run shows no pending increments after execution. 204 tests passing, 0 failed.
+

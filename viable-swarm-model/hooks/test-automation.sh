@@ -2665,6 +2665,23 @@ else
 fi
 
 # ============================================================================
+# Test 194: R67-R70 builds_tested >= 2 (counter executed at least once) (R71)
+# ============================================================================
+
+echo -n "TEST: R67-R70 builds_tested >= 2 after S5 iteration counter ... "
+
+R67_BT=$(grep "^| R67 " "$MUTATION_STATE" | awk -F'|' '{print $7}' | tr -d ' ')
+R68_BT=$(grep "^| R68 " "$MUTATION_STATE" | awk -F'|' '{print $7}' | tr -d ' ')
+R69_BT=$(grep "^| R69 " "$MUTATION_STATE" | awk -F'|' '{print $7}' | tr -d ' ')
+R70_BT=$(grep "^| R70 " "$MUTATION_STATE" | awk -F'|' '{print $7}' | tr -d ' ')
+
+if [ "$R67_BT" -ge 2 ] && [ "$R68_BT" -ge 2 ] && [ "$R69_BT" -ge 2 ] && [ "$R70_BT" -ge 2 ]; then
+    pass
+else
+    fail "expected R67-R70 builds_tested >= 2, got R67=$R67_BT R68=$R68_BT R69=$R69_BT R70=$R70_BT"
+fi
+
+# ============================================================================
 # Test 192: session-end.sh does NOT warn about deprecated knowledge broker (R69)
 
 echo -n "TEST: session-end.sh no knowledge-broker warning on plan.md without refs ... "
