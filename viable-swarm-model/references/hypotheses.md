@@ -192,3 +192,82 @@
 **Result**: Backend code agents completed without timeout (improvement). Architect and backend tester still timed out. H217 scope is too narrow — covers implementation agents but not design/test agents.
 **Rationale**: Code-writing agents benefit from smaller tasks; design agents producing multi-document architecture specs still exceed timeout limits.
 
+
+---
+
+## H401: Tool-Enforced GraphQL Stub Detection Prevents Stub Mutations Reaching Phase 6
+
+**Status**: untested
+**Proposed**: 2026-06-06
+**Rationale**: FB34 probation mutation FB34-1 (GraphQL mutation completeness checklist) did not prevent six `INTERNAL_ERROR` stub mutations from reaching Phase 6. The prompt-only checklist was ignored until `vsm_auditor` flagged the parity gap in the implementation audit.
+**Source**: Fitness build FB34, Phase 6 implementation audit
+**Experiment**: Add a `scripts/check-graphql-stubs.py` hard gate invoked in Phase 3c and Phase 6. It introspects the Strawberry schema and fails if any `@strawberry.mutation` body contains only `pass`, `raise`, or returns a hard-coded `INTERNAL_ERROR` / `NotImplemented` payload. Run the next GraphQL-enabled build with the gate enabled.
+**Expected**: Zero stub mutations reach the implementation audit; Phase 3c coordinator blocks on the gate instead of documenting parity gaps later.
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
+
+---
+
+## H402: Mandatory Frontend Fix-Agent Sign-Off Improves Traceability
+
+**Status**: untested
+**Proposed**: 2026-06-06
+**Rationale**: The SocketProvider `authenticate` emit fix and the `queries.ts` DRIVERS-query additions were applied during the FB34 fix wave, but `.kimi/` contains no `vsm_frontend_fix_agent` report. The fixes are traceable only through implementation-audit re-checks, not through a dedicated fix-agent artifact.
+**Source**: Fitness build FB34, Phase 7 fix wave
+**Experiment**: Update `SKILL.md` Phase 7 to require a `vsm_frontend_fix_agent` spawn (and `.kimi/frontend-fix-report.md`) whenever a frontend file is modified in the fix wave. Measure report presence in the next three builds that require frontend fixes.
+**Expected**: 100% of frontend-modifying fix waves produce a dedicated report; S5 can verify scope and regression status without relying on auditor re-checks.
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
+
+---
+
+## H403: Security Agent Frontend Source Scan Catches Persisted JWT and Fallback URIs
+
+**Status**: untested
+**Proposed**: 2026-06-06
+**Rationale**: `security-report.md` in FB34 states "No `frontend/src/**/*.ts` or `frontend/src/**/*.tsx` files were found" despite the existence of `src/pages/*.tsx` and `src/sio/SocketProvider.tsx`. The security gate therefore missed `localStorage` JWT persistence, Apollo Client fallback URIs, and CORS credential usage.
+**Source**: Fitness build FB34, Phase 5 security gate
+**Experiment**: Append a mandatory frontend-source scan block to `agents/vsm_security.md` requiring `find frontend/src -type f` and explicit checks for `localStorage.setItem("token"`, `|| 'http://localhost'`, and `credentials: 'include'` without explicit origin. Run the next build with the updated prompt.
+**Expected**: ≥1 MEDIUM finding per build that persists JWT in `localStorage` or bakes localhost fallbacks.
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
+
+---
+
+## H404: GraphQL Mutation Test Coverage Floor Prevents Stub Mutations Passing Phase 4
+
+**Status**: untested
+**Proposed**: 2026-06-06
+**Rationale**: The FB34 backend test suite reported 33/33 passing while six GraphQL mutations returned `INTERNAL_ERROR`. The existing tests did not exercise the mutation implementations, so stubs were invisible to the Phase 4 gate.
+**Source**: Fitness build FB34, Phase 4 testing
+**Experiment**: Append a rule to `vsm-stack-skills/tester-backend/SKILL.md` (and `agents/vsm_backend_tester.md`) requiring at least one test per `@strawberry.mutation` in the schema, with an explicit assertion that the resolver does not return `INTERNAL_ERROR`. Measure stub escape rate in the next GraphQL build.
+**Expected**: Zero stub mutations pass the Phase 4 test suite.
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
+
+---
+
+## H405: Session-End Mutation-State Backfill Ensures All Probation Mutations Are Scored
+
+**Status**: untested
+**Proposed**: 2026-06-06
+**Rationale**: At the end of FB34, mutation-state rows FB34-1, FB34-2, FB34-3 still showed `Builds Tested = 0` and `Score = —` until manually backfilled. Manual S5 discipline is insufficient under pressure; the organism repeatedly leaves probation mutations unmeasured.
+**Source**: Fitness build FB34, Phase 8b mutation tracking
+**Experiment**: Add a `scripts/backfill-mutation-state.py` invocation to `session-end.sh` that increments `Builds Tested` and writes a provisional effectiveness score (1–5) for every probation/monitor mutation referenced in `.kimi/mutations-applied.md`. Verify mutation-state within 1 hour of build close in the next fitness build.
+**Expected**: 100% of probation/monitor mutations linked to a completed build have `Builds Tested ≥ 1` and a numeric score before S5 declares Phase 8 complete.
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
+
+---
+
+## H406: Skill Variety Metric Should Parse Agent Reports
+
+**Status**: untested
+**Proposed**: 2026-06-06
+**Rationale**: `organism-vitals.md` in FB34 lists `integration-patterns` as an unused skill, yet `integration-contract.md` explicitly cites `integration-patterns` under "Skills consulted." The current metric counts skill reads only from S5 or Phase 0 load, not from agent reports, leading to undercounting and false variety deficits.
+**Source**: Fitness build FB34, Phase 0 / Phase 6
+**Experiment**: Refactor `scripts/organism-vitals.py` to grep `.kimi/*-report.md` and `.kimi/*-audit.md` for `Skills consulted:` / `Skills read:` headers and union those skill IDs with Phase 0 load. Compare the resulting skill variety score against the legacy score for FB34.
+**Expected**: Skill variety for FB34 rises to ≥0.85 (from 0.75) because `integration-patterns`, `graphql-pitfalls`, and `dependency-drift-pitfalls` are confirmed consulted.
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
+

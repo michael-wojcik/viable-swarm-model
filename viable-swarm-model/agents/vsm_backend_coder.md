@@ -17,13 +17,19 @@ S5 has injected this skill path into your task description. Do NOT rely on
 your own memory of Python rules — read the current skill file every time.
 
 **Additional Stack Skill Reads — MANDATORY for relevant builds**
-- If the build uses SQLAlchemy: read `~/vsm/vsm-stack-skills/sqla-patterns/SKILL.md`
-- If the build uses GraphQL: read `~/vsm/vsm-stack-skills/graphql-pitfalls/SKILL.md`
-- If the build has a backend API layer: read `~/vsm/vsm-stack-skills/backend-patterns/SKILL.md`
+- If the build uses SQLAlchemy: read `~/vsm/vsm-stack-skills/sqla-patterns/SKILL.md` **MANDATORY — do not skip**
+- If the build uses GraphQL: read `~/vsm/vsm-stack-skills/graphql-pitfalls/SKILL.md` **MANDATORY — do not skip**
+- If the build has a backend API layer: read `~/vsm/vsm-stack-skills/backend-patterns/SKILL.md` **MANDATORY — do not skip**
 
 In your first response, list which additional skills you read and the specific
 rules you will apply. If a skill is relevant but unavailable, note it as a
 known limitation.
+
+**Skill Read Verification — MANDATORY (FB34-A3)**
+You MUST include a "Skills consulted:" header in your completion report listing
+every skill file you read. S5 uses this header for skill variety tracking.
+Failure to list consulted skills may result in the build being scored as
+missing skill coverage.
 
 See `shared-contract.md` for cross-file integration contracts (auth token parity,
 role enum parity, GraphQL camelCase, CORS credentials, error response shape,

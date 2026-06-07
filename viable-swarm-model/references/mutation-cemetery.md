@@ -68,3 +68,56 @@ re-adding the same broken rules.
 **Replacement**: Explicit Phase 0 manual checklist — S5 reads skill-state.md, mutation-state.md, and hypotheses.md manually before spawning any agents.
 **Builds since removal**: 0
 **Recurrence since removal**: —
+
+### R-5 — FB31-5: Knowledge broker auto-update reminder
+
+**Removed**: 2026-06-06 (FB34 Phase 8c-iii removal gate)
+**Type**: append-only
+**Target failure**: Knowledge broker not auto-updated at end of builds
+**Applied**: 2026-06-04 (FB31)
+**Ineffective in builds**: FB33, FB34 (2 builds tested)
+**Original rule text**: "vsm_meta MUST append a knowledge-broker update checklist item to its report; S5 MUST update the broker before declaring Phase 8 complete."
+**Rationale for removal**: Prompt-only reminder was ignored in both FB33 and FB34. The broker was last updated 2026-06-04 despite builds on 2026-06-06. Manual S5 discipline is insufficient under session-end time pressure.
+**Replacement**: FB34-C1 — tool-enforced `scripts/backfill-mutation-state.py` invoked from `hooks/session-end.sh`, plus an explicit broker-update step in the session-end hook.
+**Builds since removal**: 0
+**Recurrence since removal**: —
+
+### R-6 — FB34-1: GraphQL mutation completeness checklist
+
+**Removed**: 2026-06-06 (FB34 Phase 8c-iii removal gate)
+**Type**: append-only
+**Target failure**: GraphQL mutations stubbed with `INTERNAL_ERROR`
+**Applied**: 2026-06-06 (FB34)
+**Ineffective in builds**: FB34 (1 build tested)
+**Original rule text**: "Backend coder MUST implement all GraphQL mutations with RBAC and tenant parity; no `INTERNAL_ERROR` stubs allowed."
+**Rationale for removal**: Prompt-only checklist was ignored. Six mutations (`updateRoute`, `deleteRoute`, `assignRoute`, `createDelivery`, `updateDelivery`, `deleteDelivery`) were stubbed and reached Phase 6 before `vsm_auditor` caught them (`implementation-audit.md` lines 30, 75–82).
+**Replacement**: FB34-C1 — `scripts/check-graphql-stubs.py` introspects the Strawberry schema and fails the gate if any mutation body is stubbed.
+**Builds since removal**: 0
+**Recurrence since removal**: —
+
+### R-7 — FB34-2: GraphQL session cleanup extension pattern
+
+**Removed**: 2026-06-06 (FB34 Phase 8c-iii removal gate)
+**Type**: append-only
+**Target failure**: GraphQL `AsyncSession` leaked in `get_graphql_context`
+**Applied**: 2026-06-06 (FB34)
+**Ineffective in builds**: FB34 (1 build tested)
+**Original rule text**: "GraphQL context factory returning a DB session MUST be paired with a schema extension or middleware that guarantees cleanup."
+**Rationale for removal**: Prompt-only pattern was ignored. `get_graphql_context` created an `AsyncSession` but never closed it on the success path (`implementation-audit.md` line 30; `lessons.md` L5). The fix was applied only after Phase 6 audit.
+**Replacement**: FB34-C1 — `scripts/integration-hard-gates.py` regex-checks `app/graphql.py` for unclosed `AsyncSession` patterns and fails the gate.
+**Builds since removal**: 0
+**Recurrence since removal**: —
+
+### R-8 — FB34-3: SocketProvider authenticate event protocol
+
+**Removed**: 2026-06-06 (FB34 Phase 8c-iii removal gate)
+**Type**: append-only
+**Target failure**: SocketProvider fails to emit `authenticate` after connect
+**Applied**: 2026-06-06 (FB34)
+**Ineffective in builds**: FB34 (1 build tested)
+**Original rule text**: "Socket.IO client provider MUST emit the authenticate event named in `api-spec.md`/`sio.py`; coordinator checklist should verify event-name dictionary parity."
+**Rationale for removal**: Prompt-only protocol was ignored. Initial `SocketProvider.tsx` passed the token in handshake `auth` but never emitted the server-required `authenticate` event (`implementation-audit.md` line 54; `lessons.md` L4).
+**Replacement**: FB34-C1 — `scripts/integration-hard-gates.py` regex-checks `src/sio/SocketProvider.tsx` for the `authenticate` emit and fails the gate if absent.
+**Builds since removal**: 0
+**Recurrence since removal**: —
+

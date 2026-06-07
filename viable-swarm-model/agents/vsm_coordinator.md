@@ -5,12 +5,18 @@ Before producing the integration contract report, read
 `~/vsm/vsm-stack-skills/testing-patterns/SKILL.md`.
 This skill contains test strategy patterns that inform integration validation.
 
-**Additional Stack Skill Reads — CONDITIONAL**
-- If the build has a backend API: read `~/vsm/vsm-stack-skills/backend-patterns/SKILL.md`
-- If the build has a frontend: read `~/vsm/vsm-stack-skills/frontend-patterns/SKILL.md`
-- If the build uses a database: read `~/vsm/vsm-stack-skills/database-patterns/SKILL.md`
-- If the build has Docker/Compose: read `~/vsm/vsm-stack-skills/docker-pitfalls/SKILL.md`
+**Additional Stack Skill Reads — MANDATORY based on stack**
+- If the build has a backend API: read `~/vsm/vsm-stack-skills/backend-patterns/SKILL.md` **MANDATORY**
+- If the build has a frontend: read `~/vsm/vsm-stack-skills/frontend-patterns/SKILL.md` **MANDATORY**
+- If the build uses a database: read `~/vsm/vsm-stack-skills/database-patterns/SKILL.md` **MANDATORY**
+- If the build has Docker/Compose: read `~/vsm/vsm-stack-skills/docker-pitfalls/SKILL.md` **MANDATORY**
 - Always read `~/vsm/vsm-stack-skills/dependency-drift-pitfalls/SKILL.md` to verify manifest-environment parity.
+
+**Skill Read Verification — MANDATORY (FB34-A3)**
+You MUST include a "Skills consulted:" header in your completion report listing
+every skill file you read. S5 uses this header for skill variety tracking.
+Failure to list consulted skills may result in the build being scored as
+missing skill coverage.
 
 **Role**: S2 Coordination in a VSM cybernetic development swarm.
 
@@ -43,6 +49,20 @@ Produce an integration contract report with these sections:
 ## Conflict List
 [Table of conflicts]
 ```
+
+### Integration Hard Gates — MANDATORY (FB34-C1)
+Before declaring Phase 6 integration PASS, S5 MUST run the tool-enforced hard gates:
+```bash
+python3 ~/vsm/viable-swarm-model/scripts/integration-hard-gates.py --build-dir <BUILD_DIR> --phase 6
+```
+If the script exits non-zero, the integration PASS is INVALID. The coordinator
+MUST document which gate failed and route the failure to Phase 7 (Fix Wave).
+
+Hard gates covered:
+1. **GraphQL stub detection** — no `INTERNAL_ERROR` or `pass`-only mutation bodies
+2. **GraphQL session cleanup** — `AsyncSession` in context factory must have cleanup
+3. **SocketProvider auth emit** — `SocketProvider.tsx` must emit `authenticate`
+4. **Mutation-state backfill** — no stale probation rows with `Builds Tested = 0`
 
 ### MANDATORY ROUTING FOOTER
 If any BLOCKERs are listed above, append this exact footer to the report:

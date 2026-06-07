@@ -296,6 +296,32 @@ def main() -> int:
                 except ValueError:
                     pass
 
+    # --- Parse agent reports for skill reads (FB34-R1) ---
+    # Agent reports in .kimi/ may cite skills under "Skills consulted:" or
+    # "Skills read:" headers. Union these with the longitudinal log to improve
+    # accuracy and prevent false "unused" flags.
+    if args.build_dir:
+        build_kimi = Path(args.build_dir) / ".kimi"
+        if build_kimi.exists():
+            for report_file in build_kimi.glob("*-report.md"):
+                try:
+                    text = report_file.read_text()
+                    for match in re.finditer(r"^[\*\-]\s*(\S+)-patterns\b", text, re.MULTILINE):
+                        skill_name = match.group(1) + "-patterns"
+                        if skill_name in full_skills and skill_name not in seen_skills:
+                            seen_skills.add(skill_name)
+                    for match in re.finditer(r"^[\*\-]\s*(\S+)-pitfalls\b", text, re.MULTILINE):
+                        skill_name = match.group(1) + "-pitfalls"
+                        if skill_name in full_skills and skill_name not in seen_skills:
+                            seen_skills.add(skill_name)
+                    for match in re.finditer(r"Skills (consulted|read):?\s*([\s\S]*?)(?=\n#|\n---|$)", text, re.IGNORECASE):
+                        block = match.group(2)
+                        for word in re.findall(r"[\w\-]+", block):
+                            if word in full_skills and word not in seen_skills:
+                                seen_skills.add(word)
+                except Exception:
+                    pass
+
     skills_total = len(full_skills)
     skills_used = len(seen_skills)
     skill_variety = round(skills_used / skills_total, 2) if skills_total else 0.0

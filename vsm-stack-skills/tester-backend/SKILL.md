@@ -110,3 +110,25 @@ async def test_graphql_register_password_too_short(client):
 **Source**: FB29 had only 3 GraphQL tests: introspection, published articles query,
 and `me` query. Zero mutation tests. GraphQL password bypass (HIGH-1) and ownership
 gap (HIGH-2) were only caught by security audit, not tests.
+
+---
+
+## Rule: GraphQL Mutation Coverage Floor — No Stub Mutations (FB34-A2)
+
+**Status**: Active (FB34-sourced)
+**Severity**: BLOCKER (untested mutation stubs escape the Phase 4 gate)
+**Applies to**: `vsm_backend_tester`, `vsm_auditor`
+
+FB34 demonstrated that 33/33 backend tests passed while six GraphQL mutations returned `INTERNAL_ERROR`. The existing test suite did not exercise the mutation implementations, so stubs were invisible to the Phase 4 hard gate.
+
+**Required rule**:
+1. The backend test suite MUST contain at least **one test per `@strawberry.mutation`** in the schema.
+2. Each mutation test MUST assert that the resolver does **NOT** return a hard-coded `INTERNAL_ERROR`, `NotImplemented`, or `None` for the success path.
+3. If a mutation resolver body contains only `pass`, `raise`, or a hard-coded error payload, the test MUST fail.
+4. The auditor MUST verify mutation coverage by cross-referencing `app/graphql.py` `@strawberry.mutation` decorators against test names in the test files.
+
+**Enforcement**:
+- If mutation coverage is < 100% (any mutation untested), score Phase 4 as ISSUE.
+- If stub mutations pass the suite, score Phase 4 as BLOCKER — the gate is not functioning.
+
+**Source**: FB34 backend tests 33/33 passed with 6 `INTERNAL_ERROR` stub mutations (`implementation-audit.md` lines 30, 75–82).

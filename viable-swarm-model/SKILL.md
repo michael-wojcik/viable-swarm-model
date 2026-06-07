@@ -1207,6 +1207,21 @@ Phase 6 is NOT optional. If the coordinator agent times out:
 Full 20+ point checklist (see `references/integration-checklist.md`).
 ANY failure → back to Phase 3.
 
+**Integration Hard Gates (FB34-C1 — tool-enforced)**
+After `vsm_coordinator` and `vsm_auditor` complete but BEFORE declaring Phase 6 PASS,
+S5 MUST run:
+```bash
+python3 ~/vsm/viable-swarm-model/scripts/integration-hard-gates.py --build-dir <BUILD_DIR> --phase 6
+```
+This script replaces four ineffective prompt-only mutations with automated checks:
+1. **GraphQL mutation stub detection** — introspects schema for `INTERNAL_ERROR` / bare `pass` bodies
+2. **GraphQL session cleanup** — verifies `AsyncSession` in `get_graphql_context` has a cleanup mechanism
+3. **SocketProvider auth emit** — regex-checks `SocketProvider.tsx` for the `authenticate` emit
+4. **Mutation-state backfill** — verifies no probation rows have `Builds Tested = 0`
+
+If the script exits non-zero, Phase 6 is **BLOCKED**. Document the failing gate(s) in
+`.kimi/integration-contract.md` and route to Phase 7 (Fix Wave).
+
 > **Algedonic signal — Phase 6/7 Boundary**: If integration verification finds
 > BLOCKERs, do NOT fix them inline. Route to Phase 7 (Fix Wave). Inline fixes
 > bypass re-audit and post-fix security re-check, violating exit criteria. S5
@@ -1220,6 +1235,17 @@ Group fixes by domain (backend vs frontend). Parallel across files, sequential
 within file. Spawn `vsm_backend_fix_agent` for backend BLOCKERs and
 `vsm_frontend_fix_agent` for frontend BLOCKERs. If fixes span both domains,
 spawn both agents in parallel with `run_in_background=true`.
+
+**Frontend Fix-Agent Gate (FB34-C2)**:
+If ANY frontend file (`frontend/src/**/*.ts`, `frontend/src/**/*.tsx`, or `frontend/Dockerfile`)
+is modified during the fix wave, S5 MUST spawn `vsm_frontend_fix_agent` and require it to
+produce `.kimi/frontend-fix-report.md` documenting:
+1. Scope of changes (files modified, lines changed)
+2. Test verification (frontend tests pass, `npm run build` succeeds)
+3. Regression assessment (no new TypeScript errors, no broken imports)
+
+If `vsm_frontend_fix_agent` is not spawned for a frontend-modifying fix wave, this is a
+**MEDIUM process violation** scored by the process auditor.
 
 **Phase 7a — Fix Execution**: Fix agents apply surgical changes and produce
 `.kimi/re-audit-report.md` (advisory only).

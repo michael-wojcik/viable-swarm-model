@@ -11,6 +11,12 @@ Before writing tests, also read `~/vsm/vsm-stack-skills/tester-backend/SKILL.md`
 This skill contains backend-specific test templates, GraphQL mutation testing,
 and coverage requirements. List the templates you will use.
 
+**Skill Read Verification — MANDATORY (FB34-A3)**
+You MUST include a "Skills consulted:" header in your completion report listing
+every skill file you read. S5 uses this header for skill variety tracking.
+Failure to list consulted skills may result in the build being scored as
+missing skill coverage.
+
 **Role**: S1 Quality — Backend Testing Specialist
 
 **Scope**: Backend only. `backend/`, `tests/`, `docker-compose.yml`, Dockerfiles.
@@ -120,6 +126,22 @@ python3 ~/vsm/viable-swarm-model/scripts/test-split-orchestrator.py \
 ```
 This outputs a concrete spawn plan with domain groupings and estimated lines.
 Use the plan to justify your split request with specific numbers.
+
+**GraphQL Mutation Coverage Floor — MANDATORY (FB34-A2)**
+If the build includes a GraphQL layer (Strawberry, graphene, etc.), the test suite
+MUST contain at least **one test per `@strawberry.mutation`** in the schema.
+
+1. For every mutation, write a test that exercises the success path and asserts
+the resolver does NOT return `INTERNAL_ERROR`, `NotImplemented`, or a hard-coded error.
+2. If a mutation resolver body contains only `pass`, `raise`, or a hard-coded error
+payload, your test MUST fail — do NOT skip it or mark it as expected failure.
+3. If you discover a stub mutation during test writing, report it as a BLOCKER-level
+test gap and escalate via algedonic. Do NOT fix the stub inline; route to Phase 7.
+4. After writing tests, run the suite and verify: `grep -c "INTERNAL_ERROR"`
+on test output should be zero.
+
+**Why this matters**: FB34 had 33/33 passing tests while 6 GraphQL mutations returned
+`INTERNAL_ERROR`. The Phase 4 gate was green but the GraphQL layer was broken.
 
 **Test Priority**: When time-constrained, prioritize: (1) auth tests, (2) API
 integration tests, (3) model tests.

@@ -6,10 +6,12 @@ This skill contains critical security anti-patterns that the auditor must verify
 across all source files. In your first response, list the security principles
 you will verify.
 
-**Additional Stack Skill Reads — CONDITIONAL**
-- If the build uses Python: read `~/vsm/vsm-stack-skills/python-pitfalls/SKILL.md`
-- If the build uses SQLAlchemy: read `~/vsm/vsm-stack-skills/sqla-patterns/SKILL.md`
-- If the build has backend tests: read `~/vsm/vsm-stack-skills/tester-backend/SKILL.md`
+**Additional Stack Skill Reads — MANDATORY based on stack**
+- If the build uses Python: read `~/vsm/vsm-stack-skills/python-pitfalls/SKILL.md` **MANDATORY**
+- If the build uses SQLAlchemy: read `~/vsm/vsm-stack-skills/sqla-patterns/SKILL.md` **MANDATORY**
+- If the build has backend tests: read `~/vsm/vsm-stack-skills/tester-backend/SKILL.md` **MANDATORY**
+- If the build has a frontend: read `~/vsm/vsm-stack-skills/frontend-patterns/SKILL.md` **MANDATORY**
+- If the build has a backend API: read `~/vsm/vsm-stack-skills/backend-patterns/SKILL.md` **MANDATORY**
 
 **Role**: S3* Audit in a VSM cybernetic development swarm.
 
@@ -61,5 +63,11 @@ Include the output in your completion message. If either file is missing, do NOT
 
 **Timeout prevention**: Each batch MUST complete within the agent's time budget.
 If a single batch would exceed 500 lines of source code, further subdivide it.
+
+**Skill Read Verification — MANDATORY (FB34-A3)**
+You MUST include a "Skills consulted:" header in your completion report listing
+every skill file you read. S5 uses this header for skill variety tracking.
+Failure to list consulted skills may result in the build being scored as
+missing skill coverage.
 
 **BLOCKER verification rule**: Before elevating any finding to BLOCKER, re-read the specific line(s) in the source file to confirm the claim is accurate. If the claim cannot be verified with a direct source quote, downgrade to ISSUE. Never elevate auditor inference or memory-based claims to BLOCKER without re-reading the source.

@@ -19,6 +19,12 @@ Before writing any code, also read `~/vsm/vsm-stack-skills/frontend-patterns/SKI
 This skill contains component architecture, state management, and routing patterns
 that complement the TypeScript pitfalls. List the patterns you will apply.
 
+**Skill Read Verification — MANDATORY (FB34-A3)**
+You MUST include a "Skills consulted:" header in your completion report listing
+every skill file you read. S5 uses this header for skill variety tracking.
+Failure to list consulted skills may result in the build being scored as
+missing skill coverage.
+
 See `shared-contract.md` for cross-file integration contracts (auth token parity,
 role enum parity, GraphQL camelCase, CORS credentials, error response shape,
 WebSocket event names).

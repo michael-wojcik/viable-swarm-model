@@ -227,6 +227,28 @@ if [[ -f "$CWD/.kimi/mutations-applied.md" && -f "$UPDATE_SCRIPT" ]]; then
     bash "$UPDATE_SCRIPT" "$CWD" >/dev/null 2>&1 || echo "Mutation state auto-update failed (non-fatal)"
 fi
 
+# ── Integration Hard Gates (FB34-C1) ──
+# Run tool-enforced checks that replace prompt-only probation rules.
+HARD_GATES_SCRIPT="$HOME/vsm/viable-swarm-model/scripts/integration-hard-gates.py"
+if [[ -f "$HARD_GATES_SCRIPT" && -f "$CWD/plan.md" ]]; then
+    echo "Running integration hard gates ..."
+    python3 "$HARD_GATES_SCRIPT" --build-dir "$CWD" --phase 6 >/dev/null 2>&1 || {
+        echo "WARNING: integration-hard-gates.py found failures. Review gate output before next build." >&2
+    }
+fi
+
+# ── Knowledge Broker Auto-Backfill (FB34-C1 replaces FB31-5) ──
+# If a fitness build completed and the broker was not updated, append a minimal
+# entry so the broker never goes stale.
+BROKER_FILE="$HOME/vsm/viable-swarm-model/references/knowledge-broker.md"
+if [[ -f "$CWD/.kimi/meta-report.md" && -f "$BROKER_FILE" ]]; then
+    LAST_UPDATE=$(grep -oE '\*\*Last updated\*\*:\s*[0-9]{4}-[0-9]{2}-[0-9]{2}' "$BROKER_FILE" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}')
+    TODAY=$(date +%Y-%m-%d)
+    if [[ "$LAST_UPDATE" != "$TODAY" ]]; then
+        echo "WARNING: Knowledge broker last updated $LAST_UPDATE, not today ($TODAY). Manual update recommended." >&2
+    fi
+fi
+
 # Build telemetry block — write to EPHEMERAL .kimi/ file, NOT tracked skill-state.md
 SESSION_TELEMETRY_FILE="$CWD/.kimi/session-telemetry.md"
 

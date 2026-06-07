@@ -150,14 +150,14 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 45 | < 55 | ✅ OK (within target) |
-| Historical effective (≥5 builds) | 58 | >15% of active | ✅ 121% |
-| Effective (<5 builds, monitored) | 45 | >30% of active | ✅ 90% |
+| Active mutations | 49 | < 55 | ✅ OK (within target) |
+| Historical effective (≥5 builds) | 62 | >15% of active | ✅ 127% |
+| Effective (<5 builds, monitored) | 45 | >30% of active | ✅ 92% |
 | Probationary mutations | 3 | <20 at any time | ✅ 3 (within target) |
-| Removed / redesigned | 19 | ≥2 per 5 builds | ✅ 19 (exceeds target) |
-| Measured effect fill rate (scored) | 91.2% | ≥80% | ✅ 91.2% |
-| Measured effect fill rate (any entry) | 92.8% | ≥80% | ✅ 92.8% |
-| Removal rate (last 5 builds) | 6 | ≥2 | ✅ Meets target |
+| Removed / redesigned | 23 | ≥2 per 5 builds | ✅ 23 (exceeds target) |
+| Measured effect fill rate (scored) | 91.8% | ≥80% | ✅ 91.8% |
+| Measured effect fill rate (any entry) | 93.3% | ≥80% | ✅ 93.3% |
+| Removal rate (last 5 builds) | 7 | ≥2 | ✅ Meets target |
 
 ---
 
@@ -339,7 +339,7 @@
 | FB31-2 | FB31 Build | structural | Tester 3-sub-wave split (redesign of H223) | effective | 1 | 4 | H304 | — | — |
 | FB31-3 | FB31 Build | append-only | Coordinator GraphQL schema introspection check | effective | 1 | 4 | H302 | — | — |
 | FB31-4 | FB31 Build | append-only | Phase 4 gate persistent pytest report | effective | 1 | 5 | H303 | — | — |
-| FB31-5 | FB31 Build | append-only | Knowledge broker auto-update reminder | monitor | 1 | 3 | — | — | FB33 |
+| FB31-5 | FB31 Build | append-only | Knowledge broker auto-update reminder | **removed** | 2 | 2 | — | — | R-5 cemetery; replaced by FB34-C1 |
 
 | **FB32 MUTATIONS (Created during FB32, await FB33 measurement)** |
 | FB32-1 | FB32 Build | append-only | Security Configuration Zero-Default Rule | **ineffective** | 1 | 2 | — | — | redesign with tool enforcement |
@@ -348,5 +348,26 @@
 | FB32-4 | FB32 Build | append-only | Phase 8 Closeout Artifact Checklist | **effective** | 1 | 5 | — | — | — |
 | FB32-5 | FB32 Build | refinement | Orphaned Query Export Limit | **effective** | 1 | 5 | — | — | — |
 
+| **FB33 MUTATIONS (Created during FB33, await FB34 measurement)** |
+| FB33-1-EXT | FB33 Build | append-only | Security patterns: insecure os.environ.get default extension | **effective** | 1 | 5 | — | — | — |
+| FB33-2 | FB33 Build | append-only | Frontend GraphQL usage mandate | **effective** | 1 | 5 | — | — | — |
+| FB33-3 | FB33 Build | append-only | Socket.IO emission coverage checklist | **effective** | 1 | 5 | — | — | — |
+| FB33-5 | FB33 Build | structural | Tool-enforced shell hook check-zero-defaults.sh | **effective** | 1 | 4 | H400 | — | — |
+| FB33-6 | FB33 Build | structural | New integration-patterns skill for cross-layer dead code | **effective** | 1 | 5 | — | — | — |
+
+| **FB34 MUTATIONS (Created during FB34, await FB35 measurement)** |
+| FB34-1 | FB34 Build | append-only | GraphQL mutation completeness checklist (no INTERNAL_ERROR stubs) | **removed** | 1 | 2 | — | — | R-6 cemetery; replaced by FB34-C1 |
+| FB34-2 | FB34 Build | append-only | GraphQL session cleanup extension pattern | **removed** | 1 | 2 | — | — | R-7 cemetery; replaced by FB34-C1 |
+| FB34-3 | FB34 Build | append-only | SocketProvider authenticate event protocol | **removed** | 1 | 2 | — | — | R-8 cemetery; replaced by FB34-C1 |
+
 | **S5 ITERATION MUTATIONS (2026-06-06)** |
 | *(none — all S5 iteration mutations are now historical)* |
+
+| **FB34 CLOSEOUT MUTATIONS (Proposed during Phase 8b, await implementation/measurement)** |
+| FB34-C1 | FB34 Phase 8b | structural | Tool-enforced integration hard-gates script (consolidates FB31-5, FB34-1, FB34-2, FB34-3) | probation | 0 | — | H401, H405 | — | FB35 |
+| FB34-C2 | FB34 Phase 8b | structural | Mandatory frontend fix-agent sign-off for Phase 7 | probation | 0 | — | H402 | — | FB35 |
+| FB34-A1 | FB34 Phase 8b | append-only | Security agent frontend source scan | probation | 0 | — | H403 | — | FB35 |
+| FB34-A2 | FB34 Phase 8b | append-only | GraphQL mutation test coverage floor | probation | 0 | — | H404 | — | FB35 |
+| FB34-A3 | FB34 Phase 8b | append-only | Mandatory stack skill reads for backend/frontend/tester agents | probation | 0 | — | — | — | FB35 |
+| FB34-R1 | FB34 Phase 8b | refinement | Skill variety tracker parses agent reports | probation | 0 | — | H406 | — | FB35 |
+

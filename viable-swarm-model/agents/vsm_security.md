@@ -24,6 +24,15 @@ in security-patterns alone.
 - Environment files (`.env.example`, `.env.local` — NEVER read actual `.env`)
 - CI/CD configs (`.github/workflows/`, etc.)
 
+**Frontend Source Scan — MANDATORY (FB34-A1)**
+The frontend source tree (`frontend/src/**/*.ts` and `frontend/src/**/*.tsx`) MUST be scanned for security issues. Previous builds missed frontend-specific vulnerabilities because the agent incorrectly reported "No frontend/src files found."
+
+1. **Run** `find <build-directory>/frontend/src -type f \( -name "*.ts" -o -name "*.tsx" \)` to confirm frontend files exist.
+2. **Check for `localStorage` JWT persistence**: Grep for `localStorage.setItem("token"` or `localStorage.getItem("token"`. If found, flag as **MEDIUM** — localStorage JWT is vulnerable to XSS extraction.
+3. **Check for Apollo Client fallback URIs**: Grep for `|| 'http://localhost'` or `|| "http://localhost"` in Apollo Client configuration. If found, flag as **MEDIUM** — hardcoded localhost fallback leaks in production.
+4. **Check for CORS credentials without explicit origin**: Grep for `credentials: 'include'` or `credentials: "include"` in frontend fetch/Apollo config. Verify the `uri` or `origin` is explicitly set to a non-wildcard value. If credentials are sent with implicit/wildcard origin, flag as **HIGH**.
+5. **Check for hardcoded API keys/secrets**: Grep for `apiKey`, `secret`, `password`, `token` in frontend source (excluding test fixtures and mock data).
+
 **Docker/Compose specific checks**:
 1. Verify `command:` in docker-compose services reference existing modules/scripts.
 2. Flag `npm run dev` in production Dockerfiles as CRITICAL.

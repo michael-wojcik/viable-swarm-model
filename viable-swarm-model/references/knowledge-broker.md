@@ -3,7 +3,7 @@
 > **Updated by**: S5 during Phase 8 / coach Phase 5 / gym Phase 5 (curated tables)
 > **Read by**: All three skills at Phase 0 (MANDATORY)
 > **Schema version**: 1.2
-> **Last updated**: 2026-06-04
+> **Last updated**: 2026-06-06
 
 ---
 
@@ -34,7 +34,10 @@
 | G7 | Module-level Celery instantiation | FB23 | FB25 | H155 | **RESOLVED** — FB28 wiring audit caught it |
 | G8 | Socket.IO non-functional | FB21 | FB24 | H66 | PENDING — not tested since FB24 |
 | G9 | Agent timeout avalanche on Tier 2+ | FB28 | FB28 | H217 | **ACTIVE** — FB28 had 5 timeouts; FB29 had 0 after task sizing |
-| G10 | GraphQL security parity gap | FB25 | FB29 | M1 | **ACTIVE** — mutations lack validation/ownership that REST enforces |
+| G10 | GraphQL security parity gap | FB25 | FB29 | M1 | **PARTIALLY RESOLVED** — FB34 achieved parity after fix wave; needs test enforcement to sustain |
+| G16 | Frontend security source scan gap | FB34 | FB34 | FB34-A1 | **ACTIVE** — `vsm_security` did not scan `frontend/src/**/*.ts*`; missed localStorage JWT, fallback URIs |
+| G17 | GraphQL mutation test coverage gap | FB34 | FB34 | FB34-A2 | **ACTIVE** — 33/33 tests passed while 6 mutations returned `INTERNAL_ERROR` |
+| G18 | Mandatory stack skill read gap | FB34 | FB34 | FB34-A3 | **ACTIVE** — `sqla-patterns`, `backend-patterns`, `frontend-patterns`, `testing-patterns`, `tester-backend` not cited as read |
 
 ---
 
@@ -67,6 +70,10 @@
 | FB9 / P46 | Test-First Exit Gate | FB20 | FB20, FB21, FB24 | **REDESIGN** — needs explicit S5 verification command, not just pattern |
 | FB25-S2 | Mutation checkpoint hard gate (prompt-only) | FB26 | FB26 | **REMOVED** — R-3 in cemetery; superseded by FB26-S3 |
 | FB27-1 | UUID coercion via `model_validator` | FB28 | FB28 | **REDESIGNED** — ORM path needed `field_validator`; new rule applied FB28 |
+| FB31-5 | Knowledge broker auto-update reminder | FB34 | FB34 | **REDESIGNED** — manual reminder ineffective; to be replaced by tool-enforced session-end backfill (FB34-C1) |
+| FB34-1 | GraphQL mutation completeness checklist | FB34 | FB34 | **REDESIGNED** — prompt-only checklist ignored; to be replaced by `scripts/check-graphql-stubs.py` (FB34-C1) |
+| FB34-2 | GraphQL session cleanup extension pattern | FB34 | FB34 | **REDESIGNED** — prompt-only pattern ignored; to be enforced by hard-gates script (FB34-C1) |
+| FB34-3 | SocketProvider authenticate event protocol | FB34 | FB34 | **REDESIGNED** — prompt-only protocol ignored; to be enforced by hard-gates script (FB34-C1) |
 
 ---
 
@@ -406,3 +413,84 @@ these failure modes disappear.
 ---
 
 *End of broker.*
+
+---
+
+## Fitness Build FB34 — ShipTrack (2026-06-06)
+
+**Build type**: Coach build (Tier 2, multi-tenant logistics/fleet management)
+**Score**: 4.0 / 5.0 (trainer rubric) | Process audit 100/100
+**Agents spawned**: 15+ (variety, architect×4, backend, frontend, wiring, coordinator, tester×2, devops, security, fix×2, meta, process auditor)
+**Timeouts**: 0 (4-spawn architect split and 2-sub-wave tester split validated)
+**Tests**: 33 backend ✅, 4 frontend ✅, frontend build ✅
+
+### New Active Gaps
+
+| ID | Gap | Severity | Mutations Applied |
+|---|---|---|---|
+| G16 | Frontend security source scan gap | MEDIUM | FB34-A1 (append-only, proposed) |
+| G17 | GraphQL mutation test coverage gap | MEDIUM | FB34-A2 (append-only, proposed) |
+| G18 | Mandatory stack skill read gap | MEDIUM | FB34-A3 (append-only, proposed) |
+
+### Resolved or Downgraded Gaps
+
+| ID | Gap | Resolution |
+|---|---|---|
+| G10 | GraphQL security parity gap | **RESOLVED in FB34** — REST and GraphQL RBAC/tenant/ownership checks aligned after fix wave |
+| G13 | Insecure defaults outside Settings | **CONTAINED** — FB33-1-EXT extension caught the recurrence; tool hook `check-zero-defaults.sh` now enforced |
+
+### Key Findings
+
+1. **Prompt-only mutations are hitting a hard ceiling**: FB34-1, FB34-2, FB34-3 (all prompt-only probation mutations) were ignored until Phase 6 audit. Removal gate triggered. Consolidation structural mutation FB34-C1 proposes tool-enforced `scripts/integration-hard-gates.py`.
+
+2. **All 5 deliberate traps caught or documented**: T1 (zero-default) caught by foundation auditor; T2 (GraphQL unwired frontend) caught by coordinator; T3 (zero Socket.IO emissions) caught by coordinator; T4 (dead code) caught by coordinator; T5 (Phase 8 pressure) prevented by mutation checkpoint discipline.
+
+3. **Agent performance polarized**: `vsm_coordinator`, `vsm_auditor`, `vsm_wiring`, `vsm_backend_fix_agent` scored 5/5. `vsm_backend_coder` (3/5) shipped 6 GraphQL stubs. `vsm_devops_coder` (3/5) shipped broken realtime command and missing Dockerfile USER.
+
+4. **Process audit perfect score**: 100/100 compliance, zero HARD BLOCKs. Phase 8 artifacts (lessons.md, mutations-applied.md, meta-report.md, process-audit.md) all produced.
+
+### Mutations Applied
+
+| Mutation | Type | File | Status |
+|---|---|---|---|
+| FB33-1-EXT | append-only | `security-patterns/SKILL.md` | Measured effective (5/5) in FB34 |
+| FB33-2 | append-only | `frontend-patterns/SKILL.md` | Measured effective (5/5) in FB34 |
+| FB33-3 | append-only | `backend-patterns/SKILL.md` | Measured effective (5/5) in FB34 |
+| FB33-6 | structural | `integration-patterns/SKILL.md` | Measured effective (5/5) in FB34 |
+| FB31-1 | structural | `agents/vsm_architect.md` | Measured effective (5/5) in FB34 |
+| FB31-2 | structural | `agents/vsm_backend_tester.md` | Measured effective (4/5) in FB34 — 2-sub-wave sufficient, 3-sub-wave may be safer |
+| FB31-3 | append-only | `agents/vsm_coordinator.md` | Measured effective (4/5) in FB34 |
+| FB31-4 | append-only | `agents/vsm_backend_tester.md` | Measured effective (5/5) in FB34 |
+| FB31-5 | append-only | `agents/vsm_meta.md` | **INEFFECTIVE** (2/5) — manual reminder ignored |
+| FB32-1 | append-only | `security-patterns/SKILL.md` | **INEFFECTIVE** (2/5) — caught only by extension FB33-1-EXT |
+| FB32-2 | append-only | `graphql-pitfalls/SKILL.md` | Measured effective (5/5) in FB34 |
+| FB34-1 | append-only | `agents/vsm_backend_coder.md` | **INEFFECTIVE** (2/5) — prompt-only checklist ignored |
+| FB34-2 | append-only | `agents/vsm_backend_coder.md` | **INEFFECTIVE** (2/5) — prompt-only pattern ignored |
+| FB34-3 | append-only | `agents/vsm_frontend_coder.md` | **INEFFECTIVE** (2/5) — prompt-only protocol ignored |
+
+### Proposed Closeout Mutations (Phase 8b)
+
+- **FB34-C1** (structural): Tool-enforced integration hard-gates script; consolidates FB31-5 + FB34-1/2/3.
+- **FB34-C2** (structural): Mandatory frontend fix-agent sign-off.
+- **FB34-A1** (append-only): Security agent frontend source scan.
+- **FB34-A2** (append-only): GraphQL mutation test coverage floor.
+- **FB34-A3** (append-only): Mandatory stack skill reads.
+- **FB34-R1** (refinement): Skill variety tracker parses agent reports.
+
+### Hypotheses Tested
+
+| Hypothesis | Result | Evidence |
+|---|---|---|
+| H401 (tool-enforced stub detection) | **UNTESTED** | Proposed; experiment in FB35+ |
+| H217 (agent task sizing) | **CONFIRMED** — 4-spawn architect + 2-sub-wave tester, zero timeouts | 1,600+ design lines, 33 tests, 15+ agents |
+
+### New Hypotheses Proposed
+
+- H401–H406 (see `references/hypotheses.md`)
+
+*Updated: 2026-06-06*
+
+---
+
+*End of broker.*
+

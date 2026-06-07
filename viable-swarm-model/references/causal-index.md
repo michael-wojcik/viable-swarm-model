@@ -21,6 +21,7 @@
 | FB31 | 3.8 | H301, H304, H302, H303 | — | FB31-1..FB31-5 | 3.8 |
 | FB32 | — | H150, H151, H154 | Gym-Batch-FB32 | FB32-1..FB32-5 (probation) | — |
 | FB33 | 6.3 | — | — | FB32-1 scored 2 (ineffective), FB32-2..FB32-5 scored 5 (effective) | 6.3 |
+| FB34 | 4.0 | H401–H406 | — | FB33-1-EXT/FB33-2/FB33-3/FB33-6/FB31-1/FB31-2/FB31-3/FB31-4 measured effective; FB31-5/FB32-1/FB34-1/FB34-2/FB34-3 ineffective; FB34-C1..FB34-R1 proposed | 4.0 |
 
 ¹ **CORRECTION**: E17 tests H107, not H300. See [Known Broken Traces](#known-broken-traces).
 ² FB29 meta-report scored 4.2; trainer scored 3.6. Effectiveness uses trainer score.
@@ -60,6 +61,12 @@
 | H302 | CONFIRMED | G6 (process audit bypass) | FB27–FB31 |
 | H303 | CONFIRMED | — (pytest report persistence) | FB31 |
 | H304 | CONFIRMED | — (tester split sizing) | FB31 |
+| H401 | UNTESTED | G17 (GraphQL stubs) | FB35+ |
+| H402 | UNTESTED | — (frontend fix traceability) | FB35+ |
+| H403 | UNTESTED | G16 (frontend security scan) | FB35+ |
+| H404 | UNTESTED | G17 (GraphQL stubs) | FB35+ |
+| H405 | UNTESTED | — (mutation-state backfill) | FB35+ |
+| H406 | UNTESTED | — (skill variety metric) | FB35+ |
 
 ---
 
@@ -92,11 +99,14 @@
 
 **Check 3 — Mutation coverage**: Are all mutations from last 5 builds in this index?
 - FB28–FB32: ✅ Complete
+- FB33–FB34: ✅ FB34 row added to Master Build Linkage Table; H401–H406 added to Active Hypotheses
 
 **Check 4 — Experiment linkage**: Are all experiments linked to a hypothesis AND a mutation or build?
 - E15–E20, Gym-Batch-FB32: ✅ Complete
 
 ---
 
-*Last updated: 2026-06-04 by comprehensive audit*
+*Last updated: 2026-06-06 by FB34 closeout (S5)*
 *Schema: 2.0 (BT-1 correction applied)*
+*Note: Removed 10 malformed CC-1..CC-10 entries created by a buggy update-causal-index.sh run; the Master Build Linkage Table and Active Hypotheses table now serve as the canonical FB34 causal trace.*
+
