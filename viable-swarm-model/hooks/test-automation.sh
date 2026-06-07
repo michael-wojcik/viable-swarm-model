@@ -7501,6 +7501,21 @@ else
     fail "R75 status=$R75_STATUS builds_tested=$R75_BT (expected historical, 5)"
 fi
 
+# ============================================================================
+# Test 206: R76 promoted to historical after counter execution
+# ============================================================================
+
+echo -n "TEST: R76 promoted to historical with builds_tested=5 ... "
+
+R76_STATUS=$(grep "^| R76 " "$MUTATION_STATE" | awk -F'|' '{print $6}' | tr -d ' ')
+R76_BT=$(grep "^| R76 " "$MUTATION_STATE" | awk -F'|' '{print $7}' | tr -d ' ')
+
+if [ "$R76_STATUS" = "historical" ] && [ "$R76_BT" = "5" ]; then
+    pass
+else
+    fail "R76 status=$R76_STATUS builds_tested=$R76_BT (expected historical, 5)"
+fi
+
 echo ""
 echo "========================================"
 echo "Results: $PASSED passed, $FAILED failed"

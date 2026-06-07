@@ -5521,3 +5521,29 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 - Result: 216 tests passing, 0 failed; stale metrics eliminated, lifecycle unblocked, safeguard honest
 
 **Measured effect**: **TESTED** — Test 113 verifies Integration Health active count. Test 191 verifies all 5 Integration Health metrics. Test 194 (fixed) verifies S5 iteration mutations builds_tested >= 2. Test 205 verifies R75 historical promotion. 216 tests passing, 0 failed.
+
+---
+
+## Mutation R80 — 2026-06-07
+
+**Session**: S5 Orchestrator Iteration R80
+**File**: `references/mutation-state.md`, `hooks/test-automation.sh`, `scripts/increment-s5-iteration-counter.py`
+**Type**: structural
+**Rationale**: System 5 / S5→S5 channel — R76 had reached builds_tested=4 after surviving R77, R78, and R79, but the S5 iteration counter had not been executed at the start of this iteration. Without the counter, R76 remained blocked at 4, one short of the historical promotion threshold (≥5). This is the exact same lifecycle blockage pattern that R79 fixed for R75. The organism's S5 iteration policy requires running the counter at the start of every iteration; skipping it artificially inflates the active mutation count and blocks autonomous portfolio curation.
+
+**Expected effect**: R76 reaches builds_tested=5 and is promoted to historical, reducing active mutations from 57 to 56. The S5 iteration mutation lifecycle continues its autonomous progression toward historical promotion for all stable mutations.
+
+**Before**:
+- R76: builds_tested=4, status=effective (blocked at 4)
+- R77: builds_tested=2, R78: builds_tested=2
+- Active mutations: 57, historical effective: 75
+- Result: Lifecycle blockage, unnecessary active mutation pressure
+
+**After**:
+- Ran `increment-s5-iteration-counter.py`: R76→5, R77→3, R78→3
+- Promoted R76 from `effective` → `historical` (builds_tested=5, score=5)
+- Active mutations: 56, historical effective: 76
+- Test 206: Verifies R76 historical with builds_tested=5
+- Result: 217 tests passing, 0 failed; lifecycle unblocked
+
+**Measured effect**: **TESTED** — Test 206 verifies R76 historical promotion. Test 194 verifies S5 iteration mutations min builds_tested >= 2. Tests 113 and 191 verify Integration Health accuracy. 217 tests passing, 0 failed.
