@@ -150,10 +150,10 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 49 | < 55 | ✅ OK (within target) |
-| Historical effective (≥5 builds) | 62 | >15% of active | ✅ 127% |
-| Effective (<5 builds, monitored) | 45 | >30% of active | ✅ 92% |
-| Probationary mutations | 3 | <20 at any time | ✅ 3 (within target) |
+| Active mutations | 55 | < 55 | ✅ OK (at target) |
+| Historical effective (≥5 builds) | 62 | >15% of active | ✅ 113% |
+| Effective (<5 builds, monitored) | 45 | >30% of active | ✅ 82% |
+| Probationary mutations | 9 | <20 at any time | ✅ 9 (within target) |
 | Removed / redesigned | 23 | ≥2 per 5 builds | ✅ 23 (exceeds target) |
 | Measured effect fill rate (scored) | 91.8% | ≥80% | ✅ 91.8% |
 | Measured effect fill rate (any entry) | 93.3% | ≥80% | ✅ 93.3% |
