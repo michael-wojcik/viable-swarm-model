@@ -2755,3 +2755,40 @@ S5 iterations R65 through R73 were executed on 2026-06-07 without individual bui
 ### Next Highest-Leverage Constraint
 **System 5 (Policy/Meta-learning) / S5→S1 channel — mutation score backfill remains manual**: While `auto-mutation-lifecycle.py` (R75) automatically increments `Builds Tested`, it does NOT write a provisional `Score` (1–5) for probation/monitor mutations. H405 explicitly hypothesized that this gap would cause probation mutations to remain unscored after build closeout. The current script behavior confirms this: `determine_effect()` fills `mutation-log.md` measured effects, but `update_mutation_state()` only increments the counter, leaving `Score` as `—`. A modest refinement to `auto-mutation-lifecycle.py` could derive a provisional score from the `Evidence` column in `mutations-applied.md` (e.g., "Score: 5" → score 5), closing the last manual backfill gap in the S2→S1 lifecycle channel. Alternatively, **System 4 (Adaptation/Intelligence) / S4→S4 channel — 4 untested hypotheses remain** (H104, H152, H[N+3], H[N+4]), requiring actual fitness builds or gym experiments for empirical validation.
 
+
+
+---
+
+## 2026-06-07 — S5 Orchestrator Iteration (R78)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S1 channel — mutation score backfill remains manual**: While `auto-mutation-lifecycle.py` (R75) automatically increments `Builds Tested` and fills `mutation-log.md` measured effects, it did NOT write a provisional `Score` (1–5) to `mutation-state.md`. H405 explicitly identified this gap: at the end of FB34, probation mutations showed `Builds Tested = 0` and `Score = —` until manually backfilled. The script already parsed scores from evidence strings (e.g., "Score: 5") to generate measured-effect text, but never propagated that parsed score to the Score column.
+
+### Change Made
+**Refinement mutation R78**: Enhanced `auto-mutation-lifecycle.py` with score backfill.
+- Added `determine_score()` function that extracts numeric scores 1–5 from `mutations-applied.md` evidence using regex
+- Modified `update_mutation_state()` to backfill `Score` only when currently `—` or empty, preserving existing manual judgments
+- Updated **Tests 200/201**: Changed initial fixture scores from hardcoded values to `—`, verifying backfill behavior
+- Added **Test 204**: Verifies that existing scores (e.g., `3`) are NOT overwritten by evidence-derived scores
+- Updated **H405** in `hypotheses.md`: Recorded implementation approach and partial confirmation status
+
+### Test Results
+- `bash hooks/test-automation.sh`: **215 passed, 0 failed**
+- Test 200: Dry-run reports score backfill (`Score —→5`) → PASS
+- Test 201: Real run backfills score from unset → PASS
+- Test 204: Existing scores preserved, unset scores backfilled → PASS
+
+### Files Modified
+- `viable-swarm-model/hooks/auto-mutation-lifecycle.py`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/hypotheses.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — 4 untested hypotheses remain** (H104, H152, H[N+3], H[N+4]). With the S5→S1 lifecycle channel now fully automated (builds_tested + score + measured effects), the infrastructure tuning phase has reached its natural limit. All remaining high-impact work requires external validation: either (a) an actual fitness build to test recent mutations end-to-end, or (b) targeted gym experiments for the remaining hypotheses. The organism's test suite (215 tests) provides strong regression protection, but it cannot substitute for empirical build validation.
+

@@ -107,8 +107,21 @@ def update_mutation_log(log_path: str, mutations: list[dict]) -> tuple[str, list
     return content, updates, errors
 
 
+def determine_score(evidence: str) -> str | None:
+    """Extract a numeric score 1-5 from evidence string. Returns None if no score found."""
+    if not evidence:
+        return None
+    # Look for patterns like 'Score: 5', 'score: 4', 'Score: 3/5', etc.
+    match = re.search(r'[Ss]core:\s*(\d)', evidence)
+    if match:
+        score = match.group(1)
+        if score in ('1', '2', '3', '4', '5'):
+            return score
+    return None
+
+
 def update_mutation_state(state_path: str, mutations: list[dict]) -> tuple[str, list[str], list[str]]:
-    """Increment Builds Tested for each mutation. Returns (new_content, updates, errors)."""
+    """Increment Builds Tested and backfill Score for each mutation. Returns (new_content, updates, errors)."""
     with open(state_path, 'r') as f:
         content = f.read()
 
@@ -142,12 +155,22 @@ def update_mutation_state(state_path: str, mutations: list[dict]) -> tuple[str, 
                 current = int(parts[5])
                 new_val = current + 1
                 parts[5] = str(new_val)
+
+                # Backfill Score if currently empty/unset
+                current_score = parts[6] if len(parts) > 6 else '—'
+                score_from_evidence = determine_score(row_mutations[0].get('evidence', ''))
+                if score_from_evidence and current_score in ('—', '', '-'):
+                    parts[6] = score_from_evidence
+                    score_msg = f", Score —→{score_from_evidence}"
+                else:
+                    score_msg = ""
+
                 # Update status if it was probation and now has builds
                 if parts[4].lower() == 'probation' and new_val >= 3:
                     parts[4] = 'monitor'
-                    updates.append(f"  mutation-state.md: {mut_id} Builds {current}→{new_val}, status probation→monitor")
+                    updates.append(f"  mutation-state.md: {mut_id} Builds {current}→{new_val}, status probation→monitor{score_msg}")
                 else:
-                    updates.append(f"  mutation-state.md: {mut_id} Builds {current}→{new_val}")
+                    updates.append(f"  mutation-state.md: {mut_id} Builds {current}→{new_val}{score_msg}")
                 new_line = '| ' + ' | '.join(parts) + ' |'
                 new_lines.append(new_line)
                 changed = True

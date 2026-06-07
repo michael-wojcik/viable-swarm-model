@@ -5468,3 +5468,28 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 
 **Measured effect**: **TESTED** — Test 203 verifies missing-ID warning. Test 189 updated to reflect R74 historical. Test 191 Integration Health sync passes. 214 tests passing, 0 failed.
 
+
+
+---
+
+## Mutation R78 — 2026-06-07
+
+**Session**: S5 Orchestrator Iteration R78
+**File**: `hooks/auto-mutation-lifecycle.py`, `hooks/test-automation.sh`
+**Type**: refinement
+**Rationale**: H405 hypothesized that probation mutations remain unscored after build closeout because `auto-mutation-lifecycle.py` only incremented `Builds Tested` but left `Score` as `—`. Manual S5 backfill is unreliable under pressure. The script already parsed scores from `mutations-applied.md` evidence (e.g., "Score: 5") to fill `mutation-log.md` measured effects, but never propagated that parsed score to the `mutation-state.md` Score column. This created a persistent gap where mutations appeared tracked but unscored.
+
+**Expected effect**: `auto-mutation-lifecycle.py` now backfills the `Score` column in `mutation-state.md` when the current score is `—` or empty and the evidence contains a parseable score (1–5). Existing scores are never overwritten, preserving manual S5 judgments. The score backfill is idempotent and safe to run on every build closeout.
+
+**Before**:
+- `auto-mutation-lifecycle.py`: Incremented `Builds Tested` only; `Score` remained `—`
+- `mutation-state.md`: Probation/monitor mutations with `Builds Tested ≥ 1` but `Score = —`
+- Result: Manual S5 backfill required for every build closeout
+
+**After**:
+- `auto-mutation-lifecycle.py`: New `determine_score()` extracts numeric score from evidence; `update_mutation_state()` backfills `Score` only when unset
+- `hooks/test-automation.sh`: Tests 200/201 updated to exercise score backfill; Test 204 verifies existing scores are preserved
+- Result: 215 tests passing, 0 failed; score backfill is automated and tested
+
+**Measured effect**: **TESTED** — Test 204 verifies existing scores are preserved. Tests 200/201 verify score backfill from unset. 215 tests passing, 0 failed.
+

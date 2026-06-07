@@ -254,10 +254,10 @@
 **Proposed**: 2026-06-06
 **Rationale**: At the end of FB34, mutation-state rows FB34-1, FB34-2, FB34-3 still showed `Builds Tested = 0` and `Score = —` until manually backfilled. Manual S5 discipline is insufficient under pressure; the organism repeatedly leaves probation mutations unmeasured.
 **Source**: Fitness build FB34, Phase 8b mutation tracking
-**Experiment**: Add a `scripts/backfill-mutation-state.py` invocation to `session-end.sh` that increments `Builds Tested` and writes a provisional effectiveness score (1–5) for every probation/monitor mutation referenced in `.kimi/mutations-applied.md`. Verify mutation-state within 1 hour of build close in the next fitness build.
+**Experiment**: ~~Add a `scripts/backfill-mutation-state.py` invocation to `session-end.sh`~~ → Enhanced `hooks/auto-mutation-lifecycle.py` (already invoked by `session-end.sh`) to backfill `Score` from `mutations-applied.md` evidence when the current score is `—`. This avoids a separate script and leverages the existing lifecycle automation. Verify mutation-state within 1 hour of build close in the next fitness build.
 **Expected**: 100% of probation/monitor mutations linked to a completed build have `Builds Tested ≥ 1` and a numeric score before S5 declares Phase 8 complete.
-**Result**: [to be filled]
-**Tested by**: [experiment ID or session]
+**Result**: **PARTIALLY CONFIRMED** — Score backfill implemented and tested in S5 iteration R78. `auto-mutation-lifecycle.py` now parses scores from evidence (e.g., "Score: 5") and writes them to `mutation-state.md` only when the score column is `—`. Existing scores are preserved. Automation suite has 3 tests covering dry-run, real-run, and existing-score preservation. Awaiting validation in a real fitness build where `mutations-applied.md` contains scored evidence.
+**Tested by**: S5 Iteration R78
 
 ---
 

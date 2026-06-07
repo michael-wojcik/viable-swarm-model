@@ -7285,8 +7285,8 @@ EOF
 cat > "$AML_TMP/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
 | ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
 |---|---|---|---|---|---|---|---|---|---|
-| T200A | Test | append-only | Test bug | effective | 2 | 5 | — | — | — |
-| T200B | Test | structural | Auth gap | probation | 1 | 3 | — | — | — |
+| T200A | Test | append-only | Test bug | effective | 2 | — | — | — | — |
+| T200B | Test | structural | Auth gap | probation | 1 | — | — | — | — |
 EOF
 
 cat > "$AML_TMP/vsm/viable-swarm-model/references/mutation-log.md" << 'EOF'
@@ -7303,16 +7303,17 @@ RC=0
 HOME="$AML_TMP" python3 "$SCRIPT_DIR/auto-mutation-lifecycle.py" "$AML_TMP/build200" --dry-run > "$AML_TMP/dryrun.out" 2>&1 || RC=$?
 OUTPUT=$(cat "$AML_TMP/dryrun.out")
 
-# Verify dry-run reports expected changes
+# Verify dry-run reports expected changes including score backfill
 if [ "$RC" -eq 0 ] && \
    echo "$OUTPUT" | grep -q "T200A" && \
    echo "$OUTPUT" | grep -q "T200B" && \
+   echo "$OUTPUT" | grep -q "Score —→5" && \
    echo "$OUTPUT" | grep -q "\[DRY RUN\]"; then
     rm -rf "$AML_TMP"
     pass
 else
     rm -rf "$AML_TMP"
-    fail "Dry-run did not report expected changes (rc=$RC)"
+    fail "Dry-run did not report expected changes including score backfill (rc=$RC)"
 fi
 
 # ============================================================================
@@ -7335,8 +7336,8 @@ EOF
 cat > "$AML_TMP/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
 | ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
 |---|---|---|---|---|---|---|---|---|---|
-| T200A | Test | append-only | Test bug | effective | 2 | 5 | — | — | — |
-| T200B | Test | structural | Auth gap | probation | 1 | 3 | — | — | — |
+| T200A | Test | append-only | Test bug | effective | 2 | — | — | — | — |
+| T200B | Test | structural | Auth gap | probation | 1 | — | — | — | — |
 EOF
 
 cat > "$AML_TMP/vsm/viable-swarm-model/references/mutation-log.md" << 'EOF'
@@ -7352,10 +7353,10 @@ EOF
 RC=0
 HOME="$AML_TMP" python3 "$SCRIPT_DIR/auto-mutation-lifecycle.py" "$AML_TMP/build200" > "$AML_TMP/real.out" 2>&1 || RC=$?
 
-# Verify mutation-state.md was updated
+# Verify mutation-state.md was updated with builds AND score backfill
 ST_OK=$(grep -c "| T200A | Test | append-only | Test bug | effective | 3 | 5 |" "$AML_TMP/vsm/viable-swarm-model/references/mutation-state.md" || true)
-# T200B should be incremented to 2 but still probation (<3)
-STB_OK=$(grep -c "| T200B | Test | structural | Auth gap | probation | 2 | 3 |" "$AML_TMP/vsm/viable-swarm-model/references/mutation-state.md" || true)
+# T200B should be incremented to 2 but still probation (<3); score stays — (no score in evidence)
+STB_OK=$(grep -c "| T200B | Test | structural | Auth gap | probation | 2 | — |" "$AML_TMP/vsm/viable-swarm-model/references/mutation-state.md" || true)
 # Verify mutation-log.md measured effect was filled
 ML_OK=$(grep -c "Effective (Score: 4–5)" "$AML_TMP/vsm/viable-swarm-model/references/mutation-log.md" || true)
 
@@ -7423,6 +7424,56 @@ if [ "$RC" -ne 0 ] && \
 else
     rm -rf "$AML_TMP"
     fail "Expected non-zero exit and warning for missing mutation ID (rc=$RC)"
+fi
+
+# ============================================================================
+# Test 204: auto-mutation-lifecycle.py score backfill respects existing scores (R78)
+# ============================================================================
+
+echo -n "TEST: auto-mutation-lifecycle.py backfills score only when currently unset ... "
+
+AML_TMP=$(mktemp -d)
+mkdir -p "$AML_TMP/build204/.kimi"
+mkdir -p "$AML_TMP/vsm/viable-swarm-model/references"
+
+cat > "$AML_TMP/build204/.kimi/mutations-applied.md" << 'EOF'
+| # | Mutation ID | Target Failure | Proposed By | Status | Evidence |
+|---|---|---|---|---|---|
+| 1 | T204A | Test bug | vsm_backend_tester | effective | Score: 5 |
+| 2 | T204B | Auth gap | vsm_security | effective | Score: 4 |
+EOF
+
+cat > "$AML_TMP/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| T204A | Test | append-only | Test bug | effective | 2 | — | — | — | — |
+| T204B | Test | structural | Auth gap | effective | 1 | 3 | — | — | — |
+EOF
+
+cat > "$AML_TMP/vsm/viable-swarm-model/references/mutation-log.md" << 'EOF'
+## Mutation T204A
+
+**Measured effect**: **PENDING**
+
+## Mutation T204B
+
+**Measured effect**: **PENDING**
+EOF
+
+RC=0
+HOME="$AML_TMP" python3 "$SCRIPT_DIR/auto-mutation-lifecycle.py" "$AML_TMP/build204" > "$AML_TMP/real.out" 2>&1 || RC=$?
+
+# T204A: score was —, should be backfilled to 5
+STA_OK=$(grep -c "| T204A | Test | append-only | Test bug | effective | 3 | 5 |" "$AML_TMP/vsm/viable-swarm-model/references/mutation-state.md" || true)
+# T204B: score was already 3, should NOT be overwritten to 4
+STB_OK=$(grep -c "| T204B | Test | structural | Auth gap | effective | 2 | 3 |" "$AML_TMP/vsm/viable-swarm-model/references/mutation-state.md" || true)
+
+if [ "$RC" -eq 0 ] && [ "$STA_OK" -eq 1 ] && [ "$STB_OK" -eq 1 ]; then
+    rm -rf "$AML_TMP"
+    pass
+else
+    rm -rf "$AML_TMP"
+    fail "Score backfill did not respect existing scores (rc=$RC sta=$STA_OK stb=$STB_OK)"
 fi
 
 echo ""
