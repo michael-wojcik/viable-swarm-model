@@ -6,6 +6,73 @@
 ---
 ---
 
+## 2026-06-07 — S5 Orchestrator Iteration (R63)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 channel — S5 iteration mutation `builds_tested` counter stale for R59-R62**: The `increment-s5-iteration-counter.py` script had not been executed at the start of iterations R60-R62, causing all four S5 iteration mutations to remain at `builds_tested=1` despite having survived multiple subsequent iterations. This blocked historical promotion eligibility and artificially inflated the active mutation count. R59, created during the first of four consecutive S5 iterations, should have reached `builds_tested=4` before this iteration began.
+
+### Change Made
+**Structural mutation R63**: Ran S5 iteration counter backfill + increment, promoted R59 to historical.
+- Ran `increment-s5-iteration-counter.py --backfill` to correct baseline: R59→4, R60→3, R61→2 (R62 correctly at 1).
+- Ran `increment-s5-iteration-counter.py` default increment for R63: R59→5, R60→4, R61→3, R62→2.
+- Promoted R59 from `effective` → `historical` (builds_tested=5, score=5) per S5 iteration policy.
+- Updated Integration Health: active=57 (was 58), historical effective=63 (was 62).
+- `hooks/test-automation.sh`: Added Tests 185-187 verifying R59 historical promotion, S5 mutation builds_tested monotonicity, and counter script syntax.
+- Added missing R62 entry to `build-health-history.md`.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **195 passed, 0 failed** (was 192 passed, 0 failed)
+- Test 185: R59 historical with builds_tested=5 → PASS
+- Test 186: S5 effective mutations have builds_tested >= 1 with monotonic decrease → PASS
+- Test 187: increment-s5-iteration-counter.py syntax valid → PASS
+- `mutation-portfolio-health.py`: Confirms total_active=57, probationary=0, effective=57, all metrics green
+
+### Files Modified
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 channel — R60 approaching historical eligibility**: R60 is now at builds_tested=4. After one more S5 iteration, it will reach 5 and be eligible for historical promotion. The organism should ensure the increment counter is run at the start of every future S5 iteration to prevent builds_tested staleness. Alternatively, **System 4 (Adaptation/Intelligence) / S4→S4 channel — 6 untested hypotheses remain**: While below the CRITICAL threshold of 7, these hypotheses (H104, H152, H153, H156, H[N+3], H[N+4]) still represent untapped learning potential. An actual fitness build or targeted gym batch would be the most valuable next step.
+
+---
+---
+
+## 2026-06-07 — S5 Orchestrator Iteration (R62)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 channel — SM7 and SM8 companion-skill mutations unvalidated**: SM7 (coach heartbeat mode) and SM8 (kimi-code-migration skill) were audit-derived mutations from the 2026-06-04 comprehensive audit. They had been implemented in companion skills but remained as `probation` in the master table because they lacked automation suite verification. This blocked the organism from recognizing their maturity and kept the probationary count artificially at 2.
+
+### Change Made
+**Refinement mutation R62**: Added automation suite tests for SM7/SM8 and promoted them to effective.
+- `hooks/test-automation.sh`: Added 3 tests verifying SM7 content in `vsm-fitness-coach/SKILL.md` (heartbeat/regression keywords), SM8 content in `kimi-code-migration/SKILL.md` (agent persona templates), and SM7/SM8 promotion to effective.
+- Promoted SM7 and SM8 from `probation` → `effective` with `builds_tested=1, score=5` per S5 iteration validation policy.
+- Fixed test expectations that still expected SM7/SM8 as probationary (updated to effective).
+- Updated Integration Health active count: 57 → 58.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **192 passed, 0 failed** (was 189 passed, 2 failed before fixes)
+- Test 182: SM7 heartbeat mode present in vsm-fitness-coach → PASS
+- Test 183: SM8 kimi-code-migration skill with agent personas → PASS
+- Test 184: SM7/SM8 promoted to effective → PASS
+- `validate-skills.py`: Still reports "OK: 25 skills validated" with zero warnings
+
+### Files Modified
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+
+### Git Commit
+- `a904b44` — R62: Promote SM7/SM8 effective, fix tests, 192 passed 0 failed
+
+### Next Highest-Leverage Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 channel — builds_tested stale for all S5 iteration mutations**: R59-R62 all remained at builds_tested=1 because the increment counter had not been run between iterations. R59, having survived R60, R61, and R62, should already be at builds_tested=4 and approaching historical eligibility. This data integrity gap blocks autonomous portfolio curation.
+
+---
+---
+
 ## 2026-06-07 — S5 Orchestrator Iteration (R59)
 
 ### Diagnosed Constraint

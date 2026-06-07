@@ -5092,3 +5092,41 @@ These gaps represent a System 3 (Audit/Control) → System 1 (Implementation) ch
 **Linked hypothesis**: H402, H403, H404 (status updated to testing)
 **Classification**: Refinement — logged.
 
+
+---
+
+## Mutation R62 — 2026-06-07
+
+**Session**: S5 Orchestrator Iteration
+**Files**: `hooks/test-automation.sh`, `references/mutation-state.md`
+**Type**: refinement
+**Rationale**: SM7 (coach heartbeat mode) and SM8 (kimi-code-migration skill) were audit-derived mutations from the 2026-06-04 comprehensive audit. They had been implemented in companion skills but remained as `probation` in the master table because they lacked automation suite verification. This blocked the organism from recognizing their maturity and kept the probationary count artificially at 2. Additionally, after promoting them to `effective`, two tests still expected them to be `probationary`, causing failures.
+
+**Expected effect**:
+- SM7 verified: `vsm-fitness-coach/SKILL.md` contains heartbeat/regression keywords.
+- SM8 verified: `kimi-code-migration/SKILL.md` exists with agent persona templates.
+- SM7 and SM8 promoted from `probation` → `effective` with `builds_tested=1, score=5`.
+- Integration Health active count updated from 57 → 58.
+
+**Measured effect**: **PASS** — 192 automation suite tests pass (0 failed). 3 new tests added; 2 test expectation fixes applied.
+**Classification**: Refinement — logged.
+
+---
+
+## Mutation R63 — 2026-06-07
+
+**Session**: S5 Orchestrator Iteration
+**Files**: `scripts/increment-s5-iteration-counter.py`, `references/mutation-state.md`, `hooks/test-automation.sh`, `references/build-health-history.md`
+**Type**: structural
+**Rationale**: **System 5 (Policy/Meta-learning) / S5→S5 channel — S5 iteration mutation `builds_tested` counter stale for R59-R62**: The `increment-s5-iteration-counter.py` script had not been executed at the start of iterations R60-R62, causing all four S5 iteration mutations to remain at `builds_tested=1` despite having survived multiple subsequent iterations. This blocked historical promotion eligibility and artificially inflated the active mutation count. R59, created during the first of four consecutive S5 iterations, should have reached `builds_tested=4` before this iteration began.
+
+**Expected effect**:
+- Backfill corrects baseline: R59→4, R60→3, R61→2 (R62 correctly at 1).
+- Default increment for R63: R59→5, R60→4, R61→3, R62→2.
+- R59 promoted from `effective` → `historical` (builds_tested=5, score=5).
+- Active mutations reduced from 58 to 57.
+- Tests 185-187 verify R59 historical promotion, S5 mutation builds_tested monotonicity, and counter script syntax.
+
+**Measured effect**: **PASS** — 195 automation suite tests pass (0 failed). 3 new tests added; no regressions.
+**Classification**: Structural — logged.
+

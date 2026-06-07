@@ -12,6 +12,7 @@
 | R56 | 2026-06-06 S5 | structural | increment-s5-iteration-counter.py + S5 builds_tested backfill (R44-R48→historical) + agent quick-reference enrichment | historical | 5 | 5 | — | — | S5 iter |
 | R57 | 2026-06-06 S5 | structural | S5 iteration lifecycle automation — auto-increment + historical promotion + hypothesis curation protocol | historical | 5 | 5 | — | — | S5 iter |
 | R58 | 2026-06-06 S5 | refinement | skill-effectiveness-tracker.py MIN_BUILDS_FOR_EFFECTIVENESS=3 threshold prevents false NEGATIVE flags on tiny samples | historical | 5 | 5 | — | — | S5 iter |
+| R59 | 2026-06-07 S5 | refinement | integration-hard-gates.py test coverage (10 tests) + FB34-2 false-positive fix + algedonic active-count bug fix | historical | 5 | 5 | — | — | S5 iter |
 | FB25-S1 | FB25 Coach | structural | False hook claim removal | historical | 5 | 5 | H300 | E17 | — |
 | FB24-1 | FB24 Build | append-only | Phase 4 gate bypass when 1 test fails | historical | 6 | 5 | H154 | — | — |
 | FB24-2 | FB24 Build | append-only | Enum type safety audit | historical | 6 | 5 | H203 | — | — |
@@ -150,8 +151,8 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 58 | < 60 | ✅ OK (at target) |
-| Historical effective (≥5 builds) | 62 | >15% of active | ✅ 113% |
+| Active mutations | 57 | < 60 | ✅ OK (below target) |
+| Historical effective (≥5 builds) | 63 | >15% of active | ✅ 113% |
 | Effective (<5 builds, monitored) | 49 | >30% of active | ✅ 88% |
 | Probationary mutations | 0 | <20 at any time | ✅ 0 (within target) |
 | Removed / redesigned | 23 | ≥2 per 5 builds | ✅ 23 (exceeds target) |
@@ -361,10 +362,9 @@
 | FB34-3 | FB34 Build | append-only | SocketProvider authenticate event protocol | **removed** | 1 | 2 | — | — | R-8 cemetery; replaced by FB34-C1 |
 
 | **S5 ITERATION MUTATIONS (2026-06-07)** |
-| R59 | 2026-06-07 S5 | refinement | integration-hard-gates.py test coverage (10 tests) + FB34-2 false-positive fix + algedonic active-count bug fix | effective | 1 | 5 | — | — | S5 iter |
-| R60 | 2026-06-07 S5 | structural | S5 iteration policy expansion (audit-derived/closeout eligibility) + batch promote SM3/FB34-C1/FB34-R1 + remove superseded FB32-1 + H401/H405/H406→testing | effective | 1 | 5 | — | — | S5 iter |
-| R61 | 2026-06-07 S5 | refinement | FB34 closeout mutation test coverage (4 tests) + active mutation target 55→60 + batch promote FB34-C2/A1/A2/A3 + H402/H403/H404→testing | effective | 1 | 5 | — | — | S5 iter |
-| R62 | 2026-06-07 S5 | refinement | SM7/SM8 companion-skill verification tests (3 tests) + batch promote SM7/SM8 to effective | effective | 1 | 5 | — | — | S5 iter |
+| R60 | 2026-06-07 S5 | structural | S5 iteration policy expansion (audit-derived/closeout eligibility) + batch promote SM3/FB34-C1/FB34-R1 + remove superseded FB32-1 + H401/H405/H406→testing | effective | 4 | 5 | — | — | S5 iter |
+| R61 | 2026-06-07 S5 | refinement | FB34 closeout mutation test coverage (4 tests) + active mutation target 55→60 + batch promote FB34-C2/A1/A2/A3 + H402/H403/H404→testing | effective | 3 | 5 | — | — | S5 iter |
+| R62 | 2026-06-07 S5 | refinement | SM7/SM8 companion-skill verification tests (3 tests) + batch promote SM7/SM8 to effective | effective | 2 | 5 | — | — | S5 iter |
 
 | **FB34 CLOSEOUT MUTATIONS (Proposed during Phase 8b, await implementation/measurement)** |
 | FB34-C1 | FB34 Phase 8b | structural | Tool-enforced integration hard-gates script (consolidates FB31-5, FB34-1, FB34-2, FB34-3) | effective | 1 | 5 | H401, H405 | — | S5 iter |

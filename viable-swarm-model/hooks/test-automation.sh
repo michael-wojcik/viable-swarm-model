@@ -6769,6 +6769,56 @@ else
     fail "expected SM7 and SM8 both to be effective"
 fi
 
+# ============================================================================
+# Test 185: R59 promoted to historical after S5 iteration counter reaches 5
+# ============================================================================
+
+echo -n "TEST: R59 promoted to historical with builds_tested=5 score=5 ... "
+
+R59_ROW=$(grep "^| R59 " "$SCRIPT_DIR/../references/mutation-state.md" | grep "historical" || true)
+R59_BUILDS=$(echo "$R59_ROW" | awk -F'|' '{print $7}' | tr -d ' ' || true)
+
+if [ -n "$R59_ROW" ] && [ "$R59_BUILDS" = "5" ]; then
+    pass
+else
+    fail "expected R59 historical with builds_tested=5, got: builds=$R59_BUILDS"
+fi
+
+# ============================================================================
+# Test 186: Remaining S5 iteration mutations have builds_tested > 1
+# ============================================================================
+
+echo -n "TEST: remaining effective S5 mutations have builds_tested >= 2 ... "
+
+R60_BT=$(grep "^| R60 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $7}' | tr -d ' ' || true)
+R61_BT=$(grep "^| R61 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $7}' | tr -d ' ' || true)
+R62_BT=$(grep "^| R62 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $7}' | tr -d ' ' || true)
+
+PASS_CHECK=0
+for bt in "$R60_BT" "$R61_BT" "$R62_BT"; do
+    if [ -n "$bt" ] && [ "$bt" -ge 2 ] 2>/dev/null; then
+        PASS_CHECK=$((PASS_CHECK + 1))
+    fi
+done
+
+if [ "$PASS_CHECK" -ge 3 ]; then
+    pass
+else
+    fail "expected R60/R61/R62 all builds_tested>=2, got: $R60_BT $R61_BT $R62_BT"
+fi
+
+# ============================================================================
+# Test 187: S5 iteration counter script syntax check
+# ============================================================================
+
+echo -n "TEST: increment-s5-iteration-counter.py syntax valid ... "
+
+if python3 -m py_compile "$SCRIPT_DIR/../scripts/increment-s5-iteration-counter.py" 2>/dev/null; then
+    pass
+else
+    fail "increment-s5-iteration-counter.py has syntax errors"
+fi
+
 echo ""
 echo "========================================"
 echo "Results: $PASSED passed, $FAILED failed"
