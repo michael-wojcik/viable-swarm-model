@@ -6815,17 +6815,41 @@ else
 fi
 
 # ============================================================================
-# Test 188: Remaining S5 iteration mutation R62 has builds_tested >= 3
+# Test 188: R62 promoted to historical after S5 iteration counter reaches 5
 # ============================================================================
 
-echo -n "TEST: remaining effective S5 mutation R62 has builds_tested >= 3 ... "
+echo -n "TEST: R62 promoted to historical with builds_tested=5 score=5 ... "
 
-R62_BT=$(grep "^| R62 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $7}' | tr -d ' ' || true)
+R62_ROW=$(grep "^| R62 " "$SCRIPT_DIR/../references/mutation-state.md" | grep "historical" || true)
+R62_BUILDS=$(echo "$R62_ROW" | awk -F'|' '{print $7}' | tr -d ' ' || true)
 
-if [ -n "$R62_BT" ] && [ "$R62_BT" -ge 3 ] 2>/dev/null; then
+if [ -n "$R62_ROW" ] && [ "$R62_BUILDS" = "5" ]; then
     pass
 else
-    fail "expected R62 builds_tested>=3, got: $R62_BT"
+    fail "expected R62 historical with builds_tested=5, got: builds=$R62_BUILDS"
+fi
+
+# ============================================================================
+# Test 189: All S5 iteration mutations are now historical (lifecycle complete)
+# ============================================================================
+
+echo -n "TEST: all S5 iteration mutations (R59-R62) are historical ... "
+
+S5_ROWS=$(grep "^| R6[0-9] " "$SCRIPT_DIR/../references/mutation-state.md" || true)
+S5_EFFECTIVE=0
+while IFS= read -r row; do
+    if [ -n "$row" ]; then
+        status=$(echo "$row" | awk -F'|' '{print $6}' | tr -d ' ')
+        if [ "$status" = "effective" ]; then
+            S5_EFFECTIVE=$((S5_EFFECTIVE + 1))
+        fi
+    fi
+done <<< "$S5_ROWS"
+
+if [ "$S5_EFFECTIVE" -eq 0 ]; then
+    pass
+else
+    fail "expected 0 effective S5 mutations, found $S5_EFFECTIVE"
 fi
 
 # ============================================================================
