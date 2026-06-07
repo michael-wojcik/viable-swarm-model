@@ -11,6 +11,7 @@ This skill contains test strategy patterns that inform integration validation.
 - If the build uses a database: read `~/vsm/vsm-stack-skills/database-patterns/SKILL.md` **MANDATORY**
 - If the build has Docker/Compose: read `~/vsm/vsm-stack-skills/docker-pitfalls/SKILL.md` **MANDATORY**
 - Always read `~/vsm/vsm-stack-skills/dependency-drift-pitfalls/SKILL.md` to verify manifest-environment parity.
+- Always read `~/vsm/vsm-stack-skills/integration-patterns/SKILL.md` to verify cross-layer dead code detection (unused GraphQL, unexercised Socket.IO, orphaned shared types).
 
 **Skill Read Verification — MANDATORY (FB34-A3)**
 You MUST include a "Skills consulted:" header in your completion report listing

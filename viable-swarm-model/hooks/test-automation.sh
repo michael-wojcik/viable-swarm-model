@@ -54,6 +54,8 @@ for pyscript in auto-gym-trigger.py mutation-predictor.py skill-effectiveness-tr
     check_syntax "$pyscript" "$SCRIPT_DIR/../scripts/$pyscript" "python3 -m py_compile"
 done
 
+check_syntax "validate-agent-files.py" "$SCRIPT_DIR/../agents/validate-agent-files.py" "python3 -m py_compile"
+
 # ============================================================================
 # Section: Mutation State Management
 # ============================================================================
@@ -2650,8 +2652,20 @@ else
 fi
 
 # ============================================================================
-# Test 192: session-end.sh does NOT warn about deprecated knowledge broker (R69)
+# Test 193: vsm_coordinator.md references integration-patterns skill (R70)
 # ============================================================================
+
+echo -n "TEST: vsm_coordinator.md references integration-patterns skill ... "
+
+COORD_FILE="$SCRIPT_DIR/../agents/vsm_coordinator.md"
+if [[ -f "$COORD_FILE" ]] && grep -q "integration-patterns/SKILL.md" "$COORD_FILE"; then
+    pass
+else
+    fail "vsm_coordinator.md missing integration-patterns skill reference"
+fi
+
+# ============================================================================
+# Test 192: session-end.sh does NOT warn about deprecated knowledge broker (R69)
 
 echo -n "TEST: session-end.sh no knowledge-broker warning on plan.md without refs ... "
 

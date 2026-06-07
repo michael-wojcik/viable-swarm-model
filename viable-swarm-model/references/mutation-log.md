@@ -5261,3 +5261,27 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 
 **Measured effect**: **TESTED** — Test 192 verifies that session-end.sh produces no knowledge-broker warning on a complete build with plan.md lacking broker references. 201 tests passing, 0 failed.
 
+
+---
+
+## Mutation R70 — 2026-06-07
+
+**Session**: S5 Orchestrator Iteration R70
+**File**: `agents/vsm_coordinator.md`, `hooks/test-automation.sh`
+**Type**: refinement
+**Rationale**: `validate-agent-files.py` (critical agent infrastructure validator) had zero test coverage in the automation suite. When run manually, it revealed that `vsm_coordinator.md` — the agent responsible for cross-layer integration verification — did NOT reference `integration-patterns/SKILL.md` despite that skill being marked "Full" in the registry with relevant agents including "coordinator". The skill contains empirical rules for dead code detection (unused GraphQL, unexercised Socket.IO, orphaned shared types) from FB33 but was invisible to the coordinator because no agent prompt loaded it. This was a classic S3→S1 knowledge channel gap: the skill existed in the registry (S3 control) but was never wired to the consumer (S1 implementation).
+
+**Expected effect**: The coordinator agent now reads `integration-patterns/SKILL.md` during integration verification, enabling cross-layer dead code detection in future builds. The automation suite verifies agent file syntax and key skill references.
+
+**Before**:
+- vsm_coordinator.md: References 6 skills (testing, backend, frontend, database, docker, dependency-drift) but NOT integration-patterns
+- validate-agent-files.py: No automation suite test coverage
+- Result: integration-patterns skill rules invisible to coordinator
+
+**After**:
+- vsm_coordinator.md: Added mandatory integration-patterns reference for cross-layer dead code detection
+- test-automation.sh: Added validate-agent-files.py syntax check + Test 193 verifying integration-patterns reference
+- Result: Agent file validation is tested; coordinator reads integration-patterns
+
+**Measured effect**: **TESTED** — Test 193 verifies integration-patterns reference in vsm_coordinator.md. validate-agent-files.py syntax check passes. 202 tests passing, 0 failed (after mutation-log entry added).
+

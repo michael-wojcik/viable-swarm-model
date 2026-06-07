@@ -154,12 +154,12 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 57 | < 60 | ✅ OK (healthy headroom) |
+| Active mutations | 58 | < 60 | ✅ OK (healthy headroom) |
 | Historical effective (≥5 builds) | 66 | >15% of active | ✅ 122% |
-| Effective (<5 builds, monitored) | 57 | >30% of active | ✅ 100% |
+| Effective (<5 builds, monitored) | 58 | >30% of active | ✅ 100% |
 | Probationary mutations | 0 | <20 at any time | ✅ 0 (within target) |
 | Removed / redesigned | 23 | ≥2 per 5 builds | ✅ 23 (exceeds target) |
-| Measured effect fill rate (scored) | 94.5% | ≥80% | ✅ 94.5% |
+| Measured effect fill rate (scored) | 94.6% | ≥80% | ✅ 94.6% |
 | Measured effect fill rate (any entry) | 95.9% | ≥80% | ✅ 95.9% |
 | Removal rate (last 5 builds) | 7 | ≥2 | ✅ Meets target |
 
@@ -368,6 +368,7 @@
 | R67 | 2026-06-07 S5 | refinement | auto-gym-trigger.py excludes testing hypotheses from backlog count | effective | 1 | 5 | — | — | S5 iter |
 | R68 | 2026-06-07 S5 | refinement | Integration Health auto-sync test + stale metric correction | effective | 1 | 5 | — | — | S5 iter |
 | R69 | 2026-06-07 S5 | refinement | Remove deprecated knowledge-broker Check 7 from session-end.sh | effective | 1 | 5 | — | — | S5 iter |
+| R70 | 2026-06-07 S5 | refinement | Wire integration-patterns skill to vsm_coordinator.md + validate-agent-files.py syntax check | effective | 1 | 5 | — | — | S5 iter |
 
 | **FB34 CLOSEOUT MUTATIONS (Proposed during Phase 8b, await implementation/measurement)** |
 | FB34-C1 | FB34 Phase 8b | structural | Tool-enforced integration hard-gates script (consolidates FB31-5, FB34-1, FB34-2, FB34-3) | effective | 1 | 5 | H401, H405 | — | S5 iter |

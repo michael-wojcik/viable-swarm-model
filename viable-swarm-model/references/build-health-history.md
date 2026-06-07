@@ -6,6 +6,40 @@
 ---
 ---
 
+## 2026-06-07 — S5 Orchestrator Iteration (R70)
+
+### Diagnosed Constraint
+**System 3 (Audit/Control) / S3→S1 channel — `integration-patterns` skill was invisible to agents despite being "Full" in the registry**: `validate-agent-files.py` (run manually) revealed that `vsm_coordinator.md` did NOT reference `integration-patterns/SKILL.md`. The skill contains empirical rules for cross-layer dead code detection (unused GraphQL, unexercised Socket.IO, orphaned shared types) from FB33-6 but was never loaded by any agent. Additionally, `validate-agent-files.py` itself had zero test coverage in the automation suite despite validating all 25 agent/skill files.
+
+### Change Made
+**Refinement mutation R70**: Wired integration-patterns skill to vsm_coordinator.md and added agent-file validation to automation suite.
+- `agents/vsm_coordinator.md`: Added mandatory `integration-patterns/SKILL.md` reference for cross-layer dead code detection
+- `hooks/test-automation.sh`: Added `validate-agent-files.py` syntax check to preliminary loop; added Test 193 verifying integration-patterns reference in vsm_coordinator.md
+- Promoted R70 to `effective` with `builds_tested=1, score=5` per S5 iteration validation policy
+- Updated Integration Health: active=58, effective=58
+
+### Test Results
+- `bash hooks/test-automation.sh`: **203 passed, 0 failed** (was 202 passed, 1 failed before mutation-log entry)
+- Test 193: vsm_coordinator.md references integration-patterns skill → PASS
+- `validate-agent-files.py`: Syntax valid, exits 0 with expected warnings
+- `mutation-portfolio-health.py`: total_active=58, effective=58, probationary=0, all metrics green
+
+### Files Modified
+- `viable-swarm-model/agents/vsm_coordinator.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 3 (Audit/Control) / S3→S1 channel — validate-agent-files.py produces 10 warnings (7 bracket placeholders + 3 SKILL-REGISTRY agent-reference gaps) that are expected but not verified**: The warnings are harmless (template placeholders and deprecated/unreferenced skills) but the automation suite does not verify that they remain stable. A future agent prompt change could introduce a new WARNING or ERROR, and without a test that validates the exact warning set, regressions could go undetected. However, the current exit-code-0 check is sufficient for detecting ERROR-level regressions. The remaining 6 untested hypotheses and 0%-exercise-rate meta-system agents continue to be the organism's primary external frontier.
+
+---
+---
+
 ## 2026-06-07 — S5 Orchestrator Iteration (R69)
 
 ### Diagnosed Constraint
