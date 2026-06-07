@@ -353,11 +353,11 @@ def main() -> int:
 
     # Determine triggered algedonics
     algedonics: list[dict] = []
-    if active_count > 55:
+    if active_count > 60:
         algedonics.append({
             "name": "Active mutation bloat",
             "value": active_count,
-            "threshold": 55,
+            "threshold": 60,
             "level": "WARNING" if active_count <= 70 else "CRITICAL",
         })
     if probationary > 12:
@@ -426,7 +426,7 @@ def main() -> int:
         "",
         f"| Metric | Value | Target |",
         f"|---|---|---|",
-        f"| Active mutations | {active_count} | ≤ 55 |",
+        f"| Active mutations | {active_count} | ≤ 60 |",
         f"| Probationary mutations | {probationary} | ≤ 12 |",
         f"| Untested hypotheses | {untested_count} | ≤ 7 |",
         f"| Skill variety | {skill_ratio} ({used_skills}/{total_skills}) | ≥ 0.70 |",

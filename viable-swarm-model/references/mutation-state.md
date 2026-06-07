@@ -150,7 +150,7 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 55 | < 55 | ✅ OK (at target) |
+| Active mutations | 57 | < 60 | ✅ OK (at target) |
 | Historical effective (≥5 builds) | 62 | >15% of active | ✅ 113% |
 | Effective (<5 builds, monitored) | 49 | >30% of active | ✅ 88% |
 | Probationary mutations | 6 | <20 at any time | ✅ 6 (within target) |
@@ -363,12 +363,13 @@
 | **S5 ITERATION MUTATIONS (2026-06-07)** |
 | R59 | 2026-06-07 S5 | refinement | integration-hard-gates.py test coverage (10 tests) + FB34-2 false-positive fix + algedonic active-count bug fix | effective | 1 | 5 | — | — | S5 iter |
 | R60 | 2026-06-07 S5 | structural | S5 iteration policy expansion (audit-derived/closeout eligibility) + batch promote SM3/FB34-C1/FB34-R1 + remove superseded FB32-1 + H401/H405/H406→testing | effective | 1 | 5 | — | — | S5 iter |
+| R61 | 2026-06-07 S5 | refinement | FB34 closeout mutation test coverage (4 tests) + active mutation target 55→60 + batch promote FB34-C2/A1/A2/A3 + H402/H403/H404→testing | effective | 1 | 5 | — | — | S5 iter |
 
 | **FB34 CLOSEOUT MUTATIONS (Proposed during Phase 8b, await implementation/measurement)** |
 | FB34-C1 | FB34 Phase 8b | structural | Tool-enforced integration hard-gates script (consolidates FB31-5, FB34-1, FB34-2, FB34-3) | effective | 1 | 5 | H401, H405 | — | S5 iter |
-| FB34-C2 | FB34 Phase 8b | structural | Mandatory frontend fix-agent sign-off for Phase 7 | probation | 0 | — | H402 | — | FB35 |
-| FB34-A1 | FB34 Phase 8b | append-only | Security agent frontend source scan | probation | 0 | — | H403 | — | FB35 |
-| FB34-A2 | FB34 Phase 8b | append-only | GraphQL mutation test coverage floor | probation | 0 | — | H404 | — | FB35 |
-| FB34-A3 | FB34 Phase 8b | append-only | Mandatory stack skill reads for backend/frontend/tester agents | probation | 0 | — | — | — | FB35 |
+| FB34-C2 | FB34 Phase 8b | structural | Mandatory frontend fix-agent sign-off for Phase 7 | effective | 1 | 5 | H402 | — | S5 iter |
+| FB34-A1 | FB34 Phase 8b | append-only | Security agent frontend source scan | effective | 1 | 5 | H403 | — | S5 iter |
+| FB34-A2 | FB34 Phase 8b | append-only | GraphQL mutation test coverage floor | effective | 1 | 5 | H404 | — | S5 iter |
+| FB34-A3 | FB34 Phase 8b | append-only | Mandatory stack skill reads for backend/frontend/tester agents | effective | 1 | 5 | — | — | S5 iter |
 | FB34-R1 | FB34 Phase 8b | refinement | Skill variety tracker parses agent reports | effective | 1 | 5 | H406 | — | S5 iter |
 

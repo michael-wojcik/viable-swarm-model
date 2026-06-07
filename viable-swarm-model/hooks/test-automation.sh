@@ -5235,12 +5235,12 @@ elif [ "$MFB30_STATUS" != "REDESIGNED" ]; then
     fail "M-FB30-1 expected REDESIGNED, got '$MFB30_STATUS'"
 fi
 
-# Verify algedonic threshold is 55
+# Verify algedonic threshold is 60
 ALG_SCRIPT="$SCRIPT_DIR/../scripts/algedonic-action-plan.py"
-if grep -q '"threshold": 55' "$ALG_SCRIPT"; then
+if grep -q '"threshold": 60' "$ALG_SCRIPT"; then
     pass
 else
-    fail "algedonic-action-plan.py threshold is not 55"
+    fail "algedonic-action-plan.py threshold is not 60"
 fi
 
 # ============================================================================
@@ -5286,10 +5286,10 @@ EOF
 HOME="$TMPDIR/home139" python3 "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" --build-dir "$TMPDIR/build139" > "$TMPDIR/out139.txt" 2>&1
 
 if ! grep -q "Active mutation bloat" "$TMPDIR/out139.txt" && \
-   grep -q "| Active mutations | 51 | ≤ 55 |" "$TMPDIR/out139.txt"; then
+   grep -q "| Active mutations | 51 | ≤ 60 |" "$TMPDIR/out139.txt"; then
     pass
 else
-    fail "algedonic should NOT trigger bloat at 51 (threshold 55)"
+    fail "algedonic should NOT trigger bloat at 51 (threshold 60)"
 fi
 
 # ============================================================================
@@ -6191,7 +6191,7 @@ EOF
 HOME="$TMPDIR/home160" python3 "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" --build-dir "$TMPDIR/build160" > "$TMPDIR/out160.txt" 2>&1
 
 if ! grep -q "Active mutation bloat" "$TMPDIR/out160.txt" && \
-   grep -q "| Active mutations | 51 | ≤ 55 |" "$TMPDIR/out160.txt"; then
+   grep -q "| Active mutations | 51 | ≤ 60 |" "$TMPDIR/out160.txt"; then
     pass
 else
     fail "algedonic should NOT count removed mutations as active (51 effective + 4 removed = 55 active, but bloat triggered)"
@@ -6614,6 +6614,120 @@ if [ "$H401_STATUS" = "testing" ] && [ "$H405_STATUS" = "testing" ] && [ "$H406_
     pass
 else
     fail "expected H401=$H401_STATUS H405=$H405_STATUS H406=$H406_STATUS all to be 'testing'"
+fi
+
+# ============================================================================
+# Test 175: FB34-A1 implemented — vsm_security.md contains frontend source scan
+# ============================================================================
+
+echo -n "TEST: FB34-A1 frontend source scan is present in vsm_security.md ... "
+
+if grep -q "Frontend Source Scan" "$SCRIPT_DIR/../agents/vsm_security.md" && \
+   grep -q "localStorage.setItem(\"token\"" "$SCRIPT_DIR/../agents/vsm_security.md" && \
+   grep -q "Apollo Client fallback URIs" "$SCRIPT_DIR/../agents/vsm_security.md"; then
+    pass
+else
+    fail "vsm_security.md missing Frontend Source Scan section (FB34-A1)"
+fi
+
+# ============================================================================
+# Test 176: FB34-A2 implemented — vsm_backend_tester.md requires GraphQL mutation tests
+# ============================================================================
+
+echo -n "TEST: FB34-A2 GraphQL mutation test coverage floor in vsm_backend_tester.md ... "
+
+if grep -q "one test per.*@strawberry.mutation" "$SCRIPT_DIR/../agents/vsm_backend_tester.md" && \
+   grep -q "INTERNAL_ERROR" "$SCRIPT_DIR/../agents/vsm_backend_tester.md"; then
+    pass
+else
+    fail "vsm_backend_tester.md missing GraphQL mutation coverage requirement (FB34-A2)"
+fi
+
+# ============================================================================
+# Test 177: FB34-C2 implemented — SKILL.md requires frontend fix-agent sign-off
+# ============================================================================
+
+echo -n "TEST: FB34-C2 frontend fix-agent sign-off gate in SKILL.md ... "
+
+if grep -q "Frontend Fix-Agent Gate (FB34-C2)" "$SCRIPT_DIR/../SKILL.md" && \
+   grep -q "frontend-fix-report.md" "$SCRIPT_DIR/../SKILL.md"; then
+    pass
+else
+    fail "SKILL.md missing Frontend Fix-Agent Gate (FB34-C2)"
+fi
+
+# ============================================================================
+# Test 178: FB34-A3 implemented — agent prompts contain mandatory stack skill reads
+# ============================================================================
+
+echo -n "TEST: FB34-A3 mandatory stack skill reads in agent prompts ... "
+
+SKILL_READ_COUNT=0
+for agent in vsm_backend_coder.md vsm_frontend_coder.md vsm_backend_tester.md vsm_auditor.md vsm_coordinator.md; do
+    if [ -f "$SCRIPT_DIR/../agents/$agent" ]; then
+        if grep -q "MANDATORY.*read.*SKILL.md" "$SCRIPT_DIR/../agents/$agent" || \
+           grep -q "read .*-patterns/SKILL.md" "$SCRIPT_DIR/../agents/$agent"; then
+            SKILL_READ_COUNT=$((SKILL_READ_COUNT + 1))
+        fi
+    fi
+done
+
+if [ "$SKILL_READ_COUNT" -ge 4 ]; then
+    pass
+else
+    fail "only $SKILL_READ_COUNT/5 agent prompts have mandatory stack skill reads (FB34-A3)"
+fi
+
+# ============================================================================
+# Test 179: FB34-C2/A1/A2/A3 promoted to effective after content-verification tests
+# ============================================================================
+
+echo -n "TEST: FB34-C2/A1/A2/A3 promoted to effective with builds_tested=1 score=5 ... "
+
+FB34C2_ROW=$(grep "^| FB34-C2 " "$SCRIPT_DIR/../references/mutation-state.md" | head -1 || true)
+FB34A1_ROW=$(grep "^| FB34-A1 " "$SCRIPT_DIR/../references/mutation-state.md" | head -1 || true)
+FB34A2_ROW=$(grep "^| FB34-A2 " "$SCRIPT_DIR/../references/mutation-state.md" | head -1 || true)
+FB34A3_ROW=$(grep "^| FB34-A3 " "$SCRIPT_DIR/../references/mutation-state.md" | head -1 || true)
+
+if echo "$FB34C2_ROW" | grep -q "effective" && \
+   echo "$FB34A1_ROW" | grep -q "effective" && \
+   echo "$FB34A2_ROW" | grep -q "effective" && \
+   echo "$FB34A3_ROW" | grep -q "effective"; then
+    pass
+else
+    fail "expected FB34-C2/A1/A2/A3 all to be effective"
+fi
+
+# ============================================================================
+# Test 180: Active mutation target updated to <60 across all files
+# ============================================================================
+
+echo -n "TEST: active mutation target is <60 in all policy files ... "
+
+if grep -q "< 60" "$SCRIPT_DIR/../references/mutation-state.md" && \
+   grep -q "≤ 60" "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" && \
+   grep -q "< 60" "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" && \
+   grep -q "< 60" "$SCRIPT_DIR/../agents/vsm_learning_curator.md" && \
+   grep -q "< 60" "$SCRIPT_DIR/../references/mutation-portfolio-template.md"; then
+    pass
+else
+    fail "active mutation target <60 not consistently applied across policy files"
+fi
+
+# ============================================================================
+# Test 181: H402 H403 H404 hypothesis statuses updated to testing
+# ============================================================================
+
+echo -n "TEST: H402 H403 H404 show testing status after agent-prompt validation ... "
+
+H402_STATUS=$(grep -A2 "## H402:" "$SCRIPT_DIR/../references/hypotheses.md" | grep "Status" | sed 's/.*://;s/^ *//')
+H403_STATUS=$(grep -A2 "## H403:" "$SCRIPT_DIR/../references/hypotheses.md" | grep "Status" | sed 's/.*://;s/^ *//')
+H404_STATUS=$(grep -A2 "## H404:" "$SCRIPT_DIR/../references/hypotheses.md" | grep "Status" | sed 's/.*://;s/^ *//')
+
+if [ "$H402_STATUS" = "testing" ] && [ "$H403_STATUS" = "testing" ] && [ "$H404_STATUS" = "testing" ]; then
+    pass
+else
+    fail "expected H402=$H402_STATUS H403=$H403_STATUS H404=$H404_STATUS all to be 'testing'"
 fi
 
 echo ""

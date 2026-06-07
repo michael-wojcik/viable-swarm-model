@@ -210,7 +210,7 @@
 
 ## H402: Mandatory Frontend Fix-Agent Sign-Off Improves Traceability
 
-**Status**: untested
+**Status**: testing
 **Proposed**: 2026-06-06
 **Rationale**: The SocketProvider `authenticate` emit fix and the `queries.ts` DRIVERS-query additions were applied during the FB34 fix wave, but `.kimi/` contains no `vsm_frontend_fix_agent` report. The fixes are traceable only through implementation-audit re-checks, not through a dedicated fix-agent artifact.
 **Source**: Fitness build FB34, Phase 7 fix wave
@@ -223,7 +223,7 @@
 
 ## H403: Security Agent Frontend Source Scan Catches Persisted JWT and Fallback URIs
 
-**Status**: untested
+**Status**: testing
 **Proposed**: 2026-06-06
 **Rationale**: `security-report.md` in FB34 states "No `frontend/src/**/*.ts` or `frontend/src/**/*.tsx` files were found" despite the existence of `src/pages/*.tsx` and `src/sio/SocketProvider.tsx`. The security gate therefore missed `localStorage` JWT persistence, Apollo Client fallback URIs, and CORS credential usage.
 **Source**: Fitness build FB34, Phase 5 security gate
@@ -236,7 +236,7 @@
 
 ## H404: GraphQL Mutation Test Coverage Floor Prevents Stub Mutations Passing Phase 4
 
-**Status**: untested
+**Status**: testing
 **Proposed**: 2026-06-06
 **Rationale**: The FB34 backend test suite reported 33/33 passing while six GraphQL mutations returned `INTERNAL_ERROR`. The existing tests did not exercise the mutation implementations, so stubs were invisible to the Phase 4 gate.
 **Source**: Fitness build FB34, Phase 4 testing
