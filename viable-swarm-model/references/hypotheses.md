@@ -197,7 +197,7 @@
 
 ## H401: Tool-Enforced GraphQL Stub Detection Prevents Stub Mutations Reaching Phase 6
 
-**Status**: untested
+**Status**: testing
 **Proposed**: 2026-06-06
 **Rationale**: FB34 probation mutation FB34-1 (GraphQL mutation completeness checklist) did not prevent six `INTERNAL_ERROR` stub mutations from reaching Phase 6. The prompt-only checklist was ignored until `vsm_auditor` flagged the parity gap in the implementation audit.
 **Source**: Fitness build FB34, Phase 6 implementation audit
@@ -249,7 +249,7 @@
 
 ## H405: Session-End Mutation-State Backfill Ensures All Probation Mutations Are Scored
 
-**Status**: untested
+**Status**: testing
 **Proposed**: 2026-06-06
 **Rationale**: At the end of FB34, mutation-state rows FB34-1, FB34-2, FB34-3 still showed `Builds Tested = 0` and `Score = —` until manually backfilled. Manual S5 discipline is insufficient under pressure; the organism repeatedly leaves probation mutations unmeasured.
 **Source**: Fitness build FB34, Phase 8b mutation tracking
@@ -262,7 +262,7 @@
 
 ## H406: Skill Variety Metric Should Parse Agent Reports
 
-**Status**: untested
+**Status**: testing
 **Proposed**: 2026-06-06
 **Rationale**: `organism-vitals.md` in FB34 lists `integration-patterns` as an unused skill, yet `integration-contract.md` explicitly cites `integration-patterns` under "Skills consulted." The current metric counts skill reads only from S5 or Phase 0 load, not from agent reports, leading to undercounting and false variety deficits.
 **Source**: Fitness build FB34, Phase 0 / Phase 6

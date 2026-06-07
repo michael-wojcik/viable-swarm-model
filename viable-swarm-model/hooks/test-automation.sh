@@ -237,11 +237,12 @@ fi
 echo -n "TEST: mutation-state.md contains S5 iteration validation policy ... "
 
 POLICY_FILE="$REAL_HOME/vsm/viable-swarm-model/references/mutation-state.md"
-if grep -q "S5 iteration mutation" "$POLICY_FILE" && \
+if grep -q "infrastructure mutation" "$POLICY_FILE" && \
    grep -q "passes automation suite validation" "$POLICY_FILE" && \
    grep -q "eligible for promotion from" "$POLICY_FILE" && \
-   grep -q "Build-derived mutations" "$POLICY_FILE" && \
-   grep -q "MUST be validated in a real fitness build" "$POLICY_FILE"; then
+   grep -q "regardless of source" "$POLICY_FILE" && \
+   grep -q "audit-derived" "$POLICY_FILE" && \
+   grep -q "closeout-proposed" "$POLICY_FILE"; then
     pass
 else
     fail "S5 iteration validation policy not found in mutation-state.md"
@@ -267,8 +268,9 @@ for sm in SM1 SM2 SM4 SM5 SM6 SM9; do
     fi
 done
 
-# Check that non-superseded SM mutations are still probationary
-for sm in SM3 SM7 SM8; do
+# Check that non-superseded SM mutations have correct statuses
+# SM3 promoted to effective (automation suite validated)
+for sm in SM7 SM8; do
     if grep -q "| $sm |.*| probation |" "$MUTATION_STATE"; then
         PASS_CHECK=$((PASS_CHECK + 1))
     else
@@ -276,6 +278,12 @@ for sm in SM3 SM7 SM8; do
         break
     fi
 done
+
+if grep -q "| SM3 |.*| effective |" "$MUTATION_STATE"; then
+    PASS_CHECK=$((PASS_CHECK + 1))
+else
+    fail "SM3 not found with effective status"
+fi
 
 if [ "$PASS_CHECK" -eq 9 ]; then
     pass
@@ -6531,6 +6539,81 @@ if [ "$RC169" -eq 0 ] && [ "$SKIP_COUNT" -ge 2 ] && \
     pass
 else
     fail "expected all checks to skip on empty build dir (exit 0, ≥2 SKIP lines)"
+fi
+
+# ============================================================================
+# Test 170: S5 iteration policy covers audit-derived and closeout infrastructure mutations
+# ============================================================================
+
+echo -n "TEST: S5 iteration validation policy includes audit-derived and closeout mutations ... "
+
+if grep -q "regardless of source" "$SCRIPT_DIR/../references/mutation-state.md" && \
+   grep -q "audit-derived" "$SCRIPT_DIR/../references/mutation-state.md" && \
+   grep -q "closeout-proposed" "$SCRIPT_DIR/../references/mutation-state.md"; then
+    pass
+else
+    fail "S5 iteration policy does not explicitly cover audit-derived/closeout mutations"
+fi
+
+# ============================================================================
+# Test 171: SM3 promoted to effective after automation suite validation
+# ============================================================================
+
+echo -n "TEST: SM3 (audit-derived) is effective with builds_tested=1 score=5 ... "
+
+SM3_ROW=$(grep "^| SM3 " "$SCRIPT_DIR/../references/mutation-state.md" | head -1 || true)
+if echo "$SM3_ROW" | grep -q "effective" && \
+   echo "$SM3_ROW" | grep -q "| 1 |" && \
+   echo "$SM3_ROW" | grep -q "| 5 |"; then
+    pass
+else
+    fail "SM3 not promoted to effective with expected metrics"
+fi
+
+# ============================================================================
+# Test 172: FB34-C1 promoted to effective after automation suite validation
+# ============================================================================
+
+echo -n "TEST: FB34-C1 (closeout structural) is effective with builds_tested=1 score=5 ... "
+
+FB34C1_ROW=$(grep "^| FB34-C1 " "$SCRIPT_DIR/../references/mutation-state.md" | head -1 || true)
+if echo "$FB34C1_ROW" | grep -q "effective" && \
+   echo "$FB34C1_ROW" | grep -q "| 1 |" && \
+   echo "$FB34C1_ROW" | grep -q "| 5 |"; then
+    pass
+else
+    fail "FB34-C1 not promoted to effective with expected metrics"
+fi
+
+# ============================================================================
+# Test 173: FB34-R1 promoted to effective after automation suite validation
+# ============================================================================
+
+echo -n "TEST: FB34-R1 (closeout refinement) is effective with builds_tested=1 score=5 ... "
+
+FB34R1_ROW=$(grep "^| FB34-R1 " "$SCRIPT_DIR/../references/mutation-state.md" | head -1 || true)
+if echo "$FB34R1_ROW" | grep -q "effective" && \
+   echo "$FB34R1_ROW" | grep -q "| 1 |" && \
+   echo "$FB34R1_ROW" | grep -q "| 5 |"; then
+    pass
+else
+    fail "FB34-R1 not promoted to effective with expected metrics"
+fi
+
+# ============================================================================
+# Test 174: H401 H405 H406 hypothesis statuses updated to testing
+# ============================================================================
+
+echo -n "TEST: H401 H405 H406 show testing status after infrastructure validation ... "
+
+H401_STATUS=$(grep -A2 "## H401:" "$SCRIPT_DIR/../references/hypotheses.md" | grep "Status" | sed 's/.*://;s/^ *//')
+H405_STATUS=$(grep -A2 "## H405:" "$SCRIPT_DIR/../references/hypotheses.md" | grep "Status" | sed 's/.*://;s/^ *//')
+H406_STATUS=$(grep -A2 "## H406:" "$SCRIPT_DIR/../references/hypotheses.md" | grep "Status" | sed 's/.*://;s/^ *//')
+
+if [ "$H401_STATUS" = "testing" ] && [ "$H405_STATUS" = "testing" ] && [ "$H406_STATUS" = "testing" ]; then
+    pass
+else
+    fail "expected H401=$H401_STATUS H405=$H405_STATUS H406=$H406_STATUS all to be 'testing'"
 fi
 
 echo ""

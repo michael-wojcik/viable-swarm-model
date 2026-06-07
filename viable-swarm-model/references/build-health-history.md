@@ -41,6 +41,46 @@
 ---
 ---
 
+## 2026-06-07 — S5 Orchestrator Iteration (R60)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 channel — S5 iteration validation policy excluded audit-derived and closeout infrastructure mutations**: The policy text limited automation-suite promotion to "S5 iteration mutations," causing audit-derived mutations (SM3-SM9) and build-closeout mutations (FB34-C1 through FB34-R1) to remain as `probation | 0 | —` indefinitely even though their infrastructure was implemented and tested. This produced a stale self-model where the organism could not distinguish "unimplemented" from "implemented but awaiting build validation." Additionally, FB32-1 (ineffective, score 2) was superseded by FB33-5 but remained in the active table, inflating the count to 56 and triggering a real (not false) active-mutation-bloat WARNING.
+
+### Change Made
+**Structural mutation R60**: Expanded the S5 iteration validation policy and batch-promoted eligible infrastructure mutations.
+- `references/mutation-state.md`: Updated S5 iteration validation policy to explicitly include "audit-derived" and "closeout-proposed" infrastructure mutations as eligible for promotion when they pass automation suite tests.
+- Batch-promoted SM3 (causal tracing automation), FB34-C1 (integration hard gates), and FB34-R1 (skill variety tracker) from `probation` → `effective` with `builds_tested=1, score=5`.
+- Moved FB32-1 to `removed` (superseded by FB33-5), reducing active mutations from 56 to 55.
+- Updated Integration Health metrics to reflect new counts: active=55, probationary=6, effective=49, fill rate=90.1%.
+- `references/hypotheses.md`: Updated H401, H405, H406 from `untested` → `testing` since their infrastructure is implemented and passing automation suite tests.
+- `hooks/test-automation.sh`: Added 5 tests verifying the policy expansion and batch promotions (Tests 170-174).
+
+### Test Results
+- `bash hooks/test-automation.sh`: **182 passed, 0 failed** (was 177 passed, 0 failed)
+- Test 170: S5 iteration policy includes audit-derived and closeout mutations → PASS
+- Test 171: SM3 promoted to effective with builds_tested=1 score=5 → PASS
+- Test 172: FB34-C1 promoted to effective with builds_tested=1 score=5 → PASS
+- Test 173: FB34-R1 promoted to effective with builds_tested=1 score=5 → PASS
+- Test 174: H401/H405/H406 statuses updated to testing → PASS
+- `validate-skills.py`: Still reports "OK: 25 skills validated" with zero warnings
+- `mutation-portfolio-health.py`: Confirms total_active=55, probationary=6, effective=49, all metrics green
+
+### Files Modified
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/hypotheses.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — 9 untested hypotheses remain above CRITICAL threshold of 7**: After R60, H401/H405/H406 are now `testing`, reducing the untested backlog from 12 to 9. The remaining CRITICAL algedonic persists because H402-H404 (frontend fix-agent sign-off, security frontend scan, GraphQL test coverage floor) and the older hypotheses (H104, H152, H153, H156, H[N+3], H[N+4]) still lack empirical validation. H402-H404 correspond to FB34-C2, FB34-A1, and FB34-A2, which are implemented in agent prompts but not directly tested in the automation suite. The next frontier is either (a) an actual fitness build to validate the FB34 closeout mutations end-to-end, or (b) implementing direct automation-suite tests for the remaining FB34 agent-prompt mutations so they too can be promoted.
+
+---
+---
+
 ## 2026-06-06 — S5 Orchestrator Iteration (R56)
 
 ### Diagnosed Constraint

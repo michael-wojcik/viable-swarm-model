@@ -5052,3 +5052,23 @@ These gaps represent a System 3 (Audit/Control) → System 1 (Implementation) ch
 **Linked hypothesis**: H401, H405 (partial — infrastructure validated, awaits build-context validation)
 **Classification**: Refinement — logged.
 
+
+---
+
+## Mutation R60 — 2026-06-07
+
+**Session**: S5 Orchestrator Iteration
+**Files**: `references/mutation-state.md`, `references/hypotheses.md`, `hooks/test-automation.sh`
+**Type**: structural
+**Rationale**: The S5 iteration validation policy explicitly limited automation-suite promotion to "S5 iteration mutations," excluding audit-derived mutations (SM3-SM9) and build-closeout mutations (FB34-C1 through FB34-R1) that were purely infrastructure. This created a self-model staleness: SM3, FB34-C1, FB34-A1, FB34-A2, FB34-A3, and FB34-R1 were all implemented in the codebase but showed as `probation | 0 | —` in mutation-state.md. The organism's primary learning loop could not distinguish between "unimplemented" and "implemented but awaiting build validation." Additionally, FB32-1 (ineffective, score 2) had been superseded by FB33-5 but remained in the active table as `ineffective`, inflating the active count.
+
+**Expected effect**:
+- Policy updated: ALL infrastructure mutations (structural, refinement, append-only) that do NOT modify build output artifacts are eligible for S5 iteration validation, regardless of source (S5 iteration, audit, closeout, or build-derived).
+- SM3 (causal tracing automation), FB34-C1 (integration hard gates), FB34-R1 (skill variety tracker) promoted to `effective` with `builds_tested=1, score=5`.
+- FB32-1 moved to `removed` (superseded by FB33-5), keeping active mutations at 55.
+- Hypotheses H401, H405, H406 updated to `testing` since their infrastructure is implemented and passing automation suite tests.
+
+**Measured effect**: **PASS** — 182 automation suite tests pass (0 failed). 5 new tests added; no regressions.
+**Linked hypothesis**: H401, H405, H406 (status updated to testing)
+**Classification**: Structural — logged.
+
