@@ -211,13 +211,14 @@ if [[ -f "$CWD/.kimi/meta-report.md" && ! -f "$CWD/.kimi/algedonic-action-plan.m
     fi
 fi
 
-# ── Auto-update mutation state (H213 safety net) ──
-# If mutations-applied.md exists but mutation-state.md was not updated during
-# Phase 8c-ii (S5 forgot to run update-mutation-state.sh), update it now.
-UPDATE_SCRIPT="$HOME/vsm/viable-swarm-model/hooks/update-mutation-state.sh"
-if [[ -f "$CWD/.kimi/mutations-applied.md" && -f "$UPDATE_SCRIPT" ]]; then
-    echo "Auto-updating mutation state from $CWD/.kimi/mutations-applied.md ..."
-    bash "$UPDATE_SCRIPT" "$CWD" >/dev/null 2>&1 || echo "Mutation state auto-update failed (non-fatal)"
+# ── Auto-update mutation lifecycle (H213 safety net) ──
+# If mutations-applied.md exists, update both mutation-log.md measured effects
+# and mutation-state.md builds_tested. Replaces update-mutation-state.sh with
+# auto-mutation-lifecycle.py which handles both files.
+AML_SCRIPT="$HOME/vsm/viable-swarm-model/hooks/auto-mutation-lifecycle.py"
+if [[ -f "$CWD/.kimi/mutations-applied.md" && -f "$AML_SCRIPT" ]]; then
+    echo "Auto-updating mutation lifecycle from $CWD/.kimi/mutations-applied.md ..."
+    python3 "$AML_SCRIPT" "$CWD" >/dev/null 2>&1 || echo "Mutation lifecycle auto-update failed (non-fatal)"
 fi
 
 # ── Integration Hard Gates (FB34-C1) ──

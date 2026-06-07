@@ -5388,3 +5388,29 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 
 **Measured effect**: **TESTED** — Tests 198 and 199 verify counter increment logic and dry-run safety. 209 tests passing, 0 failed.
 
+
+
+---
+
+## Mutation R75 — 2026-06-07
+
+**Session**: S5 Orchestrator Iteration R75
+**File**: `hooks/session-end.sh`, `hooks/test-automation.sh`
+**Type**: structural
+**Rationale**: `auto-mutation-lifecycle.py` was created during FB21 as a replacement for `update-mutation-lifecycle.sh` (which had format mismatch bugs). The new script is strictly superior: it updates BOTH `mutation-log.md` measured effects AND `mutation-state.md` builds_tested, has scoped search for mutation IDs to avoid false matches, and has robust error handling. Despite this, it sat as dead code for ~12 days and 50+ S5 iterations, never invoked by `session-end.sh`. The old `update-mutation-state.sh` continued to be used, only updating builds_tested and leaving mutation-log.md measured effects permanently as **PENDING**. This created a systematic data integrity gap in the S2→S1 channel.
+
+**Expected effect**: Every build closeout now auto-updates both mutation-state.md and mutation-log.md via the superior script. The old script remains in place as a fallback but is no longer invoked by session-end.sh.
+
+**Before**:
+- session-end.sh: Called `update-mutation-state.sh` (old script, only increments builds_tested)
+- auto-mutation-lifecycle.py: Dead code — never invoked
+- mutation-log.md: Measured effects remained **PENDING** even after builds completed
+- Result: Incomplete mutation lifecycle updates, manual S5 backfill required
+
+**After**:
+- session-end.sh: Calls `auto-mutation-lifecycle.py` (updates both log and state)
+- test-automation.sh: Test 200 verifies dry-run reports changes; Test 201 verifies real run updates both files; Test 202 verifies session-end.sh wiring
+- Result: 213 tests passing, 0 failed; build closeouts auto-update full mutation lifecycle
+
+**Measured effect**: **TESTED** — Tests 200-202 verify auto-mutation-lifecycle.py behavior and session-end.sh wiring. 213 tests passing, 0 failed.
+

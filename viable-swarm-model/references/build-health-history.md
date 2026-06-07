@@ -2641,3 +2641,43 @@ S5 iterations R65 through R73 were executed on 2026-06-07 without individual bui
 ### Next Highest-Leverage Constraint
 **System 4 (Adaptation/Intelligence) / S4→S4 channel — 4 untested hypotheses remain** (H104, H152, H[N+3], H[N+4]). With the active mutation count now at 58 (healthy headroom under <60), backfilling tests for remaining untested hypotheses is the highest-ROI work. Alternatively, **System 4 (Adaptation/Intelligence) / S4→S5 channel — skill variety at 0.75** with 4 unused Full skills requires actual fitness build exercise.
 
+
+
+---
+
+## 2026-06-07 — S5 Orchestrator Iteration (R75)
+
+### Diagnosed Constraint
+**System 2 (Coordination) / S2→S1 channel — `auto-mutation-lifecycle.py` is dead code**: The script was created during FB21 to replace `update-mutation-state.sh` (which had format mismatch bugs) but was never wired into `session-end.sh`. For ~12 days and 50+ iterations, the old script continued to be invoked at build closeout, only incrementing `builds_tested` in mutation-state.md while leaving `mutation-log.md` measured effects permanently as **PENDING**. This created a systematic data integrity gap where mutations appeared tracked but their measured effects were never auto-filled.
+
+### Change Made
+**Structural mutation R75**: Wired `auto-mutation-lifecycle.py` into `session-end.sh`, replacing `update-mutation-state.sh`.
+- `hooks/session-end.sh`: Replaced `update-mutation-state.sh` invocation with `auto-mutation-lifecycle.py`
+- `hooks/test-automation.sh`: 
+  - Added syntax check for `auto-mutation-lifecycle.py`
+  - Test 200: Verifies dry-run reports pending changes
+  - Test 201: Verifies real run updates both mutation-log.md and mutation-state.md
+  - Test 202: Verifies session-end.sh references the new script
+
+**Bonus**: Counter execution during R75 incremented R71-R72 from builds_tested=4→5, making them eligible for historical promotion. Promoted R71-R72 to historical, reducing active mutations from 59 to 57.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **213 passed, 0 failed** (was 209/0)
+- Test 200: auto-mutation-lifecycle.py dry-run → PASS
+- Test 201: auto-mutation-lifecycle.py real run → PASS
+- Test 202: session-end.sh wiring → PASS
+- Integration Health: Active mutations 57 (<60 target), historical effective 72, scored fill 94.8%, any fill 96.1%
+
+### Files Modified
+- `viable-swarm-model/hooks/session-end.sh`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — 4 untested hypotheses remain** (H104, H152, H[N+3], H[N+4]). With active mutations at 57 (healthy headroom) and the S2→S1 lifecycle channel now fully automated, backfilling empirical validation for remaining hypotheses is the highest-ROI work. Alternatively, **System 4 (Adaptation/Intelligence) / S4→S5 channel — skill variety at 0.75** with 4 unused Full skills requires actual fitness build exercise to resolve.
+

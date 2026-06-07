@@ -54,6 +54,8 @@ for pyscript in auto-gym-trigger.py mutation-predictor.py skill-effectiveness-tr
     check_syntax "$pyscript" "$SCRIPT_DIR/../scripts/$pyscript" "python3 -m py_compile"
 done
 
+check_syntax "auto-mutation-lifecycle.py" "$SCRIPT_DIR/auto-mutation-lifecycle.py" "python3 -m py_compile"
+
 check_syntax "validate-agent-files.py" "$SCRIPT_DIR/../agents/validate-agent-files.py" "python3 -m py_compile"
 
 # ============================================================================
@@ -7018,20 +7020,20 @@ fi
 # Test 189: R59-R62 S5 iteration mutations are historical; R67 is effective
 # ============================================================================
 
-echo -n "TEST: R59-R62 historical and R71 effective ... "
+echo -n "TEST: R59-R62 historical and R73 effective ... "
 
 R59_HIST=$(grep "^| R59 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $6}' | tr -d ' ')
 R60_HIST=$(grep "^| R60 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $6}' | tr -d ' ')
 R61_HIST=$(grep "^| R61 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $6}' | tr -d ' ')
 R62_HIST=$(grep "^| R62 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $6}' | tr -d ' ')
-R71_STAT=$(grep "^| R71 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $6}' | tr -d ' ')
+R73_STAT=$(grep "^| R73 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $6}' | tr -d ' ')
 
 if [ "$R59_HIST" = "historical" ] && [ "$R60_HIST" = "historical" ] && \
    [ "$R61_HIST" = "historical" ] && [ "$R62_HIST" = "historical" ] && \
-   [ "$R71_STAT" = "effective" ]; then
+   [ "$R73_STAT" = "effective" ]; then
     pass
 else
-    fail "expected R59-R62 historical and R71 effective, got R59=$R59_HIST R60=$R60_HIST R61=$R61_HIST R62=$R62_HIST R71=$R71_STAT"
+    fail "expected R59-R62 historical and R73 effective, got R59=$R59_HIST R60=$R60_HIST R61=$R61_HIST R62=$R62_HIST R73=$R73_STAT"
 fi
 
 # ============================================================================
@@ -7245,6 +7247,121 @@ if [ "$BEFORE" = "$AFTER" ]; then
     pass
 else
     fail "Dry-run modified the file"
+fi
+
+# ============================================================================
+# Test 200: auto-mutation-lifecycle.py dry-run updates mutation-log and state (R75)
+# ============================================================================
+
+echo -n "TEST: auto-mutation-lifecycle.py dry-run reports pending changes ... "
+
+AML_TMP=$(mktemp -d)
+mkdir -p "$AML_TMP/build200/.kimi"
+mkdir -p "$AML_TMP/vsm/viable-swarm-model/references"
+
+cat > "$AML_TMP/build200/.kimi/mutations-applied.md" << 'EOF'
+| # | Mutation ID | Target Failure | Proposed By | Status | Evidence |
+|---|---|---|---|---|---|
+| 1 | T200A | Test bug | vsm_backend_tester | effective | Score: 5 |
+| 2 | T200B | Auth gap | vsm_security | probation | Pending review |
+EOF
+
+cat > "$AML_TMP/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| T200A | Test | append-only | Test bug | effective | 2 | 5 | — | — | — |
+| T200B | Test | structural | Auth gap | probation | 1 | 3 | — | — | — |
+EOF
+
+cat > "$AML_TMP/vsm/viable-swarm-model/references/mutation-log.md" << 'EOF'
+## Mutation T200A
+
+**Measured effect**: **PENDING**
+
+## Mutation T200B
+
+**Measured effect**: **PENDING**
+EOF
+
+RC=0
+HOME="$AML_TMP" python3 "$SCRIPT_DIR/auto-mutation-lifecycle.py" "$AML_TMP/build200" --dry-run > "$AML_TMP/dryrun.out" 2>&1 || RC=$?
+OUTPUT=$(cat "$AML_TMP/dryrun.out")
+
+# Verify dry-run reports expected changes
+if [ "$RC" -eq 0 ] && \
+   echo "$OUTPUT" | grep -q "T200A" && \
+   echo "$OUTPUT" | grep -q "T200B" && \
+   echo "$OUTPUT" | grep -q "\[DRY RUN\]"; then
+    rm -rf "$AML_TMP"
+    pass
+else
+    rm -rf "$AML_TMP"
+    fail "Dry-run did not report expected changes (rc=$RC)"
+fi
+
+# ============================================================================
+# Test 201: auto-mutation-lifecycle.py real run updates files correctly (R75)
+# ============================================================================
+
+echo -n "TEST: auto-mutation-lifecycle.py real run increments builds and fills measured effect ... "
+
+AML_TMP=$(mktemp -d)
+mkdir -p "$AML_TMP/build200/.kimi"
+mkdir -p "$AML_TMP/vsm/viable-swarm-model/references"
+
+cat > "$AML_TMP/build200/.kimi/mutations-applied.md" << 'EOF'
+| # | Mutation ID | Target Failure | Proposed By | Status | Evidence |
+|---|---|---|---|---|---|
+| 1 | T200A | Test bug | vsm_backend_tester | effective | Score: 5 |
+| 2 | T200B | Auth gap | vsm_security | probation | Pending review |
+EOF
+
+cat > "$AML_TMP/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| T200A | Test | append-only | Test bug | effective | 2 | 5 | — | — | — |
+| T200B | Test | structural | Auth gap | probation | 1 | 3 | — | — | — |
+EOF
+
+cat > "$AML_TMP/vsm/viable-swarm-model/references/mutation-log.md" << 'EOF'
+## Mutation T200A
+
+**Measured effect**: **PENDING**
+
+## Mutation T200B
+
+**Measured effect**: **PENDING**
+EOF
+
+RC=0
+HOME="$AML_TMP" python3 "$SCRIPT_DIR/auto-mutation-lifecycle.py" "$AML_TMP/build200" > "$AML_TMP/real.out" 2>&1 || RC=$?
+
+# Verify mutation-state.md was updated
+ST_OK=$(grep -c "| T200A | Test | append-only | Test bug | effective | 3 | 5 |" "$AML_TMP/vsm/viable-swarm-model/references/mutation-state.md" || true)
+# T200B should be incremented to 2 but still probation (<3)
+STB_OK=$(grep -c "| T200B | Test | structural | Auth gap | probation | 2 | 3 |" "$AML_TMP/vsm/viable-swarm-model/references/mutation-state.md" || true)
+# Verify mutation-log.md measured effect was filled
+ML_OK=$(grep -c "Effective (Score: 4–5)" "$AML_TMP/vsm/viable-swarm-model/references/mutation-log.md" || true)
+
+if [ "$RC" -eq 0 ] && [ "$ST_OK" -eq 1 ] && [ "$STB_OK" -eq 1 ] && [ "$ML_OK" -ge 1 ]; then
+    rm -rf "$AML_TMP"
+    pass
+else
+    rm -rf "$AML_TMP"
+    fail "Real run did not update correctly (rc=$RC st=$ST_OK stb=$STB_OK ml=$ML_OK)"
+fi
+
+# ============================================================================
+# Test 202: session-end.sh references auto-mutation-lifecycle.py (R75)
+# ============================================================================
+
+echo -n "TEST: session-end.sh references auto-mutation-lifecycle.py not update-mutation-state.sh ... "
+
+if grep -q "auto-mutation-lifecycle.py" "$SCRIPT_DIR/session-end.sh" && \
+   ! grep -v "^#" "$SCRIPT_DIR/session-end.sh" | grep -q "update-mutation-state.sh"; then
+    pass
+else
+    fail "session-end.sh does not reference auto-mutation-lifecycle.py or still references old script"
 fi
 
 echo ""
