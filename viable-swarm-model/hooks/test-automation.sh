@@ -6830,26 +6830,23 @@ else
 fi
 
 # ============================================================================
-# Test 189: All S5 iteration mutations are now historical (lifecycle complete)
+# Test 189: R59-R62 S5 iteration mutations are historical; R67 is effective
 # ============================================================================
 
-echo -n "TEST: all S5 iteration mutations (R59-R62) are historical ... "
+echo -n "TEST: R59-R62 historical and R67 effective ... "
 
-S5_ROWS=$(grep "^| R6[0-9] " "$SCRIPT_DIR/../references/mutation-state.md" || true)
-S5_EFFECTIVE=0
-while IFS= read -r row; do
-    if [ -n "$row" ]; then
-        status=$(echo "$row" | awk -F'|' '{print $6}' | tr -d ' ')
-        if [ "$status" = "effective" ]; then
-            S5_EFFECTIVE=$((S5_EFFECTIVE + 1))
-        fi
-    fi
-done <<< "$S5_ROWS"
+R59_HIST=$(grep "^| R59 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $6}' | tr -d ' ')
+R60_HIST=$(grep "^| R60 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $6}' | tr -d ' ')
+R61_HIST=$(grep "^| R61 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $6}' | tr -d ' ')
+R62_HIST=$(grep "^| R62 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $6}' | tr -d ' ')
+R67_STAT=$(grep "^| R67 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $6}' | tr -d ' ')
 
-if [ "$S5_EFFECTIVE" -eq 0 ]; then
+if [ "$R59_HIST" = "historical" ] && [ "$R60_HIST" = "historical" ] && \
+   [ "$R61_HIST" = "historical" ] && [ "$R62_HIST" = "historical" ] && \
+   [ "$R67_STAT" = "effective" ]; then
     pass
 else
-    fail "expected 0 effective S5 mutations, found $S5_EFFECTIVE"
+    fail "expected R59-R62 historical and R67 effective, got R59=$R59_HIST R60=$R60_HIST R61=$R61_HIST R62=$R62_HIST R67=$R67_STAT"
 fi
 
 # ============================================================================
@@ -6915,6 +6912,50 @@ if [ "$AG_COUNT" = "2" ]; then
     pass
 else
     fail "expected 2 untested hypotheses (excluding 3 testing), got $AG_COUNT"
+fi
+
+# ============================================================================
+# Test 191: mutation-state.md Integration Health metrics match computed values
+# ============================================================================
+
+echo -n "TEST: mutation-state.md Integration Health matches portfolio-health.py ... "
+
+# Run mutation-portfolio-health.py on the real mutation-state.md
+PH_JSON=$(cd "$SCRIPT_DIR/.." && python3 scripts/mutation-portfolio-health.py 2>/dev/null)
+PH_ACTIVE=$(echo "$PH_JSON" | python3 -c "import sys,json; print(json.load(sys.stdin)['total_active'])")
+PH_EFFECTIVE=$(echo "$PH_JSON" | python3 -c "import sys,json; print(json.load(sys.stdin)['effective_count'])")
+PH_PROBATIONARY=$(echo "$PH_JSON" | python3 -c "import sys,json; print(json.load(sys.stdin)['probationary_count'])")
+PH_SCORED=$(echo "$PH_JSON" | python3 -c "import sys,json; print(json.load(sys.stdin)['measured_fill_rate_scored'])")
+PH_ANY=$(echo "$PH_JSON" | python3 -c "import sys,json; print(json.load(sys.stdin)['measured_fill_rate_any'])")
+
+# Parse Integration Health table from mutation-state.md
+MS_ACTIVE=$(grep "^| Active mutations" "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $3}' | tr -d ' ')
+MS_EFFECTIVE=$(grep "^| Effective (<5 builds" "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $3}' | tr -d ' ')
+MS_PROBATIONARY=$(grep "^| Probationary mutations" "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $3}' | tr -d ' ')
+MS_SCORED=$(grep "^| Measured effect fill rate (scored)" "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $3}' | tr -d ' %')
+MS_ANY=$(grep "^| Measured effect fill rate (any entry)" "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $3}' | tr -d ' %')
+
+MISMATCH=""
+if [ "$PH_ACTIVE" != "$MS_ACTIVE" ]; then
+    MISMATCH="$MISMATCH active($PH_ACTIVE vs $MS_ACTIVE)"
+fi
+if [ "$PH_EFFECTIVE" != "$MS_EFFECTIVE" ]; then
+    MISMATCH="$MISMATCH effective($PH_EFFECTIVE vs $MS_EFFECTIVE)"
+fi
+if [ "$PH_PROBATIONARY" != "$MS_PROBATIONARY" ]; then
+    MISMATCH="$MISMATCH probationary($PH_PROBATIONARY vs $MS_PROBATIONARY)"
+fi
+if [ "$PH_SCORED" != "$MS_SCORED" ]; then
+    MISMATCH="$MISMATCH scored_rate($PH_SCORED vs $MS_SCORED)"
+fi
+if [ "$PH_ANY" != "$MS_ANY" ]; then
+    MISMATCH="$MISMATCH any_rate($PH_ANY vs $MS_ANY)"
+fi
+
+if [ -z "$MISMATCH" ]; then
+    pass
+else
+    fail "Integration Health stale:$MISMATCH"
 fi
 
 # ============================================================================

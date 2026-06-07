@@ -6,6 +6,39 @@
 ---
 ---
 
+## 2026-06-07 — S5 Orchestrator Iteration (R68)
+
+### Diagnosed Constraint
+**System 3 (Audit/Control) / S3→S5 channel — Integration Health metrics in mutation-state.md were stale, corrupting the self-model presented to S5**: Comparison with `mutation-portfolio-health.py` ground-truth revealed significant discrepancies: effective count was under-reported by 5 (50 vs 55), scored fill rate was 4.4pp low (90.1% vs 94.5%), and any-entry fill rate was 4.4pp low (91.5% vs 95.9%). This silent data drift meant S5 was making portfolio decisions based on an outdated snapshot.
+
+### Change Made
+**Refinement mutation R68**: Corrected stale Integration Health metrics and added automated alignment verification.
+- Updated Integration Health: active=56, effective=56, scored=94.5%, any=95.9%
+- Added **Test 191**: Runs `mutation-portfolio-health.py` and compares 5 key metrics (active, effective, probationary, scored fill rate, any fill rate) against the Integration Health table in `mutation-state.md`
+- Promoted R68 to `effective` with `builds_tested=1, score=5` per S5 iteration validation policy
+- Updated Test 189 to account for R67 being effective (R59-R62 historical + R67 effective)
+
+### Test Results
+- `bash hooks/test-automation.sh`: **200 passed, 0 failed** (was 199 passed, 1 failed before Test 189 fix)
+- Test 191: mutation-state.md Integration Health matches portfolio-health.py computed values → PASS
+- `mutation-portfolio-health.py`: total_active=56, effective=56, probationary=0, scored=94.5%, any=95.9%
+- `organism-vitals.py`: All metrics green — untested hypotheses 6, no algedonics triggered
+
+### Files Modified
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — 6 untested hypotheses remain stale for 12-16 days**: H104, H152, H153, H156, H[N+3], H[N+4] still lack empirical validation. With S4 intelligence now fully consistent (auto-gym-trigger.py, organism-vitals.py, algedonic-action-plan.py all report the same count), the organism accurately senses the backlog but cannot autonomously act on it. The S5 infrastructure tuning phase has reached clear diminishing returns: 200 tests passing, all metrics green, zero data integrity errors. The next frontier is unambiguously external: a fitness build or targeted gym batch.
+
+---
+---
+
 ## 2026-06-07 — S5 Orchestrator Iteration (R67)
 
 ### Diagnosed Constraint

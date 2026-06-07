@@ -5210,3 +5210,32 @@ These gaps represent a System 3 (Audit/Control) → System 1 (Implementation) ch
 
 **Measured effect**: **TESTED** — Test 190 verifies that 3 "testing" hypotheses are excluded from the backlog count. 199 tests passing, 0 failed.
 
+
+---
+
+## Mutation R68 — 2026-06-07
+
+**Session**: S5 Orchestrator Iteration R68
+**File**: `references/mutation-state.md`, `hooks/test-automation.sh`
+**Type**: refinement
+**Rationale**: The Integration Health table in `mutation-state.md` is manually maintained and had become stale. Comparison with `mutation-portfolio-health.py` ground-truth revealed discrepancies:
+- Effective count: table claimed 50, computed value was 55 (+5 error)
+- Scored fill rate: table claimed 90.1%, computed value was 94.5% (+4.4pp error)
+- Any-entry fill rate: table claimed 91.5%, computed value was 95.9% (+4.4pp error)
+
+These stale metrics corrupted the S3→S5 control channel by presenting an outdated self-model. S5 relied on the Integration Health table for quick portfolio assessment, but the data was 4-5 percentage points behind reality. This is a classic manual-update failure mode: humans (or S5 agents) update tables inconsistently while scripts compute correctly from source.
+
+**Expected effect**: Integration Health metrics are now accurate. Test 191 auto-verifies alignment on every test run, preventing future staleness. S5 receives truthful portfolio health signals.
+
+**Before**:
+- Integration Health: effective=50, scored=90.1%, any=91.5%
+- No automated verification of table accuracy
+- Silent data drift between table and computed values
+
+**After**:
+- Integration Health: effective=56, scored=94.5%, any=95.9%
+- Test 191: Runs mutation-portfolio-health.py and compares 5 key metrics against the table
+- Future staleness caught immediately by automation suite
+
+**Measured effect**: **TESTED** — Test 191 verifies active/effective/probationary/scored/any metrics match computed values. 200 tests passing, 0 failed.
+
