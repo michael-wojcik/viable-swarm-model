@@ -7018,20 +7018,20 @@ fi
 # Test 189: R59-R62 S5 iteration mutations are historical; R67 is effective
 # ============================================================================
 
-echo -n "TEST: R59-R62 historical and R67 effective ... "
+echo -n "TEST: R59-R62 historical and R71 effective ... "
 
 R59_HIST=$(grep "^| R59 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $6}' | tr -d ' ')
 R60_HIST=$(grep "^| R60 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $6}' | tr -d ' ')
 R61_HIST=$(grep "^| R61 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $6}' | tr -d ' ')
 R62_HIST=$(grep "^| R62 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $6}' | tr -d ' ')
-R67_STAT=$(grep "^| R67 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $6}' | tr -d ' ')
+R71_STAT=$(grep "^| R71 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $6}' | tr -d ' ')
 
 if [ "$R59_HIST" = "historical" ] && [ "$R60_HIST" = "historical" ] && \
    [ "$R61_HIST" = "historical" ] && [ "$R62_HIST" = "historical" ] && \
-   [ "$R67_STAT" = "effective" ]; then
+   [ "$R71_STAT" = "effective" ]; then
     pass
 else
-    fail "expected R59-R62 historical and R67 effective, got R59=$R59_HIST R60=$R60_HIST R61=$R61_HIST R62=$R62_HIST R67=$R67_STAT"
+    fail "expected R59-R62 historical and R71 effective, got R59=$R59_HIST R60=$R60_HIST R61=$R61_HIST R62=$R62_HIST R71=$R71_STAT"
 fi
 
 # ============================================================================
@@ -7179,6 +7179,72 @@ if [[ -f "$DDP_FILE" ]] && grep -q "After ANY Phase 0 environment fix that chang
     pass
 else
     fail "dependency-drift-pitfalls/SKILL.md missing H156 manifest parity rule"
+fi
+
+# ============================================================================
+# Test 198: increment-s5-iteration-counter.py increments effective mutations only (R74)
+# ============================================================================
+
+echo -n "TEST: increment-s5-iteration-counter.py increments effective S5 mutations only ... "
+
+TMP_STATE=$(mktemp)
+cat > "$TMP_STATE" << 'EOF'
+| **S5 ITERATION MUTATIONS** |
+| R99A | 2026-06-07 S5 | refinement | Test mutation A | effective | 2 | 5 | — | — | S5 iter |
+| R99B | 2026-06-07 S5 | refinement | Test mutation B | effective | 3 | 5 | — | — | S5 iter |
+| R99C | 2026-06-07 S5 | refinement | Test mutation C | monitor | 1 | 3 | — | — | S5 iter |
+| **NEXT SECTION** |
+EOF
+
+python3 "$SCRIPT_DIR/../scripts/increment-s5-iteration-counter.py" --mutation-state "$TMP_STATE" >/dev/null 2>&1
+RC=$?
+
+if [ "$RC" -ne 0 ]; then
+    rm -f "$TMP_STATE"
+    fail "Counter exited non-zero (rc=$RC)"
+fi
+
+# Verify effective mutations incremented
+A_OK=$(grep -c "| R99A | 2026-06-07 S5 | refinement | Test mutation A | effective | 3 | 5 |" "$TMP_STATE" || true)
+B_OK=$(grep -c "| R99B | 2026-06-07 S5 | refinement | Test mutation B | effective | 4 | 5 |" "$TMP_STATE" || true)
+# Verify monitor mutation NOT incremented
+C_OK=$(grep -c "| R99C | 2026-06-07 S5 | refinement | Test mutation C | monitor | 1 | 3 |" "$TMP_STATE" || true)
+
+rm -f "$TMP_STATE"
+
+if [ "$A_OK" -eq 1 ] && [ "$B_OK" -eq 1 ] && [ "$C_OK" -eq 1 ]; then
+    pass
+else
+    fail "Counter behavior incorrect (A=$A_OK B=$B_OK C=$C_OK)"
+fi
+
+# ============================================================================
+# Test 199: increment-s5-iteration-counter.py dry-run does not modify file (R74)
+# ============================================================================
+
+echo -n "TEST: increment-s5-iteration-counter.py dry-run does not modify file ... "
+
+TMP_STATE=$(mktemp)
+cat > "$TMP_STATE" << 'EOF'
+| **S5 ITERATION MUTATIONS** |
+| R99D | 2026-06-07 S5 | refinement | Test mutation D | effective | 5 | 5 | — | — | S5 iter |
+EOF
+
+BEFORE=$(cat "$TMP_STATE")
+python3 "$SCRIPT_DIR/../scripts/increment-s5-iteration-counter.py" --mutation-state "$TMP_STATE" --dry-run >/dev/null 2>&1
+RC=$?
+AFTER=$(cat "$TMP_STATE")
+
+rm -f "$TMP_STATE"
+
+if [ "$RC" -ne 0 ]; then
+    fail "Dry-run exited non-zero (rc=$RC)"
+fi
+
+if [ "$BEFORE" = "$AFTER" ]; then
+    pass
+else
+    fail "Dry-run modified the file"
 fi
 
 echo ""

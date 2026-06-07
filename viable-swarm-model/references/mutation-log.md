@@ -5361,3 +5361,30 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 
 **Measured effect**: **TESTED** — Tests 196 and 197 verify H153 and H156 prevention rules are present in their respective skill files. 207 tests passing, 0 failed.
 
+
+
+---
+
+## Mutation R74 — 2026-06-07
+
+**Session**: S5 Orchestrator Iteration R74
+**File**: `hooks/test-automation.sh`
+**Type**: refinement
+**Rationale**: `increment-s5-iteration-counter.py` is the critical S5→S5 channel script that modifies `mutation-state.md` — the organism's self-model. It increments `builds_tested` for all effective S5 iteration mutations, which is the gateway for historical promotion eligibility. A bug in this script (e.g., incorrect regex, off-by-one in parsing, or accidentally incrementing non-effective mutations) could corrupt 62+ mutation rows without detection. Despite this criticality, the script had only a syntax check (Test 187). No behavior test verified that it actually increments the right rows by the right amount, or that dry-run mode is safe.
+
+**Expected effect**: The S5→S5 meta-learning channel is protected by behavior tests that catch counter regressions before they corrupt mutation-state.md. Dry-run mode safety is verified.
+
+**Before**:
+- increment-s5-iteration-counter.py: Syntax check only (Test 187)
+- No verification that effective mutations are incremented
+- No verification that monitor/probation mutations are skipped
+- No verification that dry-run does not modify files
+- Result: Counter bugs could silently corrupt 62+ mutation rows
+
+**After**:
+- Test 198: Creates temp mutation-state.md with effective and monitor S5 mutations, runs counter, verifies effective are incremented and monitor is untouched
+- Test 199: Creates temp mutation-state.md, runs counter in dry-run mode, verifies file is unchanged
+- Result: 209 tests passing, 0 failed; counter behavior regressions caught by automation suite
+
+**Measured effect**: **TESTED** — Tests 198 and 199 verify counter increment logic and dry-run safety. 209 tests passing, 0 failed.
+

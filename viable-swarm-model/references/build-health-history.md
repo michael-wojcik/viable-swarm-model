@@ -2590,3 +2590,54 @@ Without a fitness build or additional S5 iteration cycles, the organism has reac
 - Broker staleness: 0 days (updated during closeout)
 - Removal gate: Triggered — FB31-5, FB34-1, FB34-2, FB34-3 moved to cemetery
 - Consolidation: FB34-C1 proposed (5.0/5 HIGH) — tool-enforced integration hard-gates script
+
+
+---
+
+## 2026-06-07 — S5 Orchestrator Iteration Backfill (R65–R73)
+
+S5 iterations R65 through R73 were executed on 2026-06-07 without individual build-health-history.md entries. Summarized below:
+
+| Iteration | Constraint | Change | Tests |
+|---|---|---|---|
+| R65 | S5 lifecycle — R61 historical eligibility | Promote R61 historical + counter increment | 197 passed, 0 failed |
+| R66 | S5 lifecycle — R62 historical eligibility | Promote R62 historical + counter increment | 198 passed, 0 failed |
+| R67 | S4→S5 channel — auto-gym-trigger.py status filter mismatch | Align status filter with organism-vitals.py | 199 passed, 0 failed |
+| R68 | S5→S5 channel — Integration Health staleness | Auto-sync test + stale metric correction | 200 passed, 0 failed |
+| R69 | S2→S1 channel — deprecated knowledge-broker Check 7 | Remove from session-end.sh | 201 passed, 0 failed |
+| R70 | S3→S1 channel — integration-patterns skill invisible | Wire to vsm_coordinator.md + validate-agent-files.py test | 202 passed, 0 failed |
+| R71 | S5→S5 channel — counter staleness recurrence | Counter execution + Test 194 stale-mutation safeguard | 204 passed, 0 failed |
+| R72 | S3→S1 channel — validate-agent-files.py false alarm | Skip deprecated skills + Test 195 behavior test | 205 passed, 0 failed |
+| R73 | S4→S4 channel — untested hypotheses H153/H156 | Backfill tests verifying prevention rules in skill files | 207 passed, 0 failed |
+
+---
+
+## 2026-06-07 — S5 Orchestrator Iteration (R74)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 channel — increment-s5-iteration-counter.py has no behavior tests**: The counter script modifies `mutation-state.md` (the organism's self-model) but had only a syntax check (Test 187). A parsing bug could corrupt 62+ mutation rows without detection. With active mutations at 62 (over the <60 target) and R67-R70 at builds_tested=4 (one increment away from historical eligibility), counter reliability was the highest-ROI constraint.
+
+### Change Made
+**Refinement mutation R74**: Added behavior tests for increment-s5-iteration-counter.py.
+- `hooks/test-automation.sh`: Test 198 verifies the counter increments effective S5 mutations and skips non-effective (monitor/probation) mutations using a temporary fixture file. Test 199 verifies `--dry-run` does not modify the file.
+
+**Bonus**: Counter execution during R74 incremented R67-R70 from builds_tested=4→5, making them eligible for historical promotion. Promoted R67-R70 to historical, reducing active mutations from 62 to 58 (back under <60 target).
+
+### Test Results
+- `bash hooks/test-automation.sh`: **209 passed, 0 failed** (was 207/0)
+- Test 198: Counter increments effective only → PASS
+- Test 199: Counter dry-run is no-op → PASS
+- Integration Health: Active mutations 58 (<60 target), historical effective 70, scored fill 94.7%, any fill 96.1%
+
+### Files Modified
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — 4 untested hypotheses remain** (H104, H152, H[N+3], H[N+4]). With the active mutation count now at 58 (healthy headroom under <60), backfilling tests for remaining untested hypotheses is the highest-ROI work. Alternatively, **System 4 (Adaptation/Intelligence) / S4→S5 channel — skill variety at 0.75** with 4 unused Full skills requires actual fitness build exercise.
+
