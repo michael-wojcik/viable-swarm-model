@@ -250,6 +250,7 @@ def main():
 
     # 13. Verify every skill's 'Relevant Agents' has at least one agent that references it
     skill_to_agents = {}  # skill_name -> set of agent type names from registry
+    deprecated_skills = set()
     if os.path.exists(registry_path):
         with open(registry_path) as f:
             registry_content = f.read()
@@ -267,6 +268,10 @@ def main():
                 if len(parts) >= 4 and parts[0] not in ('Skill', 'Pattern Skills', 'Pitfall Skills'):
                     skill_name = parts[0]
                     agents_str = parts[2] if len(parts) >= 3 else ''
+                    status = parts[4] if len(parts) >= 5 else ''
+                    if status.lower() == 'deprecated':
+                        deprecated_skills.add(skill_name)
+                        continue
                     agent_types = {a.strip().lower() for a in agents_str.split(',') if a.strip() and a.strip() != '—'}
                     if agent_types:
                         skill_to_agents[skill_name] = agent_types

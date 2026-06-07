@@ -2682,6 +2682,37 @@ else
 fi
 
 # ============================================================================
+# Test 195: validate-agent-files.py behavior — exit 0, expected warnings, no deprecated false alarms (R72)
+# ============================================================================
+
+echo -n "TEST: validate-agent-files.py exits 0 with expected warning set ... "
+
+VAF_OUTPUT=$(cd "$SCRIPT_DIR/../agents" && HOME="$REAL_HOME" python3 validate-agent-files.py 2>&1)
+VAF_RC=$?
+
+# Must exit 0
+if [ "$VAF_RC" -ne 0 ]; then
+    fail "validate-agent-files.py exited $VAF_RC, expected 0"
+fi
+
+# Must contain expected bracket-placeholder warnings
+if ! echo "$VAF_OUTPUT" | grep -q "vsm_meta.yaml.*unfilled bracket placeholders"; then
+    fail "Missing expected vsm_meta.yaml bracket-placeholder warning"
+fi
+
+# Must NOT contain deprecated skill false alarm
+if echo "$VAF_OUTPUT" | grep -q "devops-patterns.*none reference it"; then
+    fail "Deprecated devops-patternsshould not trigger agent-reference warning"
+fi
+
+# Must contain legitimate kimi-code-migration warning (Full skill, no agent reference)
+if ! echo "$VAF_OUTPUT" | grep -q "kimi-code-migration.*none reference it"; then
+    fail "Missing expected kimi-code-migration agent-reference warning"
+fi
+
+pass
+
+# ============================================================================
 # Test 192: session-end.sh does NOT warn about deprecated knowledge broker (R69)
 
 echo -n "TEST: session-end.sh no knowledge-broker warning on plan.md without refs ... "

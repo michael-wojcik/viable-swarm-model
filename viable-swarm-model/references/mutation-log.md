@@ -5310,3 +5310,28 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 
 **Measured effect**: **TESTED** — Test 194 verifies R67-R70 builds_tested >= 2. Counter dry-run shows no pending increments after execution. 204 tests passing, 0 failed.
 
+
+
+---
+
+## Mutation R72 — 2026-06-07
+
+**Session**: S5 Orchestrator Iteration R72
+**File**: `agents/validate-agent-files.py`, `hooks/test-automation.sh`
+**Type**: refinement
+**Rationale**: `validate-agent-files.py` is the critical S3→S1 channel validator for all 25 agent/skill files. When run manually, it produced 9 warnings: 7 expected bracket placeholders in agent prompts (template variables) and 2 SKILL-REGISTRY agent-reference gaps. One of the 2 gaps — `devops-patterns` — was false noise because the skill is explicitly marked `Deprecated` in the registry. Deprecated skills should not be required to have agent references. The second gap — `kimi-code-migration` — is legitimate (a Full skill with no agent prompt reference). More importantly, the automation suite only had a syntax check for validate-agent-files.py; a behavior test that verifies exit code and warning stability did not exist, meaning structural regressions in agent files could go undetected.
+
+**Expected effect**: The S3→S1 channel is cleaner (no false warnings from deprecated skills) and protected by a behavior test that catches both exit-code regressions and unexpected warning changes.
+
+**Before**:
+- validate-agent-files.py: Warned about `devops-patterns` despite Deprecated status
+- test-automation.sh: Only syntax check for validate-agent-files.py
+- Result: 9 warnings, 1 false alarm, no behavior coverage
+
+**After**:
+- validate-agent-files.py: Skips Deprecated skills in agent-reference check
+- test-automation.sh: Test 195 verifies exit code 0, expected bracket-placeholder warnings present, deprecated warning absent, legitimate kimi-code-migration warning present
+- Result: 8 warnings (all legitimate), behavior test coverage
+
+**Measured effect**: **TESTED** — Test 195 verifies validate-agent-files.py exit code 0 and expected warning set. 205 tests passing, 0 failed.
+
