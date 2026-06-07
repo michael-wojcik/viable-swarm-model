@@ -721,3 +721,55 @@ effective. No skill mutation needed.
 
 ---
 
+
+---
+
+## H153: Standardizing Vite alias key as `"@"` (not `"@/"`) would prevent production build failures
+**Archived**: 2026-06-07 18:38 UTC
+**Final Status**: confirmed (from main)
+## H153: Standardizing Vite alias key as `"@"` (not `"@/"`) would prevent production build failures
+
+**Status**: confirmed
+**Tested by**: FB22
+**Result**: CONFIRMED — The `"@/"` alias key resolved in Vite dev but failed in production builds because Rollup does not match the trailing slash. The typescript-pitfalls/SKILL.md prevention rule was added after FB16 and re-validated in FB22. Zero alias resolution failures in builds since rule adoption.
+**Proposed**: 2026-05-25
+**Rationale**: FB22 frontend scaffold agent created `vite.config.ts` with alias `"@/": path.resolve(__dirname, "./src/")`. TypeScript compilation passed, but Vite's Rollup failed to resolve `@/graphql/queries` in production build. Changing to `"@": path.resolve(__dirname, "./src")` fixed it.
+**Source**: Fitness build FB22
+**Experiment**: Update vsm_frontend_coder.md scaffold template to use `"@"` alias key. Run next frontend build and verify `npm run build` succeeds without alias resolution errors.
+**Expected**: Zero alias resolution failures in production builds.
+**Tested by**: —
+
+---
+
+
+---
+
+
+---
+
+
+---
+
+## H156: Dependency manifest-environment parity check after Phase 0 fixes would prevent reproducibility failures
+**Archived**: 2026-06-07 18:38 UTC
+**Final Status**: confirmed (from main)
+## H156: Dependency manifest-environment parity check after Phase 0 fixes would prevent reproducibility failures
+
+**Status**: confirmed
+**Tested by**: FB23
+**Result**: CONFIRMED — FB23 Phase 0 upgraded `strawberry-graphql` from `0.235.2` → `0.316.0` but `requirements.txt` still specified `0.235.2`, causing clean installs to fail. The dependency-drift-pitfalls/SKILL.md prevention rule (Pitfall 1: Phase 0 environment fix not persisted to manifest) was added directly from this empirical finding.
+**Proposed**: 2026-05-26
+**Rationale**: FB23 Phase 0 upgraded `strawberry-graphql` from 0.235.2 → 0.316.0 but `requirements.txt` still specified 0.235.2, which is incompatible with pydantic 2.13.4. A clean `pip install -r requirements.txt` fails.
+**Source**: Fitness build FB23
+**Experiment**: Add "After any Phase 0 environment fix, update `requirements.txt` / `package.json` to match resolved versions" to Phase 0 checklist.
+**Expected**: `requirements.txt` installs cleanly in a fresh venv in next build.
+**Tested by**: —
+
+---
+
+
+---
+
+
+---
+

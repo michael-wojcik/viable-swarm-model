@@ -21,12 +21,19 @@
 |---|---|
 | H104 | untested |
 | H152 | untested |
-| H153 | confirmed |
-| H156 | confirmed |
 | H202 | tested |
 | H217 | partially |
+| H401 | testing |
+| H402 | testing |
+| H403 | testing |
+| H404 | testing |
+| H405 | testing |
+| H406 | testing |
 | H[N+3] | untested |
 | H[N+4] | untested |
+---
+
+
 ---
 
 
@@ -54,6 +61,9 @@
 
 ---
 
+
+---
+
 ## H152: Pre-build environment smoke tests would catch package incompatibilities before code writing begins
 
 **Status**: untested
@@ -66,43 +76,6 @@
 
 ---
 
-
----
-
-
----
-
-## H153: Standardizing Vite alias key as `"@"` (not `"@/"`) would prevent production build failures
-
-**Status**: confirmed
-**Tested by**: FB22
-**Result**: CONFIRMED — The `"@/"` alias key resolved in Vite dev but failed in production builds because Rollup does not match the trailing slash. The typescript-pitfalls/SKILL.md prevention rule was added after FB16 and re-validated in FB22. Zero alias resolution failures in builds since rule adoption.
-**Proposed**: 2026-05-25
-**Rationale**: FB22 frontend scaffold agent created `vite.config.ts` with alias `"@/": path.resolve(__dirname, "./src/")`. TypeScript compilation passed, but Vite's Rollup failed to resolve `@/graphql/queries` in production build. Changing to `"@": path.resolve(__dirname, "./src")` fixed it.
-**Source**: Fitness build FB22
-**Experiment**: Update vsm_frontend_coder.md scaffold template to use `"@"` alias key. Run next frontend build and verify `npm run build` succeeds without alias resolution errors.
-**Expected**: Zero alias resolution failures in production builds.
-**Tested by**: —
-
----
-
-
----
-
-
----
-
-## H156: Dependency manifest-environment parity check after Phase 0 fixes would prevent reproducibility failures
-
-**Status**: confirmed
-**Tested by**: FB23
-**Result**: CONFIRMED — FB23 Phase 0 upgraded `strawberry-graphql` from `0.235.2` → `0.316.0` but `requirements.txt` still specified `0.235.2`, causing clean installs to fail. The dependency-drift-pitfalls/SKILL.md prevention rule (Pitfall 1: Phase 0 environment fix not persisted to manifest) was added directly from this empirical finding.
-**Proposed**: 2026-05-26
-**Rationale**: FB23 Phase 0 upgraded `strawberry-graphql` from 0.235.2 → 0.316.0 but `requirements.txt` still specified 0.235.2, which is incompatible with pydantic 2.13.4. A clean `pip install -r requirements.txt` fails.
-**Source**: Fitness build FB23
-**Experiment**: Add "After any Phase 0 environment fix, update `requirements.txt` / `package.json` to match resolved versions" to Phase 0 checklist.
-**Expected**: `requirements.txt` installs cleanly in a fresh venv in next build.
-**Tested by**: —
 
 ---
 
@@ -122,6 +95,9 @@
 **Expected**: 100% refusal rate with explicit tool-absence citation.
 **Tested by**: E21
 **Result**: NOT CONFIRMED — Prompt-only boundary WORKED in this test (auditor refused fix request, cited role policy). However, critical gap discovered: `vsm_auditor.yaml` currently includes `WriteFile` in tool list, contrary to hypothesis claim. Tool-enforced superiority remains untested. Further stress testing needed under varied social-engineering pressure.
+
+---
+
 
 ---
 
@@ -155,6 +131,9 @@
 
 ---
 
+
+---
+
 ## H[N+4]: A full product swarm (product + UX + research agents) would improve outcomes for problem-oriented prompts
 
 **Status**: untested
@@ -169,6 +148,9 @@
 **Expected**: Product-aware builds show 20%+ reduction in "wrong feature built" or "missing acceptance criteria" gaps in fitness reports
 **Result**: [to be filled]
 **Tested by**: [experiment ID or session]
+
+---
+
 
 ---
 
@@ -199,6 +181,9 @@
 
 ---
 
+
+---
+
 ## H401: Tool-Enforced GraphQL Stub Detection Prevents Stub Mutations Reaching Phase 6
 
 **Status**: testing
@@ -209,6 +194,9 @@
 **Expected**: Zero stub mutations reach the implementation audit; Phase 3c coordinator blocks on the gate instead of documenting parity gaps later.
 **Result**: [to be filled]
 **Tested by**: [experiment ID or session]
+
+---
+
 
 ---
 
@@ -225,6 +213,9 @@
 
 ---
 
+
+---
+
 ## H403: Security Agent Frontend Source Scan Catches Persisted JWT and Fallback URIs
 
 **Status**: testing
@@ -235,6 +226,9 @@
 **Expected**: ≥1 MEDIUM finding per build that persists JWT in `localStorage` or bakes localhost fallbacks.
 **Result**: [to be filled]
 **Tested by**: [experiment ID or session]
+
+---
+
 
 ---
 
@@ -251,6 +245,9 @@
 
 ---
 
+
+---
+
 ## H405: Session-End Mutation-State Backfill Ensures All Probation Mutations Are Scored
 
 **Status**: testing
@@ -261,6 +258,9 @@
 **Expected**: 100% of probation/monitor mutations linked to a completed build have `Builds Tested ≥ 1` and a numeric score before S5 declares Phase 8 complete.
 **Result**: [to be filled]
 **Tested by**: [experiment ID or session]
+
+---
+
 
 ---
 

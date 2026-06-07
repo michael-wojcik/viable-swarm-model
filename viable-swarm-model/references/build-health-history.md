@@ -2718,3 +2718,40 @@ S5 iterations R65 through R73 were executed on 2026-06-07 without individual bui
 ### Next Highest-Leverage Constraint
 **System 4 (Adaptation/Intelligence) / S4→S4 channel — 4 untested hypotheses remain** (H104, H152, H[N+3], H[N+4]). The organism's own build-health-history has repeatedly noted since R60 that "further S5 infrastructure iterations would produce diminishing returns." With 213 tests passing, zero data integrity errors, active mutations at 57 (healthy), and all infrastructure channels well-tested, the next frontier is unambiguously external: either (a) an actual fitness build to validate recent mutations end-to-end, or (b) targeted gym experiments for the remaining hypotheses. The S5 infrastructure tuning phase has reached natural completion.
 
+
+
+---
+
+## 2026-06-07 — S5 Orchestrator Iteration (R77)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 and S4→S5 channels — lifecycle maintenance backlog**: Two accumulated maintenance tasks were degrading data freshness: (1) R74 had reached builds_tested=4 and was one iteration away from historical promotion eligibility, meaning the S5 iteration counter had not been run since R74 was applied; (2) hypothesis-backlog-curator.py --dry-run identified H153 and H156 as confirmed hypotheses still present in the active backlog, despite being confirmed in FB22 and FB23 respectively. Both represent channel hygiene gaps where automated or near-automated maintenance was deferred.
+
+### Change Made
+**Structural mutation R77**: Compound lifecycle maintenance + test coverage expansion.
+- `scripts/increment-s5-iteration-counter.py`: Executed to advance R74→5, R75→4, R76→3
+- `references/mutation-state.md`: Promoted R74 from effective→historical; updated Integration Health metrics (active 56, historical effective 74)
+- `scripts/hypothesis-backlog-curator.py`: Ran without --dry-run to archive H153 and H156 to hypotheses-archive.md
+- `hooks/test-automation.sh`: Added Test 203 verifying auto-mutation-lifecycle.py warns on missing mutation ID; updated Test 189 to expect R74=historical
+
+### Test Results
+- `bash hooks/test-automation.sh`: **214 passed, 0 failed**
+- Test 203: Missing mutation ID warning → PASS
+- Test 189: R74 historical status → PASS
+- Test 191: Integration Health auto-sync → PASS
+- Integration Health: Active mutations 56 (<60 target), historical effective 74, scored fill 94.8%, any fill 96.1%
+
+### Files Modified
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/hypotheses.md`
+- `viable-swarm-model/references/hypotheses-archive.md`
+- `viable-swarm-model/references/build-health-history.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 5 (Policy/Meta-learning) / S5→S1 channel — mutation score backfill remains manual**: While `auto-mutation-lifecycle.py` (R75) automatically increments `Builds Tested`, it does NOT write a provisional `Score` (1–5) for probation/monitor mutations. H405 explicitly hypothesized that this gap would cause probation mutations to remain unscored after build closeout. The current script behavior confirms this: `determine_effect()` fills `mutation-log.md` measured effects, but `update_mutation_state()` only increments the counter, leaving `Score` as `—`. A modest refinement to `auto-mutation-lifecycle.py` could derive a provisional score from the `Evidence` column in `mutations-applied.md` (e.g., "Score: 5" → score 5), closing the last manual backfill gap in the S2→S1 lifecycle channel. Alternatively, **System 4 (Adaptation/Intelligence) / S4→S4 channel — 4 untested hypotheses remain** (H104, H152, H[N+3], H[N+4]), requiring actual fitness builds or gym experiments for empirical validation.
+

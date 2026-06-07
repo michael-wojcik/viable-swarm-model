@@ -5441,3 +5441,30 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 
 **Measured effect**: **TESTED** — Test 194 dynamically verifies effective S5 mutations. integration-hard-gates.py syntax check passes. 213 tests passing, 0 failed.
 
+
+
+---
+
+## Mutation R77 — 2026-06-07
+
+**Session**: S5 Orchestrator Iteration R77
+**File**: `references/mutation-state.md`, `references/hypotheses.md`, `hooks/test-automation.sh`
+**Type**: structural + refinement
+**Rationale**: Two lifecycle maintenance tasks had accumulated: (1) R74 reached builds_tested=5 after running increment-s5-iteration-counter.py, making it eligible for historical promotion per the S5 iteration policy; (2) hypothesis-backlog-curator.py --dry-run identified H153 and H156 as confirmed hypotheses ready for archival. Both tasks are part of the S5→S5 and S4→S5 channel maintenance protocols. Additionally, auto-mutation-lifecycle.py lacked a test for the edge case where a mutation ID in mutations-applied.md does not exist in mutation-log.md — a data integrity scenario that should produce a visible warning.
+
+**Expected effect**: Mutation portfolio stays lean (active mutations 57→56), hypothesis backlog stays under the ≤20 limit, and the automation suite has coverage for the missing-mutation-ID edge case.
+
+**Before**:
+- R74: builds_tested=4, status=effective (one iteration away from historical eligibility)
+- hypotheses.md: H153 and H156 still listed as active confirmed hypotheses
+- test-automation.sh: No test for auto-mutation-lifecycle.py behavior when mutation ID is missing from mutation-log.md
+- Result: Stale data in active files, uncovered edge case in critical lifecycle script
+
+**After**:
+- R74: builds_tested=5, status=historical; active mutations 56, historical effective 74
+- hypotheses.md: H153 and H156 archived to hypotheses-archive.md; 12 active hypotheses remaining
+- Test 203: Verifies auto-mutation-lifecycle.py exits non-zero and warns when mutation ID missing from mutation-log.md
+- Result: 214 tests passing, 0 failed; lifecycle channels current
+
+**Measured effect**: **TESTED** — Test 203 verifies missing-ID warning. Test 189 updated to reflect R74 historical. Test 191 Integration Health sync passes. 214 tests passing, 0 failed.
+

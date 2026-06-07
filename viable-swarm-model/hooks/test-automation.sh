@@ -7033,10 +7033,10 @@ else
 fi
 
 # ============================================================================
-# Test 189: R59-R62 S5 iteration mutations are historical; R67 is effective
+# Test 189: R59-R62 and R74 S5 iteration mutations are historical
 # ============================================================================
 
-echo -n "TEST: R59-R62 historical and R74 effective ... "
+echo -n "TEST: R59-R62 historical and R74 historical ... "
 
 R59_HIST=$(grep "^| R59 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $6}' | tr -d ' ')
 R60_HIST=$(grep "^| R60 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $6}' | tr -d ' ')
@@ -7046,10 +7046,10 @@ R74_STAT=$(grep "^| R74 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F
 
 if [ "$R59_HIST" = "historical" ] && [ "$R60_HIST" = "historical" ] && \
    [ "$R61_HIST" = "historical" ] && [ "$R62_HIST" = "historical" ] && \
-   [ "$R74_STAT" = "effective" ]; then
+   [ "$R74_STAT" = "historical" ]; then
     pass
 else
-    fail "expected R59-R62 historical and R74 effective, got R59=$R59_HIST R60=$R60_HIST R61=$R61_HIST R62=$R62_HIST R74=$R74_STAT"
+    fail "expected R59-R62 historical and R74 historical, got R59=$R59_HIST R60=$R60_HIST R61=$R61_HIST R62=$R62_HIST R74=$R74_STAT"
 fi
 
 # ============================================================================
@@ -7378,6 +7378,51 @@ if grep -q "auto-mutation-lifecycle.py" "$SCRIPT_DIR/session-end.sh" && \
     pass
 else
     fail "session-end.sh does not reference auto-mutation-lifecycle.py or still references old script"
+fi
+
+# ============================================================================
+# Test 203: auto-mutation-lifecycle.py warns on missing mutation ID (R77)
+# ============================================================================
+
+echo -n "TEST: auto-mutation-lifecycle.py warns when mutation ID missing from mutation-log.md ... "
+
+AML_TMP=$(mktemp -d)
+mkdir -p "$AML_TMP/build203/.kimi"
+mkdir -p "$AML_TMP/vsm/viable-swarm-model/references"
+
+cat > "$AML_TMP/build203/.kimi/mutations-applied.md" << 'EOF'
+| # | Mutation ID | Target Failure | Proposed By | Status | Evidence |
+|---|---|---|---|---|---|
+| 1 | T203A | Test bug | vsm_backend_tester | effective | Score: 5 |
+| 2 | T203_UNKNOWN | Missing log | vsm_security | effective | Score: 4 |
+EOF
+
+cat > "$AML_TMP/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| T203A | Test | append-only | Test bug | effective | 2 | 5 | — | — | — |
+| T203_UNKNOWN | Test | structural | Missing log | effective | 1 | 4 | — | — | — |
+EOF
+
+cat > "$AML_TMP/vsm/viable-swarm-model/references/mutation-log.md" << 'EOF'
+## Mutation T203A
+
+**Measured effect**: **PENDING**
+EOF
+
+RC=0
+HOME="$AML_TMP" python3 "$SCRIPT_DIR/auto-mutation-lifecycle.py" "$AML_TMP/build203" > "$AML_TMP/run.out" 2>&1 || RC=$?
+OUTPUT=$(cat "$AML_TMP/run.out")
+
+# Should exit non-zero because T203_UNKNOWN is missing from mutation-log.md
+if [ "$RC" -ne 0 ] && \
+   echo "$OUTPUT" | grep -q "T203_UNKNOWN" && \
+   echo "$OUTPUT" | grep -q "not found in mutation-log.md"; then
+    rm -rf "$AML_TMP"
+    pass
+else
+    rm -rf "$AML_TMP"
+    fail "Expected non-zero exit and warning for missing mutation ID (rc=$RC)"
 fi
 
 echo ""
