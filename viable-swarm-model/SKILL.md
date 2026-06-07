@@ -1516,15 +1516,17 @@ before Phase 8c-ii is complete. If empty, fill it now based on this build's
 results: Did the mutation prevent its target failure? Did it have no observable
 effect? Did it cause a new issue?
 
-**Step 8c-5a: Auto-update mutation state ([TIER B: shell-verified] MANDATORY — H213)**
+**Step 8c-5a: Auto-update mutation lifecycle ([TIER B: shell-verified] MANDATORY — H213)**
 After `.kimi/mutations-applied.md` is complete, S5 MUST run:
 ```bash
-bash ~/vsm/viable-swarm-model/hooks/update-mutation-state.sh .
+python3 ~/vsm/viable-swarm-model/hooks/auto-mutation-lifecycle.py .
 ```
 This script automatically:
+- Updates `**Measured effect**` in `references/mutation-log.md` from evidence in `mutations-applied.md`
 - Increments `Builds Tested` for each mutation in `references/mutation-state.md`
-- Replaces `[PENDING]` measured effects in `references/mutation-log.md`
-- Updates status fields based on build scores
+- Updates status fields (e.g., probation → monitor) based on build counts
+
+Replaces the older `update-mutation-state.sh` which only incremented builds_tested.
 
 **NEW (FB29-sourced)**: After running the script, S5 MUST verify the current
 build ID appears in `references/mutation-state.md`:

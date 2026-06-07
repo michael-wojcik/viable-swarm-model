@@ -165,7 +165,7 @@ def check_mutation_state_backfill() -> bool:
     if stale_count > 0:
         fail(
             f"FB31-5: mutation-state.md contains {stale_count} probation mutation(s) with "
-            f"'Builds Tested = 0' or empty score. Run update-mutation-state.sh to backfill."
+            f"'Builds Tested = 0' or empty score. Run auto-mutation-lifecycle.py to backfill."
         )
         return False
 

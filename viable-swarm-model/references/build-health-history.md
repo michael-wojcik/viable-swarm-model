@@ -2681,3 +2681,40 @@ S5 iterations R65 through R73 were executed on 2026-06-07 without individual bui
 ### Next Highest-Leverage Constraint
 **System 4 (Adaptation/Intelligence) / S4→S4 channel — 4 untested hypotheses remain** (H104, H152, H[N+3], H[N+4]). With active mutations at 57 (healthy headroom) and the S2→S1 lifecycle channel now fully automated, backfilling empirical validation for remaining hypotheses is the highest-ROI work. Alternatively, **System 4 (Adaptation/Intelligence) / S4→S5 channel — skill variety at 0.75** with 4 unused Full skills requires actual fitness build exercise to resolve.
 
+
+
+---
+
+## 2026-06-07 — S5 Orchestrator Iteration (R76)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S1 and S5→S5 channels — obsolete script references after R75 migration**: After wiring `auto-mutation-lifecycle.py` into `session-end.sh` (R75), three stale references to the old `update-mutation-state.sh` remained: (1) `SKILL.md` Step 8c-5a instructed S5 to run the old script with an incorrect description (claiming it updated mutation-log.md, which only the new script does); (2) `integration-hard-gates.py` error messages told users to run the old script for backfill; (3) Test 194 checked R67-R70 builds_tested >= 2, but those mutations were historical since R74, making the test obsolete. These documentation/test drifts could mislead future S5 iterations or build agents into running the wrong script.
+
+### Change Made
+**Refinement mutation R76**: Cleaned up all obsolete `update-mutation-state.sh` references.
+- `SKILL.md`: Updated Step 8c-5a to reference `auto-mutation-lifecycle.py` with accurate capabilities
+- `scripts/integration-hard-gates.py`: Error messages now reference `auto-mutation-lifecycle.py`
+- `hooks/test-automation.sh`: Test 194 rewritten as a dynamic Python one-liner that checks ALL effective S5 iteration mutations have builds_tested >= 2 (not hardcoded to historical IDs)
+
+**Bonus**: Counter execution during R76 incremented R73 from builds_tested=4→5, making it eligible for historical promotion. Promoted R73 to historical, reducing active mutations from 58 to 57.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **213 passed, 0 failed**
+- Test 194: Dynamic S5 builds_tested safeguard → PASS
+- integration-hard-gates.py syntax check → PASS
+- Integration Health: Active mutations 57 (<60 target), historical effective 73, scored fill 94.8%, any fill 96.1%
+
+### Files Modified
+- `viable-swarm-model/SKILL.md`
+- `viable-swarm-model/scripts/integration-hard-gates.py`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — 4 untested hypotheses remain** (H104, H152, H[N+3], H[N+4]). The organism's own build-health-history has repeatedly noted since R60 that "further S5 infrastructure iterations would produce diminishing returns." With 213 tests passing, zero data integrity errors, active mutations at 57 (healthy), and all infrastructure channels well-tested, the next frontier is unambiguously external: either (a) an actual fitness build to validate recent mutations end-to-end, or (b) targeted gym experiments for the remaining hypotheses. The S5 infrastructure tuning phase has reached natural completion.
+

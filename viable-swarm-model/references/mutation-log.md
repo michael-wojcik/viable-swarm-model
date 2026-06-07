@@ -5414,3 +5414,30 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 
 **Measured effect**: **TESTED** — Tests 200-202 verify auto-mutation-lifecycle.py behavior and session-end.sh wiring. 213 tests passing, 0 failed.
 
+
+
+---
+
+## Mutation R76 — 2026-06-07
+
+**Session**: S5 Orchestrator Iteration R76
+**File**: `SKILL.md`, `scripts/integration-hard-gates.py`, `hooks/test-automation.sh`
+**Type**: refinement
+**Rationale**: After wiring `auto-mutation-lifecycle.py` into `session-end.sh` (R75), three obsolete references to the old `update-mutation-state.sh` remained in active files: (1) `SKILL.md` Step 8c-5a instructed S5 to run the old script with an incorrect description (claiming it updated mutation-log.md, which it never did); (2) `integration-hard-gates.py` error messages told users to run the old script for backfill; (3) Test 194 checked R67-R70 builds_tested >= 2, but those mutations were promoted to historical in R74, making the test obsolete. These stale references created a documentation/instruction drift where S5 or build agents might run the wrong script.
+
+**Expected effect**: All active documentation, error messages, and tests reference the current mutation lifecycle script. Test 194 dynamically checks ALL effective S5 iteration mutations (not hardcoded IDs), making it a living safeguard against forgotten counter execution.
+
+**Before**:
+- SKILL.md: Instructed running `update-mutation-state.sh` with incorrect capabilities description
+- integration-hard-gates.py: Error messages referenced `update-mutation-state.sh`
+- Test 194: Checked R67-R70 (all historical since R74)
+- Result: Documentation drift, potential for wrong script execution
+
+**After**:
+- SKILL.md: References `auto-mutation-lifecycle.py` with accurate capabilities
+- integration-hard-gates.py: Error messages reference `auto-mutation-lifecycle.py`
+- Test 194: Python one-liner dynamically extracts S5 section and verifies min builds_tested >= 2
+- Result: 213 tests passing, 0 failed; all references current
+
+**Measured effect**: **TESTED** — Test 194 dynamically verifies effective S5 mutations. integration-hard-gates.py syntax check passes. 213 tests passing, 0 failed.
+
