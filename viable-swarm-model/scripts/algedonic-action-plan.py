@@ -342,7 +342,8 @@ def main() -> int:
 
     # Compute metrics
     mutation_rows = parse_mutation_rows(MUTATION_STATE)
-    active_count = len(mutation_rows)
+    active_statuses = {"probation", "effective", "monitor", "ineffective"}
+    active_count = len([r for r in mutation_rows if r["status"] in active_statuses])
     probationary = sum(1 for r in mutation_rows if r["status"] == "probation")
     untested_count = count_untested_hypotheses(HYPOTHESES)
     untested_ids = extract_untested_hypothesis_ids(HYPOTHESES)

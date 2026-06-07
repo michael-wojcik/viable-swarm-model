@@ -360,8 +360,8 @@
 | FB34-2 | FB34 Build | append-only | GraphQL session cleanup extension pattern | **removed** | 1 | 2 | — | — | R-7 cemetery; replaced by FB34-C1 |
 | FB34-3 | FB34 Build | append-only | SocketProvider authenticate event protocol | **removed** | 1 | 2 | — | — | R-8 cemetery; replaced by FB34-C1 |
 
-| **S5 ITERATION MUTATIONS (2026-06-06)** |
-| *(none — all S5 iteration mutations are now historical)* |
+| **S5 ITERATION MUTATIONS (2026-06-07)** |
+| R59 | 2026-06-07 S5 | refinement | integration-hard-gates.py test coverage (10 tests) + FB34-2 false-positive fix + algedonic active-count bug fix | effective | 1 | 5 | — | — | S5 iter |
 
 | **FB34 CLOSEOUT MUTATIONS (Proposed during Phase 8b, await implementation/measurement)** |
 | FB34-C1 | FB34 Phase 8b | structural | Tool-enforced integration hard-gates script (consolidates FB31-5, FB34-1, FB34-2, FB34-3) | probation | 0 | — | H401, H405 | — | FB35 |

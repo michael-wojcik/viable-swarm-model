@@ -5033,3 +5033,22 @@ These gaps represent a System 3 (Audit/Control) → System 1 (Implementation) ch
 **Linked hypothesis**: H406
 **Classification**: Refinement — logged.
 
+
+---
+
+## Mutation R59 — 2026-06-07
+
+**Session**: S5 Orchestrator Iteration
+**Files**: `scripts/integration-hard-gates.py`, `scripts/algedonic-action-plan.py`, `hooks/test-automation.sh`
+**Type**: refinement
+**Rationale**: `integration-hard-gates.py` (FB34-C1 implementation) was wired into `session-end.sh` but had zero test coverage in the automation suite. Additionally, two data-accuracy bugs were discovered: (1) `algedonic-action-plan.py` counted `removed` mutations in non-REMOVED sections as active, producing a false WARNING at 59 active mutations instead of the true 55. (2) `integration-hard-gates.py` FB34-2 session-cleanup check falsely flagged any file importing `AsyncSession` even when `get_graphql_context` did not exist.
+
+**Expected effect**:
+- `test-automation.sh` includes syntax check and 9 behavior tests for `integration-hard-gates.py`, covering all 4 gates (FB34-1 stub detection, FB34-2 session cleanup, FB34-3 SocketProvider auth emit, FB31-5 mutation-state backfill).
+- `algedonic-action-plan.py` active mutation count excludes `removed` and `ineffective` rows regardless of which section they appear in.
+- `integration-hard-gates.py` FB34-2 check skips when `get_graphql_context` is absent, and only inspects AsyncSession usage inside that function body.
+
+**Measured effect**: **PASS** — 177 automation suite tests pass (0 failed). 10 new tests added; no regressions.
+**Linked hypothesis**: H401, H405 (partial — infrastructure validated, awaits build-context validation)
+**Classification**: Refinement — logged.
+

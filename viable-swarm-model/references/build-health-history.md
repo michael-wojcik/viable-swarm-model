@@ -6,6 +6,41 @@
 ---
 ---
 
+## 2026-06-07 — S5 Orchestrator Iteration (R59)
+
+### Diagnosed Constraint
+**System 3 (Audit/Control) / S3→S1 channel — `integration-hard-gates.py` has zero test coverage despite being critical build-quality infrastructure**: The script (implementing FB34-C1) was wired into `session-end.sh` but had no tests in `test-automation.sh`. Additionally, `algedonic-action-plan.py` was producing a false WARNING algedonic (59 active mutations vs true 55) because `removed` mutations in non-REMOVED sections were incorrectly counted. The FB34-2 session-cleanup check in `integration-hard-gates.py` was also producing false positives on files that merely imported `AsyncSession` without using it in `get_graphql_context`.
+
+### Change Made
+**Refinement mutation R59**: Added comprehensive test coverage for `integration-hard-gates.py` and fixed two data-accuracy bugs.
+- `hooks/test-automation.sh`: Added syntax check for `integration-hard-gates.py` in the preliminary Python loop, plus 9 behavior tests covering all 4 hard gates (GraphQL stub detection PASS/FAIL, session cleanup PASS/FAIL, SocketProvider auth emit PASS/FAIL, mutation-state backfill PASS/FAIL, skip-on-missing-files).
+- `scripts/algedonic-action-plan.py`: Fixed `active_count` to filter by `active_statuses = {"probation", "effective", "monitor", "ineffective"}`, excluding `removed` mutations regardless of which table section they appear in.
+- `scripts/integration-hard-gates.py`: Fixed FB34-2 check to locate `get_graphql_context` function body and only inspect AsyncSession usage within it. If the function is absent, the check now correctly SKIPs instead of FAILing.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **177 passed, 0 failed** (was 159 passed, 1 failed — Test 53 pre-existing failure also resolved by the FB34-2 fix)
+- Test 160: algedonic-action-plan.py excludes removed mutations from active count → PASS
+- Tests 161-169: integration-hard-gates.py syntax + 9 behavior tests all → PASS
+- `validate-skills.py`: Still reports "OK: 25 skills validated" with zero warnings
+- `mutation-portfolio-health.py`: Confirms total_active=55, probationary=9, all metrics green
+
+### Files Modified
+- `viable-swarm-model/scripts/algedonic-action-plan.py`
+- `viable-swarm-model/scripts/integration-hard-gates.py`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — 12 untested hypotheses remain above CRITICAL threshold of 7**: With the false WARNING eliminated and the hard gates now tested, the organism's sole remaining CRITICAL algedonic is the untested hypothesis backlog. Five of these (H401-H405) correspond to the now-implemented FB34 closeout mutations, but their hypotheses still show "untested" because they await validation in a real fitness build. The remaining 7 (H104, H152, H153, H156, H[N+3], H[N+4]) are older hypotheses requiring gym experiments. The auto-gym-trigger.py correctly identifies the backlog but cannot execute experiments autonomously. The next frontier is either (a) an actual fitness build to validate FB34-C1 through FB34-R1, or (b) a targeted gym batch for the older hypotheses.
+
+---
+---
+
 ## 2026-06-06 — S5 Orchestrator Iteration (R56)
 
 ### Diagnosed Constraint

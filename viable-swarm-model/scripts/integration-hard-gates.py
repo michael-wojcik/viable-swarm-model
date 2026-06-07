@@ -71,8 +71,21 @@ def check_graphql_session_cleanup(build_dir: Path) -> bool:
         return True
 
     text = graphql_file.read_text()
+    # Locate get_graphql_context function; if absent, nothing to check
+    match = re.search(r"(async\s+)?def\s+get_graphql_context\b", text)
+    if not match:
+        print("[SKIP] No get_graphql_context function in app/graphql.py")
+        return True
+
+    # Extract the function body (naive: from the def line to the next top-level def/class or EOF)
+    start = match.start()
+    rest = text[start:]
+    # Find next top-level definition
+    next_def = re.search(r"\n(?:async\s+)?def\s+|\nclass\s+", rest[1:])
+    func_body = rest[: next_def.start() + 1] if next_def else rest
+
     # Check if get_graphql_context creates an AsyncSession
-    if "AsyncSession" not in text and "async_session" not in text.lower():
+    if "AsyncSession" not in func_body and "async_session" not in func_body.lower():
         print("[SKIP] No AsyncSession usage in get_graphql_context")
         return True
 

@@ -50,7 +50,7 @@ for script in update-mutation-state.sh validate-mutation-state.sh auto-broker-up
     check_syntax "$script" "$SCRIPT_DIR/$script" "bash -n"
 done
 
-for pyscript in auto-gym-trigger.py mutation-predictor.py skill-effectiveness-tracker.py; do
+for pyscript in auto-gym-trigger.py mutation-predictor.py skill-effectiveness-tracker.py integration-hard-gates.py; do
     check_syntax "$pyscript" "$SCRIPT_DIR/../scripts/$pyscript" "python3 -m py_compile"
 done
 
@@ -6134,6 +6134,403 @@ if [ "$HAS_BREAKDOWN" -ge 1 ] && [ "$HAS_MISSING" -ge 1 ] && [ "$HAS_UNUSED" -ge
     pass
 else
     fail "variety breakdown missing expected elements"
+fi
+
+# ============================================================================
+# Test 160: algedonic-action-plan.py excludes removed mutations from active count
+# ============================================================================
+
+echo -n "TEST: algedonic-action-plan.py excludes removed mutations from active count ... "
+
+mkdir -p "$TMPDIR/build160/.kimi"
+mkdir -p "$TMPDIR/home160/vsm/viable-swarm-model/references"
+mkdir -p "$TMPDIR/home160/vsm/vsm-stack-skills"
+
+cat > "$TMPDIR/home160/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+| M1 | Test | test | none | effective | 5 | 4 | — | — | — |
+EOF
+# Add 50 more effective + 4 removed (in a non-REMOVED section to simulate FB-era grouping)
+for i in $(seq 2 51); do
+    echo "| M$i | Test | test | none | effective | 5 | 4 | — | — | — |" >> "$TMPDIR/home160/vsm/viable-swarm-model/references/mutation-state.md"
+done
+for i in $(seq 52 55); do
+    echo "| M$i | Test | test | none | **removed** | 1 | 2 | — | — | — |" >> "$TMPDIR/home160/vsm/viable-swarm-model/references/mutation-state.md"
+done
+
+cat > "$TMPDIR/home160/vsm/viable-swarm-model/references/hypotheses.md" << 'EOF'
+# Hypotheses
+## H1: Test
+**Status**: confirmed
+EOF
+
+cat > "$TMPDIR/home160/vsm/viable-swarm-model/references/build-health-history.md" << 'EOF'
+# Build Health History
+## 2026-06-01 — FB999
+- Score: 4.0/5.0
+EOF
+
+cat > "$TMPDIR/home160/vsm/vsm-stack-skills/SKILL-REGISTRY.md" << 'EOF'
+# Skill Registry
+| Skill | Relevant Agents |
+|---|---|
+| skill-a | all |
+EOF
+
+HOME="$TMPDIR/home160" python3 "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" --build-dir "$TMPDIR/build160" > "$TMPDIR/out160.txt" 2>&1
+
+if ! grep -q "Active mutation bloat" "$TMPDIR/out160.txt" && \
+   grep -q "| Active mutations | 51 | ≤ 55 |" "$TMPDIR/out160.txt"; then
+    pass
+else
+    fail "algedonic should NOT count removed mutations as active (51 effective + 4 removed = 55 active, but bloat triggered)"
+fi
+
+# ============================================================================
+# Test 161: integration-hard-gates.py detects GraphQL mutation stubs
+# ============================================================================
+
+echo -n "TEST: integration-hard-gates.py detects GraphQL mutation stubs ... "
+
+mkdir -p "$TMPDIR/build161/app"
+
+cat > "$TMPDIR/build161/app/graphql.py" << 'EOF'
+import strawberry
+from sqlalchemy.ext.asyncio import AsyncSession
+
+@strawberry.type
+class Query:
+    @strawberry.field
+    def hello(self) -> str:
+        return "world"
+
+@strawberry.type
+class Mutation:
+    @strawberry.mutation
+    async def create_item(self) -> str:
+        pass
+
+    @strawberry.mutation
+    async def update_item(self) -> str:
+        raise NotImplementedError("TODO")
+
+    @strawberry.mutation
+    async def delete_item(self) -> str:
+        return {"message": "INTERNAL_ERROR"}
+
+    @strawberry.mutation
+    async def archive_item(self) -> str:
+        return {"errors": [{"message": "INTERNAL_ERROR"}]}
+EOF
+
+mkdir -p "$TMPDIR/build161/vsm/viable-swarm-model/references"
+cat > "$TMPDIR/build161/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target | Status | Builds Tested | Score |
+|---|---|---|---|---|---|---|
+| E1 | FB33 | append-only | Test | **effective** | 1 | 5 |
+EOF
+
+OUTPUT161=$(HOME="$TMPDIR/build161" python3 "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build161" --phase 6 2>&1) || RC161=$?
+
+if [ "${RC161:-0}" -ne 0 ] && \
+   echo "$OUTPUT161" | grep -q "FB34-1: Found" && \
+   echo "$OUTPUT161" | grep -q "potential GraphQL mutation stub"; then
+    pass
+else
+    fail "expected hard gate to fail on GraphQL stubs"
+fi
+
+# ============================================================================
+# Test 162: integration-hard-gates.py PASS on fully implemented GraphQL
+# ============================================================================
+
+echo -n "TEST: integration-hard-gates.py PASS on fully implemented GraphQL ... "
+
+mkdir -p "$TMPDIR/build162/app"
+
+cat > "$TMPDIR/build162/app/graphql.py" << 'EOF'
+import strawberry
+from sqlalchemy.ext.asyncio import AsyncSession
+
+@strawberry.type
+class Mutation:
+    @strawberry.mutation
+    async def create_item(self, name: str) -> str:
+        async with AsyncSession() as session:
+            result = await session.execute("INSERT INTO items (name) VALUES (:name)", {"name": name})
+            await session.commit()
+        return f"Created {name}"
+
+    @strawberry.mutation
+    async def update_item(self, id: int, name: str) -> str:
+        return f"Updated {id} to {name}"
+EOF
+
+mkdir -p "$TMPDIR/build162/vsm/viable-swarm-model/references"
+cat > "$TMPDIR/build162/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target | Status | Builds Tested | Score |
+|---|---|---|---|---|---|---|
+| E1 | FB33 | append-only | Test | **effective** | 1 | 5 |
+EOF
+
+OUTPUT162=$(HOME="$TMPDIR/build162" python3 "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build162" --phase 6 2>&1) && RC162=0 || RC162=$?
+
+if [ "$RC162" -eq 0 ] && echo "$OUTPUT162" | grep -q "\[PASS\] FB34-1"; then
+    pass
+else
+    fail "expected hard gate to pass on fully implemented mutations"
+fi
+
+# ============================================================================
+# Test 163: integration-hard-gates.py detects missing session cleanup
+# ============================================================================
+
+echo -n "TEST: integration-hard-gates.py detects missing session cleanup ... "
+
+mkdir -p "$TMPDIR/build163/app"
+
+cat > "$TMPDIR/build163/app/graphql.py" << 'EOF'
+import strawberry
+from sqlalchemy.ext.asyncio import AsyncSession
+
+async def get_graphql_context():
+    session = AsyncSession()
+    return {"session": session}
+
+@strawberry.type
+class Mutation:
+    @strawberry.mutation
+    async def create_item(self) -> str:
+        return "ok"
+EOF
+
+mkdir -p "$TMPDIR/build163/vsm/viable-swarm-model/references"
+cat > "$TMPDIR/build163/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target | Status | Builds Tested | Score |
+|---|---|---|---|---|---|---|
+| E1 | FB33 | append-only | Test | **effective** | 1 | 5 |
+EOF
+
+OUTPUT163=$(HOME="$TMPDIR/build163" python3 "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build163" --phase 6 2>&1) || RC163=$?
+
+if [ "${RC163:-0}" -ne 0 ] && \
+   echo "$OUTPUT163" | grep -q "FB34-2:" && \
+   echo "$OUTPUT163" | grep -q "no detected cleanup mechanism"; then
+    pass
+else
+    fail "expected hard gate to fail on missing session cleanup"
+fi
+
+# ============================================================================
+# Test 164: integration-hard-gates.py PASS on session cleanup present
+# ============================================================================
+
+echo -n "TEST: integration-hard-gates.py PASS on session cleanup present ... "
+
+mkdir -p "$TMPDIR/build164/app"
+
+cat > "$TMPDIR/build164/app/graphql.py" << 'EOF'
+import strawberry
+from sqlalchemy.ext.asyncio import AsyncSession
+
+async def get_graphql_context():
+    async with AsyncSession() as session:
+        yield {"session": session}
+        await session.close()
+
+@strawberry.type
+class Mutation:
+    @strawberry.mutation
+    async def create_item(self) -> str:
+        return "ok"
+EOF
+
+mkdir -p "$TMPDIR/build164/vsm/viable-swarm-model/references"
+cat > "$TMPDIR/build164/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target | Status | Builds Tested | Score |
+|---|---|---|---|---|---|---|
+| E1 | FB33 | append-only | Test | **effective** | 1 | 5 |
+EOF
+
+OUTPUT164=$(HOME="$TMPDIR/build164" python3 "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build164" --phase 6 2>&1) && RC164=0 || RC164=$?
+
+if [ "$RC164" -eq 0 ] && echo "$OUTPUT164" | grep -q "\[PASS\] FB34-2"; then
+    pass
+else
+    fail "expected hard gate to pass when session.close() is present"
+fi
+
+# ============================================================================
+# Test 165: integration-hard-gates.py detects missing SocketProvider auth emit
+# ============================================================================
+
+echo -n "TEST: integration-hard-gates.py detects missing SocketProvider auth emit ... "
+
+mkdir -p "$TMPDIR/build165/frontend/src/sio"
+
+cat > "$TMPDIR/build165/frontend/src/sio/SocketProvider.tsx" << 'EOF'
+import { useEffect } from "react";
+import io from "socket.io-client";
+
+export function SocketProvider({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    const socket = io("/");
+    socket.on("connect", () => {
+      console.log("connected");
+    });
+    socket.on("authenticated", (data) => {
+      console.log("auth ok", data);
+    });
+  }, []);
+  return <>{children}</>;
+}
+EOF
+
+mkdir -p "$TMPDIR/build165/vsm/viable-swarm-model/references"
+cat > "$TMPDIR/build165/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target | Status | Builds Tested | Score |
+|---|---|---|---|---|---|---|
+| E1 | FB33 | append-only | Test | **effective** | 1 | 5 |
+EOF
+
+OUTPUT165=$(HOME="$TMPDIR/build165" python3 "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build165" --phase 6 2>&1) || RC165=$?
+
+if [ "${RC165:-0}" -ne 0 ] && \
+   echo "$OUTPUT165" | grep -q "FB34-3:" && \
+   echo "$OUTPUT165" | grep -q "does not emit 'authenticate'"; then
+    pass
+else
+    fail "expected hard gate to fail on missing authenticate emit"
+fi
+
+# ============================================================================
+# Test 166: integration-hard-gates.py PASS on SocketProvider auth emit
+# ============================================================================
+
+echo -n "TEST: integration-hard-gates.py PASS on SocketProvider auth emit ... "
+
+mkdir -p "$TMPDIR/build166/frontend/src/sio"
+
+cat > "$TMPDIR/build166/frontend/src/sio/SocketProvider.tsx" << 'EOF'
+import { useEffect } from "react";
+import io from "socket.io-client";
+
+export function SocketProvider({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    const socket = io("/");
+    socket.on("connect", () => {
+      socket.emit("authenticate", { token: localStorage.getItem("token") });
+    });
+    socket.on("authenticated", (data) => {
+      console.log("auth ok", data);
+    });
+  }, []);
+  return <>{children}</>;
+}
+EOF
+
+mkdir -p "$TMPDIR/build166/vsm/viable-swarm-model/references"
+cat > "$TMPDIR/build166/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target | Status | Builds Tested | Score |
+|---|---|---|---|---|---|---|
+| E1 | FB33 | append-only | Test | **effective** | 1 | 5 |
+EOF
+
+OUTPUT166=$(HOME="$TMPDIR/build166" python3 "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build166" --phase 6 2>&1) && RC166=0 || RC166=$?
+
+if [ "$RC166" -eq 0 ] && echo "$OUTPUT166" | grep -q "\[PASS\] FB34-3"; then
+    pass
+else
+    fail "expected hard gate to pass when authenticate emit and listen are present"
+fi
+
+# ============================================================================
+# Test 167: integration-hard-gates.py detects stale probation rows
+# ============================================================================
+
+echo -n "TEST: integration-hard-gates.py detects stale probation rows ... "
+
+mkdir -p "$TMPDIR/build167/vsm/viable-swarm-model/references"
+
+cat > "$TMPDIR/build167/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+
+| ID | Source | Type | Target | Status | Builds Tested | Score |
+|---|---|---|---|---|---|---|
+| P1 | FB34 | append-only | Test | **probation** | — | — |
+| P2 | FB34 | structural | Test | **probation** | 0 | — |
+| E1 | FB33 | append-only | Test | **effective** | 1 | 5 |
+EOF
+
+OUTPUT167=$(HOME="$TMPDIR/build167" python3 "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build167" --phase 6 2>&1) || RC167=$?
+
+if [ "${RC167:-0}" -ne 0 ] && \
+   echo "$OUTPUT167" | grep -q "FB31-5:" && \
+   echo "$OUTPUT167" | grep -q "probation mutation(s) with 'Builds Tested = 0'"; then
+    pass
+else
+    fail "expected hard gate to fail on stale probation rows"
+fi
+
+# ============================================================================
+# Test 168: integration-hard-gates.py PASS on current mutation-state
+# ============================================================================
+
+echo -n "TEST: integration-hard-gates.py PASS on current mutation-state ... "
+
+mkdir -p "$TMPDIR/build168/vsm/viable-swarm-model/references"
+
+cat > "$TMPDIR/build168/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+
+| ID | Source | Type | Target | Status | Builds Tested | Score |
+|---|---|---|---|---|---|---|
+| P1 | FB34 | append-only | Test | **probation** | 1 | 4 |
+| E1 | FB33 | append-only | Test | **effective** | 1 | 5 |
+EOF
+
+OUTPUT168=$(HOME="$TMPDIR/build168" python3 "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build168" --phase 6 2>&1) && RC168=0 || RC168=$?
+
+if [ "$RC168" -eq 0 ] && echo "$OUTPUT168" | grep -q "\[PASS\] FB31-5"; then
+    pass
+else
+    fail "expected hard gate to pass when no stale probation rows exist"
+fi
+
+# ============================================================================
+# Test 169: integration-hard-gates.py skips checks when files missing
+# ============================================================================
+
+echo -n "TEST: integration-hard-gates.py skips checks when build files missing ... "
+
+mkdir -p "$TMPDIR/build169"
+mkdir -p "$TMPDIR/build169/vsm/viable-swarm-model/references"
+
+cat > "$TMPDIR/build169/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target | Status | Builds Tested | Score |
+|---|---|---|---|---|---|---|
+| E1 | FB33 | append-only | Test | **effective** | 1 | 5 |
+EOF
+
+OUTPUT169=$(HOME="$TMPDIR/build169" python3 "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build169" --phase 6 2>&1) && RC169=0 || RC169=$?
+
+SKIP_COUNT=$(echo "$OUTPUT169" | grep -c "\[SKIP\]" || true)
+
+if [ "$RC169" -eq 0 ] && [ "$SKIP_COUNT" -ge 2 ] && \
+   echo "$OUTPUT169" | grep -q "all integration hard gates clear"; then
+    pass
+else
+    fail "expected all checks to skip on empty build dir (exit 0, ≥2 SKIP lines)"
 fi
 
 echo ""
