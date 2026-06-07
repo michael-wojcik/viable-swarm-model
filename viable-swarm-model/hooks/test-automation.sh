@@ -6800,25 +6800,32 @@ else
 fi
 
 # ============================================================================
-# Test 187: Remaining S5 iteration mutations have builds_tested > 1
+# Test 187: R61 promoted to historical after S5 iteration counter reaches 5
 # ============================================================================
 
-echo -n "TEST: remaining effective S5 mutations have builds_tested >= 2 ... "
+echo -n "TEST: R61 promoted to historical with builds_tested=5 score=5 ... "
 
-R61_BT=$(grep "^| R61 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $7}' | tr -d ' ' || true)
-R62_BT=$(grep "^| R62 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $7}' | tr -d ' ' || true)
+R61_ROW=$(grep "^| R61 " "$SCRIPT_DIR/../references/mutation-state.md" | grep "historical" || true)
+R61_BUILDS=$(echo "$R61_ROW" | awk -F'|' '{print $7}' | tr -d ' ' || true)
 
-PASS_CHECK=0
-for bt in "$R61_BT" "$R62_BT"; do
-    if [ -n "$bt" ] && [ "$bt" -ge 2 ] 2>/dev/null; then
-        PASS_CHECK=$((PASS_CHECK + 1))
-    fi
-done
-
-if [ "$PASS_CHECK" -ge 2 ]; then
+if [ -n "$R61_ROW" ] && [ "$R61_BUILDS" = "5" ]; then
     pass
 else
-    fail "expected R61/R62 both builds_tested>=2, got: $R61_BT $R62_BT"
+    fail "expected R61 historical with builds_tested=5, got: builds=$R61_BUILDS"
+fi
+
+# ============================================================================
+# Test 188: Remaining S5 iteration mutation R62 has builds_tested >= 3
+# ============================================================================
+
+echo -n "TEST: remaining effective S5 mutation R62 has builds_tested >= 3 ... "
+
+R62_BT=$(grep "^| R62 " "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $7}' | tr -d ' ' || true)
+
+if [ -n "$R62_BT" ] && [ "$R62_BT" -ge 3 ] 2>/dev/null; then
+    pass
+else
+    fail "expected R62 builds_tested>=3, got: $R62_BT"
 fi
 
 # ============================================================================

@@ -6,6 +6,41 @@
 ---
 ---
 
+## 2026-06-07 — S5 Orchestrator Iteration (R65)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 channel — R61 blocked at builds_tested=4**: R61 was created during the R61 S5 iteration and had survived R62, R63, and R64, reaching `builds_tested=4`. Like R59 and R60 before it, R61 needed one more counter increment to reach historical eligibility (`builds_tested >= 5`). With active mutations at 56 and the target at <60, every historical promotion frees headroom for future mutations.
+
+### Change Made
+**Structural mutation R65**: Ran S5 iteration counter default increment, promoted R61 to historical.
+- Ran `increment-s5-iteration-counter.py`: R61→5, R62→4.
+- Promoted R61 from `effective` → `historical` (builds_tested=5, score=5).
+- Updated Integration Health: active=55 (was 56), historical effective=65 (was 64).
+- `hooks/test-automation.sh`: Updated Tests 185-188 to verify R59/R60/R61 historical, R62 builds_tested >= 3. Removed experimental pre-flight counter-staleness test (conceptually flawed — counter always has pending work for remaining effective mutations).
+
+### Test Results
+- `bash hooks/test-automation.sh`: **197 passed, 0 failed** (was 196 passed, 0 failed)
+- Test 185: R59 historical with builds_tested=5 → PASS
+- Test 186: R60 historical with builds_tested=5 → PASS
+- Test 187: R61 historical with builds_tested=5 → PASS
+- Test 188: R62 builds_tested >= 3 → PASS
+- `organism-vitals.py`: All metrics green — Active mutations 55, Skill variety 1.0, Agent variety 1.0
+- `mutation-portfolio-health.py`: Confirms total_active=55, probationary=0, effective=55, all metrics green
+
+### Files Modified
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 channel — R62 approaching historical eligibility**: R62 is now at builds_tested=4. After one more S5 iteration with the counter run, it will reach 5 and be eligible for historical promotion, reducing active mutations from 55 to 54. This would be the final S5 iteration mutation eligible for promotion in the current batch. After R62, all remaining active mutations are build-derived (FB-era) and require actual fitness build validation to progress. With the organism in excellent health (all algedonics green, 197 tests passing, skill variety 1.0), the next frontier is either one final counter run for R62 or transitioning to gym experiments / fitness builds to validate the 6 remaining untested hypotheses.
+
+---
+---
+
 ## 2026-06-07 — S5 Orchestrator Iteration (R64)
 
 ### Diagnosed Constraint

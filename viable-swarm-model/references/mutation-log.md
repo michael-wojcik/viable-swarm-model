@@ -5149,3 +5149,22 @@ These gaps represent a System 3 (Audit/Control) → System 1 (Implementation) ch
 **Measured effect**: **PASS** — 196 automation suite tests pass (0 failed). No regressions.
 **Classification**: Structural — logged.
 
+
+---
+
+## Mutation R65 — 2026-06-07
+
+**Session**: S5 Orchestrator Iteration
+**Files**: `scripts/increment-s5-iteration-counter.py`, `references/mutation-state.md`, `hooks/test-automation.sh`, `references/build-health-history.md`
+**Type**: structural
+**Rationale**: **System 5 (Policy/Meta-learning) / S5→S5 channel — R61 blocked at builds_tested=4**: R61 was created during the R61 S5 iteration and had survived R62, R63, and R64, reaching `builds_tested=4`. Like R59 and R60 before it, R61 needed one more counter increment to reach historical eligibility (`builds_tested >= 5`). With active mutations at 56 and the target at <60, every historical promotion frees headroom for future mutations.
+
+**Expected effect**:
+- Default increment: R61→5, R62→4.
+- R61 promoted from `effective` → `historical` (builds_tested=5, score=5).
+- Active mutations reduced from 56 to 55.
+- Tests 185-188 verify R59/R60/R61 historical, R62 builds_tested >= 3.
+
+**Measured effect**: **PASS** — 197 automation suite tests pass (0 failed). No regressions.
+**Classification**: Structural — logged.
+
