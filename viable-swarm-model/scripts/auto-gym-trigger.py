@@ -72,7 +72,7 @@ def parse_hypotheses(path: Path) -> list[dict]:
         status_match = re.search(r"\*\*Status\*\*\s*:\s*(\S+)", section, re.IGNORECASE)
         status = status_match.group(1).lower() if status_match else "unknown"
 
-        if status not in ("untested", "testing"):
+        if status not in ("untested",):
             continue
 
         proposed_match = re.search(r"\*\*Proposed\*\*\s*:\s*(\d{4}-\d{2}-\d{2})", section)
@@ -111,8 +111,8 @@ def parse_hypotheses(path: Path) -> list[dict]:
                 h["status"] = status_line
                 break
 
-    # Filter out any that are no longer untested/testing after updates
-    hypotheses = [h for h in hypotheses if h["status"] in ("untested", "testing")]
+    # Filter out any that are no longer untested after updates
+    hypotheses = [h for h in hypotheses if h["status"] in ("untested",)]
 
     return hypotheses
 

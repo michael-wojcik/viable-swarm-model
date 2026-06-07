@@ -6,6 +6,43 @@
 ---
 ---
 
+## 2026-06-07 — S5 Orchestrator Iteration (R67)
+
+### Diagnosed Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — auto-gym-trigger.py counts "testing" hypotheses as backlog, causing 2x inflation and conflicting signals with organism-vitals.py**: R51 aligned the auto-gym-trigger.py threshold to 7 but left the status filter counting both "untested" and "testing" hypotheses. organism-vitals.py and algedonic-action-plan.py only count "untested". This produced contradictory intelligence: auto-gym-trigger.py reported 12 untested hypotheses while organism-vitals.py reported 6. If the gym cooldown had elapsed, the trigger would have fired for 6 hypotheses already in "testing" status (H401-H406), wasting gym resources.
+
+### Change Made
+**Refinement mutation R67**: Aligned auto-gym-trigger.py status filter with organism-vitals.py.
+- Changed `status not in ("untested", "testing")` to `status not in ("untested",)` in `parse_hypotheses()`
+- Updated final filter to only keep "untested" hypotheses after applying status updates
+- auto-gym-trigger.py now correctly reports 6 untested hypotheses (was 12)
+- Added Test 190: verifies 3 "testing" hypotheses are excluded from backlog count
+- Promoted R67 to `effective` with `builds_tested=1, score=5` per S5 iteration validation policy
+- Updated Integration Health: active=55 (was 54), effective=50 (was 49)
+
+### Test Results
+- `bash hooks/test-automation.sh`: **199 passed, 0 failed** (was 198 passed, 0 failed)
+- Test 190: auto-gym-trigger.py excludes testing hypotheses from backlog → PASS
+- `organism-vitals.py`: All metrics green — Untested hypotheses 6 (no algedonic)
+- `auto-gym-trigger.py`: Reports 6 untested, no trigger (consistent with vitals)
+- `mutation-portfolio-health.py`: Confirms total_active=55, probationary=0, all metrics green
+
+### Files Modified
+- `viable-swarm-model/scripts/auto-gym-trigger.py`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — 6 genuinely untested hypotheses remain and have been stale for 12-16 days**: H104, H152, H153, H156, H[N+3], H[N+4] all lack empirical validation. With the auto-gym-trigger.py now consistent, the organism accurately detects the backlog. However, gym experiment execution still requires external invocation (`/flow:vsm-fitness-gym`). The next frontier is either (a) an actual fitness build to validate recent infrastructure mutations end-to-end, or (b) a targeted gym batch for the 3 simplest hypotheses (H152, H153, H156) which require minimal reproducible experiments. Further S5 infrastructure script fixes would indeed produce diminishing returns; the organism's sensing and control infrastructure is now internally consistent.
+
+---
+---
+
 ## 2026-06-07 — S5 Orchestrator Iteration (R66)
 
 ### Diagnosed Constraint

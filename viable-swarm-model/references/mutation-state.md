@@ -154,9 +154,9 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 54 | < 60 | ✅ OK (healthy headroom) |
+| Active mutations | 55 | < 60 | ✅ OK (healthy headroom) |
 | Historical effective (≥5 builds) | 66 | >15% of active | ✅ 122% |
-| Effective (<5 builds, monitored) | 49 | >30% of active | ✅ 88% |
+| Effective (<5 builds, monitored) | 50 | >30% of active | ✅ 91% |
 | Probationary mutations | 0 | <20 at any time | ✅ 0 (within target) |
 | Removed / redesigned | 23 | ≥2 per 5 builds | ✅ 23 (exceeds target) |
 | Measured effect fill rate (scored) | 90.1% | ≥80% | ✅ 90.1% |
@@ -365,6 +365,7 @@
 | FB34-3 | FB34 Build | append-only | SocketProvider authenticate event protocol | **removed** | 1 | 2 | — | — | R-8 cemetery; replaced by FB34-C1 |
 
 | **S5 ITERATION MUTATIONS (2026-06-07)** |
+| R67 | 2026-06-07 S5 | refinement | auto-gym-trigger.py excludes testing hypotheses from backlog count | effective | 1 | 5 | — | — | S5 iter |
 
 | **FB34 CLOSEOUT MUTATIONS (Proposed during Phase 8b, await implementation/measurement)** |
 | FB34-C1 | FB34 Phase 8b | structural | Tool-enforced integration hard-gates script (consolidates FB31-5, FB34-1, FB34-2, FB34-3) | effective | 1 | 5 | H401, H405 | — | S5 iter |

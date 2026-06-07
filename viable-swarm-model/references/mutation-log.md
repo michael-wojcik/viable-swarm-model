@@ -5187,3 +5187,26 @@ These gaps represent a System 3 (Audit/Control) → System 1 (Implementation) ch
 **Measured effect**: **PASS** — 198 automation suite tests pass (0 failed). No regressions.
 **Classification**: Structural — logged.
 
+
+---
+
+## Mutation R67 — 2026-06-07
+
+**Session**: S5 Orchestrator Iteration R67
+**File**: `scripts/auto-gym-trigger.py`, `hooks/test-automation.sh`
+**Type**: refinement
+**Rationale**: R51 aligned the auto-gym-trigger.py threshold with organism-vitals.py (10→7) but did not align the status filter. auto-gym-trigger.py counted BOTH "untested" and "testing" hypotheses toward the backlog, while organism-vitals.py and algedonic-action-plan.py only count "untested". This caused a 2x inflation of the reported backlog (12 vs 6) and would trigger unnecessary gym batches for hypotheses already being validated. The discrepancy corrupted the S4→S4 intelligence channel by presenting contradictory signals to S5.
+**Expected effect**: auto-gym-trigger.py now reports the same untested hypothesis count as organism-vitals.py. Gym batches are only triggered for genuinely untested hypotheses, not those already in testing. S4 intelligence consistency is restored.
+
+**Before**:
+- auto-gym-trigger.py: `status not in ("untested", "testing")` → counted 12 hypotheses (6 untested + 6 testing)
+- organism-vitals.py: counted 6 untested hypotheses
+- Result: conflicting signals, potential false gym triggers
+
+**After**:
+- auto-gym-trigger.py: `status not in ("untested",)` → counts 6 hypotheses (only untested)
+- organism-vitals.py: counts 6 untested hypotheses
+- Result: consistent signals, no false triggers
+
+**Measured effect**: **TESTED** — Test 190 verifies that 3 "testing" hypotheses are excluded from the backlog count. 199 tests passing, 0 failed.
+

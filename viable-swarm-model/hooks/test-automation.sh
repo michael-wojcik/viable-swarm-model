@@ -6853,6 +6853,71 @@ else
 fi
 
 # ============================================================================
+# Test 190: auto-gym-trigger.py excludes "testing" hypotheses from backlog count
+# ============================================================================
+
+echo -n "TEST: auto-gym-trigger.py excludes testing hypotheses from backlog ... "
+
+mkdir -p "$TMPDIR/build190/.kimi"
+mkdir -p "$TMPDIR/build190/gym"
+
+# Create hypotheses.md with 2 untested and 3 testing hypotheses
+cat > "$TMPDIR/build190/hypotheses.md" << 'EOF'
+# Hypothesis Backlog
+
+| Hypothesis | Status |
+|---|---|
+| H001 | untested |
+
+---
+
+## H001: Untested hypothesis one
+**Status**: untested
+**Proposed**: 2026-06-01
+**Rationale**: Test
+**Experiment**: Run a test.
+
+## H002: Untested hypothesis two
+**Status**: untested
+**Proposed**: 2026-06-01
+**Rationale**: Test
+**Experiment**: Run a test.
+
+## H003: Testing hypothesis one
+**Status**: testing
+**Proposed**: 2026-06-01
+**Rationale**: Test
+**Experiment**: Run a test.
+
+## H004: Testing hypothesis two
+**Status**: testing
+**Proposed**: 2026-06-01
+**Rationale**: Test
+**Experiment**: Run a test.
+
+## H005: Testing hypothesis three
+**Status**: testing
+**Proposed**: 2026-06-01
+**Rationale**: Test
+**Experiment**: Run a test.
+EOF
+
+AG_COUNT=$(AUTO_GYM_HYPOTHESES="$TMPDIR/build190/hypotheses.md" \
+    AUTO_GYM_MUTATION_STATE="$TMPDIR/build190/mutation-state.md" \
+    AUTO_GYM_GYM_DIR="$TMPDIR/build190/gym" \
+    AUTO_GYM_OUTPUT="$TMPDIR/build190/.kimi/auto-gym-trigger.md" \
+    AUTO_GYM_BACKLOG_THRESHOLD="1" \
+    AUTO_GYM_COOLDOWN_DAYS="0" \
+    AUTO_GYM_MONITOR_THRESHOLD="99" \
+    python3 "$SCRIPT_DIR/../scripts/auto-gym-trigger.py" 2>&1 | grep -o "Found [0-9]* untested" | awk '{print $2}')
+
+if [ "$AG_COUNT" = "2" ]; then
+    pass
+else
+    fail "expected 2 untested hypotheses (excluding 3 testing), got $AG_COUNT"
+fi
+
+# ============================================================================
 # Test 187: S5 iteration counter script syntax check
 # ============================================================================
 
