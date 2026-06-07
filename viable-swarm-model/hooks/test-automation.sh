@@ -7155,6 +7155,32 @@ else
     fail "increment-s5-iteration-counter.py has syntax errors"
 fi
 
+# ============================================================================
+# Test 196: H153 prevention rule exists in typescript-pitfalls/SKILL.md (R73)
+# ============================================================================
+
+echo -n "TEST: typescript-pitfalls/SKILL.md contains H153 Vite alias prevention rule ... "
+
+TSP_FILE="$SCRIPT_DIR/../../vsm-stack-skills/typescript-pitfalls/SKILL.md"
+if [[ -f "$TSP_FILE" ]] && grep -q 'Use `"@"` (not `"@/"`) as the alias key in' "$TSP_FILE"; then
+    pass
+else
+    fail "typescript-pitfalls/SKILL.md missing H153 Vite alias prevention rule"
+fi
+
+# ============================================================================
+# Test 197: H156 prevention rule exists in dependency-drift-pitfalls/SKILL.md (R73)
+# ============================================================================
+
+echo -n "TEST: dependency-drift-pitfalls/SKILL.md contains H156 manifest parity rule ... "
+
+DDP_FILE="$SCRIPT_DIR/../../vsm-stack-skills/dependency-drift-pitfalls/SKILL.md"
+if [[ -f "$DDP_FILE" ]] && grep -q "After ANY Phase 0 environment fix that changes a resolved version, update the manifest file" "$DDP_FILE"; then
+    pass
+else
+    fail "dependency-drift-pitfalls/SKILL.md missing H156 manifest parity rule"
+fi
+
 echo ""
 echo "========================================"
 echo "Results: $PASSED passed, $FAILED failed"

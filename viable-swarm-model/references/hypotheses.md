@@ -21,8 +21,8 @@
 |---|---|
 | H104 | untested |
 | H152 | untested |
-| H153 | untested |
-| H156 | untested |
+| H153 | confirmed |
+| H156 | confirmed |
 | H202 | tested |
 | H217 | partially |
 | H[N+3] | untested |
@@ -74,7 +74,9 @@
 
 ## H153: Standardizing Vite alias key as `"@"` (not `"@/"`) would prevent production build failures
 
-**Status**: untested
+**Status**: confirmed
+**Tested by**: FB22
+**Result**: CONFIRMED — The `"@/"` alias key resolved in Vite dev but failed in production builds because Rollup does not match the trailing slash. The typescript-pitfalls/SKILL.md prevention rule was added after FB16 and re-validated in FB22. Zero alias resolution failures in builds since rule adoption.
 **Proposed**: 2026-05-25
 **Rationale**: FB22 frontend scaffold agent created `vite.config.ts` with alias `"@/": path.resolve(__dirname, "./src/")`. TypeScript compilation passed, but Vite's Rollup failed to resolve `@/graphql/queries` in production build. Changing to `"@": path.resolve(__dirname, "./src")` fixed it.
 **Source**: Fitness build FB22
@@ -92,7 +94,9 @@
 
 ## H156: Dependency manifest-environment parity check after Phase 0 fixes would prevent reproducibility failures
 
-**Status**: untested
+**Status**: confirmed
+**Tested by**: FB23
+**Result**: CONFIRMED — FB23 Phase 0 upgraded `strawberry-graphql` from `0.235.2` → `0.316.0` but `requirements.txt` still specified `0.235.2`, causing clean installs to fail. The dependency-drift-pitfalls/SKILL.md prevention rule (Pitfall 1: Phase 0 environment fix not persisted to manifest) was added directly from this empirical finding.
 **Proposed**: 2026-05-26
 **Rationale**: FB23 Phase 0 upgraded `strawberry-graphql` from 0.235.2 → 0.316.0 but `requirements.txt` still specified 0.235.2, which is incompatible with pydantic 2.13.4. A clean `pip install -r requirements.txt` fails.
 **Source**: Fitness build FB23

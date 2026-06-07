@@ -154,9 +154,9 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 60 | < 60 | ✅ At target (no headroom) |
+| Active mutations | 61 | < 60 | ⚠️ Over target by 1 — prioritize historical promotion |
 | Historical effective (≥5 builds) | 66 | >15% of active | ✅ 122% |
-| Effective (<5 builds, monitored) | 60 | >30% of active | ✅ 100% |
+| Effective (<5 builds, monitored) | 61 | >30% of active | ✅ 100% |
 | Probationary mutations | 0 | <20 at any time | ✅ 0 (within target) |
 | Removed / redesigned | 23 | ≥2 per 5 builds | ✅ 23 (exceeds target) |
 | Measured effect fill rate (scored) | 94.7% | ≥80% | ✅ 94.7% |
@@ -365,12 +365,13 @@
 | FB34-3 | FB34 Build | append-only | SocketProvider authenticate event protocol | **removed** | 1 | 2 | — | — | R-8 cemetery; replaced by FB34-C1 |
 
 | **S5 ITERATION MUTATIONS (2026-06-07)** |
-| R67 | 2026-06-07 S5 | refinement | auto-gym-trigger.py excludes testing hypotheses from backlog count | effective | 2 | 5 | — | — | S5 iter |
-| R68 | 2026-06-07 S5 | refinement | Integration Health auto-sync test + stale metric correction | effective | 2 | 5 | — | — | S5 iter |
-| R69 | 2026-06-07 S5 | refinement | Remove deprecated knowledge-broker Check 7 from session-end.sh | effective | 2 | 5 | — | — | S5 iter |
-| R70 | 2026-06-07 S5 | refinement | Wire integration-patterns skill to vsm_coordinator.md + validate-agent-files.py syntax check | effective | 2 | 5 | — | — | S5 iter |
-| R71 | 2026-06-07 S5 | refinement | S5 iteration counter execution + Test 194 stale-mutation safeguard | effective | 1 | 5 | — | — | S5 iter |
-| R72 | 2026-06-07 S5 | refinement | validate-agent-files.py skip deprecated skills + Test 195 behavior test | effective | 1 | 5 | — | — | S5 iter |
+| R67 | 2026-06-07 S5 | refinement | auto-gym-trigger.py excludes testing hypotheses from backlog count | effective | 4 | 5 | — | — | S5 iter |
+| R68 | 2026-06-07 S5 | refinement | Integration Health auto-sync test + stale metric correction | effective | 4 | 5 | — | — | S5 iter |
+| R69 | 2026-06-07 S5 | refinement | Remove deprecated knowledge-broker Check 7 from session-end.sh | effective | 4 | 5 | — | — | S5 iter |
+| R70 | 2026-06-07 S5 | refinement | Wire integration-patterns skill to vsm_coordinator.md + validate-agent-files.py syntax check | effective | 4 | 5 | — | — | S5 iter |
+| R71 | 2026-06-07 S5 | refinement | S5 iteration counter execution + Test 194 stale-mutation safeguard | effective | 3 | 5 | — | — | S5 iter |
+| R72 | 2026-06-07 S5 | refinement | validate-agent-files.py skip deprecated skills + Test 195 behavior test | effective | 3 | 5 | — | — | S5 iter |
+| R73 | 2026-06-07 S5 | refinement | Stale hypothesis backfill tests (H153/H156) in test-automation.sh + skill content verification | effective | 2 | 5 | — | — | S5 iter |
 
 | **FB34 CLOSEOUT MUTATIONS (Proposed during Phase 8b, await implementation/measurement)** |
 | FB34-C1 | FB34 Phase 8b | structural | Tool-enforced integration hard-gates script (consolidates FB31-5, FB34-1, FB34-2, FB34-3) | effective | 1 | 5 | H401, H405 | — | S5 iter |

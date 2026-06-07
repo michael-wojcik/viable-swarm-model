@@ -5335,3 +5335,29 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 
 **Measured effect**: **TESTED** — Test 195 verifies validate-agent-files.py exit code 0 and expected warning set. 205 tests passing, 0 failed.
 
+
+
+---
+
+## Mutation R73 — 2026-06-07
+
+**Session**: S5 Orchestrator Iteration R73
+**File**: `hooks/test-automation.sh`
+**Type**: refinement
+**Rationale**: The VSM organism maintains 6 untested hypotheses (H104, H152, H153, H156, H[N+3], H[N+4]) that are tracked in the S4→S4 hypothesis backlog channel. Two of these — H153 (Vite alias key mismatch `"@/"` vs `"@"`) and H156 (manifest-environment parity after Phase 0 fixes) — already have prevention rules encoded in stack skills (`typescript-pitfalls/SKILL.md` and `dependency-drift-pitfalls/SKILL.md`). However, there was no automated verification that these rules remain present in the skills. If a future S5 iteration accidentally removes or rewrites a skill file, the prevention rule could be lost without detection. This is a structural regression vulnerability in the S3→S1 knowledge channel.
+
+**Expected effect**: The S3→S1 channel gains automated verification that critical hypothesis-derived prevention rules are present in stack skills. If a skill file is modified and the rule removed, the automation suite fails, catching the regression before it reaches a build.
+
+**Before**:
+- typescript-pitfalls/SKILL.md: Contains H153 Vite alias rule
+- dependency-drift-pitfalls/SKILL.md: Contains H156 manifest parity rule
+- test-automation.sh: No tests verifying these rules exist
+- Result: Prevention rules could be silently removed from skills; untested hypotheses remain in backlog with no empirical pressure to resolve them
+
+**After**:
+- Test 196: Verifies `typescript-pitfalls/SKILL.md` contains the H153 Vite alias prevention rule (`Use "@" (not "@/") as the alias key`)
+- Test 197: Verifies `dependency-drift-pitfalls/SKILL.md` contains the H156 manifest parity rule (`After ANY Phase 0 environment fix that changes a resolved version, update the manifest file`)
+- Result: 207 tests passing, 0 failed; skill content regressions caught by automation suite
+
+**Measured effect**: **TESTED** — Tests 196 and 197 verify H153 and H156 prevention rules are present in their respective skill files. 207 tests passing, 0 failed.
+
