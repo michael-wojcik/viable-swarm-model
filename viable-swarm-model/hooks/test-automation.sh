@@ -2650,6 +2650,129 @@ else
 fi
 
 # ============================================================================
+# Test 192: session-end.sh does NOT warn about deprecated knowledge broker (R69)
+# ============================================================================
+
+echo -n "TEST: session-end.sh no knowledge-broker warning on plan.md without refs ... "
+
+mkdir -p "$TMPDIR/build192/.kimi"
+mkdir -p "$TMPDIR/build192/vsm/viable-swarm-model/references"
+mkdir -p "$TMPDIR/build192/vsm-fitness-builds/coach"
+
+cat > "$TMPDIR/build192/plan.md" << 'EOF'
+# Build Plan — FB999-Test192
+**Tier**: 1
+Domain: Integration Test
+EOF
+
+cat > "$TMPDIR/build192/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
+cat > "$TMPDIR/build192/.kimi/phase4-gate.md" << 'EOF'
+# Phase 4 Gate
+PASS
+EOF
+
+cat > "$TMPDIR/build192/.kimi/re-audit-report.md" << 'EOF'
+# Re-Audit Report
+Verdict: PASS
+EOF
+
+cat > "$TMPDIR/build192/.kimi/lessons.md" << 'EOF'
+# Lessons
+Learned something.
+EOF
+
+cat > "$TMPDIR/build192/.kimi/mutations-applied.md" << 'EOF'
+# Mutations Applied
+## Build ID: FB999-Test192
+**Mutation**: M-TEST-1
+**Effectiveness**: 5/5
+EOF
+
+cat > "$TMPDIR/build192/.kimi/security-report.md" << 'EOF'
+# Security Report
+Zero findings.
+EOF
+
+cat > "$TMPDIR/build192/.kimi/process-audit.md" << 'EOF'
+# Process Audit
+Score: 85/100
+EOF
+
+cat > "$TMPDIR/build192/.kimi/mutation-portfolio-review.md" << 'EOF'
+# Mutation Portfolio Review
+## Portfolio Health Metrics
+| Metric | Value |
+|---|---|
+| Total | 10 |
+EOF
+
+cat > "$TMPDIR/build192/.kimi/variety-assessment.md" << 'EOF'
+# Variety Assessment
+## Health Metrics
+| Metric | Value | Status |
+|---|---|---|
+| Probationary | 5 | OK |
+EOF
+
+cat > "$TMPDIR/build192/.kimi/meta-metrics-precomputed.md" << 'EOF'
+# Pre-computed Meta Metrics
+Score: 4.0
+EOF
+
+cat > "$TMPDIR/build192/.kimi/algedonic-action-plan.md" << 'EOF'
+# Algedonic Action Plan
+No actions required.
+EOF
+
+mkdir -p "$TMPDIR/build192/backend"
+cat > "$TMPDIR/build192/backend/auth.py" << 'EOF'
+import jwt
+EOF
+
+cat > "$TMPDIR/build192/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target | Status | Builds | Score |
+|---|---|---|---|---|---|---|
+| FB999-Test192 | Test | append | Test | effective | 5 | 4 |
+EOF
+
+cat > "$TMPDIR/build192/vsm/viable-swarm-model/references/mutation-log.md" << 'EOF'
+# Mutation Log
+## Mutation Test
+**Measured effect**: CONFIRMED
+EOF
+
+cat > "$TMPDIR/build192/vsm/viable-swarm-model/references/hypotheses.md" << 'EOF'
+# Hypotheses
+## H1: Test
+**Status**: confirmed
+EOF
+
+cat > "$TMPDIR/build192/vsm/viable-swarm-model/references/knowledge-broker.md" << 'EOF'
+# Broker
+> **Last updated**: 2026-06-05
+EOF
+
+cat > "$TMPDIR/build192/vsm/viable-swarm-model/references/build-health-history.md" << 'EOF'
+# Build Health History
+EOF
+
+export HOME="$TMPDIR/build192"
+
+PAYLOAD='{"session_id":"test-session-192","cwd":"'$TMPDIR/build192'","reason":"stop","stop_hook_active":"false"}'
+SE_OUTPUT=$(echo "$PAYLOAD" | bash "$SCRIPT_DIR/session-end.sh" 2>&1) || true
+
+if echo "$SE_OUTPUT" | grep -qi "knowledge broker references"; then
+    fail "session-end produced deprecated knowledge-broker warning"
+else
+    pass
+fi
+
+# ============================================================================
 # Test 55: vsm_process_auditor.md contains Mode A/Mode B workflow (R22)
 # ============================================================================
 

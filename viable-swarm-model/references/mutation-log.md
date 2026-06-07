@@ -5239,3 +5239,25 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 
 **Measured effect**: **TESTED** — Test 191 verifies active/effective/probationary/scored/any metrics match computed values. 200 tests passing, 0 failed.
 
+
+---
+
+## Mutation R69 — 2026-06-07
+
+**Session**: S5 Orchestrator Iteration R69
+**File**: `hooks/session-end.sh`, `hooks/test-automation.sh`
+**Type**: refinement
+**Rationale**: `knowledge-broker.sh` was deprecated in R43 (converted to no-op stub with deprecation notice, removed from diagnostic-router). However, `session-end.sh` Check 7 was never updated — it continued to warn whenever `plan.md` lacked knowledge-broker references. This produced a false warning in every build, cluttering the session-end audit output and reducing signal-to-noise ratio. The warning was particularly misleading because the broker is intentionally deprecated and no longer required reading.
+
+**Expected effect**: session-end.sh no longer produces false knowledge-broker warnings. Build closeout output is cleaner and more actionable. S5 can focus on genuine warnings rather than deprecated-infrastructure noise.
+
+**Before**:
+- session-end.sh Check 7: `if plan.md has no knowledge-broker references → warn`
+- Result: False warning in every build where plan.md doesn't mention deprecated broker
+
+**After**:
+- session-end.sh: Check 7 removed entirely
+- Result: No false knowledge-broker warnings
+
+**Measured effect**: **TESTED** — Test 192 verifies that session-end.sh produces no knowledge-broker warning on a complete build with plan.md lacking broker references. 201 tests passing, 0 failed.
+

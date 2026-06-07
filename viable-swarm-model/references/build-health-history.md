@@ -6,6 +6,39 @@
 ---
 ---
 
+## 2026-06-07 — S5 Orchestrator Iteration (R69)
+
+### Diagnosed Constraint
+**System 3 (Audit/Control) / S3→S5 channel — session-end.sh Check 7 produced false warnings about deprecated knowledge-broker infrastructure**: `knowledge-broker.sh` was deprecated in R43 (no-op stub with deprecation notice, removed from diagnostic-router). However, Check 7 in `session-end.sh` was never removed — it continued warning whenever `plan.md` lacked knowledge-broker references. This produced a false warning in every build, reducing the signal-to-noise ratio of the session-end audit and training S5 to ignore warnings.
+
+### Change Made
+**Refinement mutation R69**: Removed stale Check 7 from session-end.sh.
+- Deleted the knowledge-broker reference check from session-end.sh (lines 90-95)
+- Added **Test 192**: Verifies that session-end.sh produces NO knowledge-broker warning on a complete build with plan.md lacking broker references
+- Promoted R69 to `effective` with `builds_tested=1, score=5` per S5 iteration validation policy
+- Updated Integration Health: active=57, effective=57
+
+### Test Results
+- `bash hooks/test-automation.sh`: **201 passed, 0 failed** (was 200 passed, 0 failed)
+- Test 192: session-end.sh no knowledge-broker warning on plan.md without refs → PASS
+- `mutation-portfolio-health.py`: Confirms total_active=57, effective=57, probationary=0, all metrics green
+
+### Files Modified
+- `viable-swarm-model/hooks/session-end.sh`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 3 (Audit/Control) / S3→S5 channel — session-end.sh Check numbering is non-contiguous (5, 8, 9, 10... with 6 and 7 missing)**: Check 6 was removed because it duplicated Check 10 (process audit). Check 7 was just removed because it referenced deprecated infrastructure. The remaining checks are functional but the numbering gaps create mild confusion. A low-priority cleanup would renumber checks sequentially. More importantly, **System 4 (Adaptation/Intelligence) / S4→S4 channel — 6 untested hypotheses remain stale**: H104, H152, H153, H156, H[N+3], H[N+4] still need empirical validation. The organism's infrastructure is now exceptionally clean (201 tests passing, all metrics green, zero false warnings).
+
+---
+---
+
 ## 2026-06-07 — S5 Orchestrator Iteration (R68)
 
 ### Diagnosed Constraint

@@ -87,13 +87,6 @@ if [[ -f "$CWD/.kimi/meta-report.md" && ! -f "$CWD/.kimi/lessons.md" ]]; then
     AUDIT_WARNINGS="${AUDIT_WARNINGS}- Phase 8b complete but lessons.md missing. Phase 8 reflection bypassed.\n"
 fi
 
-# Check 7: knowledge-broker.md consumption check
-if [[ -f "$CWD/plan.md" ]]; then
-    if ! grep -qi "knowledge-broker\|Active Constraints\|broker trap" "$CWD/plan.md" 2>/dev/null; then
-        AUDIT_WARNINGS="${AUDIT_WARNINGS}- plan.md has no knowledge broker references. Phase 0 broker read likely skipped.\n"
-    fi
-fi
-
 # Check 8: Mutation portfolio review completion (NEW — closes S4→S5 learning loop)
 # If build reached Phase 8 (meta-report.md exists) but portfolio review was never done,
 # flag the omission and auto-generate pre-computed health data as fallback.
