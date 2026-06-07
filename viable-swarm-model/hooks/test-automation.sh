@@ -269,21 +269,15 @@ for sm in SM1 SM2 SM4 SM5 SM6 SM9; do
 done
 
 # Check that non-superseded SM mutations have correct statuses
-# SM3 promoted to effective (automation suite validated)
-for sm in SM7 SM8; do
-    if grep -q "| $sm |.*| probation |" "$MUTATION_STATE"; then
+# SM3/SM7/SM8 promoted to effective (automation suite or companion-skill validated)
+for sm in SM3 SM7 SM8; do
+    if grep -q "| $sm |.*| effective |" "$MUTATION_STATE"; then
         PASS_CHECK=$((PASS_CHECK + 1))
     else
-        fail "$sm not found with probation status"
+        fail "$sm not found with effective status"
         break
     fi
 done
-
-if grep -q "| SM3 |.*| effective |" "$MUTATION_STATE"; then
-    PASS_CHECK=$((PASS_CHECK + 1))
-else
-    fail "SM3 not found with effective status"
-fi
 
 if [ "$PASS_CHECK" -eq 9 ]; then
     pass
@@ -6728,6 +6722,51 @@ if [ "$H402_STATUS" = "testing" ] && [ "$H403_STATUS" = "testing" ] && [ "$H404_
     pass
 else
     fail "expected H402=$H402_STATUS H403=$H403_STATUS H404=$H404_STATUS all to be 'testing'"
+fi
+
+# ============================================================================
+# Test 182: SM7 implemented — vsm-fitness-coach/SKILL.md contains heartbeat/regression
+# ============================================================================
+
+echo -n "TEST: SM7 coach heartbeat mode is present in vsm-fitness-coach/SKILL.md ... "
+
+if [ -f "$SCRIPT_DIR/../../vsm-fitness-coach/SKILL.md" ] && \
+   grep -q "heartbeat" "$SCRIPT_DIR/../../vsm-fitness-coach/SKILL.md" && \
+   grep -q "regression" "$SCRIPT_DIR/../../vsm-fitness-coach/SKILL.md"; then
+    pass
+else
+    fail "vsm-fitness-coach/SKILL.md missing heartbeat/regression content (SM7)"
+fi
+
+# ============================================================================
+# Test 183: SM8 implemented — kimi-code-migration skill exists with agent personas
+# ============================================================================
+
+echo -n "TEST: SM8 kimi-code-migration skill exists with agent persona templates ... "
+
+KCM_SKILL="$SCRIPT_DIR/../../vsm-stack-skills/kimi-code-migration/SKILL.md"
+if [ -f "$KCM_SKILL" ] && \
+   grep -q "agent persona" "$KCM_SKILL" && \
+   grep -q "kimi-code" "$KCM_SKILL"; then
+    pass
+else
+    fail "kimi-code-migration/SKILL.md missing expected content (SM8)"
+fi
+
+# ============================================================================
+# Test 184: SM7 and SM8 promoted to effective after companion-skill verification
+# ============================================================================
+
+echo -n "TEST: SM7 and SM8 promoted to effective with builds_tested=1 score=5 ... "
+
+SM7_ROW=$(grep "^| SM7 " "$SCRIPT_DIR/../references/mutation-state.md" | head -1 || true)
+SM8_ROW=$(grep "^| SM8 " "$SCRIPT_DIR/../references/mutation-state.md" | head -1 || true)
+
+if echo "$SM7_ROW" | grep -q "effective" && \
+   echo "$SM8_ROW" | grep -q "effective"; then
+    pass
+else
+    fail "expected SM7 and SM8 both to be effective"
 fi
 
 echo ""

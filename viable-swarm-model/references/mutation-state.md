@@ -150,10 +150,10 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 57 | < 60 | ✅ OK (at target) |
+| Active mutations | 58 | < 60 | ✅ OK (at target) |
 | Historical effective (≥5 builds) | 62 | >15% of active | ✅ 113% |
 | Effective (<5 builds, monitored) | 49 | >30% of active | ✅ 88% |
-| Probationary mutations | 6 | <20 at any time | ✅ 6 (within target) |
+| Probationary mutations | 0 | <20 at any time | ✅ 0 (within target) |
 | Removed / redesigned | 23 | ≥2 per 5 builds | ✅ 23 (exceeds target) |
 | Measured effect fill rate (scored) | 90.1% | ≥80% | ✅ 90.1% |
 | Measured effect fill rate (any entry) | 91.5% | ≥80% | ✅ 91.5% |
@@ -324,8 +324,8 @@
 
 | **2026-06-04 AUDIT MUTATIONS (Awaiting Measurement)** |
 | SM3 | 2026-06-04 Audit | structural | Causal tracing automation | effective | 1 | 5 | — | — | S5 iter |
-| SM7 | 2026-06-04 Audit | structural | Coach heartbeat mode | probation | 0 | — | — | — | FB30 |
-| SM8 | 2026-06-04 Audit | refinement | kimi-code-migration skill | probation | 0 | — | — | — | FB30 |
+| SM7 | 2026-06-04 Audit | structural | Coach heartbeat mode | effective | 1 | 5 | — | — | S5 iter |
+| SM8 | 2026-06-04 Audit | refinement | kimi-code-migration skill | effective | 1 | 5 | — | — | S5 iter |
 
 
 | **FB30 MUTATIONS (Created during FB30, await FB31 measurement)** |
@@ -364,6 +364,7 @@
 | R59 | 2026-06-07 S5 | refinement | integration-hard-gates.py test coverage (10 tests) + FB34-2 false-positive fix + algedonic active-count bug fix | effective | 1 | 5 | — | — | S5 iter |
 | R60 | 2026-06-07 S5 | structural | S5 iteration policy expansion (audit-derived/closeout eligibility) + batch promote SM3/FB34-C1/FB34-R1 + remove superseded FB32-1 + H401/H405/H406→testing | effective | 1 | 5 | — | — | S5 iter |
 | R61 | 2026-06-07 S5 | refinement | FB34 closeout mutation test coverage (4 tests) + active mutation target 55→60 + batch promote FB34-C2/A1/A2/A3 + H402/H403/H404→testing | effective | 1 | 5 | — | — | S5 iter |
+| R62 | 2026-06-07 S5 | refinement | SM7/SM8 companion-skill verification tests (3 tests) + batch promote SM7/SM8 to effective | effective | 1 | 5 | — | — | S5 iter |
 
 | **FB34 CLOSEOUT MUTATIONS (Proposed during Phase 8b, await implementation/measurement)** |
 | FB34-C1 | FB34 Phase 8b | structural | Tool-enforced integration hard-gates script (consolidates FB31-5, FB34-1, FB34-2, FB34-3) | effective | 1 | 5 | H401, H405 | — | S5 iter |
