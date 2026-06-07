@@ -2676,11 +2676,13 @@ S5_MIN=$(python3 -c "
 import re
 with open('$MUTATION_STATE') as f:
     text = f.read()
-section = re.search(r'\*\*S5 ITERATION MUTATIONS.*?\n\|', text, re.DOTALL)
+# Match from section header until next blank line or end of file
+section = re.search(r'\*\*S5 ITERATION MUTATIONS.*?(?=\n\n|\Z)', text, re.DOTALL)
 if not section:
-    print('999')
+    print('SECTION_NOT_FOUND')
     exit()
 min_bt = 999
+found_any = False
 for line in section.group(0).splitlines():
     if 'effective' in line.lower() and line.startswith('|') and '---' not in line:
         parts = [p.strip().strip('*') for p in line.split('|') if p.strip()]
@@ -2688,12 +2690,20 @@ for line in section.group(0).splitlines():
             try:
                 bt = int(parts[5])
                 min_bt = min(min_bt, bt)
+                found_any = True
             except:
                 pass
-print(min_bt if min_bt != 999 else '0')
+if not found_any:
+    print('NO_MUTATIONS')
+else:
+    print(min_bt)
 ")
 
-if [ "$S5_MIN" = "999" ] || [ "$S5_MIN" = "0" ] || [ "$S5_MIN" -ge 2 ]; then
+if [ "$S5_MIN" = "SECTION_NOT_FOUND" ]; then
+    fail "S5 ITERATION MUTATIONS section not found in mutation-state.md"
+elif [ "$S5_MIN" = "NO_MUTATIONS" ]; then
+    pass  # No S5 iteration mutations currently effective — vacuously true
+elif [ "$S5_MIN" -ge 2 ]; then
     pass
 else
     fail "S5 iteration mutation with builds_tested < 2 found (min=$S5_MIN)"
@@ -7474,6 +7484,21 @@ if [ "$RC" -eq 0 ] && [ "$STA_OK" -eq 1 ] && [ "$STB_OK" -eq 1 ]; then
 else
     rm -rf "$AML_TMP"
     fail "Score backfill did not respect existing scores (rc=$RC sta=$STA_OK stb=$STB_OK)"
+fi
+
+# ============================================================================
+# Test 205: R75 promoted to historical after counter execution
+# ============================================================================
+
+echo -n "TEST: R75 promoted to historical with builds_tested=5 ... "
+
+R75_STATUS=$(grep "^| R75 " "$MUTATION_STATE" | awk -F'|' '{print $6}' | tr -d ' ')
+R75_BT=$(grep "^| R75 " "$MUTATION_STATE" | awk -F'|' '{print $7}' | tr -d ' ')
+
+if [ "$R75_STATUS" = "historical" ] && [ "$R75_BT" = "5" ]; then
+    pass
+else
+    fail "R75 status=$R75_STATUS builds_tested=$R75_BT (expected historical, 5)"
 fi
 
 echo ""

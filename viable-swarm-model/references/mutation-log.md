@@ -5493,3 +5493,31 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 
 **Measured effect**: **TESTED** — Test 204 verifies existing scores are preserved. Tests 200/201 verify score backfill from unset. 215 tests passing, 0 failed.
 
+
+---
+
+## Mutation R79 — 2026-06-07
+
+**Session**: S5 Orchestrator Iteration R79
+**File**: `references/mutation-state.md`, `hooks/test-automation.sh`, `scripts/increment-s5-iteration-counter.py`
+**Type**: structural + refinement
+**Rationale**: Three compounding constraints were detected simultaneously: (1) System 3 / S3→S5 channel — Integration Health metrics in mutation-state.md were stale (active=56 vs computed 58, removed=23 vs computed 24), causing Test 113 and Test 191 to fail. This is a recurrence of the exact same staleness diagnosed in R68, indicating the update protocol is still not robust. (2) System 5 / S5→S5 channel — R75 had reached builds_tested=4 but the counter had not been executed in the most recent iteration, so it was blocked at 4 instead of being promoted to historical at 5. R77 and R78 were also stuck at 1. (3) Test 194, created in R71 as a stale-mutation backstop, had a broken regex that matched only the section header line instead of the actual data rows, causing it to always report min_bt=999 and pass vacuously — it was a false-positive safeguard providing zero protection.
+
+**Expected effect**: Integration Health metrics are accurate and tests pass. R75 is promoted to historical, reducing active mutation pressure. Test 194 actually verifies S5 iteration mutations have builds_tested >= 2 by parsing the real data rows. The organism's self-model and safeguard tests are both honest and functional.
+
+**Before**:
+- mutation-state.md Integration Health: active=56, effective=56, historical=74, removed=23, scored=94.8%, any=96.1%, removal_rate=7
+- mutation-portfolio-health.py computed: active=58, effective=58, historical=74, removed=24, scored=94.9%, any=96.2%, removal_rate=8
+- R75: builds_tested=4, status=effective (blocked at 4, one increment away from historical)
+- R77/R78: builds_tested=1 (counter not executed)
+- Test 194: regex `r'\*\*S5 ITERATION MUTATIONS.*?\n\|'` matched only 2 lines, always found zero data rows, printed 999, and passed
+- Result: 2 test failures, false-positive safeguard, lifecycle blockage
+
+**After**:
+- Ran `increment-s5-iteration-counter.py`: R75→5, R76→4, R77→2, R78→2
+- Promoted R75 to historical; updated Integration Health: active=57, effective=57, historical=75, removed=24, scored=94.9%, any=96.2%, removal_rate=8
+- Test 194: Fixed regex to `r'\*\*S5 ITERATION MUTATIONS.*?(?=\n\n|\Z)'`, added `found_any` flag, fails if section not found, fails if min < 2
+- Test 205: Verifies R75 is historical with builds_tested=5
+- Result: 216 tests passing, 0 failed; stale metrics eliminated, lifecycle unblocked, safeguard honest
+
+**Measured effect**: **TESTED** — Test 113 verifies Integration Health active count. Test 191 verifies all 5 Integration Health metrics. Test 194 (fixed) verifies S5 iteration mutations builds_tested >= 2. Test 205 verifies R75 historical promotion. 216 tests passing, 0 failed.

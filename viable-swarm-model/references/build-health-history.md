@@ -6,6 +6,47 @@
 ---
 ---
 
+## 2026-06-07 — S5 Orchestrator Iteration (R79)
+
+### Diagnosed Constraint
+**System 3 (Audit/Control) / S3→S5 channel — Integration Health metrics in mutation-state.md were stale, causing 2 test failures (Tests 113 and 191)**: The computed values from `mutation-portfolio-health.py` (active=58, removed=24, scored=94.9%) had diverged from the Integration Health table (active=56, removed=23, scored=94.8%). This is a recurrence of the exact same staleness fixed in R68, indicating the manual update protocol remains fragile.
+
+**System 5 (Policy/Meta-learning) / S5→S5 channel — S5 iteration counter not executed, blocking R75 at builds_tested=4 and leaving R77/R78 at 1**: R75 should have reached 5 and been promoted to historical, but the counter had not run. R77 and R78, created in recent iterations, also had not been incremented.
+
+**System 3 (Audit/Control) / S3→S5 channel — Test 194 was a false-positive safeguard**: The regex `r'\*\*S5 ITERATION MUTATIONS.*?\n\|'` matched only the section header and the table separator line, finding zero data rows. It always printed `min_bt=999` and passed vacuously, providing zero actual protection against stale builds_tested values.
+
+### Change Made
+**Structural + refinement mutation R79**: Ran S5 iteration counter, promoted R75 to historical, corrected Integration Health, and fixed Test 194.
+- Ran `python3 scripts/increment-s5-iteration-counter.py`: R75→5, R76→4, R77→2, R78→2
+- Promoted R75 from `effective` → `historical` (builds_tested=5, score=5)
+- Updated Integration Health: active=57, effective=57, historical=75, removed=24, scored=94.9%, any=96.2%, removal_rate=8
+- `hooks/test-automation.sh`: Fixed Test 194 regex to match full section until blank line; added `found_any` flag; fails if section missing or min < 2
+- Added Test 205: Verifies R75 historical with builds_tested=5
+
+### Test Results
+- `bash hooks/test-automation.sh`: **216 passed, 0 failed** (was 213 passed, 2 failed)
+- Test 113: Integration Health active count matches computed → PASS
+- Test 191: Integration Health all 5 metrics match portfolio-health.py → PASS
+- Test 194 (fixed): S5 iteration mutations min builds_tested >= 2 → PASS
+- Test 205: R75 historical with builds_tested=5 → PASS
+- `mutation-portfolio-health.py`: total_active=57, effective=57, probationary=0, all metrics green
+- `validate-mutation-state.sh`: ✅ PASS — zero errors, zero warnings
+
+### Files Modified
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 channel — R76 approaching historical eligibility at builds_tested=4**: After one more counter increment, R76 will reach 5 and be eligible for historical promotion, reducing active mutations from 57 to 56. Alternatively, **System 4 (Adaptation/Intelligence) / S4→S4 channel — 4 genuinely untested hypotheses remain** (H104, H152, H[N+3], H[N+4]) and the meta-system agents (vsm_learning_curator, vsm_variety_engineer) still have 0% empirical exercise rate. With the organism's internal infrastructure now exceptionally solid (216 tests passing, all metrics green, zero false safeguards), the next frontier is unambiguously external: a real fitness build or targeted gym batch.
+
+---
+---
+
 ## 2026-06-07 — S5 Orchestrator Iteration (R72)
 
 ### Diagnosed Constraint
