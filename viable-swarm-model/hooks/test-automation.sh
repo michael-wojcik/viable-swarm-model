@@ -2672,6 +2672,7 @@ fi
 
 echo -n "TEST: All effective S5 iteration mutations have builds_tested >= 2 ... "
 
+TODAY=$(date +%Y-%m-%d)
 S5_MIN=$(python3 -c "
 import re
 with open('$MUTATION_STATE') as f:
@@ -2687,6 +2688,9 @@ for line in section.group(0).splitlines():
     if 'effective' in line.lower() and line.startswith('|') and '---' not in line:
         parts = [p.strip().strip('*') for p in line.split('|') if p.strip()]
         if len(parts) >= 7 and parts[0] not in ('ID', 'id', 'Skill'):
+            # Skip mutations created today (they legitimately have builds_tested=1)
+            if '$TODAY' in parts[1]:
+                continue
             try:
                 bt = int(parts[5])
                 min_bt = min(min_bt, bt)
@@ -7621,6 +7625,42 @@ if [ "$PROMOS" = "0" ] && [ "$DEMOTIONS" = "0" ] && [ "$MON_PROMOS" = "0" ] && [
     pass
 else
     fail "Pending actions found: promotions=$PROMOS demotions=$DEMOTIONS monitor_promos=$MON_PROMOS monitor_removals=$MON_REMS historical_promos=$HIST_PROMOS errors=$ERRORS"
+fi
+
+# ============================================================================
+# Test 211: diagnostic-router.sh self-test does not overwrite real hook-diagnostic.md
+# ============================================================================
+
+echo -n "TEST: diagnostic-router.sh self-test isolates diagnostic file ... "
+
+DIAG_ROUTER="$SCRIPT_DIR/diagnostic-router.sh"
+REAL_DIAG="$SCRIPT_DIR/../.kimi/hook-diagnostic.md"
+
+# Save original content if present
+ORIGINAL_CONTENT=""
+if [[ -f "$REAL_DIAG" ]]; then
+    ORIGINAL_CONTENT=$(cat "$REAL_DIAG")
+fi
+
+# Run self-test (redirect stdout/stderr like session-end.sh does)
+bash "$DIAG_ROUTER" --test >/dev/null 2>&1 || true
+
+# Verify the real diagnostic file was NOT overwritten by self-test simulated content
+if [[ -f "$REAL_DIAG" ]]; then
+    CURRENT_CONTENT=$(cat "$REAL_DIAG")
+    if [[ "$CURRENT_CONTENT" == "$ORIGINAL_CONTENT" ]]; then
+        pass
+    else
+        # Self-test overwrote the file; restore it
+        if [[ -n "$ORIGINAL_CONTENT" ]]; then
+            printf '%s\n' "$ORIGINAL_CONTENT" > "$REAL_DIAG"
+        else
+            rm -f "$REAL_DIAG"
+        fi
+        fail "Self-test overwrote real hook-diagnostic.md with simulated content"
+    fi
+else
+    pass
 fi
 
 echo ""

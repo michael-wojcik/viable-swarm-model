@@ -5623,3 +5623,27 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 - Result: 222 tests passing, 0 failed; portfolio maintenance blockages caught immediately
 
 **Measured effect**: **TESTED** — Test 210 verifies zero pending actions across all six portfolio health lists. 222 tests passing, 0 failed.
+
+---
+
+## Mutation R84 — 2026-06-08
+
+**Session**: S5 Orchestrator Iteration R84
+**File**: `hooks/diagnostic-router.sh`, `hooks/test-automation.sh`
+**Type**: refinement
+**Rationale**: System 3 (Audit/Control) / S3→S5 channel — `diagnostic-router.sh --test` (self-test mode) was called by `session-end.sh` at the end of every build/session. The self-test simulated failures for 8 different hooks, and for each simulation it called `write_diagnostic()` which OVERWROTE `.kimi/hook-diagnostic.md`. The last simulated case (`telemetry-logger.sh` with "Unknown failure" "MEDIUM") remained in the file, creating a false diagnostic report that looked like a real hook failure. Any S5 or human reviewing `.kimi/hook-diagnostic.md` would incorrectly believe `telemetry-logger.sh` had failed with an unknown error.
+
+**Expected effect**: The self-test now uses a temporary diagnostic file, so it never pollutes the real `.kimi/hook-diagnostic.md`. Real diagnostic reports from actual hook failures are preserved. Test 211 verifies this isolation.
+
+**Before**:
+- `diagnostic-router.sh --test`: Each simulated case overwrote `.kimi/hook-diagnostic.md`
+- `.kimi/hook-diagnostic.md` (2026-06-07 20:18): Falsely reported `telemetry-logger.sh` exit=1 with "Unknown failure"
+- Result: False positive in the S3→S5 diagnostic channel
+
+**After**:
+- `diagnostic-router.sh`: `cmd_test()` sets `local DIAG_FILE` to a temp file before running simulated cases
+- `cmd_test()`: Cleans up the temp file after self-test completes
+- `hooks/test-automation.sh`: Test 211 verifies that after `diagnostic-router.sh --test`, the real `.kimi/hook-diagnostic.md` is unchanged
+- Result: 223 tests passing, 0 failed; diagnostic channel no longer corrupted by self-test
+
+**Measured effect**: **TESTED** — Test 211 verifies self-test isolation. 223 tests passing, 0 failed.

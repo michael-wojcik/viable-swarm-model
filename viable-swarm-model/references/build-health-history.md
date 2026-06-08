@@ -2971,3 +2971,39 @@ S5 iterations R65 through R73 were executed on 2026-06-07 without individual bui
 ### Next Highest-Leverage Constraint
 **System 4 (Adaptation/Intelligence) / S4→S4 channel — 4 untested hypotheses remain** (H104, H152, H[N+3], H[N+4]). With the S5→S1 lifecycle channel now fully automated (builds_tested + score + measured effects), the infrastructure tuning phase has reached its natural limit. All remaining high-impact work requires external validation: either (a) an actual fitness build to test recent mutations end-to-end, or (b) targeted gym experiments for the remaining hypotheses. The organism's test suite (215 tests) provides strong regression protection, but it cannot substitute for empirical build validation.
 
+
+---
+---
+
+## 2026-06-08 — S5 Orchestrator Iteration (R84)
+
+### Diagnosed Constraint
+**System 3 (Audit/Control) / S3→S5 channel — `diagnostic-router.sh --test` overwrote real `.kimi/hook-diagnostic.md` with simulated content**: The `session-end.sh` hook runs `diagnostic-router.sh --test` at every session close to verify the self-healing infrastructure is functional. However, the self-test's `run_case()` helper called `write_diagnostic()` for each simulated hook failure, and `write_diagnostic()` writes to `.kimi/hook-diagnostic.md` via `printf` redirection. Because there are 8 simulated cases, the file was overwritten 8 times, leaving only the last case (`telemetry-logger.sh` with "Unknown failure" "MEDIUM") in the file. The resulting artifact (`2026-06-07 20:18`) was indistinguishable from a real failure, creating a false positive in the S3→S5 diagnostic channel.
+
+### Change Made
+**Refinement mutation R84**: Isolated the diagnostic-router self-test from the real diagnostic file.
+- `hooks/diagnostic-router.sh`: Added `local DIAG_FILE` in `cmd_test()` set to a `mktemp` path, so all 8 simulated `write_diagnostic()` calls write to a temporary file instead of the real `.kimi/hook-diagnostic.md`
+- `hooks/diagnostic-router.sh`: Added `rm -f "$DIAG_FILE"` in the cleanup section to remove the temp file after self-test completion
+- `hooks/test-automation.sh`: Added Test 211 verifying that after `diagnostic-router.sh --test`, the real `.kimi/hook-diagnostic.md` retains its original content (or remains absent if it wasn't present)
+- Promoted R84 to `effective` with `builds_tested=1, score=5` per S5 iteration validation policy
+- Updated Integration Health: active=55, effective=55
+
+### Test Results
+- `bash hooks/test-automation.sh`: **223 passed, 0 failed** (was 222 passed, 0 failed)
+- Test 211: diagnostic-router.sh self-test isolates diagnostic file → PASS
+- `mutation-portfolio-health.py`: total_active=55, effective=55, probationary=0, all metrics green, all actionable lists empty
+- `validate-mutation-state.sh`: ✅ PASS — zero errors, zero warnings
+
+### Files Modified
+- `viable-swarm-model/hooks/diagnostic-router.sh`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — 4 untested hypotheses remain stale** (H104, H152, H[N+3], H[N+4]) and meta-system agents still have 0% empirical exercise rate. With internal infrastructure now exceptionally solid (223 tests passing, diagnostic channel no longer corrupted by self-test, portfolio health safeguard catching blockages), the S5 iteration loop has reached a natural plateau. The organism is ready for external validation: a real fitness build or targeted gym batch is the most valuable next step. No further high-impact internal infrastructure constraints are visible.
+

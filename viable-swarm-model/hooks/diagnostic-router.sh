@@ -181,6 +181,10 @@ cmd_test() {
     local tmp_stderr
     tmp_stderr="$(mktemp)"
 
+    # Use a temporary diagnostic file so self-test does not overwrite real reports.
+    local DIAG_FILE
+    DIAG_FILE="$(mktemp)"
+
     # Helper to run one case
     run_case() {
         local hook="$1"
@@ -252,7 +256,7 @@ cmd_test() {
         ((failures++)) || true
     fi
 
-    rm -f "$tmp_stderr"
+    rm -f "$tmp_stderr" "$DIAG_FILE"
 
     if [[ "$failures" -gt 0 ]]; then
         log_stderr ""
