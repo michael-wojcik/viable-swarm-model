@@ -5572,3 +5572,32 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 - Result: 218 tests passing, 0 failed; manual Integration Health updates no longer needed
 
 **Measured effect**: **TESTED** — Test 199b creates a mock mutation-state.md with wrong Integration Health values (active=99, historical=0, etc.), runs the counter, and verifies all 7 metrics are corrected. Test 194 verifies S5 iteration mutations builds_tested >= 2. Tests 113 and 191 verify real file accuracy. 218 tests passing, 0 failed.
+
+---
+
+## Mutation R82 — 2026-06-07
+
+**Session**: S5 Orchestrator Iteration R82
+**File**: `references/mutation-state.md`, `hooks/test-automation.sh`, `scripts/increment-s5-iteration-counter.py`
+**Type**: structural
+**Rationale**: System 5 / S5→S5 channel — R77 and R78 had reached builds_tested=4 after surviving R79, R80, and R81. The S5 iteration counter (now with auto-sync Integration Health) incremented both to 5, making them eligible for historical promotion. This was the final S5 iteration mutation lifecycle cleanup step — all S5 iteration mutations (R75–R78) created during the 2026-06-07 batch are now historical. Additionally, during the promotion, a StrReplaceFile ordering issue briefly deleted R77 and R78 from the file (the remove-from-S5-section edit succeeded before the add-to-historical edit), requiring manual recovery. This exposed a fragility in batch multi-edit operations on the master table.
+
+**Expected effect**: Active mutations drop from 56 to 54. The S5 iteration mutation section is now empty (all mutations promoted). The organism's mutation portfolio is fully current with zero probationary or monitor S5 iteration mutations. Tests 207–209 verify the final promotion state.
+
+**Before**:
+- R77: builds_tested=4, status=effective
+- R78: builds_tested=4, status=effective
+- Active mutations: 56, historical effective: 76
+- S5 ITERATION MUTATIONS section: 2 rows (R77, R78)
+
+**After**:
+- Ran `increment-s5-iteration-counter.py`: R77→5, R78→5 (auto-sync updated Integration Health to active=56, historical=76)
+- Promoted R77 and R78 from `effective` → `historical` (builds_tested=5, score=5)
+- Active mutations: 54, historical effective: 78
+- S5 ITERATION MUTATIONS section: empty (all S5 iteration mutations now historical)
+- Test 207: R77 historical with builds_tested=5
+- Test 208: R78 historical with builds_tested=5
+- Test 209: All 4 S5 iteration mutations (R75–R78) historical
+- Result: 221 tests passing, 0 failed; S5 iteration lifecycle cleanup complete
+
+**Measured effect**: **TESTED** — Tests 207–209 verify R77/R78 historical and the complete S5 iteration mutation lifecycle. Test 199b verifies Integration Health auto-sync. 221 tests passing, 0 failed.

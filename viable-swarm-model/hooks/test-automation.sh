@@ -7560,6 +7560,49 @@ else
     fail "R76 status=$R76_STATUS builds_tested=$R76_BT (expected historical, 5)"
 fi
 
+# ============================================================================
+# Test 207: R77 promoted to historical after counter execution
+# ============================================================================
+
+echo -n "TEST: R77 promoted to historical with builds_tested=5 ... "
+
+R77_STATUS=$(grep "^| R77 " "$MUTATION_STATE" | awk -F'|' '{print $6}' | tr -d ' ')
+R77_BT=$(grep "^| R77 " "$MUTATION_STATE" | awk -F'|' '{print $7}' | tr -d ' ')
+
+if [ "$R77_STATUS" = "historical" ] && [ "$R77_BT" = "5" ]; then
+    pass
+else
+    fail "R77 status=$R77_STATUS builds_tested=$R77_BT (expected historical, 5)"
+fi
+
+# ============================================================================
+# Test 208: R78 promoted to historical after counter execution
+# ============================================================================
+
+echo -n "TEST: R78 promoted to historical with builds_tested=5 ... "
+
+R78_STATUS=$(grep "^| R78 " "$MUTATION_STATE" | awk -F'|' '{print $6}' | tr -d ' ')
+R78_BT=$(grep "^| R78 " "$MUTATION_STATE" | awk -F'|' '{print $7}' | tr -d ' ')
+
+if [ "$R78_STATUS" = "historical" ] && [ "$R78_BT" = "5" ]; then
+    pass
+else
+    fail "R78 status=$R78_STATUS builds_tested=$R78_BT (expected historical, 5)"
+fi
+
+# ============================================================================
+# Test 209: All S5 iteration mutations are now historical
+# ============================================================================
+
+echo -n "TEST: All S5 iteration mutations (R75-R78) are historical ... "
+
+S5_HISTORICAL=$(grep -c "^| R7[5-8] .* historical " "$MUTATION_STATE" || true)
+if [ "$S5_HISTORICAL" -eq 4 ]; then
+    pass
+else
+    fail "Expected 4 historical S5 mutations (R75-R78), found $S5_HISTORICAL"
+fi
+
 echo ""
 echo "========================================"
 echo "Results: $PASSED passed, $FAILED failed"

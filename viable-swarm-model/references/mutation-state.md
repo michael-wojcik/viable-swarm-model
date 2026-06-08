@@ -26,6 +26,8 @@
 | R73 | 2026-06-07 S5 | refinement | Stale hypothesis backfill tests (H153/H156) in test-automation.sh + skill content verification | historical | 5 | 5 | — | — | S5 iter |
 | R75 | 2026-06-07 S5 | structural | Wire auto-mutation-lifecycle.py into session-end.sh + behavior tests (dry-run + real run + wiring) | historical | 5 | 5 | — | — | S5 iter |
 | R76 | 2026-06-07 S5 | refinement | Update obsolete script references (SKILL.md, integration-hard-gates.py, Test 194) + dynamic S5 builds_tested safeguard | historical | 5 | 5 | — | — | S5 iter |
+| R77 | 2026-06-07 S5 | structural | S5 lifecycle maintenance — R74 historical promotion + H153/H156 archival + Test 203 missing-ID guard | historical | 5 | 5 | — | — | S5 iter |
+| R78 | 2026-06-07 S5 | refinement | auto-mutation-lifecycle.py score backfill from evidence + respect existing scores + Tests 200/201/204 | historical | 5 | 5 | H405 | — | S5 iter |
 | FB25-S1 | FB25 Coach | structural | False hook claim removal | historical | 5 | 5 | H300 | E17 | — |
 | FB24-1 | FB24 Build | append-only | Phase 4 gate bypass when 1 test fails | historical | 6 | 5 | H154 | — | — |
 | FB24-2 | FB24 Build | append-only | Enum type safety audit | historical | 6 | 5 | H203 | — | — |
@@ -164,9 +166,9 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 56 | < 60 | ✅ Within target |
-| Historical effective (≥5 builds) | 76 | >15% of active | ✅ 136% |
-| Effective (<5 builds, monitored) | 56 | >30% of active | ✅ 100% |
+| Active mutations | 54 | < 60 | ✅ Within target |
+| Historical effective (≥5 builds) | 78 | >15% of active | ✅ 144% |
+| Effective (<5 builds, monitored) | 54 | >30% of active | ✅ 100% |
 | Probationary mutations | 0 | <20 at any time | ✅ 0 (within target) |
 | Removed / redesigned | 24 | ≥2 per 5 builds | ✅ 24 (exceeds target) |
 | Measured effect fill rate (scored) | 94.9% | ≥80% | ✅ 94.9% |
@@ -375,8 +377,7 @@
 | FB34-3 | FB34 Build | append-only | SocketProvider authenticate event protocol | **removed** | 1 | 2 | — | — | R-8 cemetery; replaced by FB34-C1 |
 
 | **S5 ITERATION MUTATIONS (2026-06-07)** |
-| R77 | 2026-06-07 S5 | structural | S5 lifecycle maintenance — R74 historical promotion + H153/H156 archival + Test 203 missing-ID guard | effective | 4 | 5 | — | — | S5 iter |
-| R78 | 2026-06-07 S5 | refinement | auto-mutation-lifecycle.py score backfill from evidence + respect existing scores + Tests 200/201/204 | effective | 4 | 5 | H405 | — | S5 iter |
+
 
 | **FB34 CLOSEOUT MUTATIONS (Proposed during Phase 8b, await implementation/measurement)** |
 | FB34-C1 | FB34 Phase 8b | structural | Tool-enforced integration hard-gates script (consolidates FB31-5, FB34-1, FB34-2, FB34-3) | effective | 1 | 5 | H401, H405 | — | S5 iter |

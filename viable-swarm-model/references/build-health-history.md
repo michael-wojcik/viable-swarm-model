@@ -6,6 +6,43 @@
 ---
 ---
 
+## 2026-06-07 — S5 Orchestrator Iteration (R82)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 channel — R77 and R78 at builds_tested=4, final S5 iteration mutations awaiting historical promotion**: R77 and R78 had survived three subsequent iterations and were one increment away from the ≥5 threshold for historical promotion. Promoting them would complete the S5 iteration mutation lifecycle cleanup that began in R79 and reduce active mutations from 56 to 54. Additionally, a StrReplaceFile batch edit ordering issue briefly deleted R77 and R78 from mutation-state.md during the promotion, exposing fragility in multi-edit operations on the master table.
+
+### Change Made
+**Structural mutation R82**: Ran the S5 iteration counter (with auto-sync Integration Health) and promoted R77/R78 to historical.
+- Ran `python3 scripts/increment-s5-iteration-counter.py`: R77→5, R78→5; auto-sync updated Integration Health
+- Promoted R77 and R78 from `effective` → `historical` (builds_tested=5, score=5)
+- Active mutations: 54 (was 56), historical effective: 78 (was 76)
+- S5 ITERATION MUTATIONS section is now empty — all S5 iteration mutations historical
+- `hooks/test-automation.sh`: Added Tests 207–209 verifying R77/R78 historical and complete S5 lifecycle
+
+### Test Results
+- `bash hooks/test-automation.sh`: **221 passed, 0 failed** (was 218 passed, 0 failed)
+- Test 207: R77 historical with builds_tested=5 → PASS
+- Test 208: R78 historical with builds_tested=5 → PASS
+- Test 209: All S5 iteration mutations (R75–R78) historical → PASS
+- Test 199b: Integration Health auto-sync → PASS
+- `mutation-portfolio-health.py`: total_active=54, effective=54, probationary=0, all metrics green, `historical_promotions_ready` empty
+- `validate-mutation-state.sh`: ✅ PASS — zero errors, zero warnings
+
+### Files Modified
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — 4 untested hypotheses remain stale** (H104, H152, H[N+3], H[N+4]) and meta-system agents (vsm_learning_curator, vsm_variety_engineer) still have 0% empirical exercise rate. With the S5 iteration mutation lifecycle now fully complete (all S5 mutations historical, 221 tests passing, auto-sync preventing staleness), the organism's internal infrastructure tuning has reached a natural plateau. The remaining high-value constraints are unambiguously external: a real fitness build or targeted gym batch is the most valuable next step. No further S5 iteration mutations are pending promotion; active mutations at 54 are well within the <60 target with significant headroom.
+
+---
+---
+
 ## 2026-06-07 — S5 Orchestrator Iteration (R81)
 
 ### Diagnosed Constraint
