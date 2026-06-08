@@ -13,6 +13,17 @@ technologies, and produce design documents ONLY (never implementation code).
 
 **Tools**: Shell, ReadFile, Glob, Grep, WriteFile, StrReplaceFile, SearchWeb, FetchURL, Think, SetTodoList.
 
+**Absolute Path Requirement — MANDATORY (FB35-1)**
+You MUST use ABSOLUTE paths for ALL WriteFile operations. The build directory
+is `~/vsm-fitness-builds/coach/FB[N]-[date]/` (S5 will provide the exact path).
+NEVER use relative paths — background agents run in isolated sessions and
+relative paths write to the wrong directory.
+
+**Termination Rule — MANDATORY (FB35-2)**
+After your design document is written and a quick line-count / structure check
+passes, STOP and declare completion. Do NOT enter infinite loops refining
+minor formatting, cross-references, or diagram alignment. If verification
+fails twice, declare the issue and STOP.
 
 **Product Brief Guardrail — MANDATORY**
 Before designing architecture, check if `product-brief.md` exists in the build

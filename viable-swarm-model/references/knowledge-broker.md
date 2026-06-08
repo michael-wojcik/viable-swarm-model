@@ -494,3 +494,46 @@ these failure modes disappear.
 
 *End of broker.*
 
+
+---
+
+## FB35 ShipTrack Regression Build — 2026-06-08
+
+### Score
+- **FB35**: 3.0/5.0
+- **Gold standard (FB34)**: 4.0/5.0
+- **Delta**: -1.0 (SIGNIFICANT regression)
+
+### Primary Finding: Agent Runtime Reliability Crisis
+The skill's rulebook is sound; the agent execution layer is broken. Background agent session isolation causes:
+1. **CWD drift**: 5/8 agents wrote files to wrong directories
+2. **Post-write hang loops**: 6 agents hung after completing deliverables
+3. **S5 manual work avalanche**: ~15 files written by S5 (far exceeding 1-file cap)
+
+### Mutations Measured
+- FB31-1: Redesigned (3/4 architect spawns hung despite 400-line limit)
+- FB33-1-EXT: Ineffective (T1 trap present in celery_app.py)
+- FB33-3: Ineffective (T3 Socket.IO trap confirmed)
+- FB33-5: Ineffective (shell hook not auto-invoked for background agents)
+- FB34-C1: Ineffective (script exists but not wired into build flow)
+- FB34-A1: Ineffective (security agent did not scan frontend)
+- FB34-A2: Ineffective (0 GraphQL tests; only 3 trivial smoke tests)
+- FB34-R1: Ineffective (not observable in build artifacts)
+
+### New Mutations Applied
+- **FB35-1** (structural): Absolute path requirement for all background agent WriteFile operations
+- **FB35-2** (structural): Termination rule to prevent post-write hang loops
+
+### New Hypotheses
+- H500: Background agent cwd drift due to session isolation
+- H501: Agent hangs correlate with Shell verification failures
+- H502: Explicit termination rule prevents post-write hang loops
+
+### Recommendation
+HALT regression builds until H500/H501 are validated via gym experiment. The -1.0 delta reflects agent infrastructure failure, not skill rule degradation. Code quality from agents that completed (vehicles.py, models.py) remains excellent (5/5).
+
+*Updated: 2026-06-08*
+
+---
+
+*End of broker.*

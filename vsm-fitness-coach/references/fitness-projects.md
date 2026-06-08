@@ -1127,3 +1127,50 @@
 ### Next Build
 - **FB33**: StreamLine (Content Streaming & Creator Platform)
 - **Prompt**: `~/vsm-fitness-builds/coach/FB33-20260604/FB33-prompt-draft.md`
+
+---
+
+## FB35: ShipTrack Regression Build
+
+**Complexity**: High (Tier 2, regression re-run of FB34)
+**Date**: 2026-06-08
+**Score**: 3.0 / 5.0
+**Delta from gold standard**: -1.0 (FB34 = 4.0)
+**Verdict**: ISSUES
+**Services**: FastAPI backend, React frontend, PostgreSQL, Redis, Celery, Strawberry GraphQL, Socket.IO
+**Build directory**: `~/vsm-fitness-builds/coach/FB35-20260608/`
+
+### Coverage Map
+
+| Capability | Tested by |
+|---|---|
+| FB35-1: Absolute path requirement | probation — awaits FB36 |
+| FB35-2: Termination rule | probation — awaits FB36 |
+| FB31-1: Architect 4-spawn split | **Ineffective** — 3/4 spawns hung |
+| FB33-1-EXT: Zero-default extension | **Ineffective** — T1 trap present |
+| FB33-2: GraphQL frontend mandate | **Effective** — frontend uses Apollo |
+| FB33-3: Socket.IO emission coverage | **Ineffective** — T3 confirmed |
+| FB33-5: check-zero-defaults.sh | **Ineffective** — hook not auto-invoked |
+| FB33-6: Cross-layer dead code | **Effective** — T4 detected |
+| FB34-C1: Integration hard-gates | **Ineffective** — script not invoked |
+| FB34-A1: Security frontend scan | **Ineffective** — not performed |
+| FB34-A2: GraphQL test floor | **Ineffective** — 0 GraphQL tests |
+| FB34-A3: Mandatory skill reads | **Partial** — effective when agents completed |
+| FB34-R1: Skill variety tracker | **Ineffective** — not observable |
+| Agent timeout rate | **Crisis** — 6/15 agents hung |
+| Process compliance | 85/100 |
+| Backend tests | 3 passed, 0 failed (smoke tests only) |
+| Frontend build | PASS |
+
+### Result
+- **Score**: 3.0/5.0 (regression from FB34 gold standard 4.0)
+- **BLOCKERs**: 1 deliberate (T1 trap)
+- **Fix iterations**: 0
+- **Key gap**: Background agent working directory drift destroyed parallel execution
+- **Key surprise**: vehicles.py and models.py are production-quality despite chaos
+- **Mutations**: FB35-1, FB35-2 (structural); H500, H501, H502 (hypotheses)
+
+### Next Build
+- **FB36**: New domain build (NOT regression — 36 mod 5 ≠ 0)
+- **Complexity**: Tier 2 (do NOT increase after failing build)
+- **Prompt**: `~/vsm-fitness-builds/coach/FB36-prompt-draft.md`

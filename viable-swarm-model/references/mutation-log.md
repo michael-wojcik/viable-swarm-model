@@ -5677,3 +5677,27 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 - Result: 226 tests passing, 0 failed; S5 instructions aligned with actual self-model file
 
 **Measured effect**: **TESTED** — Tests 212-214 verify SKILL.md Phase 0/8 and session-end.sh reference mutation-state.md, not skill-state.md. 226 tests passing, 0 failed.
+
+---
+
+## Mutation FB35-1 — 2026-06-08
+
+**Session**: FB35 Fitness Build — Regression evaluation
+**File**: `agents/vsm_backend_coder.md`, `agents/vsm_frontend_coder.md`, `agents/vsm_architect.md`
+**Type**: structural
+**Target failure mode**: Background agents write files to wrong directories (session cwd drift)
+**Rationale**: FB35 showed 5/8 background agents wrote files to their own session directories instead of the build directory. This caused massive file loss and forced S5 to manually recreate ~15 files.
+**Expected effect**: Agents use absolute paths for all WriteFile/StrReplaceFile operations, ensuring files land in the correct build directory regardless of session isolation.
+**Measured effect**: [to be filled by FB36]
+
+---
+
+## Mutation FB35-2 — 2026-06-08
+
+**Session**: FB35 Fitness Build — Regression evaluation
+**File**: `agents/vsm_backend_coder.md`, `agents/vsm_frontend_coder.md`, `agents/vsm_architect.md`
+**Type**: structural
+**Target failure mode**: Agents hang after WriteFile + Shell verification, entering infinite self-correction loops
+**Rationale**: FB35: 6 agents hung for 10-15+ minutes after completing their primary deliverables, stuck fixing minor verification failures (UUID types, CORS parsing). S5 had to manually stop each one.
+**Expected effect**: Agents terminate cleanly after primary deliverable + basic verification. No infinite loops on minor mismatches.
+**Measured effect**: [to be filled by FB36]

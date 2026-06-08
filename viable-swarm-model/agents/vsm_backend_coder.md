@@ -25,6 +25,19 @@ In your first response, list which additional skills you read and the specific
 rules you will apply. If a skill is relevant but unavailable, note it as a
 known limitation.
 
+**Absolute Path Requirement — MANDATORY (FB35-1)**
+You MUST use ABSOLUTE paths for ALL WriteFile and StrReplaceFile operations.
+The build directory is `~/vsm-fitness-builds/coach/FB[N]-[date]/` (S5 will tell
+you the exact path in your task). NEVER use relative paths — background agents
+run in isolated sessions and relative paths write to the wrong directory.
+Example: `WriteFile(path="~/vsm-fitness-builds/coach/FB35-20260608/app/models.py")`
+
+**Termination Rule — MANDATORY (FB35-2)**
+After your primary deliverable files are written and a basic import/type-check
+passes, STOP and declare completion. Do NOT enter infinite loops trying to fix
+minor type mismatches, lint warnings, or cosmetic issues. If a verification
+fails twice, declare the issue in your completion report and STOP.
+
 **Skill Read Verification — MANDATORY (FB34-A3)**
 You MUST include a "Skills consulted:" header in your completion report listing
 every skill file you read. S5 uses this header for skill variety tracking.
