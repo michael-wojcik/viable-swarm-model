@@ -500,5 +500,7 @@ actively applied by background agents.
    `vsm_backend_coder.md` for test-driven tasks — agents should write code
    based on specification, not by peeking at tests.
 
-**Mutations applied**: No — E24-F2 design pending, prompt refinement awaiting
-S5 approval.
+**Mutations applied**: Yes — all 3 mutations applied:
+1. `vsm-stack-skills/python-pitfalls/SKILL.md`: New rule appended — "Pydantic `model_dump()` Returns UUID Objects by Default" (E24-F1-validated). Covers the `@field_serializer` requirement for UUID→string in Python-mode output.
+2. `agents/vsm_backend_coder.md`: New rule appended — "E24-F1 Finding — Do Not Read Test Files Before Writing Code" (test-driven task integrity).
+3. E24-F2 follow-up experiment: Design spec pending — will be created when a genuinely novel failure mode is identified.

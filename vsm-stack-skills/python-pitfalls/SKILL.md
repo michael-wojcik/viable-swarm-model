@@ -717,3 +717,63 @@ token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
 1. Backend coder MUST grep for `settings\.[a-z_]+` (lowercase after dot) and verify against the Settings class definition.
 2. Auditor MUST flag any lowercase settings access as BLOCKER.
 
+
+---
+
+## Rule: Pydantic `model_dump()` Returns UUID Objects by Default
+
+**Status**: Active (E24-F1-validated)
+**Applies to**: vsm_backend_coder, vsm_backend_fix, vsm_backend_tester
+**Severity**: ISSUE
+
+**Problem**: Pydantic V2's `BaseModel.model_dump()` returns `UUID` objects as-is
+for `UUID`-typed fields. If downstream code or tests expect string
+representations (e.g., `assert result == {"id": "550e8400-...", ...}`), the
+assertion will fail with a mismatch between `UUID(...)` and `"550e8400-..."`.
+
+This is distinct from JSON serialization (`model_dump_json()`), which does
+serialize UUIDs as strings automatically. The trap only triggers when code
+consumes the Python dict output of `model_dump()`.
+
+**Example failure**:
+```python
+from uuid import UUID
+from pydantic import BaseModel
+
+class User(BaseModel):
+    id: UUID
+    name: str
+
+u = User(id="550e8400-e29b-41d4-a716-446655440000", name="Alice")
+result = u.model_dump()
+# result == {"id": UUID("550e8400-e29b-41d4-a716-446655440000"), "name": "Alice"}
+# NOT {"id": "550e8400-e29b-41d4-a716-446655440000", "name": "Alice"}
+```
+
+**Correct pattern**:
+```python
+from uuid import UUID
+from pydantic import BaseModel, field_serializer
+
+class User(BaseModel):
+    id: UUID
+    name: str
+
+    @field_serializer("id")
+    def serialize_id(self, value: UUID) -> str:
+        return str(value)
+```
+
+**Prevention rules**:
+1. If a `UUID`-typed field's `model_dump()` output is consumed by Python code
+   (not just sent over the wire as JSON), verify whether string serialization
+   is required.
+2. Use `@field_serializer("field_name")` for targeted UUID→string conversion
+   in `model_dump()` output.
+3. Do NOT rely on `model_dump_json()` behavior when writing assertions against
+   `model_dump()` results.
+
+**Source**: E24-F1 gym experiment. Agent wrote naive `User` model without
+`@field_serializer`, tests failed because `model_dump()` returned `UUID`
+objects. Agent diagnosed and fixed in 1 iteration. This rule prevents the
+initial failure.

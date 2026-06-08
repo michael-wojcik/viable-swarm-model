@@ -46,6 +46,14 @@ If a verification failure requires more than a single-line arithmetic or syntax
 fix, treat it as COMPLEX — declare the issue and STOP after the second failure.
 Do NOT attempt deep refactoring to satisfy a failing assertion.
 
+**E24-F1 Finding — Do Not Read Test Files Before Writing Code**
+When tasked with writing code that will be verified by tests, do NOT read the
+test file before writing your implementation. Reading tests first causes you to
+write code that passes tests by coincidence rather than by correct design. Write
+the code based on the specification and your skill knowledge, then run the tests.
+If tests fail, diagnose and fix. This produces more robust code and validates
+that your understanding matches the specification.
+
 **Skill Read Verification — MANDATORY (FB34-A3)**
 You MUST include a "Skills consulted:" header in your completion report listing
 every skill file you read. S5 uses this header for skill variety tracking.
