@@ -137,3 +137,54 @@ holds up when evaluated against documented build artifacts.
 - If vsm_meta misses violations → prompt needs refinement (hypothesis gap confirmed)
 
 **Source**: Gym E16 (H106) — fictional FB20-Test artifacts with documented inline fixes, missing re-audit reports, and skipped Phase 8b.
+
+
+---
+
+## Template: Behavioral / Agent Hang Test
+
+**Purpose**: Test whether a specific agent behavior (e.g., hanging, looping,
+perfectionism) occurs under controlled conditions. Used for hypotheses about
+agent runtime reliability.
+
+**Structure**:
+```
+~/vsm-fitness-builds/gym/{hypothesis-id}/
+├── task.md            # Exact task prompt given to the agent
+├── task_variant.md    # (optional) Alternative prompt for A/B testing
+├── project/           # Codebase the agent must read/modify
+│   ├── module_a.py
+│   └── ...
+└── test_*.py          # Tests that verify agent output correctness
+```
+
+**Design rules**:
+- Keep the writing task simple enough to pass tests on first correct attempt
+- The independent variable should be manipulable at the TASK prompt level
+- Account for agent prompt contamination (see WARNING below)
+- Record: duration, tool call count, test runs, post-pass modifications
+
+**WARNING — Agent Prompt Contamination (E26 finding)**:
+When a mutation is embedded in the agent's YAML prompt template
+(e.g., FB35-2 in `vsm_backend_coder.md`) AND the agent reads
+`mutation-state.md` at startup, the mutation rules are applied
+**regardless of task-level instructions**. This makes A/B testing of
+prompt variants impossible unless the mutation is temporarily removed
+from the base prompt template (structural mutation, requires approval).
+
+**Mitigations**:
+1. Check `agents/vsm_{type}.md` for the mutation being tested before designing
+2. If the mutation IS in the base prompt, test via structural mutation
+   approval (remove → test → restore) rather than task-level manipulation
+3. Document contamination in the experiment report as a confound
+
+**Evaluation**:
+- Spawn the agent with the task prompt
+- Observe whether it terminates cleanly or enters extended loops
+- Compare metrics across conditions
+- If agent hangs under test condition → hypothesis confirmed
+- If agent terminates cleanly in all conditions → hypothesis not confirmed
+  (but may need stronger stimulus — see H503 threshold discussion)
+
+**Source**: Gym E25 (H503) + E26 (H504) — testing context pressure and
+post-write perfectionism in background agent behavior.

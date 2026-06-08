@@ -97,3 +97,12 @@ because of this mutation.]
 **Expected effect**: Main skill hypothesis backlog has zero original untested items. Gym experiment log documents all three experiments with full methodology and results.
 
 ---
+
+
+## Mutation Gym-5 — 2026-06-08
+
+**Session**: Gym experiments E25–E26 — H503 (context pressure) and H504 (post-write perfectionism)
+**File**: `~/vsm/vsm-fitness-gym/references/experiment-templates.md`
+**Type**: append-only
+**Rationale**: E26 revealed a critical methodological confound: when a mutation (e.g., FB35-2 STOP rule) is embedded in the agent's YAML prompt template AND the agent reads `mutation-state.md` at startup, the mutation is applied regardless of task-level instructions. This makes A/B testing of prompt variants impossible without structural mutation approval to temporarily remove the base prompt rule. The new "Behavioral / Agent Hang Test" template documents this contamination risk and provides mitigation strategies. This prevents future gym experiment designers from unknowingly confounding their behavioral hypotheses.
+**Expected effect**: Future behavioral experiments (agent hang, timeout, perfectionism) explicitly check for base prompt contamination before designing A/B cohorts. Contamination is documented as a confound rather than producing false negative results.
