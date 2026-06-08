@@ -103,6 +103,136 @@ def increment_builds_tested(text: str, mutations: list[dict]) -> str:
     return new_text
 
 
+def parse_all_mutations(text: str) -> list[dict]:
+    """Parse all mutation rows from mutation-state.md using the same logic as mutation-portfolio-health.py."""
+    rows = []
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("|") or stripped.startswith("|---|"):
+            continue
+        parts = [p.strip() for p in line.split("|")]
+        parts = [p for p in parts if p]
+        if len(parts) < 6:
+            continue
+        if parts[0].startswith("**") or parts[0] == "ID":
+            continue
+        if parts[1] in ("Source", "", "—"):
+            continue
+        raw_id = parts[0]
+        clean_id = re.sub(r"^~~(.+)~~$", r"\1", raw_id)
+        status_raw = parts[4].lower() if len(parts) > 4 else ""
+        status_raw = re.sub(r"\*\*", "", status_raw).strip()
+        try:
+            builds_tested = int(parts[5]) if parts[5] not in ("", "—") else 0
+        except ValueError:
+            builds_tested = 0
+        score_raw = parts[6] if len(parts) > 6 else ""
+        score = None
+        if score_raw and score_raw not in ("—", ""):
+            try:
+                score = int(score_raw)
+            except ValueError:
+                pass
+        valid_statuses = {"probation", "effective", "monitor", "ineffective",
+                          "removed", "historical", "redesigned"}
+        if status_raw not in valid_statuses:
+            continue
+        rows.append({
+            "id": clean_id,
+            "status": status_raw,
+            "builds_tested": builds_tested,
+            "score": score,
+        })
+    # Deduplicate by ID (keep last occurrence — Schema v2.0 updates rows in place)
+    seen = {}
+    for row in rows:
+        seen[row["id"]] = row
+    return list(seen.values())
+
+
+def compute_portfolio_metrics(rows: list[dict]) -> dict:
+    """Compute Integration Health metrics from parsed mutation rows."""
+    total_active = 0
+    probationary = 0
+    effective = 0
+    monitor = 0
+    ineffective = 0
+    removed = 0
+    historical = 0
+    tracked = 0
+    scored = 0
+    any_entry = 0
+
+    for row in rows:
+        tracked += 1
+        if row["status"] in ("probation", "effective", "monitor", "ineffective"):
+            total_active += 1
+        if row["status"] == "probation":
+            probationary += 1
+        elif row["status"] == "effective":
+            effective += 1
+        elif row["status"] == "monitor":
+            monitor += 1
+        elif row["status"] == "ineffective":
+            ineffective += 1
+        elif row["status"] in ("removed", "redesigned"):
+            removed += 1
+        elif row["status"] == "historical":
+            historical += 1
+
+        if row["score"] is not None:
+            scored += 1
+        if row["builds_tested"] > 0 or row["score"] is not None:
+            any_entry += 1
+
+    scored_rate = round((scored / tracked) * 100, 1) if tracked > 0 else 0.0
+    any_rate = round((any_entry / tracked) * 100, 1) if tracked > 0 else 0.0
+
+    return {
+        "active": total_active,
+        "probationary": probationary,
+        "effective": effective,
+        "historical": historical,
+        "removed": removed,
+        "scored_rate": scored_rate,
+        "any_rate": any_rate,
+    }
+
+
+def sync_integration_health(text: str) -> tuple[str, bool]:
+    """Sync the Integration Health table in mutation-state.md with computed metrics.
+
+    Returns (updated_text, changed).
+    """
+    rows = parse_all_mutations(text)
+    if not rows:
+        return text, False
+
+    metrics = compute_portfolio_metrics(rows)
+    new_text = text
+    changed = False
+
+    # Map metric names to their current values in the table
+    # We use regex to find and replace only the numeric/value column
+    replacements = [
+        (r"^(\| Active mutations \s*\|)\s*\d+\s*(\|)", f"\\1 {metrics['active']} \\2"),
+        (r"^(\| Historical effective \(≥5 builds\) \s*\|)\s*\d+\s*(\|)", f"\\1 {metrics['historical']} \\2"),
+        (r"^(\| Effective \(<5 builds.*?\)\s*\|)\s*\d+\s*(\|)", f"\\1 {metrics['effective']} \\2"),
+        (r"^(\| Probationary mutations \s*\|)\s*\d+\s*(\|)", f"\\1 {metrics['probationary']} \\2"),
+        (r"^(\| Removed / redesigned \s*\|)\s*\d+\s*(\|)", f"\\1 {metrics['removed']} \\2"),
+        (r"^(\| Measured effect fill rate \(scored\) \s*\|)\s*[0-9.]+\%?\s*(\|)", f"\\1 {metrics['scored_rate']}% \\2"),
+        (r"^(\| Measured effect fill rate \(any entry\) \s*\|)\s*[0-9.]+\%?\s*(\|)", f"\\1 {metrics['any_rate']}% \\2"),
+    ]
+
+    for pattern, replacement in replacements:
+        new_line, count = re.subn(pattern, replacement, new_text, flags=re.MULTILINE, count=1)
+        if count > 0 and new_line != new_text:
+            new_text = new_line
+            changed = True
+
+    return new_text, changed
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Increment S5 iteration mutation counters")
     parser.add_argument("--mutation-state", type=Path, default=DEFAULT_MUTATION_STATE)
@@ -128,6 +258,9 @@ def main() -> int:
         new_text = increment_builds_tested(text, mutations)
         mode = "increment"
 
+    # Always sync Integration Health to prevent staleness
+    new_text, health_changed = sync_integration_health(new_text)
+
     if new_text == text:
         print(f"No changes needed ({mode} mode).")
         return 0
@@ -139,6 +272,8 @@ def main() -> int:
     for old, new in zip(old_muts, new_muts):
         if old["builds_tested"] != new["builds_tested"]:
             print(f"  {old['id']}: builds_tested {old['builds_tested']} -> {new['builds_tested']}")
+    if health_changed:
+        print("  Integration Health table synced")
 
     if args.dry_run:
         print("(dry-run: no files modified)")

@@ -6,6 +6,43 @@
 ---
 ---
 
+## 2026-06-07 — S5 Orchestrator Iteration (R81)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 channel — Integration Health staleness is a recurring failure mode**: Despite being fixed manually in R68 and R79, stale Integration Health metrics recurred because `increment-s5-iteration-counter.py` only incremented `builds_tested` but never updated the Integration Health table. S5 repeatedly forgot the manual update step. Additionally, R77 and R78 were at builds_tested=3 and needed the counter run to advance toward historical eligibility.
+
+### Change Made
+**Structural mutation R81**: Added automatic Integration Health sync to `increment-s5-iteration-counter.py`.
+- Added `parse_all_mutations()` — parses all mutation rows using the same logic as `mutation-portfolio-health.py`
+- Added `compute_portfolio_metrics()` — computes active, effective, historical, probationary, removed, scored_rate, any_rate
+- Added `sync_integration_health()` — finds and replaces the 7 Integration Health table values in-place
+- The sync runs automatically after every counter increment/backfill
+- Ran counter: R77→4, R78→4
+- `hooks/test-automation.sh`: Added Test 199b verifying sync corrects deliberately stale mock values
+
+### Test Results
+- `bash hooks/test-automation.sh`: **218 passed, 0 failed** (was 217 passed, 0 failed)
+- Test 199b: Counter syncs stale Integration Health (active=99→2, scored=0.0%→100.0%, etc.) → PASS
+- Test 194: S5 iteration mutations min builds_tested >= 2 → PASS
+- Tests 113 + 191: Real Integration Health accurate → PASS
+- `mutation-portfolio-health.py`: total_active=56, effective=56, all metrics green
+
+### Files Modified
+- `viable-swarm-model/scripts/increment-s5-iteration-counter.py`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 channel — R77 and R78 at builds_tested=4, one increment away from historical eligibility**: After one more counter run, both will reach 5 and be eligible for promotion, reducing active mutations from 56 to 54. This would complete the S5 iteration mutation lifecycle cleanup. Alternatively, **System 4 (Adaptation/Intelligence) / S4→S4 channel — 4 untested hypotheses remain stale** (H104, H152, H[N+3], H[N+4]) and meta-system agents still have 0% empirical exercise rate. With internal infrastructure now exceptionally solid (218 tests passing, all metrics green, auto-sync preventing staleness), the external frontier remains the primary target for high-value improvement.
+
+---
+---
+
 ## 2026-06-07 — S5 Orchestrator Iteration (R80)
 
 ### Diagnosed Constraint

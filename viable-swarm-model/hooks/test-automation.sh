@@ -7276,6 +7276,50 @@ else
 fi
 
 # ============================================================================
+# Test 199b: increment-s5-iteration-counter.py syncs Integration Health
+# ============================================================================
+
+echo -n "TEST: increment-s5-iteration-counter.py syncs stale Integration Health ... "
+
+TMP_STATE=$(mktemp)
+cat > "$TMP_STATE" << 'EOF'
+| **S5 ITERATION MUTATIONS** |
+| R99A | 2026-06-07 S5 | refinement | Test mutation A | effective | 2 | 5 | — | — | S5 iter |
+| R99B | 2026-06-07 S5 | refinement | Test mutation B | effective | 1 | 5 | — | — | S5 iter |
+
+## Integration Health
+
+| Metric | Current | Target | Status |
+|---|---|---|---|
+| Active mutations | 99 | < 60 | ❌ Wrong |
+| Historical effective (≥5 builds) | 0 | >15% of active | ❌ Wrong |
+| Effective (<5 builds, monitored) | 99 | >30% of active | ❌ Wrong |
+| Probationary mutations | 99 | <20 at any time | ❌ Wrong |
+| Removed / redesigned | 0 | ≥2 per 5 builds | ❌ Wrong |
+| Measured effect fill rate (scored) | 0.0% | ≥80% | ❌ Wrong |
+| Measured effect fill rate (any entry) | 0.0% | ≥80% | ❌ Wrong |
+EOF
+
+python3 "$SCRIPT_DIR/../scripts/increment-s5-iteration-counter.py" --mutation-state "$TMP_STATE" >/dev/null 2>&1
+RC=$?
+
+ACTIVE=$(grep "^| Active mutations" "$TMP_STATE" | awk -F'|' '{print $3}' | tr -d ' ')
+HIST=$(grep "^| Historical effective" "$TMP_STATE" | awk -F'|' '{print $3}' | tr -d ' ')
+EFF=$(grep "^| Effective (<5 builds" "$TMP_STATE" | awk -F'|' '{print $3}' | tr -d ' ')
+PROB=$(grep "^| Probationary mutations" "$TMP_STATE" | awk -F'|' '{print $3}' | tr -d ' ')
+REM=$(grep "^| Removed / redesigned" "$TMP_STATE" | awk -F'|' '{print $3}' | tr -d ' ')
+SCORED=$(grep "^| Measured effect fill rate (scored)" "$TMP_STATE" | awk -F'|' '{print $3}' | tr -d ' %')
+ANY=$(grep "^| Measured effect fill rate (any entry)" "$TMP_STATE" | awk -F'|' '{print $3}' | tr -d ' %')
+
+rm -f "$TMP_STATE"
+
+if [ "$RC" -eq 0 ] && [ "$ACTIVE" = "2" ] && [ "$HIST" = "0" ] && [ "$EFF" = "2" ] && [ "$PROB" = "0" ] && [ "$REM" = "0" ] && [ "$SCORED" = "100.0" ] && [ "$ANY" = "100.0" ]; then
+    pass
+else
+    fail "Integration Health not synced correctly (active=$ACTIVE hist=$HIST eff=$EFF prob=$PROB rem=$REM scored=$SCORED any=$ANY rc=$RC)"
+fi
+
+# ============================================================================
 # Test 200: auto-mutation-lifecycle.py dry-run updates mutation-log and state (R75)
 # ============================================================================
 

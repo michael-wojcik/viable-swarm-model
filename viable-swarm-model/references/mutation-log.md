@@ -5547,3 +5547,28 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 - Result: 217 tests passing, 0 failed; lifecycle unblocked
 
 **Measured effect**: **TESTED** — Test 206 verifies R76 historical promotion. Test 194 verifies S5 iteration mutations min builds_tested >= 2. Tests 113 and 191 verify Integration Health accuracy. 217 tests passing, 0 failed.
+
+---
+
+## Mutation R81 — 2026-06-07
+
+**Session**: S5 Orchestrator Iteration R81
+**File**: `scripts/increment-s5-iteration-counter.py`, `hooks/test-automation.sh`, `references/mutation-state.md`
+**Type**: structural
+**Rationale**: System 5 / S5→S5 channel — Integration Health staleness has recurred twice (R68, R79) despite tests catching it. The root cause is that `increment-s5-iteration-counter.py` only incremented `builds_tested` but never synced the Integration Health table. S5 had to manually update the table after every counter run — a step that was repeatedly forgotten. Additionally, R77 and R78 had reached builds_tested=3 and needed the counter run to advance toward historical eligibility.
+
+**Expected effect**: Running `increment-s5-iteration-counter.py` now automatically syncs the Integration Health table to computed values, eliminating manual update as a failure mode. Future S5 iterations will never leave stale Integration Health metrics because the sync is built into the same script that modifies mutation-state.md.
+
+**Before**:
+- `increment-s5-iteration-counter.py`: Incremented builds_tested only; Integration Health remained untouched
+- Manual protocol step: "Update Integration Health after mutation changes" — repeatedly forgotten
+- R77: builds_tested=3, R78: builds_tested=3
+- Result: Stale metrics caught by Tests 113/191 in R68 and R79; manual fix required each time
+
+**After**:
+- `increment-s5-iteration-counter.py`: New `parse_all_mutations()`, `compute_portfolio_metrics()`, and `sync_integration_health()` functions compute metrics from the full mutation table and update the Integration Health table in-place
+- Counter run: R77→4, R78→4
+- Test 199b: Verifies Integration Health sync on a mock file with deliberately stale values
+- Result: 218 tests passing, 0 failed; manual Integration Health updates no longer needed
+
+**Measured effect**: **TESTED** — Test 199b creates a mock mutation-state.md with wrong Integration Health values (active=99, historical=0, etc.), runs the counter, and verifies all 7 metrics are corrected. Test 194 verifies S5 iteration mutations builds_tested >= 2. Tests 113 and 191 verify real file accuracy. 218 tests passing, 0 failed.

@@ -375,8 +375,8 @@
 | FB34-3 | FB34 Build | append-only | SocketProvider authenticate event protocol | **removed** | 1 | 2 | — | — | R-8 cemetery; replaced by FB34-C1 |
 
 | **S5 ITERATION MUTATIONS (2026-06-07)** |
-| R77 | 2026-06-07 S5 | structural | S5 lifecycle maintenance — R74 historical promotion + H153/H156 archival + Test 203 missing-ID guard | effective | 3 | 5 | — | — | S5 iter |
-| R78 | 2026-06-07 S5 | refinement | auto-mutation-lifecycle.py score backfill from evidence + respect existing scores + Tests 200/201/204 | effective | 3 | 5 | H405 | — | S5 iter |
+| R77 | 2026-06-07 S5 | structural | S5 lifecycle maintenance — R74 historical promotion + H153/H156 archival + Test 203 missing-ID guard | effective | 4 | 5 | — | — | S5 iter |
+| R78 | 2026-06-07 S5 | refinement | auto-mutation-lifecycle.py score backfill from evidence + respect existing scores + Tests 200/201/204 | effective | 4 | 5 | H405 | — | S5 iter |
 
 | **FB34 CLOSEOUT MUTATIONS (Proposed during Phase 8b, await implementation/measurement)** |
 | FB34-C1 | FB34 Phase 8b | structural | Tool-enforced integration hard-gates script (consolidates FB31-5, FB34-1, FB34-2, FB34-3) | effective | 1 | 5 | H401, H405 | — | S5 iter |
