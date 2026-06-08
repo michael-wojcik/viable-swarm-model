@@ -569,3 +569,50 @@ HALT regression builds until H500/H501 are validated via gym experiment. The -1.
 | E24 | H502 partially confirmed — explicit STOP works, delta unmeasured | Next build: add explicit STOP to 50% of architect/backend_coder tasks, compare hang rate between STOP and no-STOP cohorts | MEDIUM |
 
 *Updated: 2026-06-08*
+
+
+---
+
+## Gym Experiment E24-F1 — Agent Hang Follow-up (2026-06-08)
+
+**Experiment**: E24-F1 — Complex Verification Failure: Pydantic UUID Serialization
+**Hypothesis tested**: H501-follow-up
+**Designer**: vsm-fitness-gym / S5 orchestrator
+
+### Findings
+
+| Run | Prompt Variant | Initial Write Correct? | Failures | Fix Iterations | Duration | Hang? |
+|---|---|---|---|---|---|---|
+| 1 | Default | Yes (read test first) | 0 | 0 | ~4 min | No |
+| 2 | Modified + "no peek" + FB35-2 STOP | No (naive code) | 2 | 1 | ~3 min | No |
+
+**Run 2** is the meaningful result: agent wrote naive Pydantic code without
+`@field_serializer`, tests failed (UUID object ≠ string), agent correctly
+diagnosed and fixed in 1 iteration. Terminated cleanly. Explicitly tracked
+FB35-2 failure count.
+
+### Key Insight
+The `python-pitfalls` skill already contains UUID coercion guidance (FB27/FB28).
+When agents read this skill (mandatory for backend_coder), they know the fix.
+Run 1 "cheated" by reading the test file first. Run 2 prevented test peeking
+and produced a genuine failure → fix cycle — but the fix was still within the
+agent's skill coverage.
+
+**H501 remains inconclusive.** We have not reproduced the FB35 hang behavior
+(6 agents, 10-15 min) in two experiments covering both trivial and complex
+failures. Possible explanations:
+1. FB35 hangs required failure classes NOT covered by skills (e.g., CORS
+   parsing, framework version incompatibilities)
+2. FB35 hangs occurred under higher context pressure (larger tasks, more
+   preceding tool calls)
+3. FB35 hangs were non-deterministic — same task might hang in one build but
+   not another
+
+### Coach Action Items
+
+| Experiment | Hypothesis Result | Recommended Focus | Priority |
+|---|---|---|---|
+| E24-F1 | H501 still inconclusive — complex failure did not trigger hang | Design **E24-F2** with genuinely novel failure (not in any skill): SQLAlchemy 2.0 async session invalidation, FastAPI dependency override conflict, or Strawberry resolver context mismatch | HIGH |
+| E24-F1 | FB35-2 compliance confirmed — agents explicitly track failure count | Consider making "do not read test before writing" a standard rule for test-driven tasks | MEDIUM |
+
+*Updated: 2026-06-08*

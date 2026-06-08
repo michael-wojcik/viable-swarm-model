@@ -302,8 +302,8 @@
 **Source**: Fitness build FB35, Phase 1/2/3
 **Experiment**: Spawn a background agent with a task that includes a deliberate Shell verification failure. Measure whether the agent terminates or loops. Test with explicit "stop after 3 attempts" rule vs default prompt.
 **Expected**: Default prompt → agent loops indefinitely. Modified prompt → agent terminates after 3 attempts.
-**Result**: NOT REPRODUCED in minimal setting. Both default and modified-prompt agents terminated cleanly after 1 fix attempt (trivial arithmetic change). Agents already applied FB35-2 from mutation-state.md. Real-world hangs involved complex semantic failures (UUID coercion, CORS parsing, enum mismatches) not replicated here. Follow-up experiment E24-F1 with non-trivial failure recommended.
-**Tested by**: E24
+**Result**: NOT REPRODUCED in E24 minimal setting (trivial arithmetic failure). E24-F1 tested a complex Pydantic UUID serialization failure. Run 1 agent read test file first and passed on first write. Run 2 agent was instructed not to read test first — wrote naive code, failed tests, diagnosed UUID→string serialization mismatch, applied `@field_serializer` fix in 1 iteration, passed on second run. Terminated cleanly in ~3 min. FB35-2 termination rule was explicitly tracked and obeyed. **Critical confound**: python-pitfalls skill already covers UUID coercion (FB27/FB28). To genuinely test H501, a failure mode NOT covered by any active skill is required. H501 remains inconclusive — real-world FB35 hangs (6 agents, 10-15 min) involved different failure classes or higher context pressure.
+**Tested by**: E24, E24-F1
 
 ---
 

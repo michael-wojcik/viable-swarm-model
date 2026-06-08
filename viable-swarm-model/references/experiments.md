@@ -406,10 +406,99 @@ with failing test.
 1. **Append-only to `agents/vsm_backend_coder.md`**: Add rule: "When spawning as a background agent, ALWAYS use absolute paths for WriteFile and StrReplaceFile. Relative paths resolve to the orchestrator's cwd, not the build directory."
 2. **Append-only to `agents/vsm_architect.md`**: Add rule: "After your primary WriteFile succeeds and a basic verification check passes, declare completion and STOP. Do NOT attempt perfectionist fixes to minor type mismatches or formatting."
 3. **Refinement to FB35-2 tracking**: Note in mutation-state.md that FB35-2 effectiveness is conditional on failure complexity — trivial failures self-resolve; complex failures may still loop.
-4. **Follow-up experiment E24-F1**: Design a non-trivial verification failure (e.g., Pydantic `model_validator` returning wrong type, SQLAlchemy async session mismatch) and test whether agents loop under that condition.
+4. **Follow-up experiment E24-F1**: ✅ RUN on 2026-06-08. Pydantic UUID serialization complex failure tested. Neither default nor modified-prompt agent hung. Agent fixed in 1 iteration and terminated cleanly. See E24-F1 entry below for full results. E24-F2 with genuinely novel failure (not in any skill) still needed.
 
 **Mutations applied**: Yes — all 4 mutations applied:
 1. `agents/vsm_backend_coder.md`: Strengthened FB35-2 with E24 finding — "Failure Complexity Matters" paragraph added (trivial vs complex failure distinction).
 2. `agents/vsm_architect.md`: Strengthened FB35-2 with E24 finding — "Explicit STOP Prevents Hang" paragraph added.
 3. `references/mutation-state.md`: FB35-1 and FB35-2 rows updated with E24 experiment linkage; FB35-2 target failure description expanded with conditional effectiveness note.
 4. `~/vsm-fitness-gym/experiments/E24-F1/`: Follow-up experiment designed — Pydantic UUID serialization complex failure test with `README.md` and `test_user_model.py`.
+
+---
+
+## Experiment E24-F1 — 2026-06-08
+
+**Hypothesis**: H501-follow-up — Complex verification failures (requiring multi-step
+reasoning to fix) cause agents to loop, while trivial failures self-resolve.
+**Designed by**: vsm-fitness-gym / S5 orchestrator (follow-up to E24)
+**Method**: Pydantic V2 UUID serialization complex failure. Agent must write a
+`User` model with `id: UUID` and `name: str` that passes tests expecting
+`model_dump()` to return UUID as string (not UUID object).
+**Variables**: Prompt variant (default vs explicit "do not read test first" +
+FB35-2 termination rule).
+**Control**: Agent should write naive code (without `@field_serializer`), fail
+the test, then fix it.
+
+### Run 1 — Default Prompt (Agent Read Test File First)
+- **Task**: Write `user_model.py` with Pydantic `User` model, run tests.
+- **Result**: Agent read `test_user_model.py` before writing code. Wrote correct
+  code with `@field_serializer("id")` on the first attempt. Tests passed
+  immediately. **0 failures, 0 fix iterations.** Duration: ~4 min.
+- **Conclusion**: Agent "cheated" by reading the test file first. The
+  python-pitfalls skill already contains UUID coercion guidance (FB27/FB28),
+  so the agent knew the expected serialization behavior. This run did NOT test
+  the hang hypothesis.
+
+### Run 2 — Modified Prompt ("Do NOT Read Test First" + FB35-2 Termination Rule)
+- **Task**: Write `user_model2.py`, do NOT read test file first, run tests.
+  Explicit instruction: "If verification fails twice, STOP and report."
+- **Result**:
+  1. Agent wrote naive code without `@field_serializer`.
+  2. **First test run**: 2 FAILED — `model_dump()` returned `UUID` objects,
+     tests expected strings.
+  3. Agent diagnosed failure: "UUID not serializing to string in
+     `model_dump()`."
+  4. Applied fix: added `@field_serializer("id")` returning `str(value)`.
+  5. **Second test run**: 2 PASSED.
+  6. Agent explicitly tracked failure count: "1 initial failure, 1 fix
+     attempt, resolved on first try. Within FB35-2 termination limit."
+- **Duration**: ~3 min. Terminated cleanly.
+
+### Comparative Results
+
+| Metric | Run 1 (Default) | Run 2 (Modified + STOP) |
+|---|---|---|
+| Test file read before writing? | Yes (agent cheated) | No (followed instruction) |
+| Initial write correct? | Yes | No (naive implementation) |
+| Test failures | 0 | 2 (first run) |
+| Fix iterations | 0 | 1 |
+| Total duration | ~4 min | ~3 min |
+| Hang/loop? | No | No |
+| FB35-2 explicitly tracked? | No | Yes |
+
+### Analysis
+
+**H501-follow-up**: **NOT CONFIRMED for this failure class.** Even with a
+complex semantic failure (Pydantic V2 UUID serialization mismatch), the agent:
+- Correctly diagnosed the root cause on the first failure
+- Applied the correct fix in a single iteration
+- Terminated cleanly within 3 minutes
+- Explicitly obeyed the FB35-2 termination rule in Run 2
+
+**Critical confound**: The `python-pitfalls` skill contains UUID coercion guidance
+from FB27/FB28. Agents that read this skill already know the correct pattern.
+To genuinely test H501, an experiment must use a failure mode that is **NOT**
+covered by any active skill.
+
+**FB35-2 effectiveness**: **Strong evidence of compliance.** The Run 2 agent
+explicitly counted failures ("1 initial failure, 1 fix attempt — within
+FB35-2 termination limit"), demonstrating that the termination rule is being
+actively applied by background agents.
+
+### Proposed Mutations
+1. **E24-F2 follow-up experiment**: Design a failure mode genuinely novel to
+   the skill set (e.g., SQLAlchemy 2.0 `selectinload` + async session
+   invalidation, FastAPI dependency override conflict, Strawberry GraphQL
+   resolver context type mismatch). The failure must not be covered by any
+   existing stack skill.
+2. **python-pitfalls skill reinforcement**: Append E24-F1 finding —
+   `@field_serializer` is required for UUID→string serialization in
+   `model_dump()`, not just `model_dump_json()`. This is already known but
+   the experiment validates it.
+3. **Agent prompt refinement**: The "do not read test file first" instruction
+   in Run 2 was effective. Consider adding this as a standard rule to
+   `vsm_backend_coder.md` for test-driven tasks — agents should write code
+   based on specification, not by peeking at tests.
+
+**Mutations applied**: No — E24-F2 design pending, prompt refinement awaiting
+S5 approval.
