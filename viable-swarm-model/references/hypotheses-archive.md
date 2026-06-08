@@ -773,3 +773,20 @@ effective. No skill mutation needed.
 
 ---
 
+
+---
+
+## H501: Agent Hangs Correlate with Shell Verification Failures
+
+**Status**: rejected
+**Tested by**: E24, E24-F1, E24-F2
+**Result**: REJECTED. Three experiments with varying failure complexity all produced clean termination after ≤1 fix iteration:
+- E24 (trivial arithmetic): 1 fix, terminated cleanly.
+- E24-F1 (complex Pydantic UUID serialization, skill-covered): 1 fix, terminated cleanly.
+- E24-F2 (genuinely novel asyncio.gather failure, zero skill coverage): 1 fix, terminated cleanly.
+Verification failures alone — regardless of complexity or skill coverage — do not cause agent hangs in controlled experiments. FB35 hangs (6 agents, 10-15 min) remain unexplained; likely caused by context pressure (H503) or post-write perfectionism (H504).
+**Proposed**: 2026-06-08
+**Rationale**: FB35: 6 agents hung after WriteFile + Shell verification, entering infinite self-correction loops. E24 series falsified the claim that verification failures cause hangs.
+**Source**: Fitness build FB35, Phase 1/2/3
+**Experiment**: Spawn background agents with deliberate Shell verification failures. Measure termination vs looping.
+**Expected**: Default prompt → agent loops indefinitely. Modified prompt → agent terminates after 3 attempts.

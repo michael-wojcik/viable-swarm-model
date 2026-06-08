@@ -777,3 +777,62 @@ class User(BaseModel):
 `@field_serializer`, tests failed because `model_dump()` returned `UUID`
 objects. Agent diagnosed and fixed in 1 iteration. This rule prevents the
 initial failure.
+
+---
+
+## Rule: `asyncio.gather` Without `return_exceptions=True` Loses Results on Partial Failure
+
+**Status**: Active (E24-F2-validated)
+**Applies to**: vsm_backend_coder, vsm_backend_fix, vsm_auditor
+**Severity**: ISSUE
+
+**Problem**: `asyncio.gather(*coros)` raises immediately when the first
+coroutine raises an exception. This loses:
+- Successful results from coroutines that completed before the failure
+- The ability to distinguish which coroutine failed and why
+- The ability to return partial results
+
+This is especially dangerous in concurrent fetch/operation patterns where
+downstream code expects a complete result mapping.
+
+**Example failure**:
+```python
+import asyncio
+
+async def fetch_all(urls):
+    # Naive — raises on first failure, losing other results
+    results = await asyncio.gather(*(fetch(url) for url in urls))
+    return dict(zip(urls, results))
+```
+
+When one `fetch()` raises `json.JSONDecodeError`, the entire `gather()`
+raises. Callers cannot tell which URL failed or access successful results.
+
+**Correct pattern**:
+```python
+import asyncio
+
+async def fetch_all(urls):
+    results = await asyncio.gather(
+        *(fetch(url) for url in urls),
+        return_exceptions=True
+    )
+    return dict(zip(urls, results))
+```
+
+With `return_exceptions=True`, exceptions are returned in the results list
+just like successful values. Callers can inspect `isinstance(result, Exception)`
+to distinguish failures from successes.
+
+**Prevention rules**:
+1. When using `asyncio.gather` for concurrent operations where partial failure
+   is possible (e.g., fetching multiple URLs, processing multiple items),
+   ALWAYS use `return_exceptions=True`.
+2. Document the behavior: callers MUST handle both success values and
+   exception objects in the returned collection.
+3. Do NOT wrap `gather()` in a broad `try/except` as a substitute for
+   `return_exceptions=True` — this still loses successful results.
+
+**Source**: E24-F2 gym experiment. Agent wrote naive `gather()`, tests failed
+because exceptions propagated instead of being returned. Agent diagnosed and
+fixed in 1 iteration. This rule prevents the initial failure.

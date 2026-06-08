@@ -30,7 +30,6 @@
 | H405 | testing |
 | H406 | testing |
 | H500 | partially confirmed |
-| H501 | rejected |
 | H502 | partially confirmed |
 | H503 | untested |
 | H504 | untested |
@@ -293,19 +292,6 @@
 **Expected**: Relative paths write to agent session directory; absolute paths write to correct location.
 **Result**: Relative paths resolved to orchestrator cwd (`/Users/mj/vsm`), not the intended experiment directory. Absolute paths were 100% accurate. A distinct "agent session directory" was not observed in this test configuration, but the non-determinism of relative paths is confirmed. FB35-1 (absolute path requirement) is supported.
 **Tested by**: E24
-
----
-
-## H501: Agent Hangs Correlate with Shell Verification Failures
-
-**Status**: inconclusive
-**Proposed**: 2026-06-08
-**Rationale**: FB35: 6 agents hung after WriteFile + Shell verification, entering infinite self-correction loops (UUID type assertions, CORS parsing, minor assertion errors). Architect spawns 2-4, backend coders, and foundation auditor all required manual S5 stop after 10-15 min.
-**Source**: Fitness build FB35, Phase 1/2/3
-**Experiment**: Spawn a background agent with a task that includes a deliberate Shell verification failure. Measure whether the agent terminates or loops. Test with explicit "stop after 3 attempts" rule vs default prompt.
-**Expected**: Default prompt → agent loops indefinitely. Modified prompt → agent terminates after 3 attempts.
-**Result**: REJECTED. E24 (trivial arithmetic): 1 fix, terminated cleanly. E24-F1 (complex Pydantic UUID): 1 fix, terminated cleanly. E24-F2 (genuinely novel asyncio.gather failure, zero skill coverage): 1 fix, terminated cleanly. Three experiments, three verification failures, zero hangs, all terminated after ≤1 fix iteration. Verification failures alone do not cause agent hangs. FB35 hangs (6 agents, 10-15 min) remain unexplained — likely caused by context pressure, non-deterministic behavior, post-write perfectionism, or failure classes not isolable in minimal experiments.
-**Tested by**: E24, E24-F1, E24-F2
 
 ---
 
