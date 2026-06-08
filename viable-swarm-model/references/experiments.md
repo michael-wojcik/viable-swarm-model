@@ -677,3 +677,93 @@ unexplained by these experiments. Possible alternative explanations:
 2. `references/hypotheses.md`: Two new hypotheses appended — H503 (context pressure) and H504 (post-write perfectionism).
 3. `references/mutation-state.md`: FB35-2 row updated with E24-F2 evidence and H501 rejection note.
 4. `references/knowledge-broker.md`: E24-F2 execution findings + Coach Action Items appended.
+
+
+---
+
+## E25 — H503: Context Pressure Hang Test (2026-06-08)
+
+**Hypothesis tested**: H503 — Agent hangs correlate with cumulative context pressure, not verification failures.
+
+**Design**: Complex-context agent must read 8 existing Python modules, understand their interfaces, and write a new `reports.py` module that integrates correctly. Tests are simple and pass on correct implementation. Cognitive load comes from number of files and interdependencies.
+
+**Files**:
+- `~/vsm-fitness-gym/experiments/E25/project/` — 8 modules (models, repository, services, notifications, validators, filters, serializers, exceptions)
+- `~/vsm-fitness-gym/experiments/E25/test_reports.py` — 4 tests for InventoryReport class
+
+**Results**:
+
+| Metric | Value |
+|---|---|
+| Files read before writing | 8 |
+| WriteFile calls | 1 |
+| Shell calls | 4 (2 failed with import error, 2 succeeded after fix) |
+| Total tool calls | ~14 |
+| Test runs | 2 (first failed due to relative imports in test file, second passed) |
+| Duration | 60 seconds |
+| Hang? | **No** |
+| Post-pass refinements? | No |
+
+**Agent behavior**: Agent read all 8 files sequentially, wrote `reports.py` with correct implementation. First test run failed because test file used relative imports (`from project.models import ...`) which didn't resolve. Agent fixed import paths (2 Shell attempts), tests passed, agent declared STOP. No post-pass refinements.
+
+**Assessment**: Agent did NOT hang under 8-file context load with 14 tool calls. However, the hypothesized "context pressure" in FB35 may have been much higher (50+ tool calls in a long build session). This experiment does not reach the threshold needed to falsify or confirm H503.
+
+---
+
+## E26 — H504: Post-Write Perfectionism Test (2026-06-08)
+
+**Hypothesis tested**: H504 — Agent hangs are caused by post-write perfectionism, not failure correction loops.
+
+**Design**: Two-cohort A/B test. Both cohorts write the same simple utility functions (`chunk_list`, `safe_divide`). Tests pass on correct first write.
+- **Cohort A (E26-A)**: Task includes explicit "STOP after tests pass" rule.
+- **Cohort B (E26-B)**: Task does NOT include STOP rule; instead says "Ensure solution is complete and polished."
+
+**Files**:
+- `~/vsm-fitness-gym/experiments/E26/task_stop.md` — Cohort A prompt
+- `~/vsm-fitness-gym/experiments/E26/task_no_stop.md` — Cohort B prompt
+- `~/vsm-fitness-gym/experiments/E26/test_utils.py` — 7 tests
+
+**Results**:
+
+| Metric | Cohort A (STOP) | Cohort B (No STOP) |
+|---|---|---|
+| Skill reads | 1 (task only) | 4 (task + SKILL-REGISTRY + mutation-state + python-pitfalls) |
+| WriteFile calls | 1 | 1 |
+| Shell calls | 2 | 3 |
+| Total tool calls | 4 | 9 |
+| Test runs | 1 | 1 |
+| Duration | 20 seconds | 58 seconds |
+| Hang? | No | No |
+| Post-pass refinements? | No | **No** |
+| Pre-pass "polish" in code? | Minimal | Docstrings, type hints, ValueError check |
+
+**Critical confound — Agent prompt contamination**: Cohort B (no STOP) agent STILL cited "FB35-2 (Termination rule): Stopped after the first passing test run" in its completion report. The `vsm_backend_coder.md` prompt template contains FB35-2 STOP rules that the agent reads from `mutation-state.md` at startup. This makes it **impossible to test a true "no STOP" condition** while FB35-2 is active in the agent prompt.
+
+**Assessment**: Neither cohort exhibited post-pass perfectionism. However, the experiment cannot falsify H504 because the independent variable (STOP rule presence) was not successfully manipulated — both cohorts received STOP behavior via the base prompt template.
+
+**Novel finding**: Cohort B exhibited **pre-pass perfectionism** — it wrote docstrings, type hints, and a `ValueError` guard for `chunk_size <= 0` before tests ran. These additions were not required by tests but reflect the agent's default quality standard when given time to read skills. This is NOT post-pass behavior (it didn't modify files after tests passed) but suggests agents default to polished output when context allows.
+
+---
+
+## E25/E26 Cross-Cutting Findings
+
+### 1. Agent Prompt Contamination Prevents Clean A/B Testing
+When a mutation (e.g., FB35-2) is embedded in the agent's YAML prompt template and the agent reads `mutation-state.md` at startup, the mutation rules are applied regardless of task-level instructions. This means:
+- Experiments testing "prompt A vs prompt B" are confounded if A/B differs on a dimension already covered by the base prompt.
+- To test H504 cleanly, FB35-2 would need to be temporarily removed from `vsm_backend_coder.md` — a structural mutation requiring approval.
+
+### 2. Context Pressure Threshold Not Reached
+E25's 14 tool calls did not trigger hang behavior. The hypothesized FB35 threshold (50+ tool calls, 10-15 min session) remains untested. A stronger experiment would require:
+- A task that forces 30+ sequential tool calls (e.g., multi-step refactor with verification at each step)
+- OR a long-running agent session with repeated spawns and context accumulation
+
+### 3. Pre-Pass vs Post-Pass Perfectionism
+E26-B wrote more polished code than E26-A (docstrings, type hints, extra validation), but this happened BEFORE tests ran, not after. If "hangs" in FB35 were agents continuing to refine after tests passed, we have not reproduced that behavior. If "hangs" were agents taking longer to write initial polished code, that's a task-sizing issue (H217), not a post-write loop.
+
+### 4. Both Hypotheses Remain Unconfirmed
+Neither H503 nor H504 was confirmed by these experiments. The FB35 hang phenomenon remains unexplained.
+
+**Recommended next steps**:
+- For H503: Design an experiment with 30+ forced tool calls (e.g., "Read file A, write file B, run test, read file C, modify file B, run test..." repeated 10 times).
+- For H504: To test cleanly, temporarily remove FB35-2 from `vsm_backend_coder.md`, run the no-STOP cohort, then restore FB35-2. This requires structural mutation approval.
+- Alternative: Accept that FB35 hangs may be non-deterministic and cannot be reliably reproduced in controlled experiments.

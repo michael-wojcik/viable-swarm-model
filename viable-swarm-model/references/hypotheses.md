@@ -31,8 +31,8 @@
 | H406 | testing |
 | H500 | partially confirmed |
 | H502 | partially confirmed |
-| H503 | untested |
-| H504 | untested |
+| H503 | tested — not confirmed |
+| H504 | tested — not confirmed |
 | H[N+3] | untested |
 | H[N+4] | untested |
 ---
@@ -124,8 +124,8 @@
   4. Run 5 fitness builds with the current markdown prompt approach
   5. Compare: agent tool misuse rates, prompt consistency, build quality scores
 **Expected**: YAML approach shows measurable reduction in agent tool misuse (e.g., auditor writing files, architect coding) and more consistent outputs. If no difference → markdown approach is sufficient; close hypothesis.
-**Result**: [to be filled]
-**Tested by**: [experiment ID or session]
+**Result**: NOT CONFIRMED — Both STOP and no-STOP cohorts terminated cleanly after tests passed. No post-pass refinements observed. However, agent prompt contamination (FB35-2 in base prompt template) prevented clean manipulation of the independent variable. Experiment inconclusive.
+**Tested by**: E26
 
 ---
 
@@ -318,7 +318,7 @@
 
 ## H503: Agent Hangs Correlate with Cumulative Context Pressure, Not Verification Failures
 
-**Status**: untested
+**Status**: tested — not confirmed
 **Proposed**: 2026-06-08
 **Rationale**: E24, E24-F1, and E24-F2 all showed that verification failures —
 whether trivial, complex, or genuinely novel — are fixed in ≤1 iteration with
@@ -333,14 +333,14 @@ with 50+ preceding tool calls (simulating a long build session). Then give it a
 verification-failure task. Compare hang rate vs a fresh-context agent with the
 same task.
 **Expected**: High-context agent hangs; fresh-context agent terminates cleanly.
-**Result**: [to be filled]
-**Tested by**: [experiment ID or session]
+**Result**: NOT CONFIRMED — Agent with 8-file read load and 14 tool calls terminated cleanly in 60s. Context pressure threshold (hypothesized 50+ tool calls) not reached. Experiment inconclusive.
+**Tested by**: E25
 
 ---
 
 ## H504: Agent Hangs Are Caused by Post-Write Perfectionism, Not Failure Correction Loops
 
-**Status**: untested
+**Status**: tested — not confirmed
 **Proposed**: 2026-06-08
 **Rationale**: E24-F2 Run 2 agent wrote correct code, passed all tests, and
 immediately terminated. But FB35 reports describe agents "entering infinite

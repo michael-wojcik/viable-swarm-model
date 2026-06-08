@@ -705,3 +705,80 @@ Verification failures do not cause agent hangs.
 | E24-F2 | FB35-2 strong compliance | Recommend FB35-2 promotion to `effective` after FB36 confirms no hangs | MEDIUM |
 
 *Updated: 2026-06-08*
+
+
+---
+
+## Gym Experiments E25 + E26 — Agent Hang Follow-up (2026-06-08)
+
+**Experiments**: E25 (H503 context pressure) + E26 (H504 post-write perfectionism)
+**Status**: EXECUTED
+**Designer/Runner**: vsm-fitness-gym / S5 orchestrator
+
+### Results
+
+| Experiment | Hypothesis | Result | Key Evidence |
+|---|---|---|---|
+| **E25** | H503: Hangs correlate with context pressure | **NOT CONFIRMED** | Agent read 8 files, made 14 tool calls, fixed 2 import errors, terminated cleanly in 60s. No hang. |
+| **E26** | H504: Hangs are post-write perfectionism | **NOT CONFIRMED** | Both STOP and no-STOP cohorts stopped after tests passed. No post-pass refinements. |
+
+### Cumulative Evidence Across E24 Series + E25/E26
+
+| Experiment | Failure | Skill Coverage | Tool Calls | Hang? |
+|---|---|---|---|---|
+| E24 | Trivial arithmetic | Yes | ~8 | No |
+| E24-F1 | Complex Pydantic UUID | Yes | ~10 | No |
+| E24-F2 | Novel asyncio.gather | No | ~10 | No |
+| E25 | Complex multi-file read | N/A | ~14 | No |
+| E26-A | Simple util (STOP) | N/A | ~4 | No |
+| E26-B | Simple util (no STOP) | N/A | ~9 | No |
+
+**Six experiments, six clean terminations, zero hangs.**
+
+### Critical Finding — Agent Prompt Contamination
+
+E26-B (no-STOP cohort) STILL applied FB35-2 STOP behavior because:
+1. `vsm_backend_coder.md` includes FB35-2 in its prompt template
+2. Agent reads `mutation-state.md` at startup, reinforcing active mutations
+3. Task-level prompt manipulation cannot override base prompt rules
+
+**Implication**: Clean A/B testing of prompt variants is impossible while the base prompt contains the mutation being tested. To test H504 properly, FB35-2 must be temporarily removed from `vsm_backend_coder.md` — a structural mutation requiring approval.
+
+### Novel Finding — Pre-Pass Perfectionism
+
+E26-B (no-STOP cohort) wrote more polished code than E26-A (STOP cohort):
+- Docstrings for both functions
+- Type hints with TypeVar
+- ValueError guard for `chunk_size <= 0`
+
+These additions were written BEFORE tests ran. If FB35 agents "hung" by producing overly polished initial output, this is a **task-sizing issue** (H217), not a post-write loop.
+
+### FB35 Hang Phenomenon — Status
+
+After 6 gym experiments testing:
+- Trivial failures (E24)
+- Complex failures (E24-F1)
+- Novel failures (E24-F2)
+- High context load (E25)
+- STOP vs no-STOP (E26)
+
+**Result**: Zero hangs reproduced. The FB35 hang phenomenon (6 agents, 10-15 min) remains unexplained by controlled experiments.
+
+### Remaining Explanations for FB35 Hangs
+
+1. **Non-deterministic model behavior**: Same task may loop under some conditions (temperature, context state) but not others. Cannot be reliably reproduced.
+2. **Much higher context pressure**: FB35 agents may have had 50+ tool calls vs our 14. Testing this requires a deliberately long-running task.
+3. **Integration-test complexity**: FB35 hangs involved CORS parsing, UUID type assertions in complex integration contexts — not isolated unit-testable failures.
+4. **Task size interaction**: FB35 agents had larger tasks (400+ lines) with multiple verification points. Our experiments used 20-50 line functions.
+5. **S5 context bloat**: The orchestrator's context (not the agent's) may affect task clarity, leading to confused agent behavior.
+
+### Coach Action Items
+
+| Experiment | Result | Recommended Focus | Priority |
+|---|---|---|---|
+| E25 | H503 NOT CONFIRMED — 14 tool calls insufficient | Design E25-F1 with 30+ forced tool calls (multi-step refactor loop) | MEDIUM |
+| E26 | H504 NOT CONFIRMED — prompt contamination blocked clean test | To test cleanly, temporarily remove FB35-2 from `vsm_backend_coder.md` (structural mutation approval needed) | LOW |
+| E25/E26 | FB35 hangs unexplained after 6 experiments | Consider accepting non-determinism as primary explanation; shift focus from "why agents hang" to "how to detect and recover from hangs" | MEDIUM |
+| E26 | Pre-pass perfectionism observed | This is a task-sizing issue (H217). Ensure STOP rules emphasize MINIMUM viable code, not just "stop after tests pass" | LOW |
+
+*Updated: 2026-06-08*
