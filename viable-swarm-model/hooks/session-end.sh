@@ -1,6 +1,6 @@
 #!/bin/bash
 # VSM Session End Hook
-# Parses telemetry logs and updates skill-state.md with efficiency baselines.
+# Parses telemetry logs and writes session telemetry to ephemeral .kimi/ file.
 # Clears per-session telemetry after processing.
 #
 # Event: SessionEnd
@@ -13,7 +13,6 @@ CWD=$(echo "$PAYLOAD" | jq -r '.cwd // "/tmp"')
 REASON=$(echo "$PAYLOAD" | jq -r '.reason // "unknown"')
 
 TELEMETRY_DIR="$HOME/.vsm-telemetry"
-SKILL_STATE="$HOME/vsm/viable-swarm-model/references/skill-state.md"
 
 # Telemetry is optional; process what exists, default to zero/unknown
 FILE_WRITES=0
@@ -243,7 +242,7 @@ if [[ -f "$CWD/.kimi/meta-report.md" && -f "$BROKER_FILE" ]]; then
     fi
 fi
 
-# Build telemetry block — write to EPHEMERAL .kimi/ file, NOT tracked skill-state.md
+# Build telemetry block — write to EPHEMERAL .kimi/ file, NOT tracked reference files
 SESSION_TELEMETRY_FILE="$CWD/.kimi/session-telemetry.md"
 
 TELEMETRY_BLOCK=$(cat << EOF
@@ -270,8 +269,8 @@ fi
 
 echo "$TELEMETRY_BLOCK" >> "$SESSION_TELEMETRY_FILE"
 
-# NOTE: S5 updates references/skill-state.md during Phase 8 by reading this file.
-# Hooks MUST NOT modify tracked reference files.
+# NOTE: S5 updates references/mutation-state.md (Efficiency Baselines section) during Phase 8
+# by reading this file. Hooks MUST NOT modify tracked reference files.
 
 # ── Build Health Dashboard ──
 # Generate longitudinal health metrics for S4 intelligence layer.

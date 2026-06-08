@@ -7440,6 +7440,45 @@ else
 fi
 
 # ============================================================================
+# Test 212: SKILL.md Phase 0 reads mutation-state.md for self-model (R85)
+# ============================================================================
+
+echo -n "TEST: SKILL.md Phase 0 points to mutation-state.md for self-model ... "
+
+SKILL_FILE="$SCRIPT_DIR/../SKILL.md"
+if grep -q "Read skill state.*mutation-state.md" "$SKILL_FILE" && \
+   ! grep -q "Read skill state.*skill-state.md" "$SKILL_FILE"; then
+    pass
+else
+    fail "SKILL.md Phase 0 still points to deprecated skill-state.md for self-model"
+fi
+
+# ============================================================================
+# Test 213: SKILL.md Phase 8 applies telemetry to mutation-state.md (R85)
+# ============================================================================
+
+echo -n "TEST: SKILL.md Phase 8 points to mutation-state.md for telemetry ... "
+
+if grep -q "Apply session telemetry to mutation-state.md" "$SKILL_FILE" && \
+   ! grep -q "Apply session telemetry to skill-state.md" "$SKILL_FILE"; then
+    pass
+else
+    fail "SKILL.md Phase 8 still points to deprecated skill-state.md for telemetry"
+fi
+
+# ============================================================================
+# Test 214: session-end.sh does not reference deprecated skill-state.md (R85)
+# ============================================================================
+
+echo -n "TEST: session-end.sh does not reference deprecated skill-state.md ... "
+
+if ! grep -q "skill-state.md" "$SCRIPT_DIR/session-end.sh"; then
+    pass
+else
+    fail "session-end.sh still references deprecated skill-state.md"
+fi
+
+# ============================================================================
 # Test 203: auto-mutation-lifecycle.py warns on missing mutation ID (R77)
 # ============================================================================
 

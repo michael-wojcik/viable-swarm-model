@@ -166,9 +166,9 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 55 | < 60 | ✅ Within target |
+| Active mutations | 56 | < 60 | ✅ Within target |
 | Historical effective (≥5 builds) | 78 | >15% of active | ✅ 144% |
-| Effective (<5 builds, monitored) | 55 | >30% of active | ✅ 100% |
+| Effective (<5 builds, monitored) | 56 | >30% of active | ✅ 100% |
 | Probationary mutations | 0 | <20 at any time | ✅ 0 (within target) |
 | Removed / redesigned | 24 | ≥2 per 5 builds | ✅ 24 (exceeds target) |
 | Measured effect fill rate (scored) | 94.9% | ≥80% | ✅ 94.9% |
@@ -378,6 +378,7 @@
 
 | **S5 ITERATION MUTATIONS (2026-06-08)** |
 | R84 | 2026-06-08 S5 | refinement | diagnostic-router.sh self-test uses temp DIAG_FILE to prevent overwriting real hook-diagnostic.md + Test 211 | effective | 1 | 5 | — | — | S5 iter |
+| R85 | 2026-06-08 S5 | structural | SKILL.md Phase 0/8 + session-end.sh: remove deprecated skill-state.md references, point to mutation-state.md + Tests 212-214 | effective | 1 | 5 | — | — | S5 iter |
 
 | **FB34 CLOSEOUT MUTATIONS (Proposed during Phase 8b, await implementation/measurement)** |
 | FB34-C1 | FB34 Phase 8b | structural | Tool-enforced integration hard-gates script (consolidates FB31-5, FB34-1, FB34-2, FB34-3) | effective | 1 | 5 | H401, H405 | — | S5 iter |

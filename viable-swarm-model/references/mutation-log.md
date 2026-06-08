@@ -5647,3 +5647,33 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 - Result: 223 tests passing, 0 failed; diagnostic channel no longer corrupted by self-test
 
 **Measured effect**: **TESTED** — Test 211 verifies self-test isolation. 223 tests passing, 0 failed.
+
+---
+
+## Mutation R85 — 2026-06-08
+
+**Session**: S5 Orchestrator Iteration R85
+**File**: `SKILL.md`, `hooks/session-end.sh`, `hooks/test-automation.sh`
+**Type**: structural
+**Rationale**: System 5 (Policy/Meta-learning) / S5→S1 channel — `references/skill-state.md` was merged into `references/mutation-state.md` on 2026-06-04 (R31/SM5) and converted to a redirect stub. However, three months later, SKILL.md still instructed S5 to: (1) read `skill-state.md` in Phase 0 as the organism's self-model, and (2) append session telemetry to `skill-state.md` in Phase 8. Additionally, `session-end.sh` had a misleading header comment claiming it "updates skill-state.md with efficiency baselines," a dead `SKILL_STATE` variable that was never referenced, and a comment claiming "S5 updates references/skill-state.md during Phase 8." These stale references created a documentation drift that could mislead future S5 instances into writing telemetry to the wrong file, corrupting the organism's self-model maintenance.
+
+**Expected effect**: Future S5 instances read `mutation-state.md` (Skill State Sections) for the self-model and update the Efficiency Baselines table in `mutation-state.md` during Phase 8. The session-end hook no longer claims to update a file it does not touch.
+
+**Before**:
+- `SKILL.md` Phase 0: "Read skill state: `~/vsm/viable-swarm-model/references/skill-state.md`"
+- `SKILL.md` Phase 8: "Apply session telemetry to skill-state.md"
+- `session-end.sh` header: "Parses telemetry logs and updates skill-state.md with efficiency baselines"
+- `session-end.sh` line 16: Dead `SKILL_STATE` variable
+- `session-end.sh` line 273: "S5 updates references/skill-state.md during Phase 8"
+- Result: Instructions pointed to deprecated redirect stub instead of master self-model file
+
+**After**:
+- `SKILL.md` Phase 0: "Read skill state: `~/vsm/viable-swarm-model/references/mutation-state.md` (Skill State Sections)"
+- `SKILL.md` Phase 8: "Apply session telemetry to mutation-state.md... update the Efficiency Baselines table"
+- `session-end.sh` header: "Parses telemetry logs and writes session telemetry to ephemeral .kimi/ file"
+- `session-end.sh`: Removed dead `SKILL_STATE` variable
+- `session-end.sh` line 273: "S5 updates references/mutation-state.md (Efficiency Baselines section) during Phase 8"
+- `hooks/test-automation.sh`: Tests 212-214 verify SKILL.md and session-end.sh no longer reference deprecated skill-state.md
+- Result: 226 tests passing, 0 failed; S5 instructions aligned with actual self-model file
+
+**Measured effect**: **TESTED** — Tests 212-214 verify SKILL.md Phase 0/8 and session-end.sh reference mutation-state.md, not skill-state.md. 226 tests passing, 0 failed.

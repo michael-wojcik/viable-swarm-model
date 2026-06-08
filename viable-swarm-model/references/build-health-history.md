@@ -3007,3 +3007,43 @@ S5 iterations R65 through R73 were executed on 2026-06-07 without individual bui
 ### Next Highest-Leverage Constraint
 **System 4 (Adaptation/Intelligence) / S4→S4 channel — 4 untested hypotheses remain stale** (H104, H152, H[N+3], H[N+4]) and meta-system agents still have 0% empirical exercise rate. With internal infrastructure now exceptionally solid (223 tests passing, diagnostic channel no longer corrupted by self-test, portfolio health safeguard catching blockages), the S5 iteration loop has reached a natural plateau. The organism is ready for external validation: a real fitness build or targeted gym batch is the most valuable next step. No further high-impact internal infrastructure constraints are visible.
 
+
+---
+---
+
+## 2026-06-08 — S5 Orchestrator Iteration (R85)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S1 channel — SKILL.md and session-end.sh still referenced deprecated `skill-state.md` three months after it was merged into `mutation-state.md`**: The `skill-state.md` redirect stub was created on 2026-06-04 when R31 consolidated all self-model data into `mutation-state.md`. Despite this, SKILL.md Phase 0 instructed S5 to "Read skill state: `references/skill-state.md`" and Phase 8 instructed S5 to "Apply session telemetry to skill-state.md." The `session-end.sh` hook had a misleading header, a dead `SKILL_STATE` variable, and a comment reinforcing the same incorrect file reference. If an S5 instance followed these instructions literally, telemetry would be appended to a redirect stub instead of the master self-model, causing the Efficiency Baselines table in `mutation-state.md` to become stale.
+
+### Change Made
+**Structural mutation R85**: Removed all deprecated `skill-state.md` references from SKILL.md and session-end.sh, replacing them with `mutation-state.md`.
+- `SKILL.md` Phase 0: Updated "Read skill state" to point to `mutation-state.md` (Skill State Sections)
+- `SKILL.md` Phase 8: Updated "Apply session telemetry" to update the Efficiency Baselines table in `mutation-state.md`
+- `session-end.sh`: Fixed header comment, removed dead `SKILL_STATE` variable, updated Phase 8 comment
+- `hooks/test-automation.sh`: Added Tests 212-214 verifying SKILL.md Phase 0/8 and session-end.sh reference mutation-state.md, not skill-state.md
+- Promoted R85 to `effective` with `builds_tested=1, score=5` per S5 iteration validation policy
+- Updated Integration Health: active=56, effective=56
+
+### Test Results
+- `bash hooks/test-automation.sh`: **226 passed, 0 failed** (was 223 passed, 0 failed)
+- Test 212: SKILL.md Phase 0 points to mutation-state.md for self-model → PASS
+- Test 213: SKILL.md Phase 8 points to mutation-state.md for telemetry → PASS
+- Test 214: session-end.sh does not reference deprecated skill-state.md → PASS
+- `mutation-portfolio-health.py`: total_active=56, effective=56, probationary=0, all metrics green, all actionable lists empty
+- `validate-mutation-state.sh`: ✅ PASS — zero errors, zero warnings
+
+### Files Modified
+- `viable-swarm-model/SKILL.md`
+- `viable-swarm-model/hooks/session-end.sh`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — 4 untested hypotheses remain stale** (H104, H152, H[N+3], H[N+4]) and meta-system agents still have 0% empirical exercise rate. With internal infrastructure now exceptionally solid (226 tests passing, all deprecated references removed, portfolio health safeguard catching blockages, diagnostic channel no longer corrupted), the S5 iteration loop has reached a natural plateau. The organism is ready for external validation: a real fitness build or targeted gym batch is the most valuable next step. No further high-impact internal infrastructure constraints are visible.
+

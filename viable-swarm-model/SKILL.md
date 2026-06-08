@@ -539,8 +539,8 @@ Main agent (S5) performs:
 3. **Read project memory**: `.kimi/lessons.md` if exists.
 4. **Read acquired wisdom**: `~/vsm/viable-swarm-model/references/acquired-wisdom.md`
    if exists.
-5. **Read skill state**: `~/vsm/viable-swarm-model/references/skill-state.md`
-   if exists. This is the organism's self-model — it knows what it is good/bad at,
+5. **Read skill state**: `~/vsm/viable-swarm-model/references/mutation-state.md`
+   (Skill State Sections). This is the organism's self-model — it knows what it is good/bad at,
    what its current "mood" is, and which mutations are pending measurement.
 6. **Read knowledge broker**: `~/vsm/viable-swarm-model/references/knowledge-broker.md`
    **[TIER C: prompt-enforced] MANDATORY**. This contains cross-skill digests from coach and gym — recent gaps,
@@ -1649,10 +1649,10 @@ Before declaring the VSM workflow "complete," S5 MUST verify:
    Documenting them as "known limitations" and declaring completion is a
    process violation. LOW findings may be documented.
 
-4. **Apply session telemetry to skill-state.md ([TIER C: prompt-enforced] MANDATORY)**:
+4. **Apply session telemetry to mutation-state.md ([TIER C: prompt-enforced] MANDATORY)**:
    Read `.kimi/session-telemetry.md` (written by `session-end.sh` hook) and
-   append the telemetry block to `references/skill-state.md`. This keeps the
-   organism's self-model current. If the telemetry file is missing, the hook
+   update the Efficiency Baselines table in `references/mutation-state.md`.
+   This keeps the organism's self-model current. If the telemetry file is missing, the hook
    did not fire — log this as a process gap.
 
 5. **Apply agent-proposed ephemeral files ([TIER C: prompt-enforced] MANDATORY)**:
