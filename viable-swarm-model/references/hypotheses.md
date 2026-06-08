@@ -30,8 +30,10 @@
 | H405 | testing |
 | H406 | testing |
 | H500 | partially confirmed |
-| H501 | inconclusive |
+| H501 | rejected |
 | H502 | partially confirmed |
+| H503 | untested |
+| H504 | untested |
 | H[N+3] | untested |
 | H[N+4] | untested |
 ---
@@ -302,8 +304,8 @@
 **Source**: Fitness build FB35, Phase 1/2/3
 **Experiment**: Spawn a background agent with a task that includes a deliberate Shell verification failure. Measure whether the agent terminates or loops. Test with explicit "stop after 3 attempts" rule vs default prompt.
 **Expected**: Default prompt → agent loops indefinitely. Modified prompt → agent terminates after 3 attempts.
-**Result**: NOT REPRODUCED in E24 minimal setting (trivial arithmetic failure). E24-F1 tested a complex Pydantic UUID serialization failure. Run 1 agent read test file first and passed on first write. Run 2 agent was instructed not to read test first — wrote naive code, failed tests, diagnosed UUID→string serialization mismatch, applied `@field_serializer` fix in 1 iteration, passed on second run. Terminated cleanly in ~3 min. FB35-2 termination rule was explicitly tracked and obeyed. **Critical confound**: python-pitfalls skill already covers UUID coercion (FB27/FB28). To genuinely test H501, a failure mode NOT covered by any active skill is required. H501 remains inconclusive — real-world FB35 hangs (6 agents, 10-15 min) involved different failure classes or higher context pressure.
-**Tested by**: E24, E24-F1
+**Result**: REJECTED. E24 (trivial arithmetic): 1 fix, terminated cleanly. E24-F1 (complex Pydantic UUID): 1 fix, terminated cleanly. E24-F2 (genuinely novel asyncio.gather failure, zero skill coverage): 1 fix, terminated cleanly. Three experiments, three verification failures, zero hangs, all terminated after ≤1 fix iteration. Verification failures alone do not cause agent hangs. FB35 hangs (6 agents, 10-15 min) remain unexplained — likely caused by context pressure, non-deterministic behavior, post-write perfectionism, or failure classes not isolable in minimal experiments.
+**Tested by**: E24, E24-F1, E24-F2
 
 ---
 
@@ -325,3 +327,48 @@
 **Status**: partially confirmed
 **Tested by**: FB35
 **Result**: Architect 4-spawn split (FB31-1) produced zero timeouts in FB34 but 3/4 timeouts in FB35. Code agents (models, auth) completed without timeout. Task sizing helps but is insufficient when agents enter post-write verification loops. H217 needs to be paired with H502 (termination rule) to be fully effective.
+
+---
+
+## H503: Agent Hangs Correlate with Cumulative Context Pressure, Not Verification Failures
+
+**Status**: untested
+**Proposed**: 2026-06-08
+**Rationale**: E24, E24-F1, and E24-F2 all showed that verification failures —
+whether trivial, complex, or genuinely novel — are fixed in ≤1 iteration with
+clean termination. FB35 had 6 agent hangs after 10-15 min, but these agents were
+spawned deep into a full fitness build with extensive preceding context,
+multiple prior agent spawns, and accumulated tool calls. Experimental agents ran
+in isolation with minimal context. The hang trigger may be context pressure
+(building up over a long session) rather than the specific failure being fixed.
+**Source**: E24-F2 analysis, FB35 retrospective
+**Experiment**: Spawn a background agent after deliberately loading its context
+with 50+ preceding tool calls (simulating a long build session). Then give it a
+verification-failure task. Compare hang rate vs a fresh-context agent with the
+same task.
+**Expected**: High-context agent hangs; fresh-context agent terminates cleanly.
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
+
+---
+
+## H504: Agent Hangs Are Caused by Post-Write Perfectionism, Not Failure Correction Loops
+
+**Status**: untested
+**Proposed**: 2026-06-08
+**Rationale**: E24-F2 Run 2 agent wrote correct code, passed all tests, and
+immediately terminated. But FB35 reports describe agents "entering infinite
+self-correction loops" after WriteFile + Shell verification. The E24-F2 agent
+had a STOP instruction in its prompt. FB35 agents may have hung not because
+they couldn't fix a failure, but because they kept trying to "improve" code
+after tests already passed — adding unnecessary features, refactoring for
+"cleanliness", or chasing minor lint warnings. An explicit "if tests pass,
+STOP immediately" rule may prevent this.
+**Source**: E24-F2 Run 2 observation, FB35 retrospective
+**Experiment**: Spawn a background agent with a task that passes tests on the
+first write. Half the agents get an explicit "STOP after tests pass" rule;
+half do not. Measure whether the no-STOP cohort attempts post-pass refinements.
+**Expected**: No-STOP cohort spends 2-3× more time on post-pass refinements;
+some enter extended loops.
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]

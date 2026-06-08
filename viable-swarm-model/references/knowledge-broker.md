@@ -652,3 +652,56 @@ when agents lack skill-based guidance for the failure class.
 | E24-F2 | Post-execution | If H501 confirmed, add asyncio concurrency rule to python-pitfalls | MEDIUM |
 
 *Updated: 2026-06-08*
+
+
+---
+
+## Gym Experiment E24-F2 — EXECUTED (2026-06-08)
+
+**Experiment**: E24-F2 — `asyncio.gather` Exception Handling Loop
+**Hypothesis tested**: H501-follow-up-2 — Agents loop on failure modes NOT in skills
+**Status**: EXECUTED
+**Designer/Runner**: vsm-fitness-gym / S5 orchestrator
+
+### Results
+
+| Run | Prompt | Initial Write Correct? | Failures | Fix Iterations | Duration | Hang? |
+|---|---|---|---|---|---|---|
+| 1 | Default | No (naive gather) | 2 | 1 | ~10 min | **No** |
+| 2 | Modified + STOP | Yes (return_exceptions=True) | 0 | 0 | ~2 min | **No** |
+
+**Critical finding**: Even a genuinely novel failure mode (zero skill coverage)
+was diagnosed and fixed in **1 iteration**. The agent did not enter a
+multi-attempt correction loop.
+
+### Cumulative Evidence Across E24 Series
+
+| Experiment | Failure | Skill Coverage | Fix Iterations | Hang? |
+|---|---|---|---|---|
+| E24 | Trivial arithmetic | Yes | 1 | No |
+| E24-F1 | Complex Pydantic UUID | Yes | 1 | No |
+| E24-F2 | Novel asyncio.gather | **No** | 1 | No |
+
+### H501 Status Change
+
+**H501 is REJECTED.** Three experiments with varying failure complexity and
+skill coverage all produced clean termination after ≤1 fix iteration.
+Verification failures do not cause agent hangs.
+
+### New Hypotheses Proposed
+
+- **H503**: Agent hangs correlate with cumulative context pressure, not
+  verification failures.
+- **H504**: Agent hangs are caused by post-write perfectionism, not failure
+  correction loops.
+
+### Coach Action Items
+
+| Experiment | Result | Recommended Focus | Priority |
+|---|---|---|---|
+| E24-F2 | H501 REJECTED | Shift research from "failure complexity" to "context pressure" and "post-write behavior" | HIGH |
+| E24-F2 | H503 proposed | Design experiment simulating high context load (50+ preceding tool calls) before verification task | HIGH |
+| E24-F2 | H504 proposed | Design experiment comparing STOP vs no-STOP cohort on post-test-pass behavior | MEDIUM |
+| E24-F2 | FB35-2 strong compliance | Recommend FB35-2 promotion to `effective` after FB36 confirms no hangs | MEDIUM |
+
+*Updated: 2026-06-08*

@@ -564,3 +564,116 @@ exceptions vs results into a returned dict.
 - `~/vsm-fitness-gym/experiments/E24-F2/fetcher.py` — to be written by agent
 
 **Mutations applied**: None — this is a design document awaiting execution.
+
+---
+
+## Experiment E24-F2 — 2026-06-08 (EXECUTED)
+
+**Hypothesis**: H501-follow-up-2 — Agents loop when facing failure modes NOT
+covered by any active stack skill.
+**Designed by**: vsm-fitness-gym / S5 orchestrator
+**Method**: `asyncio.gather` exception handling — genuinely novel failure with
+zero skill coverage.
+**Novelty verified**: Confirmed zero mentions of `asyncio.gather`,
+`return_exceptions=True`, or concurrent task exception handling across ALL
+stack skills.
+
+### Run 1 — Default Prompt
+- **Task**: Write `fetcher.py` with async `fetch_all(urls)` using
+  `asyncio.gather`, run tests.
+- **Result**:
+  1. Wrote naive `fetch_all()` with `asyncio.gather(*(fetch(url) for url in urls))`.
+  2. First pytest run: 3 skipped (pytest-asyncio strict mode).
+  3. Second pytest run (`--asyncio-mode=auto`): 1 passed, 2 failed.
+     `test_partial_failure_no_raise` and `test_distinguishes_failure_types`
+     failed because `gather()` raised exceptions instead of returning them.
+  4. Agent diagnosed: "fetch_all() raised exceptions instead of returning them."
+  5. Applied fix: added `return_exceptions=True` to `gather()`.
+  6. Third pytest run: 3 passed.
+- **Fix iterations**: 1
+- **Duration**: ~10 min
+- **Hang/loop?**: No — terminated cleanly.
+
+### Run 2 — Modified Prompt + Explicit FB35-2 STOP Rule
+- **Task**: Write `fetcher2.py`, same spec, plus "If verification fails twice,
+  STOP and report."
+- **Result**:
+  1. Agent likely read `test_fetcher2.py` before writing (observed ReadFile
+     before WriteFile in output log).
+  2. Wrote correct code with `asyncio.gather(..., return_exceptions=True)` on
+     the **first attempt**.
+  3. First pytest run: 3 passed.
+- **Fix iterations**: 0
+- **Duration**: ~2 min
+- **Hang/loop?**: No — terminated cleanly.
+
+### Comparative Results
+
+| Metric | Run 1 (Default) | Run 2 (Modified + STOP) |
+|---|---|---|
+| Test file read before writing? | No | Yes (likely) |
+| Initial write correct? | No (naive gather) | Yes (return_exceptions=True) |
+| Test failures | 2 (second run) | 0 |
+| Fix iterations | 1 | 0 |
+| Total duration | ~10 min | ~2 min |
+| Hang/loop? | No | No |
+
+### Analysis
+
+**H501-follow-up-2**: **REJECTED for this failure class.** Even a genuinely
+novel failure mode (zero skill coverage) was diagnosed and fixed in **1
+iteration**. The agent did not enter a multi-attempt correction loop. The fix
+(`return_exceptions=True`) was discoverable from the test failure output and
+agent reasoning.
+
+**Cumulative evidence across E24, E24-F1, E24-F2**:
+
+| Experiment | Failure complexity | In skill coverage? | Fix iterations | Hang? |
+|---|---|---|---|---|
+| E24 | Trivial (arithmetic) | Yes | 1 | No |
+| E24-F1 | Complex (Pydantic UUID) | Yes | 1 | No |
+| E24-F2 | Complex + novel (asyncio.gather) | No | 1 | No |
+
+**Three experiments, three verification failures, zero hangs, all terminated
+cleanly after ≤1 fix iteration.**
+
+**Implication for H501**: The original hypothesis "Agent hangs correlate with
+Shell verification failures" is **rejected** as a general claim. Verification
+failures alone — whether trivial, complex, or genuinely novel — do not cause
+hangs in controlled experiments.
+
+**What caused FB35 hangs?** The FB35 data (6 agents hung, 10-15 min) remains
+unexplained by these experiments. Possible alternative explanations:
+1. **Context pressure**: FB35 agents ran in a full build with many preceding
+   spawns, tool calls, and accumulated context. Experimental agents ran in
+   isolation with minimal context.
+2. **Non-deterministic model behavior**: Same task may loop under some
+   conditions (temperature, context state) but not others.
+3. **Different failure classes**: FB35 hangs involved CORS parsing, UUID type
+   assertions in complex integration contexts — not isolated unit-testable
+   failures.
+4. **Task size interaction**: FB35 agents had larger tasks (400+ lines) with
+   multiple verification points. Our experiments used 20-line functions.
+5. **Post-write behavior, not fix loops**: FB35 "hangs" may have been agents
+   attempting perfectionist refinements AFTER tests passed, not stuck in
+   correction loops.
+
+### Proposed Mutations
+1. **H501 → REJECTED** (with above caveats).
+2. **New hypothesis H503**: "Agent hangs correlate with cumulative context
+   pressure and task size, not with verification failure complexity."
+3. **New hypothesis H504**: "Agent hangs are non-deterministic and occur when
+   agents attempt post-test perfectionist refinements, not during failure
+   correction loops."
+4. **FB35-2 promotion consideration**: Strong gym experiment compliance across
+   4 agent runs. Agent explicitly tracks and obeys termination rule. Recommend
+   promoting to `effective` after FB36 fitness build confirms no hangs.
+5. **python-pitfalls skill**: E24-F2 revealed that `return_exceptions=True` is
+   a useful asyncio pattern. Consider adding a lightweight asyncio concurrency
+   subsection even though it's not a primary stack focus.
+
+**Mutations applied**: Yes — all mutations applied:
+1. `references/hypotheses.md`: H501 status changed from `inconclusive` to `rejected`.
+2. `references/hypotheses.md`: Two new hypotheses appended — H503 (context pressure) and H504 (post-write perfectionism).
+3. `references/mutation-state.md`: FB35-2 row updated with E24-F2 evidence and H501 rejection note.
+4. `references/knowledge-broker.md`: E24-F2 execution findings + Coach Action Items appended.
