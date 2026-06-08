@@ -616,3 +616,39 @@ failures. Possible explanations:
 | E24-F1 | FB35-2 compliance confirmed — agents explicitly track failure count | Consider making "do not read test before writing" a standard rule for test-driven tasks | MEDIUM |
 
 *Updated: 2026-06-08*
+
+
+---
+
+## Gym Experiment E24-F2 — Design Complete (2026-06-08)
+
+**Experiment**: E24-F2 — `asyncio.gather` Exception Handling Loop
+**Hypothesis tested**: H501-follow-up-2 — Agents loop on failure modes NOT in skills
+**Status**: Designed, awaiting execution
+**Designer**: vsm-fitness-gym / S5 orchestrator
+
+### Design Summary
+- **Novelty verified**: Zero mentions of `asyncio.gather`, `return_exceptions=True`,
+  or concurrent task exception handling across ALL stack skills.
+- **Failure class**: `asyncio.gather()` without `return_exceptions=True` raises
+  on first exception, losing successful results and exception identity.
+- **Correct fix**: `return_exceptions=True` + unwrapping exceptions vs results
+  into a returned dict.
+- **Test coverage**: 3 tests — all success, partial failure with no raise,
+  exception type preservation.
+
+### Why This Matters
+E24 (trivial arithmetic) and E24-F1 (Pydantic UUID serialization) both used
+failure modes within skill coverage. Agents recovered in 1 iteration. E24-F2
+is the first experiment to test a failure mode genuinely outside the skill
+portfolio. If agents loop here, it confirms H501's core claim: hangs occur
+when agents lack skill-based guidance for the failure class.
+
+### Coach Action Items
+
+| Experiment | Status | Recommended Focus | Priority |
+|---|---|---|---|
+| E24-F2 | Designed, awaiting execution | Run E24-F2 to test genuinely novel failure | HIGH |
+| E24-F2 | Post-execution | If H501 confirmed, add asyncio concurrency rule to python-pitfalls | MEDIUM |
+
+*Updated: 2026-06-08*

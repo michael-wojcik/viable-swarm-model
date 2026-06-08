@@ -504,3 +504,63 @@ actively applied by background agents.
 1. `vsm-stack-skills/python-pitfalls/SKILL.md`: New rule appended — "Pydantic `model_dump()` Returns UUID Objects by Default" (E24-F1-validated). Covers the `@field_serializer` requirement for UUID→string in Python-mode output.
 2. `agents/vsm_backend_coder.md`: New rule appended — "E24-F1 Finding — Do Not Read Test Files Before Writing Code" (test-driven task integrity).
 3. E24-F2 follow-up experiment: Design spec pending — will be created when a genuinely novel failure mode is identified.
+
+---
+
+## Experiment E24-F2 — 2026-06-08 (Designed, Awaiting Execution)
+
+**Hypothesis**: H501-follow-up-2 — Agents loop when facing failure modes NOT
+covered by any active stack skill.
+**Designed by**: vsm-fitness-gym / S5 orchestrator
+**Method**: `asyncio.gather` exception handling in concurrent async tasks.
+**Rationale for novelty**: Comprehensive search of all stack skills confirms
+**zero mentions** of `asyncio.gather`, `return_exceptions=True`, or
+concurrent task exception handling. This is a genuinely novel failure class.
+
+### The Failure
+
+Agent writes `fetcher.py` with an async `fetch_all(urls)` function that fetches
+multiple URLs concurrently. The naive implementation:
+
+```python
+results = await asyncio.gather(
+    fetch(url1), fetch(url2), fetch(url3)
+)
+```
+
+**The trap**: When one `fetch()` raises (bad JSON, 404), `gather()` raises
+immediately, losing:
+- Successful results from other URLs
+- The ability to distinguish which URL failed and why
+- The ability to return partial results
+
+The correct fix requires `return_exceptions=True` AND proper unwrapping of
+exceptions vs results into a returned dict.
+
+### Tests
+
+`test_fetcher.py` provides three tests:
+1. `test_all_success` — all URLs return valid JSON
+2. `test_partial_failure_no_raise` — mixed success/failure; `fetch_all` must
+   **return a dict** (not raise) containing both results and exceptions
+3. `test_distinguishes_failure_types` — returned exceptions must preserve
+   original types so callers can distinguish JSON errors from HTTP errors
+
+### Procedure
+1. Spawn background `vsm_backend_coder` with task (default prompt).
+2. Wait up to 10 minutes.
+3. Record fix iterations, duration, termination/hang status.
+4. Repeat with modified prompt (explicit FB35-2 STOP rule after 2 failures).
+5. Compare.
+
+### Expected Behaviors
+- **Default prompt loops** (>3 fix attempts or >5 min) → confirms H501
+- **Modified prompt stops after 2** → confirms FB35-2 effectiveness
+- **Both pass quickly** → rejects H501 for this failure class
+
+### Files
+- `~/vsm-fitness-gym/experiments/E24-F2/README.md` — this spec
+- `~/vsm-fitness-gym/experiments/E24-F2/test_fetcher.py` — provided tests
+- `~/vsm-fitness-gym/experiments/E24-F2/fetcher.py` — to be written by agent
+
+**Mutations applied**: None — this is a design document awaiting execution.
