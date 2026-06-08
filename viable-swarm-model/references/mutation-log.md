@@ -5601,3 +5601,25 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 - Result: 221 tests passing, 0 failed; S5 iteration lifecycle cleanup complete
 
 **Measured effect**: **TESTED** — Tests 207–209 verify R77/R78 historical and the complete S5 iteration mutation lifecycle. Test 199b verifies Integration Health auto-sync. 221 tests passing, 0 failed.
+
+---
+
+## Mutation R83 — 2026-06-07
+
+**Session**: S5 Orchestrator Iteration R83
+**File**: `hooks/test-automation.sh`
+**Type**: refinement
+**Rationale**: System 3 (Audit/Control) / S3→S5 channel — `mutation-portfolio-health.py` computes six "actionable" lists (`promotions_ready`, `demotions_ready`, `monitor_promotions_ready`, `monitor_removals_ready`, `historical_promotions_ready`, `data_integrity_errors`) that indicate mutations needing S5 attention. When these lists are non-empty, the organism has unaddressed portfolio maintenance. However, the automation suite had no test verifying these lists are empty under normal conditions. R79-R82 fixed multiple instances of mutations lingering in `historical_promotions_ready` (R75-R78 blocked at builds_tested=4). A dedicated test would catch similar blockages immediately.
+
+**Expected effect**: The automation suite now verifies that the portfolio health script reports zero pending promotions, demotions, monitor actions, and data integrity errors. If any mutation reaches eligibility without being acted upon, the test fails immediately.
+
+**Before**:
+- `mutation-portfolio-health.py`: Computed actionable lists but no automation suite verification
+- `historical_promotions_ready`: Contained R75-R78 before R79-R82 fixed them
+- Result: Mutations could linger at promotion eligibility without triggering test failures
+
+**After**:
+- `hooks/test-automation.sh`: Test 210 runs `mutation-portfolio-health.py` and verifies all six actionable lists are empty
+- Result: 222 tests passing, 0 failed; portfolio maintenance blockages caught immediately
+
+**Measured effect**: **TESTED** — Test 210 verifies zero pending actions across all six portfolio health lists. 222 tests passing, 0 failed.

@@ -7603,6 +7603,26 @@ else
     fail "Expected 4 historical S5 mutations (R75-R78), found $S5_HISTORICAL"
 fi
 
+# ============================================================================
+# Test 210: mutation-portfolio-health.py reports no pending actions or errors
+# ============================================================================
+
+echo -n "TEST: Portfolio health has no pending promotions/demotions/data errors ... "
+
+PH_JSON=$(cd "$SCRIPT_DIR/.." && python3 scripts/mutation-portfolio-health.py 2>/dev/null)
+PROMOS=$(echo "$PH_JSON" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('promotions_ready',[])))" )
+DEMOTIONS=$(echo "$PH_JSON" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('demotions_ready',[])))" )
+MON_PROMOS=$(echo "$PH_JSON" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('monitor_promotions_ready',[])))" )
+MON_REMS=$(echo "$PH_JSON" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('monitor_removals_ready',[])))" )
+HIST_PROMOS=$(echo "$PH_JSON" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('historical_promotions_ready',[])))" )
+ERRORS=$(echo "$PH_JSON" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('data_integrity_errors',[])))" )
+
+if [ "$PROMOS" = "0" ] && [ "$DEMOTIONS" = "0" ] && [ "$MON_PROMOS" = "0" ] && [ "$MON_REMS" = "0" ] && [ "$HIST_PROMOS" = "0" ] && [ "$ERRORS" = "0" ]; then
+    pass
+else
+    fail "Pending actions found: promotions=$PROMOS demotions=$DEMOTIONS monitor_promos=$MON_PROMOS monitor_removals=$MON_REMS historical_promos=$HIST_PROMOS errors=$ERRORS"
+fi
+
 echo ""
 echo "========================================"
 echo "Results: $PASSED passed, $FAILED failed"
