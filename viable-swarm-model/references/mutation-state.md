@@ -135,8 +135,8 @@
 | R4 | FB28 Build | refinement | Phase 3c coordinator MANDATORY for Tier 2+ | effective | 1 | 5 | — | — | FB31 |
 | A9 | FB28 Build | append-only | Pydantic V2 + SQLAlchemy ORM test fixture pattern | effective | 1 | 5 | — | — | FB31 |
 | **FB35 MUTATIONS (Measured in FB36)** |
-| FB35-1 | FB35 Build | structural | Absolute path requirement for background agents | probation | 0 | — | H500 | — | FB36 |
-| FB35-2 | FB35 Build | structural | Termination rule to prevent post-write hang loops | probation | 0 | — | H501 | — | FB36 |
+| FB35-1 | FB35 Build | structural | Absolute path requirement for background agents | probation | 0 | — | H500 | E24 | FB36 |
+| FB35-2 | FB35 Build | structural | Termination rule to prevent post-write hang loops. **E24 finding**: effectiveness is conditional on failure complexity — trivial failures self-resolve in 1 attempt; complex failures (UUID coercion, enum mismatch, validator conflict) may still loop. | probation | 0 | — | H501 | E24 | FB36 |
 | **FB29 MUTATIONS (Measured in FB30)** |
 | PM4 | FB29 Build | append-only | GraphQL parity admin override specificity | effective | 1 | 5 | — | — | FB31 |
 | PM5 | FB29 Build | append-only | Enum `.value` in conftest.py | effective | 1 | 5 | — | — | FB31 |

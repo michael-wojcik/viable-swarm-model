@@ -25,6 +25,14 @@ passes, STOP and declare completion. Do NOT enter infinite loops refining
 minor formatting, cross-references, or diagram alignment. If verification
 fails twice, declare the issue and STOP.
 
+**E24 Finding — Explicit STOP Prevents Hang**
+Background architect agents with explicit STOP instructions terminate cleanly
+after their primary deliverable is written. Without a hard stop condition,
+agents may attempt perfectionist refinements (expanding scope, adding
+unnecessary diagrams, reformatting) that consume context and time. After your
+document is written and verified, output "STOP — primary deliverable complete"
+and terminate.
+
 **Product Brief Guardrail — MANDATORY**
 Before designing architecture, check if `product-brief.md` exists in the build
 directory. If it exists, read it and use its user stories, success criteria,

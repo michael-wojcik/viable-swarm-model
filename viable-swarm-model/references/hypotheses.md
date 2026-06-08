@@ -29,6 +29,9 @@
 | H404 | testing |
 | H405 | testing |
 | H406 | testing |
+| H500 | partially confirmed |
+| H501 | inconclusive |
+| H502 | partially confirmed |
 | H[N+3] | untested |
 | H[N+4] | untested |
 ---
@@ -280,40 +283,40 @@
 
 ## H500: Background Agent Session Isolation Causes CWD Drift
 
-**Status**: untested
+**Status**: partially confirmed
 **Proposed**: 2026-06-08
 **Rationale**: FB35 regression build: 5 of 8 background agents wrote files to their own session directories instead of the build directory. Requirements+env agent, frontend coder, routes+deliveries agent, and graphql+dead-code agent all produced files that were lost. S5 had to manually recreate ~15 files.
 **Source**: Fitness build FB35, Phase 2/3
 **Experiment**: Run a gym experiment spawning a background agent with a WriteFile task using a relative path, then check whether the file appears in the orchestrator's cwd or the agent's session directory. Compare with absolute path behavior.
 **Expected**: Relative paths write to agent session directory; absolute paths write to correct location.
-**Result**: [to be filled]
-**Tested by**: [experiment ID or session]
+**Result**: Relative paths resolved to orchestrator cwd (`/Users/mj/vsm`), not the intended experiment directory. Absolute paths were 100% accurate. A distinct "agent session directory" was not observed in this test configuration, but the non-determinism of relative paths is confirmed. FB35-1 (absolute path requirement) is supported.
+**Tested by**: E24
 
 ---
 
 ## H501: Agent Hangs Correlate with Shell Verification Failures
 
-**Status**: untested
+**Status**: inconclusive
 **Proposed**: 2026-06-08
 **Rationale**: FB35: 6 agents hung after WriteFile + Shell verification, entering infinite self-correction loops (UUID type assertions, CORS parsing, minor assertion errors). Architect spawns 2-4, backend coders, and foundation auditor all required manual S5 stop after 10-15 min.
 **Source**: Fitness build FB35, Phase 1/2/3
 **Experiment**: Spawn a background agent with a task that includes a deliberate Shell verification failure. Measure whether the agent terminates or loops. Test with explicit "stop after 3 attempts" rule vs default prompt.
 **Expected**: Default prompt → agent loops indefinitely. Modified prompt → agent terminates after 3 attempts.
-**Result**: [to be filled]
-**Tested by**: [experiment ID or session]
+**Result**: NOT REPRODUCED in minimal setting. Both default and modified-prompt agents terminated cleanly after 1 fix attempt (trivial arithmetic change). Agents already applied FB35-2 from mutation-state.md. Real-world hangs involved complex semantic failures (UUID coercion, CORS parsing, enum mismatches) not replicated here. Follow-up experiment E24-F1 with non-trivial failure recommended.
+**Tested by**: E24
 
 ---
 
 ## H502: Explicit Termination Rule Prevents Post-Write Hang Loops
 
-**Status**: untested
+**Status**: partially confirmed
 **Proposed**: 2026-06-08
 **Rationale**: FB35 architect spawn 1 (406 lines) completed cleanly, while spawns 2-4 (similar size) hung. The difference may be non-deterministic, but the pattern suggests agents lack a termination condition after completing their primary deliverable. An explicit "if file is written and verification passes, STOP" rule may prevent hang loops.
 **Source**: Fitness build FB35, Phase 1
 **Experiment**: Add an explicit termination rule to vsm_architect.md and vsm_backend_coder.md prompts: "After your primary WriteFile succeeds and a basic import check passes, declare completion and stop. Do NOT attempt perfectionist fixes to minor type mismatches." Measure hang rate in next build.
 **Expected**: Hang rate drops from 6/15 to ≤2/15.
-**Result**: [to be filled]
-**Tested by**: [experiment ID or session]
+**Result**: Explicit STOP instruction produced clean termination in a background `vsm_architect` agent. Agent cited the STOP rule as the reason for not elaborating. No control condition (without STOP) was tested, so delta in hang rate is unmeasured. FB35-2 is supported but needs full-build validation.
+**Tested by**: E24
 
 ---
 

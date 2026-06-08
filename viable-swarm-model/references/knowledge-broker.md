@@ -537,3 +537,35 @@ HALT regression builds until H500/H501 are validated via gym experiment. The -1.
 ---
 
 *End of broker.*
+
+
+---
+
+## Gym Experiment E24 — Agent Runtime Reliability (2026-06-08)
+
+**Experiment**: E24 — Background Agent CWD & Hang Behavior
+**Hypotheses tested**: H500, H501, H502
+**Designer**: vsm-fitness-gym / S5 orchestrator
+
+### Findings
+
+| Hypothesis | Result | Key Evidence |
+|---|---|---|
+| H500 (CWD drift) | **Partially confirmed** | Relative path file landed in orchestrator cwd (`/Users/mj/vsm`), not E24 target. Absolute path was 100% accurate. Distinct "agent session directory" was NOT observed — agent cwd matched orchestrator cwd. |
+| H501 (Hang on verification failure) | **Inconclusive** | Neither default nor modified-prompt agent hung. Both terminated after 1 fix attempt (trivial arithmetic change). Agents already applied FB35-2 from mutation-state.md. Real-world FB35 hangs involved complex semantic failures not replicated. |
+| H502 (Termination rule effectiveness) | **Partially confirmed** | Explicit STOP instruction produced clean termination. No control condition tested. Agent obeyed STOP but delta vs implicit completion is unmeasured. |
+
+### Cross-Skill Findings
+1. **Agent prompt contamination**: `vsm_backend_coder` reads `mutation-state.md` at startup and applies FB35-1/FB35-2 even when the task prompt doesn't mention them. This makes it impossible to test "default prompt" vs "modified prompt" behavior cleanly when mutations are active.
+2. **Minimal experiment limitation**: Trivial verification failures (change `return a+b` to `return a+b+1`) self-resolve in 1 iteration. Complex failures (UUID coercion, enum mismatch, Pydantic validator conflict) are needed to reproduce FB35 hang behavior.
+3. **Path behavior nuance**: WriteFile relative path resolution depends on the agent's cwd, which in current Kimi CLI appears to inherit the orchestrator's cwd. FB35's "lost files" may have involved a different mechanism (e.g., agents writing to `/tmp` or session-scoped directories that were cleaned up).
+
+### Coach Action Items
+
+| Experiment | Hypothesis Result | Recommended Coach Build Focus | Priority |
+|---|---|---|---|
+| E24 | H500 partially confirmed — absolute paths are deterministic, relative paths are not | Next coach build should enforce absolute paths in ALL agent task descriptions; measure file loss rate | HIGH |
+| E24 | H501 inconclusive — minimal failure does not trigger hang | Design follow-up experiment E24-F1 with non-trivial verification failure (e.g., Pydantic validator type mismatch, SQLAlchemy async session conflict) | HIGH |
+| E24 | H502 partially confirmed — explicit STOP works, delta unmeasured | Next build: add explicit STOP to 50% of architect/backend_coder tasks, compare hang rate between STOP and no-STOP cohorts | MEDIUM |
+
+*Updated: 2026-06-08*

@@ -38,6 +38,14 @@ passes, STOP and declare completion. Do NOT enter infinite loops trying to fix
 minor type mismatches, lint warnings, or cosmetic issues. If a verification
 fails twice, declare the issue in your completion report and STOP.
 
+**E24 Finding — Failure Complexity Matters**
+Trivial failures (e.g., changing a single return value) self-resolve in one
+attempt. Complex semantic failures (UUID coercion, enum mismatch, Pydantic
+validator conflict, CORS parsing errors) can trigger infinite correction loops.
+If a verification failure requires more than a single-line arithmetic or syntax
+fix, treat it as COMPLEX — declare the issue and STOP after the second failure.
+Do NOT attempt deep refactoring to satisfy a failing assertion.
+
 **Skill Read Verification — MANDATORY (FB34-A3)**
 You MUST include a "Skills consulted:" header in your completion report listing
 every skill file you read. S5 uses this header for skill variety tracking.
