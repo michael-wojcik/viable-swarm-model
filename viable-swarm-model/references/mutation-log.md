@@ -5786,3 +5786,21 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 - H406 (skill variety metric should parse agent reports) gains automation-suite evidence.
 
 **Measured effect**: **TESTED** — Test 226 verifies agent-report skill parsing in `organism-vitals.py`. Full automation suite: **242 passed, 0 failed**. H406 evidence updated; FB34-R1 implementation now has direct automation coverage.
+
+----
+
+## Mutation R91 — 2026-06-14
+
+**Session**: S5 Orchestrator Iteration R91
+**Files**: `hooks/test-automation.sh`, `references/mutation-state.md`
+**Type**: structural
+**Rationale**: System 3 (Audit/Control) / S3→S5 channel — FB34 closeout mutations H402 (frontend fix-agent sign-off), H403 (security frontend source scan), and H404 (GraphQL mutation test coverage floor) were implemented in SKILL.md, agent prompts, and stack skills during R60-R61, but had no automation-suite tests verifying the prompt rules remained present. Prompt-only rules are easily lost during refactors; without tests, S5 cannot trust that the rules will be enforced in future builds.
+
+**Expected effect**:
+- `hooks/test-automation.sh`: Tests 227-229 verify the presence of specific rule strings:
+  - Test 227: `SKILL.md` Phase 7 contains the `Frontend Fix-Agent Gate`, `vsm_frontend_fix_agent`, and `frontend-fix-report.md` requirements (H402).
+  - Test 228: `agents/vsm_security.md` contains the `Frontend Source Scan` checklist, including `localStorage.setItem("token"`, `http://localhost`, `credentials: 'include'`, and `find <build-directory>/frontend/src` (H403).
+  - Test 229: `vsm-stack-skills/tester-backend/SKILL.md` contains the `@strawberry.mutation`, `INTERNAL_ERROR`, and "one test per" coverage rule (H404).
+- These tests make the prompt-level implementations regression-resistant and provide automation-suite evidence for H402-H404 while awaiting real-build validation.
+
+**Measured effect**: **TESTED** — Tests 227-229 verify H402/H403/H404 prompt-rule presence. Full automation suite: **245 passed, 0 failed**. H402-H404 remain `testing` awaiting real fitness-build validation, but now have tool-enforced regression coverage.

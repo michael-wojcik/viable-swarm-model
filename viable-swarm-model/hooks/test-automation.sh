@@ -8178,6 +8178,53 @@ else
     fail "expected skill variety 2/3 from agent report parsing; rc=$RC output=$OUTPUT"
 fi
 
+# ============================================================================
+# Test 227: SKILL.md requires frontend fix-agent sign-off for frontend fixes
+# ============================================================================
+
+echo -n "TEST: SKILL.md Phase 7 requires frontend fix-agent sign-off ... "
+
+SKILL_FILE="$SCRIPT_DIR/../SKILL.md"
+if grep -q "Frontend Fix-Agent Gate" "$SKILL_FILE" && \
+   grep -q "vsm_frontend_fix_agent" "$SKILL_FILE" && \
+   grep -q "frontend-fix-report.md" "$SKILL_FILE"; then
+    pass
+else
+    fail "SKILL.md Phase 7 missing frontend fix-agent sign-off gate"
+fi
+
+# ============================================================================
+# Test 228: vsm_security.md requires frontend source scan
+# ============================================================================
+
+echo -n "TEST: vsm_security.md requires frontend source scan ... "
+
+SECURITY_FILE="$SCRIPT_DIR/../agents/vsm_security.md"
+if grep -q "Frontend Source Scan" "$SECURITY_FILE" && \
+   grep -q "localStorage.setItem(\"token\"" "$SECURITY_FILE" && \
+   grep -q "http://localhost" "$SECURITY_FILE" && \
+   grep -q "credentials: 'include'" "$SECURITY_FILE" && \
+   grep -q "find <build-directory>/frontend/src" "$SECURITY_FILE"; then
+    pass
+else
+    fail "vsm_security.md missing frontend source scan checks"
+fi
+
+# ============================================================================
+# Test 229: tester-backend skill requires one test per GraphQL mutation
+# ============================================================================
+
+echo -n "TEST: tester-backend skill requires GraphQL mutation coverage and no stub assertions ... "
+
+TESTER_SKILL="$SCRIPT_DIR/../../vsm-stack-skills/tester-backend/SKILL.md"
+if grep -q "@strawberry.mutation" "$TESTER_SKILL" && \
+   grep -q "INTERNAL_ERROR" "$TESTER_SKILL" && \
+   grep -q "one test per" "$TESTER_SKILL"; then
+    pass
+else
+    fail "tester-backend skill missing GraphQL mutation test coverage rule"
+fi
+
 echo ""
 echo "========================================"
 echo "Results: $PASSED passed, $FAILED failed"

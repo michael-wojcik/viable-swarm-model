@@ -175,9 +175,9 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 57 | < 60 | ✅ Within target |
+| Active mutations | 58 | < 60 | ✅ Within target |
 | Historical effective (≥5 builds) | 84 | >15% of active | ✅ 147% |
-| Effective (<5 builds, monitored) | 57 | >30% of active | ✅ 100% |
+| Effective (<5 builds, monitored) | 58 | >30% of active | ✅ 100% |
 | Probationary mutations | 0 | <20 at any time | ✅ 0 (within target) |
 | Removed / redesigned | 24 | ≥2 per 5 builds | ✅ 24 (exceeds target) |
 | Measured effect fill rate (scored) | 95.2% | ≥80% | ✅ 95.2% |
@@ -387,6 +387,7 @@
 
 | **S5 ITERATION MUTATIONS (2026-06-08)** |
 | R90 | 2026-06-14 S5 | refinement | Test coverage for FB34-R1 skill variety agent-report parsing (organism-vitals.py) + Test 226 | effective | 2 | 5 | H406 | — | S5 iter |
+| R91 | 2026-06-14 S5 | structural | Automation coverage for FB34 closeout prompt rules (H402 frontend fix-agent sign-off, H403 security frontend scan, H404 GraphQL mutation test coverage) + Tests 227-229 | effective | 1 | 5 | H402, H403, H404 | — | S5 iter |
 
 | **FB34 CLOSEOUT MUTATIONS (Proposed during Phase 8b, await implementation/measurement)** |
 | FB34-C1 | FB34 Phase 8b | structural | Tool-enforced integration hard-gates script (consolidates FB31-5, FB34-1, FB34-2, FB34-3) | effective | 1 | 5 | H401, H405 | — | S5 iter |

@@ -3444,3 +3444,36 @@ S5 iterations R65 through R73 were executed on 2026-06-07 without individual bui
 
 ### Next Highest-Leverage Constraint
 **System 3 (Audit/Control) / S3→S1 channel — H401-H406 remain in `testing` status awaiting real fitness-build validation**: With active mutations now at 57/60, the organism has comfortable headroom for 2–3 new mutations. The most valuable next step is a targeted gym experiment or real GraphQL-enabled fitness build to validate H401 (GraphQL stub gate) and H404 (mutation test coverage floor), or a skill/agent mutation to strengthen H402/H403/H406 automation coverage.
+
+---
+---
+
+## 2026-06-14 — S5 Orchestrator Iteration (R91: FB34 Closeout Prompt-Rule Regression Tests)
+
+### Diagnosed Constraint
+**System 3 (Audit/Control) / S3→S5 channel — H402, H403, and H404 were implemented as prompt-only rules in SKILL.md, agent files, and stack skills but had no automation coverage**: Prompt-only rules are easily lost during refactors. Without tests, S5 could not verify that the frontend fix-agent sign-off, security frontend scan, and GraphQL mutation coverage rules remained present across iterations.
+
+### Change Made
+**S5 iteration mutation R91**: Added regression tests for FB34 closeout prompt rules.
+- Test 227: `SKILL.md` Phase 7 requires `vsm_frontend_fix_agent` and `.kimi/frontend-fix-report.md` for frontend fix waves (H402).
+- Test 228: `agents/vsm_security.md` contains the `Frontend Source Scan` checklist including `localStorage.setItem("token"`, `http://localhost`, `credentials: 'include'`, and `find <build-directory>/frontend/src` (H403).
+- Test 229: `vsm-stack-skills/tester-backend/SKILL.md` requires one test per `@strawberry.mutation` and asserts against `INTERNAL_ERROR` stubs (H404).
+- Added R91 mutation row/log entry and synced Integration Health metrics.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **245 passed, 0 failed** (~11s)
+- Tests 227-229: FB34 closeout prompt-rule regression checks → PASS
+- `python3 hooks/validate-mutation-state.py`: ✅ PASS
+- `mutation-portfolio-health.py`: active=58, historical=84, effective=58, probationary=0
+
+### Files Modified
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 1 (Implementation) / S5→S1 channel — all high-impact automation-test gaps in the current organism are now covered, but the swarm has not validated these gates against a real build**: The most valuable next step is a real GraphQL-enabled fitness build to confirm H401-H404 behave as expected under production-like conditions. With active mutations at 58/60, the organism can absorb the resulting build-derived mutations.
