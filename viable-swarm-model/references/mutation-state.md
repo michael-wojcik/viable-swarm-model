@@ -386,8 +386,8 @@
 | FB34-3 | FB34 Build | append-only | SocketProvider authenticate event protocol | **removed** | 1 | 2 | — | — | R-8 cemetery; replaced by FB34-C1 |
 
 | **S5 ITERATION MUTATIONS (2026-06-08)** |
-| R90 | 2026-06-14 S5 | refinement | Test coverage for FB34-R1 skill variety agent-report parsing (organism-vitals.py) + Test 226 | effective | 2 | 5 | H406 | — | S5 iter |
-| R91 | 2026-06-14 S5 | structural | Automation coverage for FB34 closeout prompt rules (H402 frontend fix-agent sign-off, H403 security frontend scan, H404 GraphQL mutation test coverage) + Tests 227-229 | effective | 1 | 5 | H402, H403, H404 | — | S5 iter |
+| R90 | 2026-06-14 S5 | refinement | Test coverage for FB34-R1 skill variety agent-report parsing (organism-vitals.py) + Test 226 | effective | 3 | 5 | H406 | — | S5 iter |
+| R91 | 2026-06-14 S5 | structural | Automation coverage for FB34 closeout prompt rules (H402 frontend fix-agent sign-off, H403 security frontend scan, H404 GraphQL mutation test coverage) + Tests 227-229 | effective | 2 | 5 | H402, H403, H404 | — | S5 iter |
 
 | **FB34 CLOSEOUT MUTATIONS (Proposed during Phase 8b, await implementation/measurement)** |
 | FB34-C1 | FB34 Phase 8b | structural | Tool-enforced integration hard-gates script (consolidates FB31-5, FB34-1, FB34-2, FB34-3) | effective | 1 | 5 | H401, H405 | — | S5 iter |

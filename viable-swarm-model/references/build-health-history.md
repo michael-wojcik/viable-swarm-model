@@ -3477,3 +3477,33 @@ S5 iterations R65 through R73 were executed on 2026-06-07 without individual bui
 
 ### Next Highest-Leverage Constraint
 **System 1 (Implementation) / S5→S1 channel — all high-impact automation-test gaps in the current organism are now covered, but the swarm has not validated these gates against a real build**: The most valuable next step is a real GraphQL-enabled fitness build to confirm H401-H404 behave as expected under production-like conditions. With active mutations at 58/60, the organism can absorb the resulting build-derived mutations.
+
+---
+---
+
+## 2026-06-14 — S5 Orchestrator Iteration (Lifecycle Counter)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S1 channel — S5 iteration mutations R90 and R91 were not advancing toward historical eligibility**: Without regular counter increments, effective S5 mutations remain in the monitored section longer than necessary, compressing headroom for future mutations and delaying the portfolio-health benefits of historical promotion.
+
+### Change Made
+**Lifecycle maintenance**:
+- Ran `increment-s5-iteration-counter.py`.
+- R90: builds_tested 2 → 3.
+- R91: builds_tested 1 → 2.
+- Integration Health table auto-synced by the counter (active=58, historical=84, effective=58).
+
+### Test Results
+- `bash hooks/test-automation.sh`: **245 passed, 0 failed** (~11s)
+- `python3 hooks/validate-mutation-state.py`: ✅ PASS
+- `mutation-portfolio-health.py`: active=58, historical=84, effective=58, probationary=0
+
+### Files Modified
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**All S5-only high-impact constraints visible in the current state files have been addressed**. Remaining open hypotheses (H401-H406, H500-H504) require real fitness-build validation or targeted gym experiments that cannot be completed within a pure S5 iteration loop. The organism is healthy (245 tests passing, 58 active mutations, no stale backlog) and ready to transition to external validation.
