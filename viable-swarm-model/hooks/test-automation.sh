@@ -8101,6 +8101,83 @@ else
     fail "expected H104 to be archived and removed from untested hypotheses"
 fi
 
+# ============================================================================
+# Test 226: organism-vitals.py parses skill reads from agent reports
+# ============================================================================
+
+echo -n "TEST: organism-vitals.py counts skills read from agent reports ... "
+
+mkdir -p "$TMPDIR/build226/.kimi"
+mkdir -p "$TMPDIR/build226/vsm/viable-swarm-model/scripts"
+mkdir -p "$TMPDIR/build226/vsm/viable-swarm-model/references"
+mkdir -p "$TMPDIR/build226/vsm/vsm-stack-skills"
+
+cp "$SCRIPT_DIR/../scripts/organism-vitals.py" "$TMPDIR/build226/vsm/viable-swarm-model/scripts/"
+
+cat > "$TMPDIR/build226/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target Failure | Status | Builds Tested | Score | Hypothesis | Experiment | Next Review |
+|---|---|---|---|---|---|---|---|---|---|
+EOF
+
+cat > "$TMPDIR/build226/vsm/viable-swarm-model/references/hypotheses.md" << 'EOF'
+# Hypotheses
+EOF
+
+cat > "$TMPDIR/build226/vsm/viable-swarm-model/references/knowledge-broker.md" << 'EOF'
+# Broker
+> **Last updated**: 2026-06-01
+EOF
+
+cat > "$TMPDIR/build226/vsm/viable-swarm-model/references/build-health-history.md" << 'EOF'
+# Build Health History
+EOF
+
+cat > "$TMPDIR/build226/vsm/vsm-stack-skills/SKILL-REGISTRY.md" << 'EOF'
+# Stack Skills Registry
+## Pattern Skills
+| Skill | Description | Relevant Agents | Depends On | Status |
+|---|---|---|---|---|
+| python-pitfalls | Python pitfalls | backend_coder | — | Full |
+| typescript-pitfalls | TS pitfalls | frontend_coder | — | Full |
+## Pitfall Skills
+| Skill | Language | Status | Description |
+|---|---|---|---|
+| docker-pitfalls | Docker | Full | Container traps |
+EOF
+
+cat > "$TMPDIR/build226/vsm/viable-swarm-model/references/skill-effectiveness-log.md" << 'EOF'
+# Skill Effectiveness Log
+## 2026-06-04
+| Skill | Builds Used | Avg Score (with) | Avg Score (without) | Delta | Flag |
+|---|---|---|---|---|---|
+| python-pitfalls | 0 | — | 3.5 | — | INSUFFICIENT_DATA |
+| typescript-pitfalls | 0 | — | 3.5 | — | INSUFFICIENT_DATA |
+| docker-pitfalls | 0 | — | 3.5 | — | INSUFFICIENT_DATA |
+EOF
+
+cat > "$TMPDIR/build226/.kimi/backend-report.md" << 'EOF'
+# Backend Report
+## Skills consulted
+- python-pitfalls
+- typescript-pitfalls
+EOF
+
+cat > "$TMPDIR/build226/plan.md" << 'EOF'
+# Build Plan — FB226
+EOF
+
+RC=0
+HOME="$TMPDIR/build226" VSM_SKILL_REGISTRY="$TMPDIR/build226/vsm/vsm-stack-skills/SKILL-REGISTRY.md" \
+    "$PYTHON3" "$SCRIPT_DIR/../scripts/organism-vitals.py" --build-dir "$TMPDIR/build226" >/dev/null 2>&1 || RC=$?
+
+OUTPUT=$(cat "$TMPDIR/build226/.kimi/organism-vitals.md" 2>/dev/null || echo "")
+if [ "$RC" -eq 0 ] && echo "$OUTPUT" | grep -q "Skill variety.*0.67.*2/3"; then
+    pass
+else
+    fail "expected skill variety 2/3 from agent report parsing; rc=$RC output=$OUTPUT"
+fi
+
 echo ""
 echo "========================================"
 echo "Results: $PASSED passed, $FAILED failed"

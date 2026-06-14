@@ -3376,3 +3376,38 @@ S5 iterations R65 through R73 were executed on 2026-06-07 without individual bui
 
 ### Next Highest-Leverage Constraint
 **System 3 (Audit/Control) / S3→S1 channel — H401-H406 remain in `testing` status awaiting real fitness-build validation**: The organism now has active-mutation headroom (58/60) and a clean hypothesis backlog. The highest-value next step is a real GraphQL-enabled fitness build to validate H401 (GraphQL stub gate) and H404 (mutation test coverage floor), or a targeted skill/agent mutation to strengthen H402/H403/H406 with automation coverage.
+
+---
+---
+
+## 2026-06-14 — S5 Orchestrator Iteration (R90: Agent-Report Skill Parsing Test)
+
+### Diagnosed Constraint
+**System 3 (Audit/Control) / S3→S5 channel — FB34-R1 (skill variety tracker parses agent reports) lacked direct automation coverage**: The feature was implemented in `scripts/organism-vitals.py` and promoted to `effective` in R60, but no test isolated the agent-report parsing path. A regression could silently undercount skills and mislead the variety engineer with false "unused skill" algedonics.
+
+### Change Made
+**S5 iteration mutation R90**: Added Test 226 verifying agent-report skill parsing.
+- Creates a minimal skill registry with 3 Full skills.
+- Sets all `Builds Used` counts to 0 in `skill-effectiveness-log.md` so the variety metric cannot come from the log.
+- Creates a mock `.kimi/backend-report.md` citing `python-pitfalls` and `typescript-pitfalls`.
+- Runs `organism-vitals.py` and asserts `Skill variety: 0.67 (2/3 skills exercised)`.
+- Added R90 row to `mutation-state.md` and log entry to `mutation-log.md`.
+- Synced Integration Health metrics after adding R90.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **242 passed, 0 failed** (~10s)
+- Test 226: organism-vitals.py counts skills read from agent reports → PASS
+- `python3 hooks/validate-mutation-state.py`: ✅ PASS
+- `mutation-portfolio-health.py`: active=59, historical=82, effective=59, probationary=0, scored_rate=95.2%, any_rate=96.4%
+
+### Files Modified
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 3 (Audit/Control) / S3→S1 channel — H401-H406 remain in `testing` status awaiting real fitness-build validation**: R90 added automation coverage for H406's agent-report path, but the broader FB34 closeout hypotheses (H401 GraphQL stub gate, H402 frontend fix-agent sign-off, H403 security frontend scan, H404 GraphQL mutation test coverage floor, H405 session-end backfill) still need real-build evidence. With active mutations at 59/60, one more S5-only mutation is possible, but the organism should prioritize a real GraphQL-enabled fitness build or a targeted gym experiment for H401/H404.

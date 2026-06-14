@@ -5770,3 +5770,19 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 **Measured effect**: **TESTED** — Tests 161-162 verify GraphQL stub detection; Tests 221-224 verify environment import smoke test (including extras stripping and unmapped-package warnings); Tests 218-219 verify `check-graphql-stubs.py` directly. Full automation suite: **240 passed, 0 failed**. Promoted to **historical** after 5 S5 iterations with no regressions. H401 and H152 tool implementation and pipeline wiring verified; awaiting validation in next compatible build.
 
 ---
+
+----
+
+## Mutation R90 — 2026-06-14
+
+**Session**: S5 Orchestrator Iteration R90
+**Files**: `hooks/test-automation.sh`, `references/mutation-state.md`
+**Type**: refinement
+**Rationale**: System 3 (Audit/Control) / S3→S5 channel — FB34-R1 (skill variety tracker parses agent reports) was promoted to `effective` in R60 but had no direct automation coverage for the agent-report parsing path. The implementation in `scripts/organism-vitals.py` parses `.kimi/*-report.md` files for `Skills consulted:` headers and bullet lists ending in `-patterns`/`-pitfalls`, but no test verified this path independently of the skill-effectiveness log. Without coverage, a regression in report parsing could silently reduce variety scores and mislead the variety engineer.
+
+**Expected effect**:
+- `hooks/test-automation.sh`: Test 226 creates a minimal registry with three Full skills, sets all `Builds Used` counts to 0 in the skill-effectiveness log, and creates a mock `.kimi/backend-report.md` citing two skills. It verifies `organism-vitals.py` produces `Skill variety: 0.67 (2/3)`.
+- The test forces the skill-counting logic to rely on agent-report parsing rather than the longitudinal log.
+- H406 (skill variety metric should parse agent reports) gains automation-suite evidence.
+
+**Measured effect**: **TESTED** — Test 226 verifies agent-report skill parsing in `organism-vitals.py`. Full automation suite: **242 passed, 0 failed**. H406 evidence updated; FB34-R1 implementation now has direct automation coverage.
