@@ -385,7 +385,7 @@
 | **S5 ITERATION MUTATIONS (2026-06-08)** |
 | R87 | 2026-06-14 S5 | structural | Hard gate test enforcing S5 iteration historical promotion eligibility (builds_tested >= 5, score 5) | effective | 2 | 5 | — | — | S5 iter |
 | R88 | 2026-06-14 S5 | refinement | hypothesis-backlog-curator.py stale untested archival (>21 days) + Tests 216-217 | effective | 2 | 5 | — | — | S5 iter |
-| R89 | 2026-06-14 S5 | structural | Tool-enforced GraphQL stub detector (check-graphql-stubs.py) + Tests 218-219 | effective | 2 | 5 | — | — | S5 iter |
+| R89 | 2026-06-14 S5 | structural | Tool-enforced GraphQL stub detector (check-graphql-stubs.py) wired into integration-hard-gates.py + Tests 161-162/218-219 | effective | 2 | 5 | — | — | S5 iter |
 
 | **FB34 CLOSEOUT MUTATIONS (Proposed during Phase 8b, await implementation/measurement)** |
 | FB34-C1 | FB34 Phase 8b | structural | Tool-enforced integration hard-gates script (consolidates FB31-5, FB34-1, FB34-2, FB34-3) | effective | 1 | 5 | H401, H405 | — | S5 iter |

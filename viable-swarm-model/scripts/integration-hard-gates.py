@@ -26,41 +26,47 @@ def fail(message: str) -> None:
 
 
 def check_graphql_stubs(build_dir: Path) -> bool:
-    """FB34-1: Detect stubbed GraphQL mutations returning INTERNAL_ERROR or NotImplemented."""
+    """FB34-1: Detect stubbed GraphQL mutations returning INTERNAL_ERROR or NotImplemented.
+
+    Delegates to scripts/check-graphql-stubs.py for AST-based scanning across the
+    whole build directory, replacing the earlier regex-only check on app/graphql.py.
+    """
     graphql_file = build_dir / "app" / "graphql.py"
     if not graphql_file.exists():
         print("[SKIP] app/graphql.py not found — no GraphQL layer to check")
         return True
 
-    text = graphql_file.read_text()
-    # Look for mutation resolvers that contain only pass/raise/INTERNAL_ERROR/NotImplemented
-    stub_patterns = [
-        r'raise\s+\w*Error\s*\(',
-        r'return\s*\{\s*["\']errors["\']?\s*:\s*\[?\s*\{\s*["\']message["\']?\s*:\s*["\']INTERNAL_ERROR',
-        r'return\s*\{\s*["\']message["\']?\s*:\s*["\']INTERNAL_ERROR',
-        r'pass\s*\n\s*\n\s*@strawberry\.mutation',
-        r'@strawberry\.mutation[\s\S]{0,200}?pass\s*$',
-        r'@strawberry\.mutation[\s\S]{0,200}?raise\s+NotImplementedError',
-        r'@strawberry\.mutation[\s\S]{0,200}?return\s*\{\s*["\']message["\']?\s*:\s*["\']Not implemented',
-    ]
+    script_path = Path(__file__).parent / "check-graphql-stubs.py"
+    if not script_path.exists():
+        fail("FB34-1: check-graphql-stubs.py not found — hard gate cannot run")
+        return False
 
-    found_stubs = []
-    for pattern in stub_patterns:
-        for match in re.finditer(pattern, text, re.MULTILINE):
-            # Extract line number
-            lineno = text[:match.start()].count("\n") + 1
-            found_stubs.append(lineno)
+    result = subprocess.run(
+        [sys.executable, str(script_path), str(build_dir)],
+        capture_output=True,
+        text=True,
+    )
 
-    if found_stubs:
+    if result.returncode == 0:
+        print("[PASS] FB34-1: No GraphQL mutation stubs detected")
+        return True
+
+    if result.returncode == 1:
+        # Count stub lines from the delegated script output
+        stub_lines = [line for line in result.stdout.splitlines() if "::" in line]
         fail(
-            f"FB34-1: Found {len(found_stubs)} potential GraphQL mutation stub(s) "
-            f"in app/graphql.py at line(s): {sorted(set(found_stubs))}. "
-            f"Mutations must be fully implemented — no INTERNAL_ERROR, NotImplemented, or bare pass."
+            f"FB34-1: Found {len(stub_lines)} potential GraphQL mutation stub(s). "
+            f"Mutations must be fully implemented — no INTERNAL_ERROR, NotImplemented, or bare pass. "
+            f"Details:\n{result.stdout}"
         )
         return False
 
-    print("[PASS] FB34-1: No GraphQL mutation stubs detected")
-    return True
+    # returncode 2 = usage/read error
+    fail(
+        f"FB34-1: check-graphql-stubs.py failed with exit code {result.returncode}. "
+        f"Output:\n{result.stdout}\n{result.stderr}"
+    )
+    return False
 
 
 def check_graphql_session_cleanup(build_dir: Path) -> bool:

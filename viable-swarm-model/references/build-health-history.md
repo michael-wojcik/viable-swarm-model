@@ -3231,3 +3231,37 @@ S5 iterations R65 through R73 were executed on 2026-06-07 without individual bui
 
 ### Next Highest-Leverage Constraint
 **System 1 (Implementation) / S1→S5 channel — H401 hard gate (`check-graphql-stubs.py`) is implemented but not yet wired into SKILL.md or the build pipeline**: The tool exists and is tested, but S5 has no automated invocation point. The highest-ROI next step is to wire `check-graphql-stubs.py` into SKILL.md Phase 3c/Phase 6 and add a stop-verifier check or session-end invocation so the gate runs automatically during GraphQL-enabled builds. Alternatively, H104/H152 will cross the stale threshold within 24 hours and should be tested or archived.
+
+---
+---
+
+## 2026-06-14 — S5 Orchestrator Iteration (R89 Wiring)
+
+### Diagnosed Constraint
+**System 3 (Audit/Control) / S3→S1 channel — `check-graphql-stubs.py` was implemented but not wired into the build pipeline**: The tool existed and had direct tests, but `scripts/integration-hard-gates.py` still used a fragile regex-only check on `app/graphql.py`. Without wiring, S5 would have to remember to invoke the new script manually during Phase 6, defeating the purpose of a tool-enforced gate.
+
+### Change Made
+**R89 follow-up wiring**: Replaced the regex-based GraphQL stub detector in `integration-hard-gates.py` with a delegation to the new AST-based `check-graphql-stubs.py`.
+- `integration-hard-gates.py` now runs `check-graphql-stubs.py <BUILD_DIR>` as a subprocess.
+- Preserves existing pass/fail output format so Tests 161-162 continue to pass.
+- Scans the entire build directory (not just `app/graphql.py`), catching stubs in any Strawberry schema file.
+- Updated R89 row in `mutation-state.md` and R89 log entry in `mutation-log.md` to reflect the wiring.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **236 passed, 0 failed**
+- Tests 161-162: GraphQL stub detection via `integration-hard-gates.py` → PASS
+- Tests 218-219: Direct `check-graphql-stubs.py` behavior → PASS
+- Test 220: Active mutation count below 60 → PASS
+- `validate-mutation-state.sh`: ✅ PASS
+
+### Files Modified
+- `viable-swarm-model/scripts/integration-hard-gates.py`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — H104 and H152 will cross the 21-day stale threshold within 24 hours**. The curator will archive them unless S5 either runs a gym experiment or updates their status. H401 is now fully wired; H404-H406 remain in `testing` status awaiting real fitness builds. The organism is ready for external validation; the most valuable next step is either a real GraphQL-enabled build to confirm H401 or a targeted gym experiment for H104/H152 before they go stale.
