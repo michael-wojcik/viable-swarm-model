@@ -3303,3 +3303,36 @@ S5 iterations R65 through R73 were executed on 2026-06-07 without individual bui
 
 ### Next Highest-Leverage Constraint
 **System 4 (Adaptation/Intelligence) / S4→S4 channel — H104 is still `untested` and will cross the 21-day stale threshold imminently**: H104 (ApolloClient `uri` parameter stderr noise) is the only remaining untested backlog item at risk of automatic archival. The organism has no gym experiment or automation coverage for it. The most valuable next step is a minimal gym experiment or a targeted SKILL.md/agent-prompt update that either confirms/rejects H104 or moves it to `testing` before the curator archives it. Alternatively, R87/R89 will reach historical eligibility in 2 more iterations, at which point headroom opens for a new structural mutation.
+
+---
+---
+
+## 2026-06-14 — S5 Orchestrator Iteration (R89 Historical Promotion)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S1 channel — active mutation count was pinned at 59/60, leaving no headroom for new structural mutations**: After the R89 hardening iteration, the organism was one mutation away from breaching its <60 active-mutation target. Adding any new mutation (e.g., to test H104 or wire H402-H406) would immediately fail Test 220 and compress the portfolio. R89 had reached `builds_tested=5` and `score=5`, making it eligible for historical promotion, but the promotion was still manual.
+
+### Change Made
+**S5 lifecycle maintenance — promoted R89 to historical**:
+- Ran `increment-s5-iteration-counter.py`: R87/R88 → 4 builds, R89 → 5 builds.
+- Moved R89 from the S5 iteration section to the HISTORICAL EFFECTIVE section and updated status to `historical`.
+- Updated R89 measured effect in `mutation-log.md` to note the historical promotion.
+- Synced Integration Health metrics: active mutations dropped from 59 to 58, historical effective rose from 81 to 82.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **240 passed, 0 failed**
+- Test 215: S5 iteration mutations with `builds_tested >= 5` and `score = 5` are historical → PASS
+- Test 220: Integration Health active mutation count is below 60 → PASS
+- `python3 hooks/validate-mutation-state.py`: ✅ PASS
+- `mutation-portfolio-health.py`: active=58, historical=82, effective=58, probationary=0
+
+### Files Modified
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — H104 is the sole remaining `untested` hypothesis and will cross the 21-day stale threshold imminently**: With one active-mutation slot now free (58/60), the organism can either archive H104 as stale or run a minimal gym experiment to confirm/reject it and capture the result as a build-derived mutation. The most valuable next step is a targeted gym experiment for H104, because it keeps the backlog actionable without adding an untested hypothesis.

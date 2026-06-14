@@ -5764,9 +5764,9 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 - `scripts/check-graphql-stubs.py`: AST-based scanner detects `@strawberry.mutation`/`@strawberry.field` resolvers whose bodies are `pass`, `raise`, or return `INTERNAL_ERROR`/`NotImplemented` placeholders.
 - The script exits non-zero and prints the file/class/method location of each stub, making it suitable as a hard gate in Phase 3c/Phase 6.
 - `scripts/integration-hard-gates.py`: Phase 3c/6 hard gates now include (1) GraphQL stub detection delegated to `check-graphql-stubs.py` and (2) environment import smoke test (H152) that reads `requirements.txt` and verifies declared packages import successfully.
-- `hooks/test-automation.sh`: Tests 161-162 verify GraphQL stub detection; Tests 221-222 verify environment import smoke test; Tests 218-219 verify `check-graphql-stubs.py` directly.
+- `hooks/test-automation.sh`: Tests 161-162 verify GraphQL stub detection; Tests 221-224 verify environment import smoke test; Tests 218-219 verify `check-graphql-stubs.py` directly.
 - H401 status updated to reflect the tool is implemented and awaiting validation in the next GraphQL-enabled build.
 
-**Measured effect**: **TESTED** — Tests 161-162 verify GraphQL stub detection; Tests 221-224 verify environment import smoke test (including extras stripping and unmapped-package warnings); Tests 218-219 verify `check-graphql-stubs.py` directly. Full automation suite: **240 passed, 0 failed**. H401 and H152 tool implementation and pipeline wiring verified; awaiting validation in next compatible build.
+**Measured effect**: **TESTED** — Tests 161-162 verify GraphQL stub detection; Tests 221-224 verify environment import smoke test (including extras stripping and unmapped-package warnings); Tests 218-219 verify `check-graphql-stubs.py` directly. Full automation suite: **240 passed, 0 failed**. Promoted to **historical** after 5 S5 iterations with no regressions. H401 and H152 tool implementation and pipeline wiring verified; awaiting validation in next compatible build.
 
 ---
