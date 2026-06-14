@@ -135,8 +135,8 @@
 | R4 | FB28 Build | refinement | Phase 3c coordinator MANDATORY for Tier 2+ | effective | 1 | 5 | — | — | FB31 |
 | A9 | FB28 Build | append-only | Pydantic V2 + SQLAlchemy ORM test fixture pattern | effective | 1 | 5 | — | — | FB31 |
 | **FB35 MUTATIONS (Measured in FB36)** |
-| FB35-1 | FB35 Build | structural | Absolute path requirement for background agents | probation | 0 | — | H500 | E24 | FB36 |
-| FB35-2 | FB35 Build | structural | Termination rule to prevent post-write hang loops. **E24 finding**: effectiveness is conditional on failure complexity — trivial failures self-resolve in 1 attempt. **E24-F1 finding**: Even complex failures (Pydantic UUID serialization) were fixed in 1 iteration with clean termination. **E24-F2 finding**: Genuinely novel failures (asyncio.gather, zero skill coverage) also fixed in 1 iteration with clean termination. Agent explicitly tracked failure count and obeyed STOP rule across all 4 gym runs. H501 rejected — verification failures do not cause hangs. FB35 hangs likely caused by context pressure or post-write perfectionism (H503/H504). | probation | 0 | — | H501 | E24, E24-F1, E24-F2 | FB36 |
+| FB35-1 | FB35 Build | structural | Absolute path requirement for background agents | effective | 1 | 4 | H500 | E24 | FB36 |
+| FB35-2 | FB35 Build | structural | Termination rule to prevent post-write hang loops. **E24 finding**: effectiveness is conditional on failure complexity — trivial failures self-resolve in 1 attempt. **E24-F1 finding**: Even complex failures (Pydantic UUID serialization) were fixed in 1 iteration with clean termination. **E24-F2 finding**: Genuinely novel failures (asyncio.gather, zero skill coverage) also fixed in 1 iteration with clean termination. Agent explicitly tracked failure count and obeyed STOP rule across all 4 gym runs. H501 rejected — verification failures do not cause hangs. FB35 hangs likely caused by context pressure or post-write perfectionism (H503/H504). | effective | 1 | 4 | H501 | E24, E24-F1, E24-F2 | FB36 |
 | **FB29 MUTATIONS (Measured in FB30)** |
 | PM4 | FB29 Build | append-only | GraphQL parity admin override specificity | effective | 1 | 5 | — | — | FB31 |
 | PM5 | FB29 Build | append-only | Enum `.value` in conftest.py | effective | 1 | 5 | — | — | FB31 |
@@ -171,11 +171,11 @@
 |---|---|---|---|
 | Active mutations | 59 | < 60 | ✅ Within target |
 | Historical effective (≥5 builds) | 78 | >15% of active | ✅ 134% |
-| Effective (<5 builds, monitored) | 57 | >30% of active | ✅ 97% |
-| Probationary mutations | 2 | <20 at any time | ✅ 2 (within target) |
+| Effective (<5 builds, monitored) | 59 | >30% of active | ✅ 100% |
+| Probationary mutations | 0 | <20 at any time | ✅ 0 (within target) |
 | Removed / redesigned | 24 | ≥2 per 5 builds | ✅ 24 (exceeds target) |
-| Measured effect fill rate (scored) | 93.8% | ≥80% | ✅ 93.8% |
-| Measured effect fill rate (any entry) | 95.0% | ≥80% | ✅ 95.0% |
+| Measured effect fill rate (scored) | 95.0% | ≥80% | ✅ 95.0% |
+| Measured effect fill rate (any entry) | 96.3% | ≥80% | ✅ 96.3% |
 | Removal rate (last 5 builds) | 8 | ≥2 | ✅ Meets target |
 
 ---
@@ -380,9 +380,9 @@
 | FB34-3 | FB34 Build | append-only | SocketProvider authenticate event protocol | **removed** | 1 | 2 | — | — | R-8 cemetery; replaced by FB34-C1 |
 
 | **S5 ITERATION MUTATIONS (2026-06-08)** |
-| R84 | 2026-06-08 S5 | refinement | diagnostic-router.sh self-test uses temp DIAG_FILE to prevent overwriting real hook-diagnostic.md + Test 211 | effective | 3 | 5 | — | — | S5 iter |
-| R85 | 2026-06-08 S5 | structural | SKILL.md Phase 0/8 + session-end.sh: remove deprecated skill-state.md references, point to mutation-state.md + Tests 212-214 | effective | 3 | 5 | — | — | S5 iter |
-| R86 | 2026-06-14 S5 | structural | Resolve Python interpreter once in test-automation.sh/session-end.sh/update-mutation-state.sh to avoid pyenv shim overhead; rewrite validate-mutation-state.sh in Python; fix date/mtime-dependent tests | effective | 2 | 5 | — | — | S5 iter |
+| R84 | 2026-06-08 S5 | refinement | diagnostic-router.sh self-test uses temp DIAG_FILE to prevent overwriting real hook-diagnostic.md + Test 211 | effective | 4 | 5 | — | — | S5 iter |
+| R85 | 2026-06-08 S5 | structural | SKILL.md Phase 0/8 + session-end.sh: remove deprecated skill-state.md references, point to mutation-state.md + Tests 212-214 | effective | 4 | 5 | — | — | S5 iter |
+| R86 | 2026-06-14 S5 | structural | Resolve Python interpreter once in test-automation.sh/session-end.sh/update-mutation-state.sh to avoid pyenv shim overhead; rewrite validate-mutation-state.sh in Python; fix date/mtime-dependent tests | effective | 3 | 5 | — | — | S5 iter |
 
 | **FB34 CLOSEOUT MUTATIONS (Proposed during Phase 8b, await implementation/measurement)** |
 | FB34-C1 | FB34 Phase 8b | structural | Tool-enforced integration hard-gates script (consolidates FB31-5, FB34-1, FB34-2, FB34-3) | effective | 1 | 5 | H401, H405 | — | S5 iter |

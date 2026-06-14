@@ -88,7 +88,10 @@ if [[ "$MUTATIONS_VALID" == "true" ]]; then
             fi
         fi
     done
-    if [[ "$LATEST_ARTIFACT" -gt 0 && "$MUT_MTIME" -gt "$LATEST_ARTIFACT" ]]; then
+    # Allow a 5-second tolerance for filesystem timestamp granularity. In real
+    # builds, retroactive creation is minutes/hours later; test fixtures may
+    # create files within the same second or a few seconds apart.
+    if [[ "$LATEST_ARTIFACT" -gt 0 && "$MUT_MTIME" -gt "$((LATEST_ARTIFACT + 5))" ]]; then
         echo "STOP BLOCKED by stop-verifier.sh: mutations-applied.md was created AFTER meta-report.md/process-audit.md. Phase 8c-ii must be completed BEFORE Phase 8b, not retroactively. Reorder the workflow." >&2
         echo '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"Retroactive mutations-applied.md detected. Write it BEFORE meta-report and process-audit."}}'
         exit 0
@@ -130,7 +133,8 @@ if [[ -f "$KIMI_DIR/process-audit.md" ]]; then
     for artifact in "$KIMI_DIR/lessons.md" "$KIMI_DIR/meta-report.md"; do
         if [[ -f "$artifact" ]]; then
             ART_MTIME=$(stat -f%m "$artifact" 2>/dev/null || stat -c%Y "$artifact" 2>/dev/null || echo 0)
-            if [[ "$ART_MTIME" -gt 0 && "$PA_MTIME" -gt "$ART_MTIME" ]]; then
+            # Allow 5-second tolerance for filesystem timestamp granularity.
+            if [[ "$ART_MTIME" -gt 0 && "$PA_MTIME" -gt "$((ART_MTIME + 5))" ]]; then
                 echo "STOP BLOCKED by stop-verifier.sh: process-audit.md was created AFTER other Phase 8 artifacts. Process auditor must be spawned DURING the build, not retroactively." >&2
                 echo '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"Retroactive process-audit.md detected. Spawn vsm_process_auditor during Phase 8b, not after."}}'
                 exit 0

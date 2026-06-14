@@ -5688,7 +5688,7 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 **Target failure mode**: Background agents write files to wrong directories (session cwd drift)
 **Rationale**: FB35 showed 5/8 background agents wrote files to their own session directories instead of the build directory. This caused massive file loss and forced S5 to manually recreate ~15 files.
 **Expected effect**: Agents use absolute paths for all WriteFile/StrReplaceFile operations, ensuring files land in the correct build directory regardless of session isolation.
-**Measured effect**: [to be filled by FB36]
+**Measured effect**: **PARTIAL (Score: 4)** — E24 gym experiment confirmed that relative paths resolve non-deterministically (to orchestrator cwd `/Users/mj/vsm` rather than the intended experiment directory), while absolute paths are 100% accurate. H500 is partially confirmed. No distinct agent session directory was observed in the test configuration, but the non-determinism of relative paths is confirmed. Awaiting FB36 for full-build validation.
 
 ---
 
@@ -5700,7 +5700,7 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 **Target failure mode**: Agents hang after WriteFile + Shell verification, entering infinite self-correction loops
 **Rationale**: FB35: 6 agents hung for 10-15+ minutes after completing their primary deliverables, stuck fixing minor verification failures (UUID types, CORS parsing). S5 had to manually stop each one.
 **Expected effect**: Agents terminate cleanly after primary deliverable + basic verification. No infinite loops on minor mismatches.
-**Measured effect**: [to be filled by FB36]
+**Measured effect**: **PARTIAL (Score: 4)** — H501 (verification failures cause hangs) was rejected by E24, E24-F1, and E24-F2: all three failure types terminated in ≤1 iteration with clean STOP behavior. FB35-2's explicit STOP instruction produced clean termination in a background `vsm_architect` agent (E24), and agents obeyed the STOP rule across all 4 gym runs. No control condition (without STOP) was tested because FB35-2 is embedded in the base agent prompt template, creating agent prompt contamination that prevents clean A/B manipulation (documented in E26 and Gym-5). FB35 hangs remain unexplained; likely causes are context pressure (H503) or post-write perfectionism (H504). Awaiting FB36 for full-build validation.
 
 ---
 

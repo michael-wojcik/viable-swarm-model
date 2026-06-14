@@ -1677,15 +1677,15 @@ cat > "$TMPDIR/build42/.kimi/mutations-applied.md" << 'EOF'
 **Effectiveness**: 5/5
 EOF
 
-cat > "$TMPDIR/build42/.kimi/meta-report.md" << 'EOF'
-# Meta Report
-Score: 4.0/5.0
-EOF
-
 cat > "$TMPDIR/build42/.kimi/process-audit.md" << 'EOF'
 # Process Audit
 Score: 85/100
 All checks passed.
+EOF
+
+cat > "$TMPDIR/build42/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
 EOF
 
 cat > "$TMPDIR/build42/.kimi/mutation-portfolio-review.md" << 'EOF'
@@ -1721,9 +1721,7 @@ No critical signals.
 EOF
 
 # Touch files to ensure mtimes are reasonable (process-audit not retroactive)
-touch "$TMPDIR/build42/.kimi/mutations-applied.md"
-touch "$TMPDIR/build42/.kimi/meta-report.md"
-touch "$TMPDIR/build42/.kimi/process-audit.md"
+
 
 PAYLOAD='{"session_id":"test-session-42","cwd":"'$TMPDIR/build42'","reason":"stop","stop_hook_active":false}'
 RC=0
@@ -1761,22 +1759,20 @@ cat > "$TMPDIR/build43/.kimi/mutations-applied.md" << 'EOF'
 **Effectiveness**: 5/5
 EOF
 
-cat > "$TMPDIR/build43/.kimi/meta-report.md" << 'EOF'
-# Meta Report
-Score: 4.0/5.0
-EOF
-
 cat > "$TMPDIR/build43/.kimi/process-audit.md" << 'EOF'
 # Process Audit
 Score: 85/100
 All checks passed.
 EOF
 
+cat > "$TMPDIR/build43/.kimi/meta-report.md" << 'EOF'
+# Meta Report
+Score: 4.0/5.0
+EOF
+
 # NO mutation-portfolio-review.md — this should trigger Check 6
 
-touch "$TMPDIR/build43/.kimi/mutations-applied.md"
-touch "$TMPDIR/build43/.kimi/meta-report.md"
-touch "$TMPDIR/build43/.kimi/process-audit.md"
+
 
 PAYLOAD='{"session_id":"test-session-43","cwd":"'$TMPDIR/build43'","reason":"stop","stop_hook_active":false}'
 RC=0
@@ -2479,15 +2475,15 @@ cat > "$TMPDIR/build53/.kimi/mutations-applied.md" << 'EOF'
 **Measured effect**: Confirmed
 EOF
 
-cat > "$TMPDIR/build53/.kimi/security-report.md" << 'EOF'
-# Security Report
-Zero findings.
-EOF
-
 cat > "$TMPDIR/build53/.kimi/process-audit.md" << 'EOF'
 # Process Audit
 Score: 85/100
 All checks passed.
+EOF
+
+cat > "$TMPDIR/build53/.kimi/security-report.md" << 'EOF'
+# Security Report
+Zero findings.
 EOF
 
 cat > "$TMPDIR/build53/.kimi/mutation-portfolio-review.md" << 'EOF'
@@ -7738,6 +7734,30 @@ else
     else
         fail "PYTHON3 invocation took ${ELAPSED}s (expected <2s): $PYTHON3"
     fi
+fi
+
+# ============================================================================
+# Test 213: FB35-1 and FB35-2 reflect gym experiment evidence
+# ============================================================================
+
+echo -n "TEST: FB35-1 and FB35-2 promoted to effective with gym experiment scores ... "
+
+FB35_1=$(grep -E '^\| FB35-1 \|' "$SCRIPT_DIR/../references/mutation-state.md" | head -1)
+FB35_2=$(grep -E '^\| FB35-2 \|' "$SCRIPT_DIR/../references/mutation-state.md" | head -1)
+
+FB35_1_STATUS=$(echo "$FB35_1" | awk -F'|' '{print $6}' | tr -d ' ')
+FB35_1_BUILDS=$(echo "$FB35_1" | awk -F'|' '{print $7}' | tr -d ' ')
+FB35_1_SCORE=$(echo "$FB35_1" | awk -F'|' '{print $8}' | tr -d ' ')
+
+FB35_2_STATUS=$(echo "$FB35_2" | awk -F'|' '{print $6}' | tr -d ' ')
+FB35_2_BUILDS=$(echo "$FB35_2" | awk -F'|' '{print $7}' | tr -d ' ')
+FB35_2_SCORE=$(echo "$FB35_2" | awk -F'|' '{print $8}' | tr -d ' ')
+
+if [ "$FB35_1_STATUS" = "effective" ] && [ "$FB35_1_BUILDS" = "1" ] && [ "$FB35_1_SCORE" = "4" ] && \
+   [ "$FB35_2_STATUS" = "effective" ] && [ "$FB35_2_BUILDS" = "1" ] && [ "$FB35_2_SCORE" = "4" ]; then
+    pass
+else
+    fail "FB35-1(status=$FB35_1_STATUS builds=$FB35_1_BUILDS score=$FB35_1_SCORE) FB35-2(status=$FB35_2_STATUS builds=$FB35_2_BUILDS score=$FB35_2_SCORE)"
 fi
 
 echo ""
