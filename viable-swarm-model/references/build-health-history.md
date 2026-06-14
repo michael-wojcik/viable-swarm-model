@@ -3411,3 +3411,36 @@ S5 iterations R65 through R73 were executed on 2026-06-07 without individual bui
 
 ### Next Highest-Leverage Constraint
 **System 3 (Audit/Control) / S3→S1 channel — H401-H406 remain in `testing` status awaiting real fitness-build validation**: R90 added automation coverage for H406's agent-report path, but the broader FB34 closeout hypotheses (H401 GraphQL stub gate, H402 frontend fix-agent sign-off, H403 security frontend scan, H404 GraphQL mutation test coverage floor, H405 session-end backfill) still need real-build evidence. With active mutations at 59/60, one more S5-only mutation is possible, but the organism should prioritize a real GraphQL-enabled fitness build or a targeted gym experiment for H401/H404.
+
+---
+---
+
+## 2026-06-14 — S5 Orchestrator Iteration (R87/R88 Historical Promotion)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S1 channel — active mutation count was at 59/60, leaving only one slot for new mutations**: R87 and R88 had reached `builds_tested=5` and `score=5`, making them eligible for historical promotion, but they remained in the effective section. Without promotion, the organism could not add more than one new mutation before hitting the <60 target again.
+
+### Change Made
+**S5 lifecycle maintenance — batch promotion of R87 and R88 to historical**:
+- Ran `increment-s5-iteration-counter.py`: R87/R88 → 5 builds, R90 → 2 builds.
+- Moved R87 and R88 from the S5 iteration section to the HISTORICAL EFFECTIVE section and updated status to `historical`.
+- Updated R87/R88 measured effects in `mutation-log.md` to note historical promotion.
+- Synced Integration Health metrics: active mutations dropped from 59 to 57, historical effective rose from 82 to 84.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **242 passed, 0 failed** (~10s)
+- Test 215: S5 iteration mutations with `builds_tested >= 5` and `score = 5` are historical → PASS
+- Test 220: Integration Health active mutation count is below 60 → PASS
+- `python3 hooks/validate-mutation-state.py`: ✅ PASS
+- `mutation-portfolio-health.py`: active=57, historical=84, effective=57, probationary=0
+
+### Files Modified
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 3 (Audit/Control) / S3→S1 channel — H401-H406 remain in `testing` status awaiting real fitness-build validation**: With active mutations now at 57/60, the organism has comfortable headroom for 2–3 new mutations. The most valuable next step is a targeted gym experiment or real GraphQL-enabled fitness build to validate H401 (GraphQL stub gate) and H404 (mutation test coverage floor), or a skill/agent mutation to strengthen H402/H403/H406 automation coverage.

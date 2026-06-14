@@ -5733,7 +5733,7 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 - The hard gate forces S5 to promote eligible mutations before the automation suite can pass, eliminating manual-memory risk.
 - Active mutation count drops by promoting R84/R85 to historical, restoring headroom.
 
-**Measured effect**: **TESTED** — Test 215 scans the S5 iteration section and fails if any effective mutation has `builds_tested >= 5` and `score = 5`. Full automation suite: **230 passed, 0 failed**. R84 and R85 were promoted to historical during this iteration, dropping active mutations from 60 to 58 and restoring headroom below the <60 target.
+**Measured effect**: **TESTED** — Test 215 scans the S5 iteration section and fails if any effective mutation has `builds_tested >= 5` and `score = 5`. Full automation suite: **230 passed, 0 failed**. R84 and R85 were promoted to historical during this iteration, dropping active mutations from 60 to 58 and restoring headroom below the <60 target. Promoted to **historical** after 5 S5 iterations with no regressions.
 
 ---
 
@@ -5749,7 +5749,7 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 - `hooks/test-automation.sh`: Tests 216 and 217 verify the stale archival behavior and ensure no stale untested hypotheses remain in the real backlog.
 - Backlog stays fresh; only actionable hypotheses remain in `hypotheses.md`.
 
-**Measured effect**: **TESTED** — Tests 216 and 217 verify `--stale-days` archival and confirm zero stale untested hypotheses remain. Full automation suite: **232 passed, 0 failed**. H[N+3] and H[N+4] archived as abandoned; hypotheses.md reduced from 17 to 15 active backlog entries.
+**Measured effect**: **TESTED** — Tests 216 and 217 verify `--stale-days` archival and confirm zero stale untested hypotheses remain. Full automation suite: **232 passed, 0 failed**. H[N+3] and H[N+4] archived as abandoned; hypotheses.md reduced from 17 to 15 active backlog entries. Promoted to **historical** after 5 S5 iterations with no regressions.
 
 ---
 
