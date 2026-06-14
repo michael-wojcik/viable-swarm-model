@@ -3336,3 +3336,43 @@ S5 iterations R65 through R73 were executed on 2026-06-07 without individual bui
 
 ### Next Highest-Leverage Constraint
 **System 4 (Adaptation/Intelligence) / S4→S4 channel — H104 is the sole remaining `untested` hypothesis and will cross the 21-day stale threshold imminently**: With one active-mutation slot now free (58/60), the organism can either archive H104 as stale or run a minimal gym experiment to confirm/reject it and capture the result as a build-derived mutation. The most valuable next step is a targeted gym experiment for H104, because it keeps the backlog actionable without adding an untested hypothesis.
+
+---
+---
+
+## 2026-06-14 — S5 Orchestrator Iteration (H104 Gym Experiment / Archive)
+
+### Diagnosed Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — H104 was the only remaining `untested` hypothesis and was about to cross the 21-day stale threshold**: Leaving it untested would either force automatic archival by `hypothesis-backlog-curator.py` or consume S5 attention during Phase 0 self-model reads without producing actionable signal.
+
+### Change Made
+**Manual gym experiment E27 for H104**:
+- Created minimal isolated Node/jsdom project at `~/vsm-fitness-builds/gym/H104/`.
+- Installed `@apollo/client`, `graphql`, and `jsdom`.
+- Tested four variants: `uri` shorthand vs explicit `link`, with and without jsdom global environment.
+- Captured stderr for all variants; all produced empty stderr.
+- Concluded H104 is **rejected** — the original FB21 noise was likely caused by a specific test-mocking setup or older client version, not the `uri` option itself.
+- Archived H104 in `references/hypotheses-archive.md` as rejected.
+- Removed H104 from `references/hypotheses.md` backlog.
+- Added Experiment E27 to `references/experiments.md`.
+- Added Test 225 verifying H104 is archived and no longer in the untested backlog.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **241 passed, 0 failed** (~10s)
+- Test 225: H104 archived as rejected → PASS
+- `python3 hooks/validate-mutation-state.py`: ✅ PASS
+- Active mutation count remains **58** (< 60)
+
+### Files Modified
+- `viable-swarm-model/references/hypotheses.md`
+- `viable-swarm-model/references/hypotheses-archive.md`
+- `viable-swarm-model/references/experiments.md`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/build-health-history.md`
+- `vsm-fitness-builds/gym/H104/` (experiment artifacts)
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 3 (Audit/Control) / S3→S1 channel — H401-H406 remain in `testing` status awaiting real fitness-build validation**: The organism now has active-mutation headroom (58/60) and a clean hypothesis backlog. The highest-value next step is a real GraphQL-enabled fitness build to validate H401 (GraphQL stub gate) and H404 (mutation test coverage floor), or a targeted skill/agent mutation to strengthen H402/H403/H406 with automation coverage.

@@ -855,3 +855,15 @@ Verification failures alone — regardless of complexity or skill coverage — d
 
 ---
 
+
+### H104: ApolloClient `uri` parameter in test environment causes stderr noise that does not fail tests but masks real client misconfiguration
+
+**Archived**: 2026-06-14
+**Final Status**: rejected
+**Proposed**: 2026-05-25
+**Rationale**: FB21 frontend tests pass but emit `ApolloClient uri parameter` errors in stderr. `client.ts` uses `HttpLink({ uri: ... })` correctly, but test mocking may initialize `ApolloClient` differently.
+**Source**: Fitness build FB21, Phase 4
+**Experiment**: E27 — Minimal Node/jsdom reproduction with `@apollo/client` current version.
+**Expected**: If test init uses `uri` parameter → confirmed. If test init uses `link` → rejected.
+**Result**: Minimal reproduction with both `uri` shorthand and explicit `link`, with and without jsdom, produced empty stderr. No warnings emitted. The original FB21 noise was likely caused by a specific test-mocking setup or older client version.
+**Tested by**: E27

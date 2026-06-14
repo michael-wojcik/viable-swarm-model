@@ -19,7 +19,6 @@
 
 | Hypothesis | Status |
 |---|---|
-| H104 | untested |
 | H152 | testing |
 | H202 | tested |
 | H217 | partially |
@@ -34,31 +33,6 @@
 | H502 | partially |
 | H503 | tested |
 | H504 | tested |
----
-
-
----
-
-
----
-
-
----
-
-
----
-
-## H104: ApolloClient `uri` parameter in test environment causes stderr noise that does not fail tests but masks real client misconfiguration
-
-**Status**: untested
-**Proposed**: 2026-05-25
-**Rationale**: FB21 frontend tests pass but emit `ApolloClient uri parameter` errors in stderr. `client.ts` uses `HttpLink({ uri: ... })` correctly, but test mocking may initialize `ApolloClient` differently.
-**Source**: Fitness build FB21, Phase 4
-**Experiment**: Inspect frontend test setup. Verify if ApolloClient is initialized with `uri` directly instead of `link`. Compare test ApolloClient init vs production ApolloClient init.
-**Expected**: If test init uses `uri` parameter → confirmed. If test init uses `link` → rejected.
-**Result**: [to be filled]
-**Tested by**: [fitness build or gym experiment]
-
 ---
 
 

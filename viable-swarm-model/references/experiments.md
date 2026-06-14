@@ -767,3 +767,24 @@ Neither H503 nor H504 was confirmed by these experiments. The FB35 hang phenomen
 - For H503: Design an experiment with 30+ forced tool calls (e.g., "Read file A, write file B, run test, read file C, modify file B, run test..." repeated 10 times).
 - For H504: To test cleanly, temporarily remove FB35-2 from `vsm_backend_coder.md`, run the no-STOP cohort, then restore FB35-2. This requires structural mutation approval.
 - Alternative: Accept that FB35 hangs may be non-deterministic and cannot be reliably reproduced in controlled experiments.
+
+---
+
+## Experiment E27 — H104: ApolloClient `uri` Parameter stderr Noise in Test Environment (2026-06-14)
+
+**Hypothesis**: H104 — ApolloClient `uri` parameter in test environment causes stderr noise that does not fail tests but masks real client misconfiguration.
+**Designed by**: S5 Orchestrator (manual gym experiment)
+**Method**: Minimal isolated Node/jsdom project in `~/vsm-fitness-builds/gym/H104/`.
+- Installed `@apollo/client`, `graphql`, and `jsdom`.
+- Created two scripts:
+  1. `with-uri.js`: initializes `ApolloClient` with top-level `uri` option.
+  2. `with-link.js`: initializes `ApolloClient` with `link: new HttpLink({ uri })`.
+  3. `with-uri-jsdom.js`: same as (1) but within a `JSDOM` global environment.
+  4. `with-uri-jsdom-nofetch.js`: same as (3) without a stubbed `fetch`.
+- Ran each script, capturing stderr separately.
+**Variables**: ApolloClient initialization style (`uri` shorthand vs explicit `link`) and presence/absence of jsdom global environment.
+**Control**: If the hypothesis holds, the `uri` variants should emit stderr warnings while the `link` variant remains silent.
+**Results**: All four variants completed with **empty stderr**. No ApolloClient warnings or errors were emitted for either initialization style.
+**Conclusion**: rejected
+**Proposed mutations**: No skill mutation. The original FB21 noise likely originated from a specific test-mocking configuration, an older `@apollo/client` version, or a missing `fetch` polyfill that produced transient warnings. Without a reproducible minimal case, no prevention rule is justified.
+**Mutations applied**: Yes — H104 archived as rejected in `references/hypotheses-archive.md`.

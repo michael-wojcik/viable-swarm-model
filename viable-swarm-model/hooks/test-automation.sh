@@ -8088,6 +8088,19 @@ else
     fail "expected H152 gate to warn and pass on unmapped package; rc=$RC output=$OUTPUT"
 fi
 
+# ============================================================================
+# Test 225: H104 gym experiment concluded and hypothesis archived
+# ============================================================================
+
+echo -n "TEST: H104 ApolloClient uri-noise hypothesis is archived as rejected ... "
+
+if grep -q "H104" "$SCRIPT_DIR/../references/hypotheses-archive.md" && \
+   ! grep -q "| H104 | untested |" "$SCRIPT_DIR/../references/hypotheses.md"; then
+    pass
+else
+    fail "expected H104 to be archived and removed from untested hypotheses"
+fi
+
 echo ""
 echo "========================================"
 echo "Results: $PASSED passed, $FAILED failed"
