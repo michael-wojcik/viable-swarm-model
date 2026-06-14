@@ -19,7 +19,7 @@ import argparse
 import re
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 VSM_ROOT = Path.home() / "vsm" / "viable-swarm-model"
@@ -48,7 +48,30 @@ class Hypothesis:
         latest = self.latest_status()
         if not latest:
             return False
-        return latest[1] in ("confirmed", "rejected", "superseded")
+        return latest[1] in ("confirmed", "rejected", "superseded", "abandoned")
+
+    def proposed_date(self) -> datetime | None:
+        """Extract proposed date from body lines."""
+        for line in self.body_lines:
+            m = re.search(r"\*\*Proposed\*\*:\s*(\d{4}-\d{2}-\d{2})", line)
+            if m:
+                try:
+                    return datetime.strptime(m.group(1), "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                except ValueError:
+                    return None
+        return None
+
+    def is_stale(self, stale_days: int, now: datetime | None = None) -> bool:
+        """An untested hypothesis is stale if it was proposed more than stale_days ago."""
+        latest = self.latest_status()
+        if not latest or latest[1] != "untested":
+            return False
+        proposed = self.proposed_date()
+        if not proposed:
+            return False
+        if now is None:
+            now = datetime.now(timezone.utc)
+        return (now - proposed).days > stale_days
 
 
 def parse_hypotheses(path: Path) -> tuple[list[Hypothesis], list[str]]:
@@ -138,21 +161,25 @@ def build_index(hypotheses: list[Hypothesis]) -> list[str]:
     return lines
 
 
-def archive_hypotheses(archive_path: Path, to_archive: list[Hypothesis]) -> None:
+def archive_hypotheses(archive_path: Path, to_archive: list[Hypothesis],
+                       final_statuses: dict[str, str] | None = None) -> None:
     """Append archived hypotheses to hypotheses-archive.md."""
     lines: list[str] = []
     if not archive_path.exists():
         lines.append("# Hypotheses Archive\n")
-        lines.append("> Confirmed, rejected, and superseded hypotheses. "
+        lines.append("> Confirmed, rejected, superseded, and abandoned hypotheses. "
                      "Moved here by hypothesis-backlog-curator.py.\n")
 
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     for h in to_archive:
         lines.append(f"\n---\n\n## {h.hid}: {h.title}")
         lines.append(f"**Archived**: {now}")
-        latest = h.latest_status()
-        if latest:
-            lines.append(f"**Final Status**: {latest[1]} (from {latest[0]})")
+        if final_statuses and h.hid in final_statuses:
+            lines.append(f"**Final Status**: {final_statuses[h.hid]}")
+        else:
+            latest = h.latest_status()
+            if latest:
+                lines.append(f"**Final Status**: {latest[1]} (from {latest[0]})")
         for body_line in h.body_lines:
             lines.append(body_line)
 
@@ -198,6 +225,8 @@ def rebuild_hypotheses_file(preamble: list[str], remaining: list[Hypothesis]) ->
 def main() -> int:
     parser = argparse.ArgumentParser(description="Hypothesis Backlog Curator")
     parser.add_argument("--dry-run", action="store_true", help="Preview changes without writing")
+    parser.add_argument("--stale-days", type=int, default=21,
+                        help="Archive untested hypotheses older than this many days (default: 21)")
     parser.add_argument("--hypotheses", help="Path to hypotheses.md")
     parser.add_argument("--archive", help="Path to hypotheses-archive.md")
     args = parser.parse_args()
@@ -205,18 +234,32 @@ def main() -> int:
     hyp_path = Path(args.hypotheses) if args.hypotheses else HYPOTHESES
     archive_path = Path(args.archive) if args.archive else ARCHIVE
 
+    now = datetime.now(timezone.utc)
     hypotheses, preamble = parse_hypotheses(hyp_path)
 
-    to_archive = [h for h in hypotheses if h.is_closed()]
-    remaining = [h for h in hypotheses if not h.is_closed()]
+    # Identify naturally closed hypotheses and stale untested ones
+    closed = [h for h in hypotheses if h.is_closed()]
+    stale = [h for h in hypotheses if h.is_stale(args.stale_days, now)]
+
+    to_archive = []
+    seen = set()
+    for h in closed + stale:
+        if h.hid not in seen:
+            to_archive.append(h)
+            seen.add(h.hid)
+
+    remaining = [h for h in hypotheses if h.hid not in seen]
 
     untested_count = sum(
         1 for h in remaining
         if h.latest_status() and h.latest_status()[1] == "untested"
     )
 
+    stale_count = len(stale)
+
     print(f"Total hypotheses: {len(hypotheses)}")
-    print(f"To archive (confirmed/rejected/superseded): {len(to_archive)}")
+    print(f"To archive (confirmed/rejected/superseded): {len(closed)}")
+    print(f"To archive (stale untested > {args.stale_days} days): {stale_count}")
     print(f"Remaining: {len(remaining)}")
     print(f"  - Untested: {untested_count}")
     print(f"  - Testing/monitor/partially confirmed: {len(remaining) - untested_count}")
@@ -225,7 +268,8 @@ def main() -> int:
         print("\nArchiving:")
         for h in to_archive:
             latest = h.latest_status()
-            print(f"  {h.hid}: {latest[1] if latest else 'unknown'}")
+            reason = "abandoned" if h.is_stale(args.stale_days, now) else (latest[1] if latest else "unknown")
+            print(f"  {h.hid}: {reason}")
 
     if args.dry_run:
         print("\n[Dry run — no files modified]")
@@ -233,7 +277,11 @@ def main() -> int:
 
     # Write archive
     if to_archive:
-        archive_hypotheses(archive_path, to_archive)
+        final_statuses = {
+            h.hid: "abandoned"
+            for h in stale
+        }
+        archive_hypotheses(archive_path, to_archive, final_statuses)
         print(f"\nAppended {len(to_archive)} hypotheses to {archive_path}")
 
     # Write cleaned hypotheses.md

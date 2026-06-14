@@ -23,18 +23,20 @@
 | H152 | untested |
 | H202 | tested |
 | H217 | partially |
+| H217-UPDATE | partially |
 | H401 | testing |
 | H402 | testing |
 | H403 | testing |
 | H404 | testing |
 | H405 | testing |
 | H406 | testing |
-| H500 | partially confirmed |
-| H502 | partially confirmed |
-| H503 | tested — not confirmed |
-| H504 | tested — not confirmed |
-| H[N+3] | untested |
-| H[N+4] | untested |
+| H500 | partially |
+| H502 | partially |
+| H503 | tested |
+| H504 | tested |
+---
+
+
 ---
 
 
@@ -68,6 +70,9 @@
 
 ---
 
+
+---
+
 ## H152: Pre-build environment smoke tests would catch package incompatibilities before code writing begins
 
 **Status**: untested
@@ -77,6 +82,9 @@
 **Experiment**: At Phase 0 self-test, add a step: "Run `python -c 'import strawberry; import pydantic'` and verify it succeeds." Run next build on the same environment.
 **Expected**: Environment incompatibility detected at Phase 0, build halted or environment fixed before Phase 1.
 **Tested by**: —
+
+---
+
 
 ---
 
@@ -102,56 +110,6 @@
 
 ---
 
-
----
-
-
----
-
-
----
-
-## H[N+3]: Native YAML custom subagents (via --agent-file) would improve agent consistency vs markdown prompts
-
-**Status**: untested
-**Proposed**: 2026-05-22
-**Rationale**: Currently, custom agents (`vsm_architect`, `vsm_auditor`, etc.) are defined as markdown prompt files spawned via the `Agent` tool using built-in `subagent_type` values (`coder`, `explore`, `plan`). Kimi CLI supports native custom subagent definitions in YAML agent files with `--agent-file`, including tool restrictions (`exclude_tools`), inheritance (`extend`), and template variables (`system_prompt_args`). This could reduce prompt drift, enforce tool boundaries at the CLI level, and simplify maintenance. However, this requires session-level agent configuration, making it incompatible with the current skill-loading model (`extra_skill_dirs`). This hypothesis is **low priority** — only test if prompt drift or tool misuse becomes a measurable problem in fitness builds.
-**Source**: CLI docs exploration
-**Experiment**:
-  1. Create `vsm-agent.yaml` defining all custom subagents with tool restrictions and inheritance
-  2. Start session with `kimi --agent-file vsm-agent.yaml`
-  3. Run 5 fitness builds with the YAML agent configuration
-  4. Run 5 fitness builds with the current markdown prompt approach
-  5. Compare: agent tool misuse rates, prompt consistency, build quality scores
-**Expected**: YAML approach shows measurable reduction in agent tool misuse (e.g., auditor writing files, architect coding) and more consistent outputs. If no difference → markdown approach is sufficient; close hypothesis.
-**Result**: NOT CONFIRMED — Both STOP and no-STOP cohorts terminated cleanly after tests passed. No post-pass refinements observed. However, agent prompt contamination (FB35-2 in base prompt template) prevented clean manipulation of the independent variable. Experiment inconclusive.
-**Tested by**: E26
-
----
-
-
----
-
-
----
-
-
----
-
-## H[N+4]: A full product swarm (product + UX + research agents) would improve outcomes for problem-oriented prompts
-
-**Status**: untested
-**Proposed**: 2026-05-22
-**Rationale**: The current skill handles prescriptive prompts well ("build X with Y") but has no product discovery phase for problem-oriented prompts ("users need Z"). A full product swarm with `vsm_product`, `vsm_ux`, and `vsm_researcher` agents could define user stories, acceptance criteria, and success metrics before architecture begins. The fitness builds have not yet tested whether problem-oriented inputs produce higher defect rates.
-**Source**: Design discussion
-**Experiment**:
-  1. Collect 10 problem-oriented prompts
-  2. Run with current skill — measure: does output match actual user need? Are acceptance criteria clear?
-  3. Run with lightweight `vsm_product` agent (product brief + user stories only)
-  4. Compare: does product agent reduce rework, improve user-facing outcomes?
-**Expected**: Product-aware builds show 20%+ reduction in "wrong feature built" or "missing acceptance criteria" gaps in fitness reports
-**Result**: [to be filled]
-**Tested by**: [experiment ID or session]
 
 ---
 
@@ -188,6 +146,9 @@
 
 ---
 
+
+---
+
 ## H401: Tool-Enforced GraphQL Stub Detection Prevents Stub Mutations Reaching Phase 6
 
 **Status**: testing
@@ -198,6 +159,9 @@
 **Expected**: Zero stub mutations reach the implementation audit; Phase 3c coordinator blocks on the gate instead of documenting parity gaps later.
 **Result**: [to be filled]
 **Tested by**: [experiment ID or session]
+
+---
+
 
 ---
 
@@ -220,6 +184,9 @@
 
 ---
 
+
+---
+
 ## H403: Security Agent Frontend Source Scan Catches Persisted JWT and Fallback URIs
 
 **Status**: testing
@@ -230,6 +197,9 @@
 **Expected**: ≥1 MEDIUM finding per build that persists JWT in `localStorage` or bakes localhost fallbacks.
 **Result**: [to be filled]
 **Tested by**: [experiment ID or session]
+
+---
+
 
 ---
 
@@ -252,6 +222,9 @@
 
 ---
 
+
+---
+
 ## H405: Session-End Mutation-State Backfill Ensures All Probation Mutations Are Scored
 
 **Status**: testing
@@ -262,6 +235,9 @@
 **Expected**: 100% of probation/monitor mutations linked to a completed build have `Builds Tested ≥ 1` and a numeric score before S5 declares Phase 8 complete.
 **Result**: **PARTIALLY CONFIRMED** — Score backfill implemented and tested in S5 iteration R78. `auto-mutation-lifecycle.py` now parses scores from evidence (e.g., "Score: 5") and writes them to `mutation-state.md` only when the score column is `—`. Existing scores are preserved. Automation suite has 3 tests covering dry-run, real-run, and existing-score preservation. Awaiting validation in a real fitness build where `mutations-applied.md` contains scored evidence.
 **Tested by**: S5 Iteration R78
+
+---
+
 
 ---
 
@@ -282,6 +258,9 @@
 
 ---
 
+
+---
+
 ## H500: Background Agent Session Isolation Causes CWD Drift
 
 **Status**: partially confirmed
@@ -292,6 +271,9 @@
 **Expected**: Relative paths write to agent session directory; absolute paths write to correct location.
 **Result**: Relative paths resolved to orchestrator cwd (`/Users/mj/vsm`), not the intended experiment directory. Absolute paths were 100% accurate. A distinct "agent session directory" was not observed in this test configuration, but the non-determinism of relative paths is confirmed. FB35-1 (absolute path requirement) is supported.
 **Tested by**: E24
+
+---
+
 
 ---
 
@@ -308,11 +290,17 @@
 
 ---
 
+
+---
+
 ## H217-UPDATE: Agent Task Sizing Reduces but Does Not Eliminate Timeouts
 
 **Status**: partially confirmed
 **Tested by**: FB35
 **Result**: Architect 4-spawn split (FB31-1) produced zero timeouts in FB34 but 3/4 timeouts in FB35. Code agents (models, auth) completed without timeout. Task sizing helps but is insufficient when agents enter post-write verification loops. H217 needs to be paired with H502 (termination rule) to be fully effective.
+
+---
+
 
 ---
 
@@ -335,6 +323,9 @@ same task.
 **Expected**: High-context agent hangs; fresh-context agent terminates cleanly.
 **Result**: NOT CONFIRMED — Agent with 8-file read load and 14 tool calls terminated cleanly in 60s. Context pressure threshold (hypothesized 50+ tool calls) not reached. Experiment inconclusive.
 **Tested by**: E25
+
+---
+
 
 ---
 

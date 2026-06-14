@@ -790,3 +790,68 @@ Verification failures alone — regardless of complexity or skill coverage — d
 **Source**: Fitness build FB35, Phase 1/2/3
 **Experiment**: Spawn background agents with deliberate Shell verification failures. Measure termination vs looping.
 **Expected**: Default prompt → agent loops indefinitely. Modified prompt → agent terminates after 3 attempts.
+
+---
+
+## H[N+3]: Native YAML custom subagents (via --agent-file) would improve agent consistency vs markdown prompts
+**Archived**: 2026-06-14 17:58 UTC
+**Final Status**: abandoned (stale untested >21 days)
+## H[N+3]: Native YAML custom subagents (via --agent-file) would improve agent consistency vs markdown prompts
+
+**Status**: untested
+**Proposed**: 2026-05-22
+**Rationale**: Currently, custom agents (`vsm_architect`, `vsm_auditor`, etc.) are defined as markdown prompt files spawned via the `Agent` tool using built-in `subagent_type` values (`coder`, `explore`, `plan`). Kimi CLI supports native custom subagent definitions in YAML agent files with `--agent-file`, including tool restrictions (`exclude_tools`), inheritance (`extend`), and template variables (`system_prompt_args`). This could reduce prompt drift, enforce tool boundaries at the CLI level, and simplify maintenance. However, this requires session-level agent configuration, making it incompatible with the current skill-loading model (`extra_skill_dirs`). This hypothesis is **low priority** — only test if prompt drift or tool misuse becomes a measurable problem in fitness builds.
+**Source**: CLI docs exploration
+**Experiment**:
+  1. Create `vsm-agent.yaml` defining all custom subagents with tool restrictions and inheritance
+  2. Start session with `kimi --agent-file vsm-agent.yaml`
+  3. Run 5 fitness builds with the YAML agent configuration
+  4. Run 5 fitness builds with the current markdown prompt approach
+  5. Compare: agent tool misuse rates, prompt consistency, build quality scores
+**Expected**: YAML approach shows measurable reduction in agent tool misuse (e.g., auditor writing files, architect coding) and more consistent outputs. If no difference → markdown approach is sufficient; close hypothesis.
+**Result**: NOT CONFIRMED — Both STOP and no-STOP cohorts terminated cleanly after tests passed. No post-pass refinements observed. However, agent prompt contamination (FB35-2 in base prompt template) prevented clean manipulation of the independent variable. Experiment inconclusive.
+**Tested by**: E26
+
+---
+
+
+---
+
+
+---
+
+
+---
+
+
+---
+
+## H[N+4]: A full product swarm (product + UX + research agents) would improve outcomes for problem-oriented prompts
+**Archived**: 2026-06-14 17:58 UTC
+**Final Status**: abandoned (stale untested >21 days)
+## H[N+4]: A full product swarm (product + UX + research agents) would improve outcomes for problem-oriented prompts
+
+**Status**: untested
+**Proposed**: 2026-05-22
+**Rationale**: The current skill handles prescriptive prompts well ("build X with Y") but has no product discovery phase for problem-oriented prompts ("users need Z"). A full product swarm with `vsm_product`, `vsm_ux`, and `vsm_researcher` agents could define user stories, acceptance criteria, and success metrics before architecture begins. The fitness builds have not yet tested whether problem-oriented inputs produce higher defect rates.
+**Source**: Design discussion
+**Experiment**:
+  1. Collect 10 problem-oriented prompts
+  2. Run with current skill — measure: does output match actual user need? Are acceptance criteria clear?
+  3. Run with lightweight `vsm_product` agent (product brief + user stories only)
+  4. Compare: does product agent reduce rework, improve user-facing outcomes?
+**Expected**: Product-aware builds show 20%+ reduction in "wrong feature built" or "missing acceptance criteria" gaps in fitness reports
+**Result**: [to be filled]
+**Tested by**: [experiment ID or session]
+
+---
+
+
+---
+
+
+---
+
+
+---
+

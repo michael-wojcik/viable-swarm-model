@@ -7797,6 +7797,79 @@ else
     fail "eligible S5 mutations not yet historical: $ELIGIBLE"
 fi
 
+# ============================================================================
+# Test 216: hypothesis-backlog-curator.py archives stale untested hypotheses
+# ============================================================================
+
+echo -n "TEST: hypothesis-backlog-curator.py archives untested hypotheses older than stale-days threshold ... "
+
+mkdir -p "$TMPDIR/build216"
+cat > "$TMPDIR/build216/hypotheses.md" << 'EOF'
+# Hypothesis Backlog
+
+## Index
+
+| Hypothesis | Status |
+|---|---|
+| H_FRESH | untested |
+| H_STALE | untested |
+
+---
+
+## H_FRESH: Fresh hypothesis
+
+**Status**: untested
+**Proposed**: 2026-06-14
+**Rationale**: Just proposed.
+
+---
+
+## H_STALE: Stale hypothesis
+
+**Status**: untested
+**Proposed**: 2026-05-01
+**Rationale**: Old and untested.
+
+---
+EOF
+
+"$PYTHON3" "$SCRIPT_DIR/../scripts/hypothesis-backlog-curator.py" \
+    --hypotheses "$TMPDIR/build216/hypotheses.md" \
+    --archive "$TMPDIR/build216/archive.md" \
+    --stale-days 21 >/dev/null 2>&1
+
+RC=0
+if [ ! -f "$TMPDIR/build216/archive.md" ]; then
+    RC=1
+elif ! grep -q "H_STALE" "$TMPDIR/build216/archive.md"; then
+    RC=1
+elif grep -q "H_STALE" "$TMPDIR/build216/hypotheses.md"; then
+    RC=1
+elif ! grep -q "H_FRESH" "$TMPDIR/build216/hypotheses.md"; then
+    RC=1
+fi
+
+if [ "$RC" -eq 0 ]; then
+    pass
+else
+    fail "curator did not correctly archive H_STALE and keep H_FRESH"
+fi
+
+# ============================================================================
+# Test 217: no stale untested hypotheses remain in real backlog
+# ============================================================================
+
+echo -n "TEST: no untested hypotheses older than 21 days remain in hypotheses.md ... "
+
+STALE_OUTPUT=$("$PYTHON3" "$SCRIPT_DIR/../scripts/hypothesis-backlog-curator.py" --dry-run --stale-days 21 2>&1)
+STALE_COUNT=$(echo "$STALE_OUTPUT" | grep -E '^To archive \(stale untested' | awk '{print $NF}')
+
+if [ "$STALE_COUNT" = "0" ]; then
+    pass
+else
+    fail "curator reports $STALE_COUNT stale untested hypotheses still in backlog"
+fi
+
 echo ""
 echo "========================================"
 echo "Results: $PASSED passed, $FAILED failed"

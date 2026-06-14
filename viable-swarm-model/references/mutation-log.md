@@ -5736,3 +5736,19 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 **Measured effect**: **TESTED** — Test 215 scans the S5 iteration section and fails if any effective mutation has `builds_tested >= 5` and `score = 5`. Full automation suite: **230 passed, 0 failed**. R84 and R85 were promoted to historical during this iteration, dropping active mutations from 60 to 58 and restoring headroom below the <60 target.
 
 ---
+
+## Mutation R88 — 2026-06-14
+
+**Session**: S5 Orchestrator Iteration R88
+**Files**: `scripts/hypothesis-backlog-curator.py`, `hooks/test-automation.sh`, `references/hypotheses.md`, `references/hypotheses-archive.md`
+**Type**: refinement
+**Rationale**: System 4 (Adaptation/Intelligence) / S4→S4 channel — The hypothesis backlog contained hypotheses that had been `untested` for 23+ days (H[N+3], H[N+4]) with no scheduled experiment. The existing `hypothesis-backlog-curator.py` only archived `confirmed`/`rejected`/`superseded` hypotheses, leaving stale untested entries to accumulate indefinitely. This degraded the backlog's signal-to-noise ratio and consumed S5 attention during Phase 0 self-model reads.
+
+**Expected effect**:
+- `scripts/hypothesis-backlog-curator.py`: Gains `--stale-days` option (default 21) that archives `untested` hypotheses proposed longer than the threshold, marking them as `abandoned`.
+- `hooks/test-automation.sh`: Tests 216 and 217 verify the stale archival behavior and ensure no stale untested hypotheses remain in the real backlog.
+- Backlog stays fresh; only actionable hypotheses remain in `hypotheses.md`.
+
+**Measured effect**: **TESTED** — Tests 216 and 217 verify `--stale-days` archival and confirm zero stale untested hypotheses remain. Full automation suite: **232 passed, 0 failed**. H[N+3] and H[N+4] archived as abandoned; hypotheses.md reduced from 17 to 15 active backlog entries.
+
+---

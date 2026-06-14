@@ -3118,3 +3118,43 @@ S5 iterations R65 through R73 were executed on 2026-06-07 without individual bui
 
 ### Next Highest-Leverage Constraint
 **System 4 (Adaptation/Intelligence) / S4→S4 channel — 4 untested hypotheses remain stale** (H104, H152, H[N+3], H[N+4]) and meta-system agents still have 0% empirical exercise rate. With internal infrastructure now exceptionally solid (230 tests passing, active mutation count back below target, historical promotions hard-gated), the S5 iteration loop has reached a natural plateau. The organism is ready for external validation: a real fitness build or targeted gym batch is the most valuable next step. No further high-impact internal infrastructure constraints are visible.
+
+---
+---
+
+## 2026-06-14 — S5 Orchestrator Iteration (R88)
+
+### Diagnosed Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — stale untested hypotheses accumulated in the backlog**: `hypotheses.md` contained hypotheses (H[N+3], H[N+4]) that had been `untested` for 23+ days with no scheduled experiment. The existing `hypothesis-backlog-curator.py` only archived `confirmed`/`rejected`/`superseded` hypotheses, so stale untested entries persisted indefinitely, degrading backlog signal-to-noise.
+
+### Change Made
+**Refinement mutation R88**: Extended `scripts/hypothesis-backlog-curator.py` to archive untested hypotheses older than a configurable threshold.
+- Added `--stale-days` option (default 21) that identifies `untested` hypotheses whose `**Proposed**` date exceeds the threshold.
+- Stale untested hypotheses are archived to `hypotheses-archive.md` with final status `abandoned`.
+- Ran the curator, archiving H[N+3] and H[N+4].
+- Added Tests 216 and 217 to `hooks/test-automation.sh`:
+  - Test 216 verifies the curator archives a stale untested hypothesis and keeps a fresh one.
+  - Test 217 runs a dry-run on the real `hypotheses.md` and fails if any stale untested hypotheses remain.
+- Added R88 row/log entry and promoted it to `effective` after suite validation.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **232 passed, 0 failed** (was 230 passed, 0 failed)
+- Test 216: curator archives stale untested hypotheses → PASS
+- Test 217: no stale untested hypotheses remain in backlog → PASS
+- `validate-mutation-state.sh`: ✅ PASS
+- `mutation-portfolio-health.py`: active=59, historical=80, effective=59, probationary=0
+
+### Files Modified
+- `viable-swarm-model/scripts/hypothesis-backlog-curator.py`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/hypotheses.md`
+- `viable-swarm-model/references/hypotheses-archive.md`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — 2 untested hypotheses (H104, H152) will cross the 21-day stale threshold within 24 hours**, and H401-H406 remain in `testing` status awaiting real fitness builds. With internal infrastructure exceptionally solid (232 tests passing, active mutations at 59/60, stale backlog hard-gated), the organism is ready for external validation. The most valuable next step is either a real fitness build to test H401-H406 or a targeted gym experiment for H104/H152 before they go stale.

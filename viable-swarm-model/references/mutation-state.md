@@ -171,9 +171,9 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 58 | < 60 | ✅ Within target |
+| Active mutations | 59 | < 60 | ✅ Within target |
 | Historical effective (≥5 builds) | 80 | >15% of active | ✅ 134% |
-| Effective (<5 builds, monitored) | 58 | >30% of active | ✅ 100% |
+| Effective (<5 builds, monitored) | 59 | >30% of active | ✅ 100% |
 | Probationary mutations | 0 | <20 at any time | ✅ 0 (within target) |
 | Removed / redesigned | 24 | ≥2 per 5 builds | ✅ 24 (exceeds target) |
 | Measured effect fill rate (scored) | 95.1% | ≥80% | ✅ 95.0% |
@@ -384,6 +384,7 @@
 | **S5 ITERATION MUTATIONS (2026-06-08)** |
 | R86 | 2026-06-14 S5 | structural | Resolve Python interpreter once in test-automation.sh/session-end.sh/update-mutation-state.sh to avoid pyenv shim overhead; rewrite validate-mutation-state.sh in Python; fix date/mtime-dependent tests | effective | 4 | 5 | — | — | S5 iter |
 | R87 | 2026-06-14 S5 | structural | Hard gate test enforcing S5 iteration historical promotion eligibility (builds_tested >= 5, score 5) | effective | 1 | 5 | — | — | S5 iter |
+| R88 | 2026-06-14 S5 | refinement | hypothesis-backlog-curator.py stale untested archival (>21 days) + Tests 216-217 | effective | 1 | 5 | — | — | S5 iter |
 
 | **FB34 CLOSEOUT MUTATIONS (Proposed during Phase 8b, await implementation/measurement)** |
 | FB34-C1 | FB34 Phase 8b | structural | Tool-enforced integration hard-gates script (consolidates FB31-5, FB34-1, FB34-2, FB34-3) | effective | 1 | 5 | H401, H405 | — | S5 iter |
