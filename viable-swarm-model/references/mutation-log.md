@@ -5752,3 +5752,20 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 **Measured effect**: **TESTED** — Tests 216 and 217 verify `--stale-days` archival and confirm zero stale untested hypotheses remain. Full automation suite: **232 passed, 0 failed**. H[N+3] and H[N+4] archived as abandoned; hypotheses.md reduced from 17 to 15 active backlog entries.
 
 ---
+
+## Mutation R89 — 2026-06-14
+
+**Session**: S5 Orchestrator Iteration R89
+**Files**: `scripts/check-graphql-stubs.py` (new), `hooks/test-automation.sh`, `references/mutation-state.md`, `references/hypotheses.md`
+**Type**: structural
+**Rationale**: System 3 (Audit/Control) / S3→S1 channel — Fitness build FB34 produced six GraphQL mutations that returned `INTERNAL_ERROR` stubs yet reached Phase 6. H401 hypothesizes that a tool-enforced stub detector invoked in Phase 3c/Phase 6 would block these stubs before they reach the implementation audit. No such tool existed; the only guard was a prompt-only checklist (FB34-1) that was ineffective and removed.
+
+**Expected effect**:
+- `scripts/check-graphql-stubs.py`: AST-based scanner detects `@strawberry.mutation`/`@strawberry.field` resolvers whose bodies are `pass`, `raise`, or return `INTERNAL_ERROR`/`NotImplemented` placeholders.
+- The script exits non-zero and prints the file/class/method location of each stub, making it suitable as a hard gate in Phase 3c/Phase 6.
+- `hooks/test-automation.sh`: Tests 218 and 219 verify stub detection and clean-resolver passing; syntax check ensures the script compiles.
+- H401 status updated to reflect the tool is implemented and awaiting validation in the next GraphQL-enabled build.
+
+**Measured effect**: **TESTED** — Tests 218 and 219 verify stub detection and clean-resolver passing; syntax check ensures the script compiles. Full automation suite: **235 passed, 0 failed**. H401 updated to reflect tool implementation; awaiting validation in next GraphQL-enabled build.
+
+---

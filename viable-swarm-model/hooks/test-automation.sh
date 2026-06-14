@@ -63,7 +63,7 @@ for script in update-mutation-state.sh validate-mutation-state.sh auto-broker-up
     check_syntax "$script" "$SCRIPT_DIR/$script" "bash -n"
 done
 
-for pyscript in auto-gym-trigger.py mutation-predictor.py skill-effectiveness-tracker.py integration-hard-gates.py; do
+for pyscript in auto-gym-trigger.py mutation-predictor.py skill-effectiveness-tracker.py integration-hard-gates.py check-graphql-stubs.py; do
     check_syntax "$pyscript" "$SCRIPT_DIR/../scripts/$pyscript" "$PYTHON3 -m py_compile"
 done
 
@@ -7869,6 +7869,84 @@ if [ "$STALE_COUNT" = "0" ]; then
 else
     fail "curator reports $STALE_COUNT stale untested hypotheses still in backlog"
 fi
+
+# ============================================================================
+# Test 218: check-graphql-stubs.py detects stub resolvers
+# ============================================================================
+
+echo -n "TEST: check-graphql-stubs.py detects Strawberry GraphQL stub resolvers ... "
+
+mkdir -p "$TMPDIR/build218"
+cat > "$TMPDIR/build218/graphql_schema.py" << 'EOF'
+import strawberry
+
+@strawberry.type
+class Query:
+    @strawberry.field
+    def hello(self) -> str:
+        return "world"
+
+@strawberry.type
+class Mutation:
+    @strawberry.mutation
+    def create_user(self) -> str:
+        pass
+
+    @strawberry.mutation
+    def update_user(self) -> str:
+        raise NotImplementedError
+
+    @strawberry.mutation
+    def delete_user(self) -> str:
+        return "INTERNAL_ERROR"
+EOF
+
+OUTPUT=$("$PYTHON3" "$SCRIPT_DIR/../scripts/check-graphql-stubs.py" "$TMPDIR/build218" 2>&1) || RC=$?
+if [ "${RC:-0}" -ne 1 ]; then
+    fail "expected exit 1 for stub resolvers, got ${RC:-0}; output: $OUTPUT"
+fi
+if ! echo "$OUTPUT" | grep -q "create_user"; then
+    fail "did not detect create_user stub; output: $OUTPUT"
+fi
+if ! echo "$OUTPUT" | grep -q "update_user"; then
+    fail "did not detect update_user stub; output: $OUTPUT"
+fi
+if ! echo "$OUTPUT" | grep -q "delete_user"; then
+    fail "did not detect delete_user stub; output: $OUTPUT"
+fi
+pass
+
+# ============================================================================
+# Test 219: check-graphql-stubs.py passes clean resolvers
+# ============================================================================
+
+echo -n "TEST: check-graphql-stubs.py passes non-stub resolvers ... "
+
+mkdir -p "$TMPDIR/build219"
+cat > "$TMPDIR/build219/graphql_schema.py" << 'EOF'
+import strawberry
+
+@strawberry.type
+class Mutation:
+    @strawberry.mutation
+    def create_user(self) -> str:
+        return "created"
+
+    @strawberry.mutation
+    async def update_user(self) -> str:
+        user = await self.fetch_user()
+        return user.name
+EOF
+
+OUTPUT=$("$PYTHON3" "$SCRIPT_DIR/../scripts/check-graphql-stubs.py" "$TMPDIR/build219" 2>&1)
+RC=$?
+if [ "$RC" -ne 0 ]; then
+    fail "expected exit 0 for clean resolvers, got $RC; output: $OUTPUT"
+fi
+if ! echo "$OUTPUT" | grep -q "OK"; then
+    fail "did not report OK for clean resolvers; output: $OUTPUT"
+fi
+pass
 
 echo ""
 echo "========================================"

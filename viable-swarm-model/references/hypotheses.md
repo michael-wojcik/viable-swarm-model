@@ -157,8 +157,8 @@
 **Source**: Fitness build FB34, Phase 6 implementation audit
 **Experiment**: Add a `scripts/check-graphql-stubs.py` hard gate invoked in Phase 3c and Phase 6. It introspects the Strawberry schema and fails if any `@strawberry.mutation` body contains only `pass`, `raise`, or returns a hard-coded `INTERNAL_ERROR` / `NotImplemented` payload. Run the next GraphQL-enabled build with the gate enabled.
 **Expected**: Zero stub mutations reach the implementation audit; Phase 3c coordinator blocks on the gate instead of documenting parity gaps later.
-**Result**: [to be filled]
-**Tested by**: [experiment ID or session]
+**Result**: Tool implemented in R89 (`scripts/check-graphql-stubs.py`). Awaiting validation in next GraphQL-enabled build.
+**Tested by**: R89 automation suite (Tests 218-219)
 
 ---
 

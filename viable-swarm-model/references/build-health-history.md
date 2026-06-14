@@ -3158,3 +3158,41 @@ S5 iterations R65 through R73 were executed on 2026-06-07 without individual bui
 
 ### Next Highest-Leverage Constraint
 **System 4 (Adaptation/Intelligence) / S4→S4 channel — 2 untested hypotheses (H104, H152) will cross the 21-day stale threshold within 24 hours**, and H401-H406 remain in `testing` status awaiting real fitness builds. With internal infrastructure exceptionally solid (232 tests passing, active mutations at 59/60, stale backlog hard-gated), the organism is ready for external validation. The most valuable next step is either a real fitness build to test H401-H406 or a targeted gym experiment for H104/H152 before they go stale.
+
+---
+---
+
+## 2026-06-14 — S5 Orchestrator Iteration (R89)
+
+### Diagnosed Constraint
+**System 3 (Audit/Control) / S3→S1 channel — GraphQL stub mutations reached Phase 6 in FB34 with no tool-enforced detector**: Fitness build FB34 produced six GraphQL mutations returning `INTERNAL_ERROR` stubs. The only guard was a prompt-only checklist (FB34-1) that was ignored and later removed. H401 proposed a hard gate, but no script existed to implement it, leaving the S3→S1 control channel dependent on auditor vigilance.
+
+### Change Made
+**Structural mutation R89**: Implemented `scripts/check-graphql-stubs.py`, an AST-based hard gate for Strawberry GraphQL stub resolvers.
+- Detects `@strawberry.mutation`/`@strawberry.field` resolvers whose bodies are `pass`, `raise`, or return `INTERNAL_ERROR`/`NotImplemented` placeholders.
+- Prints file/class/method of each stub and exits non-zero, making it suitable for Phase 3c/Phase 6 gating.
+- Added syntax check to the automation suite loop.
+- Added Tests 218 and 219 verifying stub detection and clean-resolver passing.
+- Updated H401 in `hypotheses.md` to reflect the tool is implemented and awaiting real-build validation.
+- Added R89 row/log entry and promoted to `effective` after suite validation.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **235 passed, 0 failed** (was 232 passed, 0 failed)
+- Test 218: detects stub resolvers → PASS
+- Test 219: passes clean resolvers → PASS
+- `validate-mutation-state.sh`: ✅ PASS
+- `mutation-portfolio-health.py`: active=60, historical=80, effective=60, probationary=0
+
+### Files Modified
+- `viable-swarm-model/scripts/check-graphql-stubs.py` (new)
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/hypotheses.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 5 (Policy/Meta-learning) / S5→S1 channel — active mutation count is now 60, at the <60 target boundary**: Any new mutation will breach the target unless an existing effective mutation is promoted to historical or removed. R86 will reach `builds_tested=5` in the next S5 iteration, making it eligible for historical promotion via Test 215. Until then, further internal mutations risk target overflow. The organism should prioritize external validation (fitness build or gym experiment) to test H401/H404 and create build-derived mutations, or complete the R86→historical promotion in the next iteration before adding more S5-only mutations.
