@@ -6,6 +6,44 @@
 ---
 ---
 
+## 2026-06-14 — S5 Orchestrator Iteration (R86)
+
+### Diagnosed Constraint
+**System 3 (Audit/Control) / S3→S5 channel — test-automation.sh could not complete within the 300s foreground timeout, breaking the S5 feedback loop**: `python3` invocations routed through pyenv shims added ~7s of startup overhead each. With 50+ Python calls in the suite, the runtime exceeded 5 minutes. `validate-mutation-state.sh` compounded the problem by parsing `mutation-state.md` with bash subprocess loops, taking >120s alone.
+
+### Change Made
+**Structural + refinement mutation R86**:
+- Added a `PYTHON3` resolver to `test-automation.sh`, `session-end.sh`, and `update-mutation-state.sh` that locates the real pyenv Python binary once and reuses it.
+- Replaced all bare `python3` invocations in those scripts with `"$PYTHON3"`.
+- Rewrote `validate-mutation-state.sh` as a Python wrapper around a new `validate-mutation-state.py` implementation.
+- Fixed two timing-dependent test regressions exposed by the speedup: `stop-verifier.sh` tests now create `process-audit.md` before `meta-report.md`, and the `process-compliance-precompute.py` mock uses a current knowledge-broker date.
+- Added **Test 212**: verifies the resolved Python interpreter is executable and invokes in <2s.
+- Ran the S5 iteration counter: R84/R85 → builds_tested=3, R86 → builds_tested=2; Integration Health synced.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **228 passed, 0 failed** (completed in ~2m 9s, down from >5m timeout)
+- `bash hooks/validate-mutation-state.sh`: **PASS** in ~1.9s (down from >120s)
+- `python3 scripts/mutation-portfolio-health.py`: total_active=59, probationary=2, all actionable lists empty
+
+### Files Modified
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/hooks/session-end.sh`
+- `viable-swarm-model/hooks/update-mutation-state.sh`
+- `viable-swarm-model/hooks/validate-mutation-state.sh`
+- `viable-swarm-model/hooks/validate-mutation-state.py` (new)
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 5 (Policy/Meta-learning) / S5→S5 channel — FB35-1 and FB35-2 remain probation with 0 builds tested despite gym experiment evidence**: E24 partially confirmed H500 (FB35-1 absolute path requirement) and E24/E24-F1 partially confirmed H502 (FB35-2 termination rule). The mutation-state self-model does not yet reflect this evidence. Additionally, **System 4 (Adaptation/Intelligence) / S4→S5 channel — four genuinely untested hypotheses remain** (H104, H152, H[N+3], H[N+4]) and the knowledge-broker.md is 8+ days stale.
+
+---
+---
+
 ## 2026-06-07 — S5 Orchestrator Iteration (R83)
 
 ### Diagnosed Constraint

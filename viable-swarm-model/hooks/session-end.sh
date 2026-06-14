@@ -7,6 +7,15 @@
 
 set -euo pipefail
 
+# Resolve the real Python interpreter once to avoid pyenv shim overhead.
+if [ -z "${PYTHON3:-}" ]; then
+    if command -v pyenv >/dev/null 2>&1; then
+        PYTHON3=$(pyenv which python3 2>/dev/null || command -v python3)
+    else
+        PYTHON3=$(command -v python3)
+    fi
+fi
+
 PAYLOAD=$(cat)
 SESSION_ID=$(echo "$PAYLOAD" | jq -r '.session_id // "unknown"')
 CWD=$(echo "$PAYLOAD" | jq -r '.cwd // "/tmp"')
@@ -94,7 +103,7 @@ if [[ -f "$CWD/.kimi/meta-report.md" && ! -f "$CWD/.kimi/mutation-portfolio-revi
     # Auto-generate pre-computed portfolio health so S5 has data even without curator
     PORTFOLIO_SCRIPT="$HOME/vsm/viable-swarm-model/scripts/mutation-portfolio-health.py"
     if [[ -f "$PORTFOLIO_SCRIPT" ]]; then
-        python3 "$PORTFOLIO_SCRIPT" --build-dir "$CWD" >/dev/null 2>&1 || {
+        "$PYTHON3" "$PORTFOLIO_SCRIPT" --build-dir "$CWD" >/dev/null 2>&1 || {
             echo "WARNING: mutation-portfolio-health.py failed. Portfolio metrics not pre-computed." >&2
         }
     fi
@@ -106,7 +115,7 @@ if [[ -f "$CWD/.kimi/meta-report.md" && ! -f "$CWD/.kimi/variety-assessment.md" 
     AUDIT_WARNINGS="${AUDIT_WARNINGS}- Phase 8b complete but variety-assessment.md missing. vsm_variety_engineer not spawned.\n"
     VITALS_SCRIPT="$HOME/vsm/viable-swarm-model/scripts/organism-vitals.py"
     if [[ -f "$VITALS_SCRIPT" ]]; then
-        python3 "$VITALS_SCRIPT" --build-dir "$CWD" >/dev/null 2>&1 || {
+        "$PYTHON3" "$VITALS_SCRIPT" --build-dir "$CWD" >/dev/null 2>&1 || {
             echo "WARNING: organism-vitals.py failed. Variety metrics not pre-computed." >&2
         }
     fi
@@ -118,7 +127,7 @@ if [[ -f "$CWD/.kimi/meta-report.md" && ! -f "$CWD/.kimi/process-audit.md" ]]; t
     AUDIT_WARNINGS="${AUDIT_WARNINGS}- Phase 8b complete but process-audit.md missing. vsm_process_auditor not spawned or timed out.\n"
     COMPLIANCE_SCRIPT="$HOME/vsm/viable-swarm-model/scripts/process-compliance-precompute.py"
     if [[ -f "$COMPLIANCE_SCRIPT" ]]; then
-        python3 "$COMPLIANCE_SCRIPT" "$CWD" >/dev/null 2>&1 || {
+        "$PYTHON3" "$COMPLIANCE_SCRIPT" "$CWD" >/dev/null 2>&1 || {
             echo "WARNING: process-compliance-precompute.py failed. Compliance metrics not pre-computed." >&2
         }
     fi
@@ -191,7 +200,7 @@ if [[ -f "$CWD/.kimi/meta-report.md" && ! -f "$CWD/.kimi/meta-metrics-precompute
     AUDIT_WARNINGS="${AUDIT_WARNINGS}- Phase 8b complete but meta-metrics-precomputed.md missing. vsm_meta may make false TBD claims.\n"
     META_METRICS_SCRIPT="$HOME/vsm/viable-swarm-model/scripts/meta-metrics-precompute.py"
     if [[ -f "$META_METRICS_SCRIPT" ]]; then
-        python3 "$META_METRICS_SCRIPT" --build-dir "$CWD" >/dev/null 2>&1 || {
+        "$PYTHON3" "$META_METRICS_SCRIPT" --build-dir "$CWD" >/dev/null 2>&1 || {
             echo "WARNING: meta-metrics-precompute.py failed. Meta metrics not pre-computed." >&2
         }
     fi
@@ -204,7 +213,7 @@ if [[ -f "$CWD/.kimi/meta-report.md" && ! -f "$CWD/.kimi/algedonic-action-plan.m
     AUDIT_WARNINGS="${AUDIT_WARNINGS}- Phase 8b complete but algedonic-action-plan.md missing. S5 has no structured action plan for next iteration.\n"
     ACTION_PLAN_SCRIPT="$HOME/vsm/viable-swarm-model/scripts/algedonic-action-plan.py"
     if [[ -f "$ACTION_PLAN_SCRIPT" ]]; then
-        python3 "$ACTION_PLAN_SCRIPT" --build-dir "$CWD" >/dev/null 2>&1 || {
+        "$PYTHON3" "$ACTION_PLAN_SCRIPT" --build-dir "$CWD" >/dev/null 2>&1 || {
             echo "WARNING: algedonic-action-plan.py failed. Action plan not generated." >&2
         }
     fi
@@ -217,7 +226,7 @@ fi
 AML_SCRIPT="$HOME/vsm/viable-swarm-model/hooks/auto-mutation-lifecycle.py"
 if [[ -f "$CWD/.kimi/mutations-applied.md" && -f "$AML_SCRIPT" ]]; then
     echo "Auto-updating mutation lifecycle from $CWD/.kimi/mutations-applied.md ..."
-    python3 "$AML_SCRIPT" "$CWD" >/dev/null 2>&1 || echo "Mutation lifecycle auto-update failed (non-fatal)"
+    "$PYTHON3" "$AML_SCRIPT" "$CWD" >/dev/null 2>&1 || echo "Mutation lifecycle auto-update failed (non-fatal)"
 fi
 
 # ── Integration Hard Gates (FB34-C1) ──
@@ -225,7 +234,7 @@ fi
 HARD_GATES_SCRIPT="$HOME/vsm/viable-swarm-model/scripts/integration-hard-gates.py"
 if [[ -f "$HARD_GATES_SCRIPT" && -f "$CWD/plan.md" ]]; then
     echo "Running integration hard gates ..."
-    python3 "$HARD_GATES_SCRIPT" --build-dir "$CWD" --phase 6 >/dev/null 2>&1 || {
+    "$PYTHON3" "$HARD_GATES_SCRIPT" --build-dir "$CWD" --phase 6 >/dev/null 2>&1 || {
         echo "WARNING: integration-hard-gates.py found failures. Review gate output before next build." >&2
     }
 fi
@@ -278,7 +287,7 @@ echo "$TELEMETRY_BLOCK" >> "$SESSION_TELEMETRY_FILE"
 # have accurate trend data for proactive health assessment.
 DASHBOARD_SCRIPT="$HOME/vsm/viable-swarm-model/scripts/build-health-dashboard.py"
 if [[ -f "$CWD/plan.md" && -f "$DASHBOARD_SCRIPT" ]]; then
-    python3 "$DASHBOARD_SCRIPT" "$CWD" >/dev/null 2>&1 || {
+    "$PYTHON3" "$DASHBOARD_SCRIPT" "$CWD" >/dev/null 2>&1 || {
         echo "WARNING: build-health-dashboard.py failed. Longitudinal health metrics not updated." >&2
     }
 fi
@@ -289,7 +298,7 @@ fi
 # .kimi/auto-gym-trigger.md only when thresholds are met.
 AUTO_GYM_SCRIPT="$HOME/vsm/viable-swarm-model/scripts/auto-gym-trigger.py"
 if [[ -f "$AUTO_GYM_SCRIPT" ]]; then
-    python3 "$AUTO_GYM_SCRIPT" >/dev/null 2>&1 || {
+    "$PYTHON3" "$AUTO_GYM_SCRIPT" >/dev/null 2>&1 || {
         echo "WARNING: auto-gym-trigger.py failed. S4 intelligence layer may not detect experiment needs." >&2
     }
     # If a trigger report was generated, notify S5

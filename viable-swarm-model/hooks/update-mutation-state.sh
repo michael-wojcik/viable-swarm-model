@@ -7,6 +7,15 @@
 
 set -euo pipefail
 
+# Resolve the real Python interpreter once to avoid pyenv shim overhead.
+if [ -z "${PYTHON3:-}" ]; then
+    if command -v pyenv >/dev/null 2>&1; then
+        PYTHON3=$(pyenv which python3 2>/dev/null || command -v python3)
+    else
+        PYTHON3=$(command -v python3)
+    fi
+fi
+
 BUILD_DIR="${1:-.}"
 DRY_RUN=false
 if [ "${2:-}" = "--dry-run" ]; then
@@ -86,7 +95,7 @@ while IFS= read -r line; do
             echo "  [DRY-RUN] Would update mutation-log.md: $MUTATION_ID -> '$EFFECT'"
           else
             # Use Python for precise block-scoped replacement
-            python3 -c "
+            "$PYTHON3" -c "
 import re
 with open('$MUTATION_LOG', 'r') as f:
     content = f.read()
@@ -119,7 +128,7 @@ else:
         if [ "$DRY_RUN" = true ]; then
           echo "  [DRY-RUN] Would increment Builds Tested for $MUTATION_ID in mutation-state.md"
         else
-          python3 -c "
+          "$PYTHON3" -c "
 import re
 with open('$MUTATION_STATE', 'r') as f:
     content = f.read()

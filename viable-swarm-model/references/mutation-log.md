@@ -5701,3 +5701,22 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 **Rationale**: FB35: 6 agents hung for 10-15+ minutes after completing their primary deliverables, stuck fixing minor verification failures (UUID types, CORS parsing). S5 had to manually stop each one.
 **Expected effect**: Agents terminate cleanly after primary deliverable + basic verification. No infinite loops on minor mismatches.
 **Measured effect**: [to be filled by FB36]
+
+---
+
+## Mutation R86 — 2026-06-14
+
+**Session**: S5 Orchestrator Iteration R86
+**Files**: `hooks/test-automation.sh`, `hooks/session-end.sh`, `hooks/update-mutation-state.sh`, `hooks/validate-mutation-state.sh` (new), `hooks/validate-mutation-state.py` (new), `references/mutation-state.md`
+**Type**: structural + refinement
+**Rationale**: System 3 (Audit/Control) / S3→S5 channel — `test-automation.sh` and `session-end.sh` invoked `python3` through pyenv shims, adding ~7 seconds of startup overhead per invocation. With 50+ Python calls per test run and 10+ per build closeout, the suite could not complete within the 300-second foreground timeout, breaking the S5 feedback loop. Separately, `validate-mutation-state.sh` processed `mutation-state.md` with bash while-loops spawning `awk`/`sed`/`tr`/`grep` for every row, taking >120 seconds on a 393-line file.
+
+**Expected effect**:
+- `test-automation.sh`, `session-end.sh`, and `update-mutation-state.sh` resolve the real pyenv Python binary once and reuse it for all internal Python invocations, eliminating shim overhead.
+- `validate-mutation-state.sh` becomes a thin wrapper around a new Python implementation that parses the master table in a single pass.
+- The automation suite completes in ~2 minutes instead of timing out.
+- Two timing-dependent test regressions exposed by the speedup are fixed: `stop-verifier.sh` tests now create `process-audit.md` before `meta-report.md`, and the `process-compliance-precompute.py` mock uses a current knowledge-broker date.
+
+**Measured effect**: **TESTED** — Test 212 verifies the PYTHON3 resolver uses a fast interpreter. Full automation suite: **228 passed, 0 failed** (completed in ~2m 9s, down from >5m timeout). `validate-mutation-state.sh` runs in ~1.9s (down from >120s).
+
+---

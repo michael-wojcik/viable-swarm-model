@@ -17,6 +17,19 @@ trap 'rm -rf "$TMPDIR"' EXIT
 
 export HOME="$TMPDIR"
 
+# Resolve the real Python interpreter once. Pyenv shims add ~7s of startup
+# overhead per invocation because they shell out to `pyenv exec`. With 50+
+# Python invocations in this suite, that overhead makes the suite unusably
+# slow. Resolving the real binary once eliminates that cost for every test.
+if [ -z "${PYTHON3:-}" ]; then
+    if command -v pyenv >/dev/null 2>&1; then
+        PYTHON3=$(pyenv which python3 2>/dev/null || command -v python3)
+    else
+        PYTHON3=$(command -v python3)
+    fi
+fi
+export PYTHON3
+
 # Create base directory structures used by multiple tests
 mkdir -p "$TMPDIR/vsm/viable-swarm-model/references"
 mkdir -p "$TMPDIR/vsm-fitness-builds/coach"
@@ -51,12 +64,14 @@ for script in update-mutation-state.sh validate-mutation-state.sh auto-broker-up
 done
 
 for pyscript in auto-gym-trigger.py mutation-predictor.py skill-effectiveness-tracker.py integration-hard-gates.py; do
-    check_syntax "$pyscript" "$SCRIPT_DIR/../scripts/$pyscript" "python3 -m py_compile"
+    check_syntax "$pyscript" "$SCRIPT_DIR/../scripts/$pyscript" "$PYTHON3 -m py_compile"
 done
 
-check_syntax "auto-mutation-lifecycle.py" "$SCRIPT_DIR/auto-mutation-lifecycle.py" "python3 -m py_compile"
+check_syntax "auto-mutation-lifecycle.py" "$SCRIPT_DIR/auto-mutation-lifecycle.py" "$PYTHON3 -m py_compile"
 
-check_syntax "validate-agent-files.py" "$SCRIPT_DIR/../agents/validate-agent-files.py" "python3 -m py_compile"
+check_syntax "validate-agent-files.py" "$SCRIPT_DIR/../agents/validate-agent-files.py" "$PYTHON3 -m py_compile"
+
+check_syntax "validate-mutation-state.py" "$SCRIPT_DIR/validate-mutation-state.py" "$PYTHON3 -m py_compile"
 
 # ============================================================================
 # Section: Mutation State Management
@@ -436,7 +451,7 @@ cat > "$TMPDIR/vsm/viable-swarm-model/references/knowledge-broker.md" << 'EOF'
 EOF
 
 RC=0
-python3 "$SCRIPT_DIR/../scripts/build-health-dashboard.py" "$TMPDIR/build8" >/dev/null 2>&1 || RC=$?
+"$PYTHON3" "$SCRIPT_DIR/../scripts/build-health-dashboard.py" "$TMPDIR/build8" >/dev/null 2>&1 || RC=$?
 
 if [ "$RC" -eq 0 ] && \
    [ -f "$TMPDIR/build8/.kimi/health-dashboard.md" ] && \
@@ -456,7 +471,7 @@ echo -n "TEST: build-health-dashboard.py rejects non-build directory ... "
 mkdir -p "$TMPDIR/notabuild"
 
 RC=0
-python3 "$SCRIPT_DIR/../scripts/build-health-dashboard.py" "$TMPDIR/notabuild" >/dev/null 2>&1 || RC=$?
+"$PYTHON3" "$SCRIPT_DIR/../scripts/build-health-dashboard.py" "$TMPDIR/notabuild" >/dev/null 2>&1 || RC=$?
 
 if [ "$RC" -ne 0 ]; then
     pass
@@ -485,7 +500,7 @@ cat > "$TMPDIR/build10/plan.md" << 'EOF'
 EOF
 
 RC=0
-python3 "$SCRIPT_DIR/../scripts/build-health-dashboard.py" "$TMPDIR/build10" >/dev/null 2>&1 || RC=$?
+"$PYTHON3" "$SCRIPT_DIR/../scripts/build-health-dashboard.py" "$TMPDIR/build10" >/dev/null 2>&1 || RC=$?
 
 if [ "$RC" -eq 0 ] && \
    grep -q "3.85" "$TMPDIR/build10/.kimi/health-dashboard.md"; then
@@ -526,7 +541,7 @@ cat > "$TMPDIR/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
 EOF
 
 RC=0
-python3 "$SCRIPT_DIR/../scripts/build-health-dashboard.py" "$TMPDIR/build11" >/dev/null 2>&1 || RC=$?
+"$PYTHON3" "$SCRIPT_DIR/../scripts/build-health-dashboard.py" "$TMPDIR/build11" >/dev/null 2>&1 || RC=$?
 
 if [ "$RC" -eq 0 ] && \
    grep -q "vsm_backend_coder" "$TMPDIR/build11/.kimi/health-dashboard.md" && \
@@ -579,7 +594,7 @@ cat > "$TMPDIR/FB100/plan.md" << 'EOF'
 EOF
 
 RC=0
-python3 "$SCRIPT_DIR/../scripts/build-health-dashboard.py" "$TMPDIR/FB100" >/dev/null 2>&1 || RC=$?
+"$PYTHON3" "$SCRIPT_DIR/../scripts/build-health-dashboard.py" "$TMPDIR/FB100" >/dev/null 2>&1 || RC=$?
 
 # Extract blocker count from the Build History table in the dashboard
 BLOCKER_VAL=$(grep "FB99" "$TMPDIR/FB100/.kimi/health-dashboard.md" | grep -oE '\| [0-9]+ \| [0-9]+h/[0-9]+i' | awk '{print $2}')
@@ -612,7 +627,7 @@ cat > "$TMPDIR/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
 EOF
 
 RC=0
-python3 "$SCRIPT_DIR/../scripts/build-health-dashboard.py" "$TMPDIR/build13" >/dev/null 2>&1 || RC=$?
+"$PYTHON3" "$SCRIPT_DIR/../scripts/build-health-dashboard.py" "$TMPDIR/build13" >/dev/null 2>&1 || RC=$?
 
 if [ "$RC" -eq 0 ] && \
    grep -q "Removed: 2" "$TMPDIR/build13/.kimi/health-dashboard.md"; then
@@ -645,7 +660,7 @@ cat > "$TMPDIR/build14/plan.md" << 'EOF'
 EOF
 
 RC=0
-python3 "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" --build-dir "$TMPDIR/build14" >/dev/null 2>&1 || RC=$?
+"$PYTHON3" "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" --build-dir "$TMPDIR/build14" >/dev/null 2>&1 || RC=$?
 
 if [ "$RC" -eq 0 ] && \
    [ -f "$TMPDIR/build14/.kimi/mutation-portfolio-health.json" ] && \
@@ -678,7 +693,7 @@ cat > "$TMPDIR/build15/plan.md" << 'EOF'
 EOF
 
 RC=0
-python3 "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" --build-dir "$TMPDIR/build15" >/dev/null 2>&1 || RC=$?
+"$PYTHON3" "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" --build-dir "$TMPDIR/build15" >/dev/null 2>&1 || RC=$?
 
 if [ "$RC" -eq 0 ] && \
    grep -q '"id": "T4"' "$TMPDIR/build15/.kimi/mutation-portfolio-health.json" && \
@@ -708,7 +723,7 @@ cat > "$TMPDIR/build16/plan.md" << 'EOF'
 EOF
 
 RC=0
-python3 "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" --build-dir "$TMPDIR/build16" >/dev/null 2>&1 || RC=$?
+"$PYTHON3" "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" --build-dir "$TMPDIR/build16" >/dev/null 2>&1 || RC=$?
 
 if [ "$RC" -eq 0 ] && \
    grep -q '"id": "T3"' "$TMPDIR/build16/.kimi/mutation-portfolio-health.json" && \
@@ -808,7 +823,7 @@ cat > "$TMPDIR/build18/plan.md" << 'EOF'
 EOF
 
 RC=0
-python3 "$SCRIPT_DIR/../scripts/organism-vitals.py" --build-dir "$TMPDIR/build18" >/dev/null 2>&1 || RC=$?
+"$PYTHON3" "$SCRIPT_DIR/../scripts/organism-vitals.py" --build-dir "$TMPDIR/build18" >/dev/null 2>&1 || RC=$?
 
 if [ "$RC" -eq 0 ] && \
    [ -f "$TMPDIR/build18/.kimi/organism-vitals.md" ] && \
@@ -874,7 +889,7 @@ cat > "$TMPDIR/build19/plan.md" << 'EOF'
 EOF
 
 RC=0
-python3 "$SCRIPT_DIR/../scripts/organism-vitals.py" --build-dir "$TMPDIR/build19" >/dev/null 2>&1 || RC=$?
+"$PYTHON3" "$SCRIPT_DIR/../scripts/organism-vitals.py" --build-dir "$TMPDIR/build19" >/dev/null 2>&1 || RC=$?
 
 if [ "$RC" -eq 0 ] && \
    grep -q "CRITICAL: Untested hypotheses" "$TMPDIR/build19/.kimi/organism-vitals.md" && \
@@ -988,7 +1003,7 @@ cat > "$TMPDIR/vsm/viable-swarm-model/references/knowledge-broker.md" << 'EOF'
 EOF
 
 RC=0
-python3 "$SCRIPT_DIR/../scripts/process-compliance-precompute.py" "$TMPDIR/build21" >/dev/null 2>&1 || RC=$?
+"$PYTHON3" "$SCRIPT_DIR/../scripts/process-compliance-precompute.py" "$TMPDIR/build21" >/dev/null 2>&1 || RC=$?
 
 if [ "$RC" -eq 0 ] && \
    [ -f "$TMPDIR/build21/.kimi/process-compliance-precomputed.json" ] && \
@@ -1012,7 +1027,7 @@ cat > "$TMPDIR/build22/plan.md" << 'EOF'
 EOF
 
 RC=0
-python3 "$SCRIPT_DIR/../scripts/process-compliance-precompute.py" "$TMPDIR/build22" >/dev/null 2>&1 || RC=$?
+"$PYTHON3" "$SCRIPT_DIR/../scripts/process-compliance-precompute.py" "$TMPDIR/build22" >/dev/null 2>&1 || RC=$?
 
 if [ "$RC" -eq 0 ] && \
    grep -q "HARD BLOCK" "$TMPDIR/build22/.kimi/process-compliance-precomputed.md" && \
@@ -1064,7 +1079,7 @@ fi
 echo -n "TEST: test-split-orchestrator.py splits backend domains correctly ... "
 
 RC=0
-OUTPUT=$(python3 "$SCRIPT_DIR/../scripts/test-split-orchestrator.py" \
+OUTPUT=$("$PYTHON3" "$SCRIPT_DIR/../scripts/test-split-orchestrator.py" \
     --domains "auth,courses,uploads,graphql,users,recipes,ingredients" \
     --tier 2 --backend 2>&1) || RC=$?
 
@@ -1084,7 +1099,7 @@ fi
 echo -n "TEST: test-split-orchestrator.py outputs valid frontend JSON ... "
 
 RC=0
-OUTPUT=$(python3 "$SCRIPT_DIR/../scripts/test-split-orchestrator.py" \
+OUTPUT=$("$PYTHON3" "$SCRIPT_DIR/../scripts/test-split-orchestrator.py" \
     --domains "auth,home,courses,graphql,uploads" \
     --tier 2 --frontend --json 2>&1) || RC=$?
 
@@ -1106,7 +1121,7 @@ echo -n "TEST: test-split-orchestrator.py writes plan to build dir ... "
 mkdir -p "$TMPDIR/build26/.kimi"
 
 RC=0
-python3 "$SCRIPT_DIR/../scripts/test-split-orchestrator.py" \
+"$PYTHON3" "$SCRIPT_DIR/../scripts/test-split-orchestrator.py" \
     --domains "auth,users" --tier 1 --backend --build-dir "$TMPDIR/build26" \
     >/dev/null 2>&1 || RC=$?
 
@@ -1254,7 +1269,7 @@ fi
 echo -n "TEST: integration-test-closeout.py exercises full closeout pipeline ... "
 
 RC=0
-python3 "$SCRIPT_DIR/../scripts/integration-test-closeout.py" >/dev/null 2>&1 || RC=$?
+"$PYTHON3" "$SCRIPT_DIR/../scripts/integration-test-closeout.py" >/dev/null 2>&1 || RC=$?
 
 if [ "$RC" -eq 0 ]; then
     pass
@@ -1427,7 +1442,7 @@ cat > "$TMPDIR/build34/.kimi/mutations-applied.md" << 'EOF'
 EOF
 
 RC=0
-python3 "$SCRIPT_DIR/../scripts/meta-metrics-precompute.py" --build-dir "$TMPDIR/build34" >/dev/null 2>&1 || RC=$?
+"$PYTHON3" "$SCRIPT_DIR/../scripts/meta-metrics-precompute.py" --build-dir "$TMPDIR/build34" >/dev/null 2>&1 || RC=$?
 
 if [ "$RC" -eq 0 ] && \
    [ -f "$TMPDIR/build34/.kimi/meta-metrics-precomputed.md" ] && \
@@ -1448,7 +1463,7 @@ fi
 echo -n "TEST: meta-metrics-precompute.py rejects nonexistent directory ... "
 
 RC=0
-python3 "$SCRIPT_DIR/../scripts/meta-metrics-precompute.py" --build-dir "$TMPDIR/nonexistent" >/dev/null 2>&1 || RC=$?
+"$PYTHON3" "$SCRIPT_DIR/../scripts/meta-metrics-precompute.py" --build-dir "$TMPDIR/nonexistent" >/dev/null 2>&1 || RC=$?
 
 if [ "$RC" -ne 0 ]; then
     pass
@@ -1465,7 +1480,7 @@ echo -n "TEST: meta-metrics-precompute.py handles empty .kimi directory ... "
 mkdir -p "$TMPDIR/build36/.kimi"
 
 RC=0
-python3 "$SCRIPT_DIR/../scripts/meta-metrics-precompute.py" --build-dir "$TMPDIR/build36" >/dev/null 2>&1 || RC=$?
+"$PYTHON3" "$SCRIPT_DIR/../scripts/meta-metrics-precompute.py" --build-dir "$TMPDIR/build36" >/dev/null 2>&1 || RC=$?
 
 if [ "$RC" -eq 0 ] && \
    [ -f "$TMPDIR/build36/.kimi/meta-metrics-precomputed.md" ] && \
@@ -1591,7 +1606,7 @@ cat > "$TMPDIR/mock-mutation-state.md" << 'EOF'
 EOF
 
 RC=0
-python3 "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" \
+"$PYTHON3" "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" \
   --build-dir "$TMPDIR/build40" \
   --mutation-state "$TMPDIR/mock-mutation-state.md" >/dev/null 2>&1 || RC=$?
 
@@ -1814,7 +1829,7 @@ cat > "$TMPDIR/curator-test/hypotheses.md" << 'EOF'
 **Rationale**: Test.
 EOF
 
-python3 "$SCRIPT_DIR/../scripts/hypothesis-backlog-curator.py" \
+"$PYTHON3" "$SCRIPT_DIR/../scripts/hypothesis-backlog-curator.py" \
     --hypotheses "$TMPDIR/curator-test/hypotheses.md" \
     --archive "$TMPDIR/curator-test/archive.md" 2>/dev/null
 
@@ -1879,7 +1894,7 @@ cat > "$TMPDIR/curator-test2/hypotheses.md" << 'EOF'
 **Result**: CONFIRMED.
 EOF
 
-python3 "$SCRIPT_DIR/../scripts/hypothesis-backlog-curator.py" \
+"$PYTHON3" "$SCRIPT_DIR/../scripts/hypothesis-backlog-curator.py" \
     --hypotheses "$TMPDIR/curator-test2/hypotheses.md" \
     --archive "$TMPDIR/curator-test2/archive.md" 2>/dev/null
 
@@ -1916,7 +1931,7 @@ EOF
 
 BEFORE=$(md5 -q "$TMPDIR/curator-test3/hypotheses.md")
 
-python3 "$SCRIPT_DIR/../scripts/hypothesis-backlog-curator.py" \
+"$PYTHON3" "$SCRIPT_DIR/../scripts/hypothesis-backlog-curator.py" \
     --dry-run \
     --hypotheses "$TMPDIR/curator-test3/hypotheses.md" \
     --archive "$TMPDIR/curator-test3/archive.md" 2>/dev/null
@@ -2060,7 +2075,7 @@ EOF
 
 export HOME="$TMPDIR/algedonic-test"
 VSM_SKILL_REGISTRY="$TMPDIR/algedonic-test/vsm/vsm-stack-skills/SKILL-REGISTRY.md" \
-    python3 "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" \
+    "$PYTHON3" "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" \
     --build-dir "$TMPDIR/algedonic-test" 2>/dev/null
 
 OUTPUT="$TMPDIR/algedonic-test/.kimi/algedonic-action-plan.md"
@@ -2145,7 +2160,7 @@ cat > "$TMPDIR/algedonic-test2/vsm/viable-swarm-model/references/build-health-hi
 EOF
 
 export HOME="$TMPDIR/algedonic-test2"
-python3 "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" \
+"$PYTHON3" "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" \
     --build-dir "$TMPDIR/algedonic-test2" 2>/dev/null
 
 OUTPUT="$TMPDIR/algedonic-test2/.kimi/algedonic-action-plan.md"
@@ -2673,7 +2688,7 @@ fi
 echo -n "TEST: All effective S5 iteration mutations have builds_tested >= 2 ... "
 
 TODAY=$(date +%Y-%m-%d)
-S5_MIN=$(python3 -c "
+S5_MIN=$("$PYTHON3" -c "
 import re
 with open('$MUTATION_STATE') as f:
     text = f.read()
@@ -2719,7 +2734,7 @@ fi
 
 echo -n "TEST: validate-agent-files.py exits 0 with expected warning set ... "
 
-VAF_OUTPUT=$(cd "$SCRIPT_DIR/../agents" && HOME="$REAL_HOME" python3 validate-agent-files.py 2>&1)
+VAF_OUTPUT=$(cd "$SCRIPT_DIR/../agents" && HOME="$REAL_HOME" "$PYTHON3" validate-agent-files.py 2>&1)
 VAF_RC=$?
 
 # Must exit 0
@@ -2948,7 +2963,7 @@ EOF
 mkdir -p "$TMPDIR/build56/vsm/viable-swarm-model/references"
 cat > "$TMPDIR/build56/vsm/viable-swarm-model/references/knowledge-broker.md" << 'EOF'
 # Knowledge Broker
-**Last updated**: 2026-06-05
+**Last updated**: 2026-06-14
 Content here.
 EOF
 
@@ -2964,7 +2979,7 @@ mutation-state probationary noted.
 EOF
 
 export HOME="$TMPDIR/build56"
-python3 "$SCRIPT_DIR/../scripts/process-compliance-precompute.py" "$TMPDIR/build56" >/dev/null 2>&1
+"$PYTHON3" "$SCRIPT_DIR/../scripts/process-compliance-precompute.py" "$TMPDIR/build56" >/dev/null 2>&1
 
 if [[ -f "$TMPDIR/build56/.kimi/process-compliance-precomputed.md" ]]; then
     PC_OUTPUT=$(cat "$TMPDIR/build56/.kimi/process-compliance-precomputed.md")
@@ -3096,7 +3111,7 @@ cat > "$TMPDIR/build59/.kimi/synthesis-integration.md" << 'EOF'
 Status: PASS
 EOF
 
-python3 "$SCRIPT_DIR/../scripts/meta-metrics-precompute.py" --build-dir "$TMPDIR/build59" >/dev/null 2>&1
+"$PYTHON3" "$SCRIPT_DIR/../scripts/meta-metrics-precompute.py" --build-dir "$TMPDIR/build59" >/dev/null 2>&1
 
 if [[ -f "$TMPDIR/build59/.kimi/meta-metrics-precomputed.md" ]]; then
     MM_OUTPUT=$(cat "$TMPDIR/build59/.kimi/meta-metrics-precomputed.md")
@@ -3198,7 +3213,7 @@ class Item(Base):
     __tablename__ = "items"
 EOF
 
-python3 "$SCRIPT_DIR/../scripts/test-target-map.py" "$TMPDIR/build61" >/dev/null 2>&1
+"$PYTHON3" "$SCRIPT_DIR/../scripts/test-target-map.py" "$TMPDIR/build61" >/dev/null 2>&1
 
 if [[ -f "$TMPDIR/build61/.kimi/test-target-map.md" ]]; then
     TM_OUTPUT=$(cat "$TMPDIR/build61/.kimi/test-target-map.md")
@@ -3253,7 +3268,7 @@ export async function fetchUser(id: number) {
 }
 EOF
 
-python3 "$SCRIPT_DIR/../scripts/test-target-map.py" "$TMPDIR/build62" >/dev/null 2>&1
+"$PYTHON3" "$SCRIPT_DIR/../scripts/test-target-map.py" "$TMPDIR/build62" >/dev/null 2>&1
 
 if [[ -f "$TMPDIR/build62/.kimi/test-target-map.md" ]]; then
     TM_OUTPUT=$(cat "$TMPDIR/build62/.kimi/test-target-map.md")
@@ -3349,7 +3364,7 @@ mkdir -p "$TMPDIR/build67/vsm/viable-swarm-model/references"
 # Use the real mutation-state.md (copied to temp for isolation)
 cp "$SCRIPT_DIR/../references/mutation-state.md" "$TMPDIR/build67/vsm/viable-swarm-model/references/mutation-state.md"
 
-python3 "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" \
+"$PYTHON3" "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" \
   --mutation-state "$TMPDIR/build67/vsm/viable-swarm-model/references/mutation-state.md" \
   --build-dir "$TMPDIR/build67" >/dev/null 2>&1
 
@@ -3400,7 +3415,7 @@ cat > "$TMPDIR/build68/vsm/viable-swarm-model/references/build-health-history.md
 - Score: 4.0/5.0
 EOF
 
-python3 "$SCRIPT_DIR/../scripts/organism-vitals.py" --build-dir "$TMPDIR/build68" >/dev/null 2>&1
+"$PYTHON3" "$SCRIPT_DIR/../scripts/organism-vitals.py" --build-dir "$TMPDIR/build68" >/dev/null 2>&1
 
 if [[ -f "$TMPDIR/build68/.kimi/organism-vitals.md" ]]; then
     OV_OUTPUT=$(cat "$TMPDIR/build68/.kimi/organism-vitals.md")
@@ -3578,6 +3593,11 @@ cat > "$TMPDIR/build71/.kimi/mutations-applied.md" << 'EOF'
 **Effectiveness**: 5/5
 EOF
 
+cat > "$TMPDIR/build71/.kimi/process-audit.md" << 'EOF'
+# Process Audit
+Score: 85/100
+EOF
+
 cat > "$TMPDIR/build71/.kimi/meta-report.md" << 'EOF'
 # Meta Report
 Score: 4.0/5.0
@@ -3617,11 +3637,6 @@ No critical signals.
 1. Continue monitoring.
 EOF
 
-cat > "$TMPDIR/build71/.kimi/process-audit.md" << 'EOF'
-# Process Audit
-Score: 85/100
-EOF
-
 export HOME="$TMPDIR/build71"
 
 PAYLOAD='{"session_id":"test-session-71","cwd":"'$TMPDIR/build71'","reason":"stop","stop_hook_active":false}'
@@ -3658,6 +3673,11 @@ cat > "$TMPDIR/build72/.kimi/mutations-applied.md" << 'EOF'
 **Effectiveness**: 5/5
 EOF
 
+cat > "$TMPDIR/build72/.kimi/process-audit.md" << 'EOF'
+# Process Audit
+Score: 85/100
+EOF
+
 cat > "$TMPDIR/build72/.kimi/meta-report.md" << 'EOF'
 # Meta Report
 Score: 4.0/5.0
@@ -3689,11 +3709,6 @@ cat > "$TMPDIR/build72/.kimi/variety-assessment.md" << 'EOF'
 | Metric | Value |
 |---|---|
 | A | 1 |
-EOF
-
-cat > "$TMPDIR/build72/.kimi/process-audit.md" << 'EOF'
-# Process Audit
-Score: 85/100
 EOF
 
 export HOME="$TMPDIR/build72"
@@ -3878,6 +3893,11 @@ cat > "$TMPDIR/build77/.kimi/mutations-applied.md" << 'EOF'
 **Effectiveness**: 5/5
 EOF
 
+cat > "$TMPDIR/build77/.kimi/process-audit.md" << 'EOF'
+# Process Audit
+Score: 85/100
+EOF
+
 cat > "$TMPDIR/build77/.kimi/meta-report.md" << 'EOF'
 # Meta Report
 Score: 4.0/5.0
@@ -3927,11 +3947,6 @@ EOF
 cat > "$TMPDIR/build77/.kimi/security-report.md" << 'EOF'
 # Security Report
 No critical findings.
-EOF
-
-cat > "$TMPDIR/build77/.kimi/process-audit.md" << 'EOF'
-# Process Audit
-Score: 85/100
 EOF
 
 export HOME="$TMPDIR/build77"
@@ -4036,7 +4051,7 @@ EOF
 
 # Run lesson-miner in a controlled way: import the detect_lesson_orphans function
 # and test it with our mock data. Use REAL_HOME so Path.home() finds actual skills.
-HOME="$REAL_HOME" python3 -c "
+HOME="$REAL_HOME" "$PYTHON3" -c "
 import sys
 import importlib.util
 spec = importlib.util.spec_from_file_location('lesson_miner', '$SCRIPT_DIR/../scripts/lesson-miner.py')
@@ -4106,7 +4121,7 @@ PREV_HOME="$HOME"
 PREV_CWD="$(pwd)"
 export HOME="$TMPDIR/build82"
 cd "$TMPDIR/build82"
-python3 "$TMPDIR/build82/vsm/viable-swarm-model/scripts/lesson-miner.py" >/dev/null 2>&1
+"$PYTHON3" "$TMPDIR/build82/vsm/viable-swarm-model/scripts/lesson-miner.py" >/dev/null 2>&1
 export HOME="$PREV_HOME"
 cd "$PREV_CWD"
 
@@ -4159,7 +4174,7 @@ EOF
 mkdir -p "$TMPDIR/build91b/.kimi"
 
 RC=0
-python3 "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" \
+"$PYTHON3" "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" \
   --build-dir "$TMPDIR/build91b" \
   --mutation-state "$TMPDIR/mock-mutation-state-91b.md" >/dev/null 2>&1 || RC=$?
 
@@ -4192,7 +4207,7 @@ EOF
 mkdir -p "$TMPDIR/build91/.kimi"
 
 RC=0
-python3 "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" \
+"$PYTHON3" "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" \
   --build-dir "$TMPDIR/build91" \
   --mutation-state "$TMPDIR/mock-mutation-state-91.md" >/dev/null 2>&1 || RC=$?
 
@@ -4228,7 +4243,7 @@ cat > "$TMPDIR/mstate92.md" << 'EOF'
 | R1 | FB92 | test | Test | **REMOVED** | 1 | 1 | — | — | — |
 EOF
 
-ACTIVE_COUNT=$(python3 -c "
+ACTIVE_COUNT=$("$PYTHON3" -c "
 import re
 from pathlib import Path
 
@@ -4309,7 +4324,7 @@ echo -n "TEST: S5 iteration historical promotion policy applied correctly ... "
 
 MSTATE_REAL="/Users/mj/vsm/viable-swarm-model/references/mutation-state.md"
 R5_STATUS=$(grep -E '^\| R5\b' "$MSTATE_REAL" | head -1)
-ACTIVE_COUNT=$(python3 -c "
+ACTIVE_COUNT=$("$PYTHON3" -c "
 import re
 from pathlib import Path
 
@@ -4353,7 +4368,7 @@ fi
 
 echo -n "TEST: algedonic-action-plan.py hypothesis actions use bullets not hardcoded numbers ... "
 
-ALGEDONIC_OUTPUT=$(cd "$SCRIPT_DIR/.." && python3 scripts/algedonic-action-plan.py 2>&1)
+ALGEDONIC_OUTPUT=$(cd "$SCRIPT_DIR/.." && "$PYTHON3" scripts/algedonic-action-plan.py 2>&1)
 
 # Check that hypothesis actions don't contain hardcoded list numbers like "1.", "2.", etc.
 # The fix removes numbers entirely, using bullet points with bold labels instead.
@@ -4828,7 +4843,7 @@ fi
 echo -n "TEST: mutation-state.md Integration Health active count matches computed value ... "
 
 mkdir -p "$TMPDIR/build113/.kimi"
-python3 "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" \
+"$PYTHON3" "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" \
   --build-dir "$TMPDIR/build113" \
   --mutation-state "$SCRIPT_DIR/../references/mutation-state.md" >/dev/null 2>&1 || true
 
@@ -4963,7 +4978,7 @@ cat > "$TMPDIR/build124/mutation-state.md" << 'EOF'
 EOF
 
 # Make gym dir old (more than 7 days ago) by setting mtime in the past
-python3 -c "import os, time; os.utime('$TMPDIR/build124/gym/recent-experiment', (time.time() - 864000, time.time() - 864000))"
+"$PYTHON3" -c "import os, time; os.utime('$TMPDIR/build124/gym/recent-experiment', (time.time() - 864000, time.time() - 864000))"
 
 AG_OUTPUT=$(AUTO_GYM_HYPOTHESES="$TMPDIR/build124/hypotheses.md" \
     AUTO_GYM_MUTATION_STATE="$TMPDIR/build124/mutation-state.md" \
@@ -4972,7 +4987,7 @@ AG_OUTPUT=$(AUTO_GYM_HYPOTHESES="$TMPDIR/build124/hypotheses.md" \
     AUTO_GYM_BACKLOG_THRESHOLD="10" \
     AUTO_GYM_COOLDOWN_DAYS="7" \
     AUTO_GYM_MONITOR_THRESHOLD="3" \
-    python3 "$SCRIPT_DIR/../scripts/auto-gym-trigger.py" 2>&1) || AG_RC=$?
+    "$PYTHON3" "$SCRIPT_DIR/../scripts/auto-gym-trigger.py" 2>&1) || AG_RC=$?
 AG_RC=${AG_RC:-0}
 
 if [ "$AG_RC" -eq 0 ] && [ ! -f "$TMPDIR/build124/.kimi/auto-gym-trigger.md" ]; then
@@ -4990,7 +5005,7 @@ echo -n "TEST: auto-gym-trigger.py hypothesis backlog trigger writes report ... 
 mkdir -p "$TMPDIR/build125/.kimi"
 mkdir -p "$TMPDIR/build125/gym/old-experiment"
 touch "$TMPDIR/build125/gym/old-experiment/.gitkeep"
-python3 -c "import os, time; os.utime('$TMPDIR/build125/gym/old-experiment', (time.time() - 864000, time.time() - 864000))"
+"$PYTHON3" -c "import os, time; os.utime('$TMPDIR/build125/gym/old-experiment', (time.time() - 864000, time.time() - 864000))"
 
 # Create a hypotheses.md with 12 untested hypotheses (above threshold of 10)
 cat > "$TMPDIR/build125/hypotheses.md" << 'EOF'
@@ -5088,7 +5103,7 @@ AG_OUTPUT=$(AUTO_GYM_HYPOTHESES="$TMPDIR/build125/hypotheses.md" \
     AUTO_GYM_BACKLOG_THRESHOLD="10" \
     AUTO_GYM_COOLDOWN_DAYS="7" \
     AUTO_GYM_MONITOR_THRESHOLD="3" \
-    python3 "$SCRIPT_DIR/../scripts/auto-gym-trigger.py" 2>&1) || AG_RC=$?
+    "$PYTHON3" "$SCRIPT_DIR/../scripts/auto-gym-trigger.py" 2>&1) || AG_RC=$?
 AG_RC=${AG_RC:-0}
 
 if [ "$AG_RC" -eq 0 ] && [ -f "$TMPDIR/build125/.kimi/auto-gym-trigger.md" ] && \
@@ -5140,7 +5155,7 @@ AG_OUTPUT=$(AUTO_GYM_HYPOTHESES="$TMPDIR/build126/hypotheses.md" \
     AUTO_GYM_BACKLOG_THRESHOLD="10" \
     AUTO_GYM_COOLDOWN_DAYS="7" \
     AUTO_GYM_MONITOR_THRESHOLD="3" \
-    python3 "$SCRIPT_DIR/../scripts/auto-gym-trigger.py" 2>&1) || AG_RC=$?
+    "$PYTHON3" "$SCRIPT_DIR/../scripts/auto-gym-trigger.py" 2>&1) || AG_RC=$?
 AG_RC=${AG_RC:-0}
 
 if [ "$AG_RC" -eq 0 ] && [ -f "$TMPDIR/build126/.kimi/auto-gym-trigger.md" ] && \
@@ -5196,7 +5211,7 @@ AG_COUNT=$(AUTO_GYM_HYPOTHESES="$TMPDIR/build138/hypotheses.md" \
     AUTO_GYM_BACKLOG_THRESHOLD="2" \
     AUTO_GYM_COOLDOWN_DAYS="0" \
     AUTO_GYM_MONITOR_THRESHOLD="99" \
-    python3 "$SCRIPT_DIR/../scripts/auto-gym-trigger.py" 2>&1 | grep -o "Found [0-9]* untested" | awk '{print $2}')
+    "$PYTHON3" "$SCRIPT_DIR/../scripts/auto-gym-trigger.py" 2>&1 | grep -o "Found [0-9]* untested" | awk '{print $2}')
 
 if [ "$AG_COUNT" = "3" ]; then
     pass
@@ -5238,7 +5253,7 @@ EOF
 
 MP_OUTPUT=$(MUTATION_PREDICTOR_STATE="$TMPDIR/build127/mutation-state.md" \
     MUTATION_PREDICTOR_LOG="$TMPDIR/build127/mutation-log.md" \
-    python3 "$SCRIPT_DIR/../scripts/mutation-predictor.py" \
+    "$PYTHON3" "$SCRIPT_DIR/../scripts/mutation-predictor.py" \
     --type append-only --target "test coverage gap" --file-category hooks 2>&1) || MP_RC=$?
 MP_RC=${MP_RC:-0}
 
@@ -5275,7 +5290,7 @@ EOF
 
 MP_OUTPUT=$(MUTATION_PREDICTOR_STATE="$TMPDIR/build128/mutation-state.md" \
     MUTATION_PREDICTOR_LOG="$TMPDIR/build128/mutation-log.md" \
-    python3 "$SCRIPT_DIR/../scripts/mutation-predictor.py" \
+    "$PYTHON3" "$SCRIPT_DIR/../scripts/mutation-predictor.py" \
     --type refinement --target "graphql validation" --file-category agents 2>&1) || MP_RC=$?
 MP_RC=${MP_RC:-0}
 
@@ -5344,7 +5359,7 @@ EOF
 SKILL_TRACKER_REGISTRY="$TMPDIR/build129/SKILL-REGISTRY.md" \
     SKILL_TRACKER_COACH_DIR="$TMPDIR/build129/coach" \
     SKILL_TRACKER_OUTPUT="$TMPDIR/build129/skill-effectiveness-log.md" \
-    python3 "$SCRIPT_DIR/../scripts/skill-effectiveness-tracker.py" >/dev/null 2>&1 || ST_RC=$?
+    "$PYTHON3" "$SCRIPT_DIR/../scripts/skill-effectiveness-tracker.py" >/dev/null 2>&1 || ST_RC=$?
 ST_RC=${ST_RC:-0}
 
 if [ "$ST_RC" -eq 0 ] && [ -f "$TMPDIR/build129/skill-effectiveness-log.md" ] && \
@@ -5385,7 +5400,7 @@ EOF
 SKILL_TRACKER_REGISTRY="$TMPDIR/build130/SKILL-REGISTRY.md" \
     SKILL_TRACKER_COACH_DIR="$TMPDIR/build130/coach" \
     SKILL_TRACKER_OUTPUT="$TMPDIR/build130/skill-effectiveness-log.md" \
-    python3 "$SCRIPT_DIR/../scripts/skill-effectiveness-tracker.py" >/dev/null 2>&1 || ST_RC=$?
+    "$PYTHON3" "$SCRIPT_DIR/../scripts/skill-effectiveness-tracker.py" >/dev/null 2>&1 || ST_RC=$?
 ST_RC=${ST_RC:-0}
 
 if [ "$ST_RC" -eq 0 ] && [ -f "$TMPDIR/build130/skill-effectiveness-log.md" ] && \
@@ -5494,7 +5509,7 @@ cat > "$TMPDIR/home139/vsm/vsm-stack-skills/SKILL-REGISTRY.md" << 'EOF'
 | skill-a | all |
 EOF
 
-HOME="$TMPDIR/home139" python3 "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" --build-dir "$TMPDIR/build139" > "$TMPDIR/out139.txt" 2>&1
+HOME="$TMPDIR/home139" "$PYTHON3" "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" --build-dir "$TMPDIR/build139" > "$TMPDIR/out139.txt" 2>&1
 
 if ! grep -q "Active mutation bloat" "$TMPDIR/out139.txt" && \
    grep -q "| Active mutations | 51 | ≤ 60 |" "$TMPDIR/out139.txt"; then
@@ -5509,7 +5524,7 @@ fi
 
 echo -n "TEST: integration-test-closeout.py --verbose shows all success markers ... "
 
-python3 "$SCRIPT_DIR/../scripts/integration-test-closeout.py" --verbose > "$TMPDIR/out140.txt" 2>&1
+"$PYTHON3" "$SCRIPT_DIR/../scripts/integration-test-closeout.py" --verbose > "$TMPDIR/out140.txt" 2>&1
 
 if grep -q "Testing: build-health-dashboard.py" "$TMPDIR/out140.txt" && \
    grep -q "Testing: mutation-portfolio-health.py" "$TMPDIR/out140.txt" && \
@@ -5529,7 +5544,7 @@ fi
 
 echo -n "TEST: verify_consistency detects all 5 error conditions ... "
 
-python3 -c "
+"$PYTHON3" -c "
 import sys, os, json, tempfile
 import importlib.util
 spec = importlib.util.spec_from_file_location('itc', '$SCRIPT_DIR/../scripts/integration-test-closeout.py')
@@ -5586,7 +5601,7 @@ fi
 
 echo -n "TEST: test_session_end_hook detects falsely flagged security report ... "
 
-python3 -c "
+"$PYTHON3" -c "
 import sys, os, tempfile
 import importlib.util
 spec = importlib.util.spec_from_file_location('itc', '$SCRIPT_DIR/../scripts/integration-test-closeout.py')
@@ -5631,7 +5646,7 @@ fi
 
 echo -n "TEST: test_session_end_hook passes with valid telemetry ... "
 
-python3 -c "
+"$PYTHON3" -c "
 import sys, os, tempfile
 import importlib.util
 spec = importlib.util.spec_from_file_location('itc', '$SCRIPT_DIR/../scripts/integration-test-closeout.py')
@@ -5674,7 +5689,7 @@ fi
 
 echo -n "TEST: test_script returns failure for unknown script names ... "
 
-python3 -c "
+"$PYTHON3" -c "
 import sys, os, tempfile
 import importlib.util
 spec = importlib.util.spec_from_file_location('itc', '$SCRIPT_DIR/../scripts/integration-test-closeout.py')
@@ -5768,7 +5783,7 @@ EOF
 
 RC=0
 VSM_SKILL_REGISTRY="$TMPDIR/vsm/vsm-stack-skills/SKILL-REGISTRY.md" \
-    python3 "$SCRIPT_DIR/../scripts/organism-vitals.py" --build-dir "$TMPDIR/build145" >/dev/null 2>&1 || RC=$?
+    "$PYTHON3" "$SCRIPT_DIR/../scripts/organism-vitals.py" --build-dir "$TMPDIR/build145" >/dev/null 2>&1 || RC=$?
 
 OUTPUT=$(cat "$TMPDIR/build145/.kimi/organism-vitals.md" 2>/dev/null || echo "")
 if [ "$RC" -eq 0 ] && \
@@ -5806,7 +5821,7 @@ EOF
 
 RC=0
 VSM_SKILL_REGISTRY="$TMPDIR/vsm/vsm-stack-skills/SKILL-REGISTRY.md" \
-    python3 "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" --build-dir "$TMPDIR/build146" >/dev/null 2>&1 || RC=$?
+    "$PYTHON3" "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" --build-dir "$TMPDIR/build146" >/dev/null 2>&1 || RC=$?
 
 OUTPUT=$(cat "$TMPDIR/build146/.kimi/algedonic-action-plan.md" 2>/dev/null || echo "")
 if [ "$RC" -eq 0 ] && \
@@ -5862,7 +5877,7 @@ cat > "$TMPDIR/build148/plan.md" << 'EOF'
 EOF
 
 RC=0
-python3 "$SCRIPT_DIR/../scripts/organism-vitals.py" --build-dir "$TMPDIR/build148" >/dev/null 2>&1 || RC=$?
+"$PYTHON3" "$SCRIPT_DIR/../scripts/organism-vitals.py" --build-dir "$TMPDIR/build148" >/dev/null 2>&1 || RC=$?
 
 OUTPUT=$(cat "$TMPDIR/build148/.kimi/organism-vitals.md" 2>/dev/null || echo "")
 if [ "$RC" -eq 0 ] && \
@@ -5918,13 +5933,13 @@ EOF
 # Run tracker with modified paths
 export HOME="$TMPDIR"
 cd "$TMPDIR"
-python3 "$TMPDIR/vsm/viable-swarm-model/scripts/skill-effectiveness-tracker.py" 2>/dev/null || true
+"$PYTHON3" "$TMPDIR/vsm/viable-swarm-model/scripts/skill-effectiveness-tracker.py" 2>/dev/null || true
 unset HOME
 
 # Count date sections
-SECTION_COUNT=$(python3 -c "import sys,re; text=open(sys.argv[1]).read(); print(len(re.findall(r'^## ' + sys.argv[2], text, re.M)))" "$TMPDIR/vsm/viable-swarm-model/references/skill-effectiveness-log.md" "$TODAY" 2>/dev/null)
+SECTION_COUNT=$("$PYTHON3" -c "import sys,re; text=open(sys.argv[1]).read(); print(len(re.findall(r'^## ' + sys.argv[2], text, re.M)))" "$TMPDIR/vsm/viable-swarm-model/references/skill-effectiveness-log.md" "$TODAY" 2>/dev/null)
 SECTION_COUNT=${SECTION_COUNT:-0}
-HAS_OLD=$(python3 -c "import sys; text=open(sys.argv[1]).read(); print(1 if 'OLD' in text else 0)" "$TMPDIR/vsm/viable-swarm-model/references/skill-effectiveness-log.md" 2>/dev/null)
+HAS_OLD=$("$PYTHON3" -c "import sys; text=open(sys.argv[1]).read(); print(1 if 'OLD' in text else 0)" "$TMPDIR/vsm/viable-swarm-model/references/skill-effectiveness-log.md" 2>/dev/null)
 HAS_OLD=${HAS_OLD:-0}
 
 if [ "$SECTION_COUNT" -eq 1 ] && [ "$HAS_OLD" -eq 0 ]; then
@@ -5939,7 +5954,7 @@ fi
 
 echo -n "TEST: validate-skills.py validates all skills with zero errors and zero warnings ... "
 
-VALIDATE_OUTPUT=$(HOME="$REAL_HOME" python3 "$REAL_HOME/vsm/vsm-stack-skills/validate-skills.py" 2>&1)
+VALIDATE_OUTPUT=$(HOME="$REAL_HOME" "$PYTHON3" "$REAL_HOME/vsm/vsm-stack-skills/validate-skills.py" 2>&1)
 VALIDATE_RC=$?
 
 if [ "$VALIDATE_RC" -eq 0 ] && \
@@ -5973,7 +5988,7 @@ cat > "$TMPDIR/build150/mutation-state.md" << 'EOF'
 | M1 | FB99 | append | Test | effective | 5 | 4 | — | — | — |
 EOF
 
-python3 "$SCRIPT_DIR/../scripts/increment-s5-iteration-counter.py" --backfill --mutation-state "$TMPDIR/build150/mutation-state.md" >/dev/null 2>&1 || true
+"$PYTHON3" "$SCRIPT_DIR/../scripts/increment-s5-iteration-counter.py" --backfill --mutation-state "$TMPDIR/build150/mutation-state.md" >/dev/null 2>&1 || true
 
 UPDATED=$(cat "$TMPDIR/build150/mutation-state.md")
 R99_OK=$(echo "$UPDATED" | grep "R99" | grep "| 3 |" | wc -l)
@@ -6006,7 +6021,7 @@ cat > "$TMPDIR/build151/mutation-state.md" << 'EOF'
 | R97 | 2026-06-06 S5 | append-only | Test C | effective | 1 | 5 | — | — | S5 iter |
 EOF
 
-python3 "$SCRIPT_DIR/../scripts/increment-s5-iteration-counter.py" --mutation-state "$TMPDIR/build151/mutation-state.md" >/dev/null 2>&1 || true
+"$PYTHON3" "$SCRIPT_DIR/../scripts/increment-s5-iteration-counter.py" --mutation-state "$TMPDIR/build151/mutation-state.md" >/dev/null 2>&1 || true
 
 UPDATED=$(cat "$TMPDIR/build151/mutation-state.md")
 R99_OK=$(echo "$UPDATED" | grep "R99" | grep "| 4 |" | wc -l)
@@ -6114,7 +6129,7 @@ EOF
 SKILL_TRACKER_REGISTRY="$TMPDIR/build155/SKILL-REGISTRY.md" \
     SKILL_TRACKER_COACH_DIR="$TMPDIR/build155/coach" \
     SKILL_TRACKER_OUTPUT="$TMPDIR/build155/skill-effectiveness-log.md" \
-    python3 "$SCRIPT_DIR/../scripts/skill-effectiveness-tracker.py" >/dev/null 2>&1 || ST_RC=$?
+    "$PYTHON3" "$SCRIPT_DIR/../scripts/skill-effectiveness-tracker.py" >/dev/null 2>&1 || ST_RC=$?
 ST_RC=${ST_RC:-0}
 
 TINY_FLAG=$(grep "tiny-skill" "$TMPDIR/build155/skill-effectiveness-log.md" | awk -F'|' '{print $7}' | tr -d ' ')
@@ -6239,7 +6254,7 @@ cat > "$TMPDIR/vsm/viable-swarm-model/references/skill-effectiveness-log.md" << 
 EOF
 
 OV_OUTPUT=$(HOME="$TMPDIR" VSM_SKILL_REGISTRY="$TMPDIR/vsm/vsm-stack-skills/SKILL-REGISTRY.md" \
-    python3 "$SCRIPT_DIR/../scripts/organism-vitals.py" --build-dir "$TMPDIR/build157" 2>/dev/null)
+    "$PYTHON3" "$SCRIPT_DIR/../scripts/organism-vitals.py" --build-dir "$TMPDIR/build157" 2>/dev/null)
 
 SKILL_VARIETY=$(echo "$OV_OUTPUT" | grep "Skill variety" | grep -oE '[0-9]+/[0-9]+')
 
@@ -6256,7 +6271,7 @@ fi
 echo -n "TEST: algedonic-action-plan.py skill variety excludes Icebox/Planned skills ... "
 
 AA_OUTPUT=$(HOME="$TMPDIR" VSM_SKILL_REGISTRY="$TMPDIR/vsm/vsm-stack-skills/SKILL-REGISTRY.md" \
-    python3 "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" --build-dir "$TMPDIR/build157" 2>/dev/null)
+    "$PYTHON3" "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" --build-dir "$TMPDIR/build157" 2>/dev/null)
 
 AA_VARIETY=$(echo "$AA_OUTPUT" | grep "Skill variety" | grep -oE '[0-9]+/[0-9]+')
 
@@ -6330,7 +6345,7 @@ mkdir -p "$TMPDIR/build159/vsm-fitness-builds/coach/FB999"
 touch "$TMPDIR/build159/vsm-fitness-builds/coach/FB999/.kimi"
 
 OV159=$(HOME="$TMPDIR/build159" VSM_SKILL_REGISTRY="$TMPDIR/build159/vsm/vsm-stack-skills/SKILL-REGISTRY.md" \
-    python3 "$SCRIPT_DIR/../scripts/organism-vitals.py" --build-dir "$TMPDIR/build159" 2>/dev/null)
+    "$PYTHON3" "$SCRIPT_DIR/../scripts/organism-vitals.py" --build-dir "$TMPDIR/build159" 2>/dev/null)
 
 # Check that variety breakdown section exists
 HAS_BREAKDOWN=$(echo "$OV159" | grep -c "Variety Breakdown" || true)
@@ -6399,7 +6414,7 @@ cat > "$TMPDIR/home160/vsm/vsm-stack-skills/SKILL-REGISTRY.md" << 'EOF'
 | skill-a | all |
 EOF
 
-HOME="$TMPDIR/home160" python3 "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" --build-dir "$TMPDIR/build160" > "$TMPDIR/out160.txt" 2>&1
+HOME="$TMPDIR/home160" "$PYTHON3" "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" --build-dir "$TMPDIR/build160" > "$TMPDIR/out160.txt" 2>&1
 
 if ! grep -q "Active mutation bloat" "$TMPDIR/out160.txt" && \
    grep -q "| Active mutations | 51 | ≤ 60 |" "$TMPDIR/out160.txt"; then
@@ -6453,7 +6468,7 @@ cat > "$TMPDIR/build161/vsm/viable-swarm-model/references/mutation-state.md" << 
 | E1 | FB33 | append-only | Test | **effective** | 1 | 5 |
 EOF
 
-OUTPUT161=$(HOME="$TMPDIR/build161" python3 "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build161" --phase 6 2>&1) || RC161=$?
+OUTPUT161=$(HOME="$TMPDIR/build161" "$PYTHON3" "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build161" --phase 6 2>&1) || RC161=$?
 
 if [ "${RC161:-0}" -ne 0 ] && \
    echo "$OUTPUT161" | grep -q "FB34-1: Found" && \
@@ -6497,7 +6512,7 @@ cat > "$TMPDIR/build162/vsm/viable-swarm-model/references/mutation-state.md" << 
 | E1 | FB33 | append-only | Test | **effective** | 1 | 5 |
 EOF
 
-OUTPUT162=$(HOME="$TMPDIR/build162" python3 "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build162" --phase 6 2>&1) && RC162=0 || RC162=$?
+OUTPUT162=$(HOME="$TMPDIR/build162" "$PYTHON3" "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build162" --phase 6 2>&1) && RC162=0 || RC162=$?
 
 if [ "$RC162" -eq 0 ] && echo "$OUTPUT162" | grep -q "\[PASS\] FB34-1"; then
     pass
@@ -6536,7 +6551,7 @@ cat > "$TMPDIR/build163/vsm/viable-swarm-model/references/mutation-state.md" << 
 | E1 | FB33 | append-only | Test | **effective** | 1 | 5 |
 EOF
 
-OUTPUT163=$(HOME="$TMPDIR/build163" python3 "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build163" --phase 6 2>&1) || RC163=$?
+OUTPUT163=$(HOME="$TMPDIR/build163" "$PYTHON3" "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build163" --phase 6 2>&1) || RC163=$?
 
 if [ "${RC163:-0}" -ne 0 ] && \
    echo "$OUTPUT163" | grep -q "FB34-2:" && \
@@ -6578,7 +6593,7 @@ cat > "$TMPDIR/build164/vsm/viable-swarm-model/references/mutation-state.md" << 
 | E1 | FB33 | append-only | Test | **effective** | 1 | 5 |
 EOF
 
-OUTPUT164=$(HOME="$TMPDIR/build164" python3 "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build164" --phase 6 2>&1) && RC164=0 || RC164=$?
+OUTPUT164=$(HOME="$TMPDIR/build164" "$PYTHON3" "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build164" --phase 6 2>&1) && RC164=0 || RC164=$?
 
 if [ "$RC164" -eq 0 ] && echo "$OUTPUT164" | grep -q "\[PASS\] FB34-2"; then
     pass
@@ -6620,7 +6635,7 @@ cat > "$TMPDIR/build165/vsm/viable-swarm-model/references/mutation-state.md" << 
 | E1 | FB33 | append-only | Test | **effective** | 1 | 5 |
 EOF
 
-OUTPUT165=$(HOME="$TMPDIR/build165" python3 "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build165" --phase 6 2>&1) || RC165=$?
+OUTPUT165=$(HOME="$TMPDIR/build165" "$PYTHON3" "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build165" --phase 6 2>&1) || RC165=$?
 
 if [ "${RC165:-0}" -ne 0 ] && \
    echo "$OUTPUT165" | grep -q "FB34-3:" && \
@@ -6664,7 +6679,7 @@ cat > "$TMPDIR/build166/vsm/viable-swarm-model/references/mutation-state.md" << 
 | E1 | FB33 | append-only | Test | **effective** | 1 | 5 |
 EOF
 
-OUTPUT166=$(HOME="$TMPDIR/build166" python3 "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build166" --phase 6 2>&1) && RC166=0 || RC166=$?
+OUTPUT166=$(HOME="$TMPDIR/build166" "$PYTHON3" "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build166" --phase 6 2>&1) && RC166=0 || RC166=$?
 
 if [ "$RC166" -eq 0 ] && echo "$OUTPUT166" | grep -q "\[PASS\] FB34-3"; then
     pass
@@ -6690,7 +6705,7 @@ cat > "$TMPDIR/build167/vsm/viable-swarm-model/references/mutation-state.md" << 
 | E1 | FB33 | append-only | Test | **effective** | 1 | 5 |
 EOF
 
-OUTPUT167=$(HOME="$TMPDIR/build167" python3 "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build167" --phase 6 2>&1) || RC167=$?
+OUTPUT167=$(HOME="$TMPDIR/build167" "$PYTHON3" "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build167" --phase 6 2>&1) || RC167=$?
 
 if [ "${RC167:-0}" -ne 0 ] && \
    echo "$OUTPUT167" | grep -q "FB31-5:" && \
@@ -6717,7 +6732,7 @@ cat > "$TMPDIR/build168/vsm/viable-swarm-model/references/mutation-state.md" << 
 | E1 | FB33 | append-only | Test | **effective** | 1 | 5 |
 EOF
 
-OUTPUT168=$(HOME="$TMPDIR/build168" python3 "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build168" --phase 6 2>&1) && RC168=0 || RC168=$?
+OUTPUT168=$(HOME="$TMPDIR/build168" "$PYTHON3" "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build168" --phase 6 2>&1) && RC168=0 || RC168=$?
 
 if [ "$RC168" -eq 0 ] && echo "$OUTPUT168" | grep -q "\[PASS\] FB31-5"; then
     pass
@@ -6741,7 +6756,7 @@ cat > "$TMPDIR/build169/vsm/viable-swarm-model/references/mutation-state.md" << 
 | E1 | FB33 | append-only | Test | **effective** | 1 | 5 |
 EOF
 
-OUTPUT169=$(HOME="$TMPDIR/build169" python3 "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build169" --phase 6 2>&1) && RC169=0 || RC169=$?
+OUTPUT169=$(HOME="$TMPDIR/build169" "$PYTHON3" "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build169" --phase 6 2>&1) && RC169=0 || RC169=$?
 
 SKIP_COUNT=$(echo "$OUTPUT169" | grep -c "\[SKIP\]" || true)
 
@@ -7123,7 +7138,7 @@ AG_COUNT=$(AUTO_GYM_HYPOTHESES="$TMPDIR/build190/hypotheses.md" \
     AUTO_GYM_BACKLOG_THRESHOLD="1" \
     AUTO_GYM_COOLDOWN_DAYS="0" \
     AUTO_GYM_MONITOR_THRESHOLD="99" \
-    python3 "$SCRIPT_DIR/../scripts/auto-gym-trigger.py" 2>&1 | grep -o "Found [0-9]* untested" | awk '{print $2}')
+    "$PYTHON3" "$SCRIPT_DIR/../scripts/auto-gym-trigger.py" 2>&1 | grep -o "Found [0-9]* untested" | awk '{print $2}')
 
 if [ "$AG_COUNT" = "2" ]; then
     pass
@@ -7138,12 +7153,12 @@ fi
 echo -n "TEST: mutation-state.md Integration Health matches portfolio-health.py ... "
 
 # Run mutation-portfolio-health.py on the real mutation-state.md
-PH_JSON=$(cd "$SCRIPT_DIR/.." && python3 scripts/mutation-portfolio-health.py 2>/dev/null)
-PH_ACTIVE=$(echo "$PH_JSON" | python3 -c "import sys,json; print(json.load(sys.stdin)['total_active'])")
-PH_EFFECTIVE=$(echo "$PH_JSON" | python3 -c "import sys,json; print(json.load(sys.stdin)['effective_count'])")
-PH_PROBATIONARY=$(echo "$PH_JSON" | python3 -c "import sys,json; print(json.load(sys.stdin)['probationary_count'])")
-PH_SCORED=$(echo "$PH_JSON" | python3 -c "import sys,json; print(json.load(sys.stdin)['measured_fill_rate_scored'])")
-PH_ANY=$(echo "$PH_JSON" | python3 -c "import sys,json; print(json.load(sys.stdin)['measured_fill_rate_any'])")
+PH_JSON=$(cd "$SCRIPT_DIR/.." && "$PYTHON3" scripts/mutation-portfolio-health.py 2>/dev/null)
+PH_ACTIVE=$(echo "$PH_JSON" | "$PYTHON3" -c "import sys,json; print(json.load(sys.stdin)['total_active'])")
+PH_EFFECTIVE=$(echo "$PH_JSON" | "$PYTHON3" -c "import sys,json; print(json.load(sys.stdin)['effective_count'])")
+PH_PROBATIONARY=$(echo "$PH_JSON" | "$PYTHON3" -c "import sys,json; print(json.load(sys.stdin)['probationary_count'])")
+PH_SCORED=$(echo "$PH_JSON" | "$PYTHON3" -c "import sys,json; print(json.load(sys.stdin)['measured_fill_rate_scored'])")
+PH_ANY=$(echo "$PH_JSON" | "$PYTHON3" -c "import sys,json; print(json.load(sys.stdin)['measured_fill_rate_any'])")
 
 # Parse Integration Health table from mutation-state.md
 MS_ACTIVE=$(grep "^| Active mutations" "$SCRIPT_DIR/../references/mutation-state.md" | awk -F'|' '{print $3}' | tr -d ' ')
@@ -7181,7 +7196,7 @@ fi
 
 echo -n "TEST: increment-s5-iteration-counter.py syntax valid ... "
 
-if python3 -m py_compile "$SCRIPT_DIR/../scripts/increment-s5-iteration-counter.py" 2>/dev/null; then
+if "$PYTHON3" -m py_compile "$SCRIPT_DIR/../scripts/increment-s5-iteration-counter.py" 2>/dev/null; then
     pass
 else
     fail "increment-s5-iteration-counter.py has syntax errors"
@@ -7228,7 +7243,7 @@ cat > "$TMP_STATE" << 'EOF'
 | **NEXT SECTION** |
 EOF
 
-python3 "$SCRIPT_DIR/../scripts/increment-s5-iteration-counter.py" --mutation-state "$TMP_STATE" >/dev/null 2>&1
+"$PYTHON3" "$SCRIPT_DIR/../scripts/increment-s5-iteration-counter.py" --mutation-state "$TMP_STATE" >/dev/null 2>&1
 RC=$?
 
 if [ "$RC" -ne 0 ]; then
@@ -7263,7 +7278,7 @@ cat > "$TMP_STATE" << 'EOF'
 EOF
 
 BEFORE=$(cat "$TMP_STATE")
-python3 "$SCRIPT_DIR/../scripts/increment-s5-iteration-counter.py" --mutation-state "$TMP_STATE" --dry-run >/dev/null 2>&1
+"$PYTHON3" "$SCRIPT_DIR/../scripts/increment-s5-iteration-counter.py" --mutation-state "$TMP_STATE" --dry-run >/dev/null 2>&1
 RC=$?
 AFTER=$(cat "$TMP_STATE")
 
@@ -7304,7 +7319,7 @@ cat > "$TMP_STATE" << 'EOF'
 | Measured effect fill rate (any entry) | 0.0% | ≥80% | ❌ Wrong |
 EOF
 
-python3 "$SCRIPT_DIR/../scripts/increment-s5-iteration-counter.py" --mutation-state "$TMP_STATE" >/dev/null 2>&1
+"$PYTHON3" "$SCRIPT_DIR/../scripts/increment-s5-iteration-counter.py" --mutation-state "$TMP_STATE" >/dev/null 2>&1
 RC=$?
 
 ACTIVE=$(grep "^| Active mutations" "$TMP_STATE" | awk -F'|' '{print $3}' | tr -d ' ')
@@ -7358,7 +7373,7 @@ cat > "$AML_TMP/vsm/viable-swarm-model/references/mutation-log.md" << 'EOF'
 EOF
 
 RC=0
-HOME="$AML_TMP" python3 "$SCRIPT_DIR/auto-mutation-lifecycle.py" "$AML_TMP/build200" --dry-run > "$AML_TMP/dryrun.out" 2>&1 || RC=$?
+HOME="$AML_TMP" "$PYTHON3" "$SCRIPT_DIR/auto-mutation-lifecycle.py" "$AML_TMP/build200" --dry-run > "$AML_TMP/dryrun.out" 2>&1 || RC=$?
 OUTPUT=$(cat "$AML_TMP/dryrun.out")
 
 # Verify dry-run reports expected changes including score backfill
@@ -7409,7 +7424,7 @@ cat > "$AML_TMP/vsm/viable-swarm-model/references/mutation-log.md" << 'EOF'
 EOF
 
 RC=0
-HOME="$AML_TMP" python3 "$SCRIPT_DIR/auto-mutation-lifecycle.py" "$AML_TMP/build200" > "$AML_TMP/real.out" 2>&1 || RC=$?
+HOME="$AML_TMP" "$PYTHON3" "$SCRIPT_DIR/auto-mutation-lifecycle.py" "$AML_TMP/build200" > "$AML_TMP/real.out" 2>&1 || RC=$?
 
 # Verify mutation-state.md was updated with builds AND score backfill
 ST_OK=$(grep -c "| T200A | Test | append-only | Test bug | effective | 3 | 5 |" "$AML_TMP/vsm/viable-swarm-model/references/mutation-state.md" || true)
@@ -7509,7 +7524,7 @@ cat > "$AML_TMP/vsm/viable-swarm-model/references/mutation-log.md" << 'EOF'
 EOF
 
 RC=0
-HOME="$AML_TMP" python3 "$SCRIPT_DIR/auto-mutation-lifecycle.py" "$AML_TMP/build203" > "$AML_TMP/run.out" 2>&1 || RC=$?
+HOME="$AML_TMP" "$PYTHON3" "$SCRIPT_DIR/auto-mutation-lifecycle.py" "$AML_TMP/build203" > "$AML_TMP/run.out" 2>&1 || RC=$?
 OUTPUT=$(cat "$AML_TMP/run.out")
 
 # Should exit non-zero because T203_UNKNOWN is missing from mutation-log.md
@@ -7558,7 +7573,7 @@ cat > "$AML_TMP/vsm/viable-swarm-model/references/mutation-log.md" << 'EOF'
 EOF
 
 RC=0
-HOME="$AML_TMP" python3 "$SCRIPT_DIR/auto-mutation-lifecycle.py" "$AML_TMP/build204" > "$AML_TMP/real.out" 2>&1 || RC=$?
+HOME="$AML_TMP" "$PYTHON3" "$SCRIPT_DIR/auto-mutation-lifecycle.py" "$AML_TMP/build204" > "$AML_TMP/real.out" 2>&1 || RC=$?
 
 # T204A: score was —, should be backfilled to 5
 STA_OK=$(grep -c "| T204A | Test | append-only | Test bug | effective | 3 | 5 |" "$AML_TMP/vsm/viable-swarm-model/references/mutation-state.md" || true)
@@ -7652,13 +7667,13 @@ fi
 
 echo -n "TEST: Portfolio health has no pending promotions/demotions/data errors ... "
 
-PH_JSON=$(cd "$SCRIPT_DIR/.." && python3 scripts/mutation-portfolio-health.py 2>/dev/null)
-PROMOS=$(echo "$PH_JSON" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('promotions_ready',[])))" )
-DEMOTIONS=$(echo "$PH_JSON" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('demotions_ready',[])))" )
-MON_PROMOS=$(echo "$PH_JSON" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('monitor_promotions_ready',[])))" )
-MON_REMS=$(echo "$PH_JSON" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('monitor_removals_ready',[])))" )
-HIST_PROMOS=$(echo "$PH_JSON" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('historical_promotions_ready',[])))" )
-ERRORS=$(echo "$PH_JSON" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('data_integrity_errors',[])))" )
+PH_JSON=$(cd "$SCRIPT_DIR/.." && "$PYTHON3" scripts/mutation-portfolio-health.py 2>/dev/null)
+PROMOS=$(echo "$PH_JSON" | "$PYTHON3" -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('promotions_ready',[])))" )
+DEMOTIONS=$(echo "$PH_JSON" | "$PYTHON3" -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('demotions_ready',[])))" )
+MON_PROMOS=$(echo "$PH_JSON" | "$PYTHON3" -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('monitor_promotions_ready',[])))" )
+MON_REMS=$(echo "$PH_JSON" | "$PYTHON3" -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('monitor_removals_ready',[])))" )
+HIST_PROMOS=$(echo "$PH_JSON" | "$PYTHON3" -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('historical_promotions_ready',[])))" )
+ERRORS=$(echo "$PH_JSON" | "$PYTHON3" -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('data_integrity_errors',[])))" )
 
 if [ "$PROMOS" = "0" ] && [ "$DEMOTIONS" = "0" ] && [ "$MON_PROMOS" = "0" ] && [ "$MON_REMS" = "0" ] && [ "$HIST_PROMOS" = "0" ] && [ "$ERRORS" = "0" ]; then
     pass
@@ -7700,6 +7715,29 @@ if [[ -f "$REAL_DIAG" ]]; then
     fi
 else
     pass
+fi
+
+# ============================================================================
+# Test 212: Python interpreter resolver avoids pyenv shim overhead
+# ============================================================================
+
+echo -n "TEST: PYTHON3 resolver uses real interpreter and avoids shim overhead ... "
+
+if [ -z "$PYTHON3" ] || [ ! -x "$PYTHON3" ]; then
+    fail "PYTHON3 not resolved to executable: ${PYTHON3:-<unset>}"
+elif ! "$PYTHON3" -c "import sys; sys.exit(0)" >/dev/null 2>&1; then
+    fail "PYTHON3 cannot execute Python: $PYTHON3"
+else
+    # Direct pyenv binary should run in <2s; shim takes ~7s on this host.
+    START=$(date +%s)
+    "$PYTHON3" -c "print('ok')" >/dev/null 2>&1
+    END=$(date +%s)
+    ELAPSED=$((END - START))
+    if [ "$ELAPSED" -lt 2 ]; then
+        pass
+    else
+        fail "PYTHON3 invocation took ${ELAPSED}s (expected <2s): $PYTHON3"
+    fi
 fi
 
 echo ""
