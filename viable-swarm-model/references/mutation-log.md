@@ -5646,7 +5646,7 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 - `hooks/test-automation.sh`: Test 211 verifies that after `diagnostic-router.sh --test`, the real `.kimi/hook-diagnostic.md` is unchanged
 - Result: 223 tests passing, 0 failed; diagnostic channel no longer corrupted by self-test
 
-**Measured effect**: **TESTED** — Test 211 verifies self-test isolation. 223 tests passing, 0 failed.
+**Measured effect**: **TESTED** — Test 211 verifies self-test isolation. 223 tests passing, 0 failed. Promoted to **historical** in R87 after 5 S5 iterations with no regressions.
 
 ---
 
@@ -5676,7 +5676,7 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 - `hooks/test-automation.sh`: Tests 212-214 verify SKILL.md and session-end.sh no longer reference deprecated skill-state.md
 - Result: 226 tests passing, 0 failed; S5 instructions aligned with actual self-model file
 
-**Measured effect**: **TESTED** — Tests 212-214 verify SKILL.md Phase 0/8 and session-end.sh reference mutation-state.md, not skill-state.md. 226 tests passing, 0 failed.
+**Measured effect**: **TESTED** — Tests 212-214 verify SKILL.md Phase 0/8 and session-end.sh reference mutation-state.md, not skill-state.md. 226 tests passing, 0 failed. Promoted to **historical** in R87 after 5 S5 iterations with no regressions.
 
 ---
 
@@ -5718,5 +5718,21 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 - Two timing-dependent test regressions exposed by the speedup are fixed: `stop-verifier.sh` tests now create `process-audit.md` before `meta-report.md`, and the `process-compliance-precompute.py` mock uses a current knowledge-broker date.
 
 **Measured effect**: **TESTED** — Test 212 verifies the PYTHON3 resolver uses a fast interpreter. Full automation suite: **228 passed, 0 failed** (completed in ~2m 9s, down from >5m timeout). `validate-mutation-state.sh` runs in ~1.9s (down from >120s).
+
+---
+
+## Mutation R87 — 2026-06-14
+
+**Session**: S5 Orchestrator Iteration R87
+**Files**: `hooks/test-automation.sh`, `references/mutation-state.md`, `references/mutation-log.md`
+**Type**: structural
+**Rationale**: System 5 (Policy/Meta-learning) / S5→S1 channel — The S5 iteration lifecycle policy requires effective S5 iteration mutations with `builds_tested >= 5` and `score = 5` to be promoted to `historical`, yet this step relied on manual S5 memory. With the active mutation count at 59/60, missing a promotion would push the organism past its <60 active-mutation target and compress headroom for new mutations. No tool-enforced check existed to prevent eligible mutations from remaining in the effective section.
+
+**Expected effect**:
+- `hooks/test-automation.sh`: Test 215 scans the S5 iteration section and fails if any mutation is still `effective` with `builds_tested >= 5` and `score = 5`.
+- The hard gate forces S5 to promote eligible mutations before the automation suite can pass, eliminating manual-memory risk.
+- Active mutation count drops by promoting R84/R85 to historical, restoring headroom.
+
+**Measured effect**: **TESTED** — Test 215 scans the S5 iteration section and fails if any effective mutation has `builds_tested >= 5` and `score = 5`. Full automation suite: **230 passed, 0 failed**. R84 and R85 were promoted to historical during this iteration, dropping active mutations from 60 to 58 and restoring headroom below the <60 target.
 
 ---

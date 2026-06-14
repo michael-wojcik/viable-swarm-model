@@ -3085,3 +3085,36 @@ S5 iterations R65 through R73 were executed on 2026-06-07 without individual bui
 ### Next Highest-Leverage Constraint
 **System 4 (Adaptation/Intelligence) / S4→S4 channel — 4 untested hypotheses remain stale** (H104, H152, H[N+3], H[N+4]) and meta-system agents still have 0% empirical exercise rate. With internal infrastructure now exceptionally solid (226 tests passing, all deprecated references removed, portfolio health safeguard catching blockages, diagnostic channel no longer corrupted), the S5 iteration loop has reached a natural plateau. The organism is ready for external validation: a real fitness build or targeted gym batch is the most valuable next step. No further high-impact internal infrastructure constraints are visible.
 
+
+---
+---
+
+## 2026-06-14 — S5 Orchestrator Iteration (R87)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S1 channel — S5 iteration historical promotions were manual, and active mutation count reached 60/60**: The S5 iteration lifecycle policy requires effective mutations with `builds_tested >= 5` and `score = 5` to be promoted to `historical`, but this step relied on S5 memory. After the previous iteration added R87 and incremented counters, the active mutation count hit 60, equaling the <60 target. Without a hard gate, future iterations could breach the target and compress headroom for new mutations.
+
+### Change Made
+**Structural mutation R87**: Added Test 215 to `hooks/test-automation.sh` as a tool-enforced historical-promotion eligibility gate.
+- Test 215 scans the S5 iteration section of `mutation-state.md` and fails if any mutation is `effective` with `builds_tested >= 5` and `score = 5`.
+- The gate forced promotion of R84 and R85 to `historical`, moving them to the Historical Effective section and updating their measured effects in `mutation-log.md`.
+- Added R87 mutation row (effective, builds_tested=1, score=5) and log entry documenting the rationale and measured effect.
+- Synced Integration Health metrics: active mutations dropped from 60 to 58, historical effective increased from 78 to 80.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **230 passed, 0 failed** (was 229 passed, 0 failed)
+- Test 215: S5 iteration mutations with builds_tested >= 5 and score 5 are historical → PASS
+- `validate-mutation-state.sh`: ✅ PASS — zero errors, zero warnings
+- `mutation-portfolio-health.py`: total_active=58, historical=80, effective=58, probationary=0, all metrics green
+
+### Files Modified
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — 4 untested hypotheses remain stale** (H104, H152, H[N+3], H[N+4]) and meta-system agents still have 0% empirical exercise rate. With internal infrastructure now exceptionally solid (230 tests passing, active mutation count back below target, historical promotions hard-gated), the S5 iteration loop has reached a natural plateau. The organism is ready for external validation: a real fitness build or targeted gym batch is the most valuable next step. No further high-impact internal infrastructure constraints are visible.

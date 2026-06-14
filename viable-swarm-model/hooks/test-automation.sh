@@ -7760,6 +7760,43 @@ else
     fail "FB35-1(status=$FB35_1_STATUS builds=$FB35_1_BUILDS score=$FB35_1_SCORE) FB35-2(status=$FB35_2_STATUS builds=$FB35_2_BUILDS score=$FB35_2_SCORE)"
 fi
 
+# ============================================================================
+# Test 215: S5 iteration mutations eligible for historical promotion are historical
+# ============================================================================
+
+echo -n "TEST: S5 iteration mutations with builds_tested >= 5 and score 5 are historical ... "
+
+ELIGIBLE=$("$PYTHON3" - <<'PY'
+import re
+from pathlib import Path
+state_path = Path.home() / "vsm" / "viable-swarm-model" / "references" / "mutation-state.md"
+text = state_path.read_text(encoding="utf-8")
+in_s5 = False
+eligible = []
+for line in text.splitlines():
+    if "**S5 ITERATION MUTATIONS" in line:
+        in_s5 = True
+        continue
+    if in_s5 and line.startswith("| **") and "S5" not in line:
+        break
+    if in_s5 and line.startswith("|") and "---" not in line:
+        parts = [p.strip() for p in line.split("|") if p.strip()]
+        if len(parts) >= 8 and parts[0] not in ("ID", "**"):
+            status = parts[4].lower().strip("*")
+            builds = parts[5]
+            score = parts[6]
+            if status == "effective" and builds.isdigit() and int(builds) >= 5 and score == "5":
+                eligible.append(parts[0])
+print(" ".join(eligible))
+PY
+)
+
+if [ -z "$ELIGIBLE" ]; then
+    pass
+else
+    fail "eligible S5 mutations not yet historical: $ELIGIBLE"
+fi
+
 echo ""
 echo "========================================"
 echo "Results: $PASSED passed, $FAILED failed"
