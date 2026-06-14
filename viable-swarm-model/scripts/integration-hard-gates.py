@@ -91,6 +91,11 @@ PACKAGE_IMPORT_MAP = {
     "jinja2": "jinja2",
     "websockets": "websockets",
     "python-socketio": "socketio",
+    "python-dotenv": "dotenv",
+    "email-validator": "email_validator",
+    "starlette": "starlette",
+    "requests": "requests",
+    "anyio": "anyio",
 }
 
 
@@ -114,12 +119,31 @@ def check_environment_imports(build_dir: Path) -> bool:
         line = line.strip()
         if not line or line.startswith("#"):
             continue
-        # Strip version specifiers
-        pkg = re.split(r"[=<>!~;]", line)[0].strip()
+        # Strip extras (e.g., pydantic[email]) and version specifiers
+        pkg = re.split(r"\[", line)[0].strip()
+        pkg = re.split(r"[=<>!~;]", pkg)[0].strip()
         if not pkg:
             continue
+        pkg = pkg.lower()
         module = PACKAGE_IMPORT_MAP.get(pkg)
         if not module:
+            # Attempt a conservative fallback for simple hyphen-to-underscore names.
+            fallback = pkg.replace("-", "_")
+            if fallback.isidentifier():
+                checked.append(pkg)
+                result = subprocess.run(
+                    [sys.executable, "-c", f"import {fallback}"],
+                    cwd=build_dir,
+                    capture_output=True,
+                    timeout=30,
+                )
+                if result.returncode != 0:
+                    # Unknown package/import mapping: report as skipped rather than
+                    # failing the gate, because we cannot reliably infer the import
+                    # name. The warning alerts S5 to add a mapping if needed.
+                    checked.pop()
+                    skipped.append(pkg)
+                continue
             skipped.append(pkg)
             continue
         checked.append(pkg)
@@ -127,9 +151,16 @@ def check_environment_imports(build_dir: Path) -> bool:
             [sys.executable, "-c", f"import {module}"],
             cwd=build_dir,
             capture_output=True,
+            timeout=30,
         )
         if result.returncode != 0:
             failed.append((pkg, module))
+
+    if skipped:
+        print(
+            f"[WARN] H152: {len(skipped)} unrecognized requirement(s) skipped "
+            f"(add to PACKAGE_IMPORT_MAP if they should be checked): {', '.join(skipped)}"
+        )
 
     if failed:
         details = ", ".join(f"{pkg} (import {module})" for pkg, module in failed)

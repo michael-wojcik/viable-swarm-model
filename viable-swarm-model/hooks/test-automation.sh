@@ -8030,6 +8030,64 @@ else
     fail "expected H152 gate to pass on importable package; rc=$RC output=$OUTPUT"
 fi
 
+# ============================================================================
+# Test 223: integration-hard-gates.py strips extras before import check
+# ============================================================================
+
+echo -n "TEST: integration-hard-gates.py strips extras from requirements.txt packages ... "
+
+mkdir -p "$TMPDIR/build223"
+cat > "$TMPDIR/build223/requirements.txt" << 'EOF'
+# Mapped package with extras and version specifier that is not installed
+aiofiles[extra]==1.0.0
+EOF
+
+mkdir -p "$TMPDIR/build223/vsm/viable-swarm-model/references"
+cat > "$TMPDIR/build223/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target | Status | Builds Tested | Score |
+|---|---|---|---|---|---|---|
+| E1 | FB33 | append-only | Test | **effective** | 1 | 5 |
+EOF
+
+set +e
+OUTPUT=$(HOME="$TMPDIR/build223" "$PYTHON3" "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build223" --phase 3c 2>&1)
+RC=$?
+set -e
+if [ "$RC" -ne 0 ] && echo "$OUTPUT" | grep -q "aiofiles" ; then
+    pass
+else
+    fail "expected H152 gate to fail on unimportable package with extras; rc=$RC output=$OUTPUT"
+fi
+
+# ============================================================================
+# Test 224: integration-hard-gates.py warns but passes on unmapped packages
+# ============================================================================
+
+echo -n "TEST: integration-hard-gates.py warns but passes on unmapped requirements.txt packages ... "
+
+mkdir -p "$TMPDIR/build224"
+cat > "$TMPDIR/build224/requirements.txt" << 'EOF'
+# Package not in PACKAGE_IMPORT_MAP with a non-identifier name (safe to skip)
+not-a-real-package-xyz==1.0.0
+EOF
+
+mkdir -p "$TMPDIR/build224/vsm/viable-swarm-model/references"
+cat > "$TMPDIR/build224/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target | Status | Builds Tested | Score |
+|---|---|---|---|---|---|---|
+| E1 | FB33 | append-only | Test | **effective** | 1 | 5 |
+EOF
+
+OUTPUT=$(HOME="$TMPDIR/build224" "$PYTHON3" "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build224" --phase 3c 2>&1)
+RC=$?
+if [ "$RC" -eq 0 ] && echo "$OUTPUT" | grep -qi "skipped" ; then
+    pass
+else
+    fail "expected H152 gate to warn and pass on unmapped package; rc=$RC output=$OUTPUT"
+fi
+
 echo ""
 echo "========================================"
 echo "Results: $PASSED passed, $FAILED failed"

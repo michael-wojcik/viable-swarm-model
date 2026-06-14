@@ -3265,3 +3265,41 @@ S5 iterations R65 through R73 were executed on 2026-06-07 without individual bui
 
 ### Next Highest-Leverage Constraint
 **System 4 (Adaptation/Intelligence) / S4→S4 channel — H104 and H152 will cross the 21-day stale threshold within 24 hours**. The curator will archive them unless S5 either runs a gym experiment or updates their status. H401 is now fully wired; H404-H406 remain in `testing` status awaiting real fitness builds. The organism is ready for external validation; the most valuable next step is either a real GraphQL-enabled build to confirm H401 or a targeted gym experiment for H104/H152 before they go stale.
+
+---
+---
+
+## 2026-06-14 — S5 Orchestrator Iteration (R89 Refinement)
+
+### Diagnosed Constraint
+**System 1 (Implementation) / S5→S1 channel — H152 environment import gate silently skipped requirements with extras (e.g., `uvicorn[standard]`) and unmapped packages**: The initial gate only recognized a fixed `PACKAGE_IMPORT_MAP` and used a naive split that left extras attached to the package name. A real build declaring `pydantic[email]` or an unmapped transitive dependency would pass Phase 3c and then fail when agents tried to import it, re-creating the FB22 waste pattern H152 was meant to prevent.
+
+### Change Made
+**R89 in-place refinement**: Hardened `scripts/integration-hard-gates.py` `check_environment_imports()` without adding a new mutation (active count remains at 59/60).
+- Strip extras brackets (`pkg[extra]`) before stripping version specifiers.
+- Normalize package names to lowercase.
+- Added conservative fallback import for unmapped simple names (`pkg.replace("-", "_")`); succeeds silently, fails safely with a warning.
+- Added common mappings (`python-dotenv`, `email-validator`, `starlette`, `requests`, `anyio`).
+- Print `[WARN] H152: ... skipped` for unrecognized requirements so S5 can extend the map.
+- Ran `increment-s5-iteration-counter.py`: R87/R88 → 3 builds, R89 → 4 builds.
+- Added Tests 223 and 224:
+  - Test 223: `aiofiles[extra]==1.0.0` is parsed and fails import.
+  - Test 224: `not-a-real-package-xyz==1.0.0` is reported as skipped and gate passes.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **240 passed, 0 failed** (was 238 passed, 0 failed)
+- `python3 hooks/validate-mutation-state.py`: ✅ PASS
+- `mutation-portfolio-health.py`: active=59, historical=81, effective=59, probationary=0
+
+### Files Modified
+- `viable-swarm-model/scripts/integration-hard-gates.py`
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 4 (Adaptation/Intelligence) / S4→S4 channel — H104 is still `untested` and will cross the 21-day stale threshold imminently**: H104 (ApolloClient `uri` parameter stderr noise) is the only remaining untested backlog item at risk of automatic archival. The organism has no gym experiment or automation coverage for it. The most valuable next step is a minimal gym experiment or a targeted SKILL.md/agent-prompt update that either confirms/rejects H104 or moves it to `testing` before the curator archives it. Alternatively, R87/R89 will reach historical eligibility in 2 more iterations, at which point headroom opens for a new structural mutation.

@@ -5767,6 +5767,6 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 - `hooks/test-automation.sh`: Tests 161-162 verify GraphQL stub detection; Tests 221-222 verify environment import smoke test; Tests 218-219 verify `check-graphql-stubs.py` directly.
 - H401 status updated to reflect the tool is implemented and awaiting validation in the next GraphQL-enabled build.
 
-**Measured effect**: **TESTED** — Tests 161-162 verify GraphQL stub detection; Tests 221-222 verify environment import smoke test; Tests 218-219 verify `check-graphql-stubs.py` directly. Full automation suite: **238 passed, 0 failed**. H401 and H152 tool implementation and pipeline wiring verified; awaiting validation in next compatible build.
+**Measured effect**: **TESTED** — Tests 161-162 verify GraphQL stub detection; Tests 221-224 verify environment import smoke test (including extras stripping and unmapped-package warnings); Tests 218-219 verify `check-graphql-stubs.py` directly. Full automation suite: **240 passed, 0 failed**. H401 and H152 tool implementation and pipeline wiring verified; awaiting validation in next compatible build.
 
 ---
