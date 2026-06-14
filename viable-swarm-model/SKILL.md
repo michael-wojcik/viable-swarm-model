@@ -609,9 +609,12 @@ Main agent (S5) performs:
     because `[PENDING]` vs `**PENDING**` format mismatch had no test coverage.
 12. **Environment Compatibility Smoke Test** (conditional): If the build declares
     framework dependencies (e.g., `[graphql library]`, `[validation library]`, `[orm library]`, `[backend framework]`,
-    `celery`), run a quick import verification in a fresh subprocess BEFORE dispatching
-    implementation agents. Use the language-specific import command:
-    - Python: `python3 -c "import strawberry; import pydantic; import sqlalchemy"`
+    `celery`), run the tool-enforced import gate BEFORE dispatching implementation agents:
+    ```bash
+    python3 ~/vsm/viable-swarm-model/scripts/integration-hard-gates.py --build-dir <BUILD_DIR> --phase 3c
+    ```
+    This gate reads `requirements.txt` and verifies that declared Python packages can be imported
+    in a fresh subprocess. For non-Python stacks, use the language-specific import command:
     - Node: `node -e "require('vite'); require('@apollo/client')"`
     - Rust: `cargo check --offline` (if Cargo.toml exists)
     If ANY import fails, STOP the build immediately. Report the environment

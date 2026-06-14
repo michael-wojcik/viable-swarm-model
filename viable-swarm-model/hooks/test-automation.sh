@@ -7972,6 +7972,64 @@ else
     fail "active mutation count $ACTIVE_COUNT is not below 60"
 fi
 
+# ============================================================================
+# Test 221: integration-hard-gates.py detects unimportable requirements
+# ============================================================================
+
+echo -n "TEST: integration-hard-gates.py detects unimportable requirements.txt packages ... "
+
+mkdir -p "$TMPDIR/build221"
+cat > "$TMPDIR/build221/requirements.txt" << 'EOF'
+# Mapped package that is not installed in this environment
+aiofiles==1.0.0
+EOF
+
+mkdir -p "$TMPDIR/build221/vsm/viable-swarm-model/references"
+cat > "$TMPDIR/build221/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target | Status | Builds Tested | Score |
+|---|---|---|---|---|---|---|
+| E1 | FB33 | append-only | Test | **effective** | 1 | 5 |
+EOF
+
+set +e
+OUTPUT=$(HOME="$TMPDIR/build221" "$PYTHON3" "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build221" --phase 3c 2>&1)
+RC=$?
+set -e
+if [ "$RC" -ne 0 ] && echo "$OUTPUT" | grep -q "H152:"; then
+    pass
+else
+    fail "expected H152 gate to fail on unimportable package; rc=$RC output=$OUTPUT"
+fi
+
+# ============================================================================
+# Test 222: integration-hard-gates.py passes when requirements are importable
+# ============================================================================
+
+echo -n "TEST: integration-hard-gates.py passes when requirements.txt packages are importable ... "
+
+mkdir -p "$TMPDIR/build222"
+cat > "$TMPDIR/build222/requirements.txt" << 'EOF'
+# Common packages available in this environment
+pydantic>=2.0
+EOF
+
+mkdir -p "$TMPDIR/build222/vsm/viable-swarm-model/references"
+cat > "$TMPDIR/build222/vsm/viable-swarm-model/references/mutation-state.md" << 'EOF'
+# Mutation State
+| ID | Source | Type | Target | Status | Builds Tested | Score |
+|---|---|---|---|---|---|---|
+| E1 | FB33 | append-only | Test | **effective** | 1 | 5 |
+EOF
+
+OUTPUT=$(HOME="$TMPDIR/build222" "$PYTHON3" "$SCRIPT_DIR/../scripts/integration-hard-gates.py" --build-dir "$TMPDIR/build222" --phase 3c 2>&1)
+RC=$?
+if [ "$RC" -eq 0 ] && echo "$OUTPUT" | grep -q "H152:"; then
+    pass
+else
+    fail "expected H152 gate to pass on importable package; rc=$RC output=$OUTPUT"
+fi
+
 echo ""
 echo "========================================"
 echo "Results: $PASSED passed, $FAILED failed"

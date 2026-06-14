@@ -69,6 +69,83 @@ def check_graphql_stubs(build_dir: Path) -> bool:
     return False
 
 
+PACKAGE_IMPORT_MAP = {
+    "strawberry-graphql": "strawberry",
+    "strawberry": "strawberry",
+    "pydantic": "pydantic",
+    "pydantic-settings": "pydantic_settings",
+    "sqlalchemy": "sqlalchemy",
+    "fastapi": "fastapi",
+    "httpx": "httpx",
+    "celery": "celery",
+    "redis": "redis",
+    "alembic": "alembic",
+    "uvicorn": "uvicorn",
+    "pytest": "pytest",
+    "pytest-asyncio": "pytest_asyncio",
+    "python-jose": "jose",
+    "passlib": "passlib",
+    "bcrypt": "bcrypt",
+    "python-multipart": "multipart",
+    "aiofiles": "aiofiles",
+    "jinja2": "jinja2",
+    "websockets": "websockets",
+    "python-socketio": "socketio",
+}
+
+
+def check_environment_imports(build_dir: Path) -> bool:
+    """H152: Verify framework dependencies declared in requirements.txt can be imported.
+
+    Prevents dispatching implementation agents into an environment with incompatible
+    package versions (e.g., strawberry-graphql that cannot import with installed pydantic).
+    """
+    requirements_file = build_dir / "requirements.txt"
+    if not requirements_file.exists():
+        print("[SKIP] H152: requirements.txt not found — no declared dependencies to verify")
+        return True
+
+    text = requirements_file.read_text()
+    failed = []
+    skipped = []
+    checked = []
+
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        # Strip version specifiers
+        pkg = re.split(r"[=<>!~;]", line)[0].strip()
+        if not pkg:
+            continue
+        module = PACKAGE_IMPORT_MAP.get(pkg)
+        if not module:
+            skipped.append(pkg)
+            continue
+        checked.append(pkg)
+        result = subprocess.run(
+            [sys.executable, "-c", f"import {module}"],
+            cwd=build_dir,
+            capture_output=True,
+        )
+        if result.returncode != 0:
+            failed.append((pkg, module))
+
+    if failed:
+        details = ", ".join(f"{pkg} (import {module})" for pkg, module in failed)
+        fail(
+            f"H152: {len(failed)} declared requirement(s) cannot be imported: {details}. "
+            f"Resolve environment incompatibility before dispatching implementation agents."
+        )
+        return False
+
+    if checked:
+        print(f"[PASS] H152: All {len(checked)} declared requirement(s) import successfully")
+    else:
+        print("[SKIP] H152: No recognized importable requirements in requirements.txt")
+    return True
+
+
 def check_graphql_session_cleanup(build_dir: Path) -> bool:
     """FB34-2: Verify AsyncSession created in get_graphql_context is closed."""
     graphql_file = build_dir / "app" / "graphql.py"
@@ -193,6 +270,7 @@ def main() -> int:
     results = []
 
     # All gates run regardless of phase; Phase 3c gets early warning, Phase 6 gets final block
+    results.append(check_environment_imports(build_dir))
     results.append(check_graphql_stubs(build_dir))
     results.append(check_graphql_session_cleanup(build_dir))
     results.append(check_socketprovider_auth_emit(build_dir))

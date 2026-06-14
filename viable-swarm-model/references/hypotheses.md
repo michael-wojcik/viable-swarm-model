@@ -20,7 +20,7 @@
 | Hypothesis | Status |
 |---|---|
 | H104 | untested |
-| H152 | untested |
+| H152 | testing |
 | H202 | tested |
 | H217 | partially |
 | H217-UPDATE | partially |
@@ -75,13 +75,14 @@
 
 ## H152: Pre-build environment smoke tests would catch package incompatibilities before code writing begins
 
-**Status**: untested
+**Status**: testing
 **Proposed**: 2026-05-25
 **Rationale**: FB22 discovered `strawberry-graphql==0.256.0` is incompatible with the installed pydantic version only after the build started and graphql.py was written. This wasted agent time and required S5 intervention.
 **Source**: Fitness build FB22
-**Experiment**: At Phase 0 self-test, add a step: "Run `python -c 'import strawberry; import pydantic'` and verify it succeeds." Run next build on the same environment.
-**Expected**: Environment incompatibility detected at Phase 0, build halted or environment fixed before Phase 1.
-**Tested by**: —
+**Experiment**: Tool-enforced import gate added to `scripts/integration-hard-gates.py` (H152). It reads `requirements.txt` and verifies declared packages import successfully in a fresh subprocess. Run next build with the gate enabled.
+**Expected**: Environment incompatibility detected at Phase 0/3c, build halted before implementation agents are dispatched.
+**Result**: Tool implemented and wired into SKILL.md Phase 0. Awaiting validation in next build with `requirements.txt`.
+**Tested by**: Tests 221-222 in automation suite
 
 ---
 
