@@ -7948,6 +7948,30 @@ if ! echo "$OUTPUT" | grep -q "OK"; then
 fi
 pass
 
+# ============================================================================
+# Test 220: Active mutation count stays below the <60 target
+# ============================================================================
+
+echo -n "TEST: Integration Health active mutation count is below 60 ... "
+
+ACTIVE_COUNT=$("$PYTHON3" - <<'PY'
+from pathlib import Path
+text = Path.home().joinpath("vsm/viable-swarm-model/references/mutation-state.md").read_text(encoding="utf-8")
+for line in text.splitlines():
+    if line.startswith("| Active mutations "):
+        parts = [p.strip() for p in line.split("|") if p.strip()]
+        if len(parts) >= 4:
+            print(parts[1])
+            break
+PY
+)
+
+if [ -n "$ACTIVE_COUNT" ] && [ "$ACTIVE_COUNT" -lt 60 ]; then
+    pass
+else
+    fail "active mutation count $ACTIVE_COUNT is not below 60"
+fi
+
 echo ""
 echo "========================================"
 echo "Results: $PASSED passed, $FAILED failed"

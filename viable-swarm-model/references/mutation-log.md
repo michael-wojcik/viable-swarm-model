@@ -5717,7 +5717,7 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 - The automation suite completes in ~2 minutes instead of timing out.
 - Two timing-dependent test regressions exposed by the speedup are fixed: `stop-verifier.sh` tests now create `process-audit.md` before `meta-report.md`, and the `process-compliance-precompute.py` mock uses a current knowledge-broker date.
 
-**Measured effect**: **TESTED** — Test 212 verifies the PYTHON3 resolver uses a fast interpreter. Full automation suite: **228 passed, 0 failed** (completed in ~2m 9s, down from >5m timeout). `validate-mutation-state.sh` runs in ~1.9s (down from >120s).
+**Measured effect**: **TESTED** — Test 212 verifies the PYTHON3 resolver uses a fast interpreter. Full automation suite: **228 passed, 0 failed** (completed in ~2m 9s, down from >5m timeout). `validate-mutation-state.sh` runs in ~1.9s (down from >120s). Promoted to **historical** after 5 S5 iterations with no regressions.
 
 ---
 

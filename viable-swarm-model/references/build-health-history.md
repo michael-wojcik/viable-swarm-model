@@ -3196,3 +3196,38 @@ S5 iterations R65 through R73 were executed on 2026-06-07 without individual bui
 
 ### Next Highest-Leverage Constraint
 **System 5 (Policy/Meta-learning) / S5→S1 channel — active mutation count is now 60, at the <60 target boundary**: Any new mutation will breach the target unless an existing effective mutation is promoted to historical or removed. R86 will reach `builds_tested=5` in the next S5 iteration, making it eligible for historical promotion via Test 215. Until then, further internal mutations risk target overflow. The organism should prioritize external validation (fitness build or gym experiment) to test H401/H404 and create build-derived mutations, or complete the R86→historical promotion in the next iteration before adding more S5-only mutations.
+
+---
+---
+
+## 2026-06-14 — S5 Orchestrator Iteration (R86→Historical + Active Count Gate)
+
+### Diagnosed Constraint
+**System 5 (Policy/Meta-learning) / S5→S1 channel — active mutation count reached 60, the <60 target boundary**: The previous iteration (R89) added an effective mutation, pushing active mutations to the boundary. Without headroom, future mutations would breach the target. R86 had `builds Tested=4` and was one iteration away from historical eligibility, but no tool-enforced check prevented the target from being exceeded.
+
+### Change Made
+**S5 lifecycle maintenance + hard gate Test 220**:
+- Ran `increment-s5-iteration-counter.py`: R86 reached `builds_tested=5`, making it eligible for historical promotion.
+- Promoted R86 to `historical`, moving it from the S5 iteration section to the Historical Effective section.
+- Updated R86 measured effect in `mutation-log.md` to note the historical promotion.
+- Synced Integration Health metrics: active mutations dropped from 60 to 59.
+- Added **Test 220** to `hooks/test-automation.sh`: parses the Integration Health table and fails if `Active mutations` is not below 60, preventing future target breaches.
+
+### Test Results
+- `bash hooks/test-automation.sh`: **236 passed, 0 failed** (was 235 passed, 0 failed)
+- Test 215: S5 iteration mutations eligible for historical promotion are historical → PASS
+- Test 220: Integration Health active mutation count is below 60 → PASS
+- `validate-mutation-state.sh`: ✅ PASS
+- `mutation-portfolio-health.py`: active=59, historical=81, effective=59, probationary=0
+
+### Files Modified
+- `viable-swarm-model/hooks/test-automation.sh`
+- `viable-swarm-model/references/mutation-state.md`
+- `viable-swarm-model/references/mutation-log.md`
+- `viable-swarm-model/references/build-health-history.md`
+
+### Git Commit
+- See `git log` for commit hash
+
+### Next Highest-Leverage Constraint
+**System 1 (Implementation) / S1→S5 channel — H401 hard gate (`check-graphql-stubs.py`) is implemented but not yet wired into SKILL.md or the build pipeline**: The tool exists and is tested, but S5 has no automated invocation point. The highest-ROI next step is to wire `check-graphql-stubs.py` into SKILL.md Phase 3c/Phase 6 and add a stop-verifier check or session-end invocation so the gate runs automatically during GraphQL-enabled builds. Alternatively, H104/H152 will cross the stale threshold within 24 hours and should be tested or archived.

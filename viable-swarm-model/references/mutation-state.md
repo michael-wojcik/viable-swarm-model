@@ -30,6 +30,7 @@
 | R78 | 2026-06-07 S5 | refinement | auto-mutation-lifecycle.py score backfill from evidence + respect existing scores + Tests 200/201/204 | historical | 5 | 5 | H405 | — | S5 iter |
 | R84 | 2026-06-08 S5 | refinement | diagnostic-router.sh self-test uses temp DIAG_FILE to prevent overwriting real hook-diagnostic.md + Test 211 | historical | 5 | 5 | — | — | S5 iter |
 | R85 | 2026-06-08 S5 | structural | SKILL.md Phase 0/8 + session-end.sh: remove deprecated skill-state.md references, point to mutation-state.md + Tests 212-214 | historical | 5 | 5 | — | — | S5 iter |
+| R86 | 2026-06-14 S5 | structural | Resolve Python interpreter once in test-automation.sh/session-end.sh/update-mutation-state.sh to avoid pyenv shim overhead; rewrite validate-mutation-state.sh in Python; fix date/mtime-dependent tests | historical | 5 | 5 | — | — | S5 iter |
 | FB25-S1 | FB25 Coach | structural | False hook claim removal | historical | 5 | 5 | H300 | E17 | — |
 | FB24-1 | FB24 Build | append-only | Phase 4 gate bypass when 1 test fails | historical | 6 | 5 | H154 | — | — |
 | FB24-2 | FB24 Build | append-only | Enum type safety audit | historical | 6 | 5 | H203 | — | — |
@@ -171,9 +172,9 @@
 
 | Metric | Current | Target | Status |
 |---|---|---|---|
-| Active mutations | 60 | < 60 | ✅ Within target |
-| Historical effective (≥5 builds) | 80 | >15% of active | ✅ 134% |
-| Effective (<5 builds, monitored) | 60 | >30% of active | ✅ 100% |
+| Active mutations | 59 | < 60 | ✅ Within target |
+| Historical effective (≥5 builds) | 81 | >15% of active | ✅ 134% |
+| Effective (<5 builds, monitored) | 59 | >30% of active | ✅ 100% |
 | Probationary mutations | 0 | <20 at any time | ✅ 0 (within target) |
 | Removed / redesigned | 24 | ≥2 per 5 builds | ✅ 24 (exceeds target) |
 | Measured effect fill rate (scored) | 95.1% | ≥80% | ✅ 95.0% |
@@ -382,10 +383,9 @@
 | FB34-3 | FB34 Build | append-only | SocketProvider authenticate event protocol | **removed** | 1 | 2 | — | — | R-8 cemetery; replaced by FB34-C1 |
 
 | **S5 ITERATION MUTATIONS (2026-06-08)** |
-| R86 | 2026-06-14 S5 | structural | Resolve Python interpreter once in test-automation.sh/session-end.sh/update-mutation-state.sh to avoid pyenv shim overhead; rewrite validate-mutation-state.sh in Python; fix date/mtime-dependent tests | effective | 4 | 5 | — | — | S5 iter |
-| R87 | 2026-06-14 S5 | structural | Hard gate test enforcing S5 iteration historical promotion eligibility (builds_tested >= 5, score 5) | effective | 1 | 5 | — | — | S5 iter |
-| R88 | 2026-06-14 S5 | refinement | hypothesis-backlog-curator.py stale untested archival (>21 days) + Tests 216-217 | effective | 1 | 5 | — | — | S5 iter |
-| R89 | 2026-06-14 S5 | structural | Tool-enforced GraphQL stub detector (check-graphql-stubs.py) + Tests 218-219 | effective | 1 | 5 | — | — | S5 iter |
+| R87 | 2026-06-14 S5 | structural | Hard gate test enforcing S5 iteration historical promotion eligibility (builds_tested >= 5, score 5) | effective | 2 | 5 | — | — | S5 iter |
+| R88 | 2026-06-14 S5 | refinement | hypothesis-backlog-curator.py stale untested archival (>21 days) + Tests 216-217 | effective | 2 | 5 | — | — | S5 iter |
+| R89 | 2026-06-14 S5 | structural | Tool-enforced GraphQL stub detector (check-graphql-stubs.py) + Tests 218-219 | effective | 2 | 5 | — | — | S5 iter |
 
 | **FB34 CLOSEOUT MUTATIONS (Proposed during Phase 8b, await implementation/measurement)** |
 | FB34-C1 | FB34 Phase 8b | structural | Tool-enforced integration hard-gates script (consolidates FB31-5, FB34-1, FB34-2, FB34-3) | effective | 1 | 5 | H401, H405 | — | S5 iter |
