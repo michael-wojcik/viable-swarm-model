@@ -22,10 +22,13 @@
 | FB32 | — | H150, H151, H154 | Gym-Batch-FB32 | FB32-1..FB32-5 (probation) | — |
 | FB33 | 6.3 | — | — | FB32-1 scored 2 (ineffective), FB32-2..FB32-5 scored 5 (effective) | 6.3 |
 | FB34 | 4.0 | H401–H406 | — | FB33-1-EXT/FB33-2/FB33-3/FB33-6/FB31-1/FB31-2/FB31-3/FB31-4 measured effective; FB31-5/FB32-1/FB34-1/FB34-2/FB34-3 ineffective; FB34-C1..FB34-R1 proposed | 4.0 |
+| FB36 | 2.85⁴ | H401–H406, H500, H502 | — | FB35-1, FB35-2 measured; FB34-C1, FB34-C2, FB34-A1–A3, FB34-R1, FB33-5, FB31-1, FB31-2, FB28-A4, FB28-A5 enforced | 2.85 — PASS (process audit 100/100; Phase 6 integration PASS; all tests/builds green) |
 
 ¹ **CORRECTION**: E17 tests H107, not H300. See [Known Broken Traces](#known-broken-traces).
 ² FB29 meta-report scored 4.2; trainer scored 3.6. Effectiveness uses trainer score.
 ³ PM1 and PM7 removed post-FB29. See mutation-state.md.
+
+⁴ **Note**: No `vsm_trainer` score artifact was produced for FB36. Score is inferred from `organism-vitals.md` (`Score drop (last→current) = -0.15`; FB35 trainer score = 3.0). The initial process audit falsely scored 40/100 due to missing artifact verification; the corrected final audit is 100/100. Update if a formal trainer score becomes available.
 
 ---
 

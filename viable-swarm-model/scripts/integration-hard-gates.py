@@ -3,7 +3,8 @@
 Integration Hard Gates — Tool-enforced checks for common integration failures.
 
 Consolidates FB31-5 (broker backfill), FB34-1 (GraphQL stub detection),
-FB34-2 (session cleanup verification), and FB34-3 (SocketProvider auth emit).
+FB34-2 (session cleanup verification), FB34-3 (SocketProvider auth emit),
+FB36-3 (GraphQL subscription URL parity), and FB36-4 (unmounted REST router cleanup).
 
 Usage:
     python3 integration-hard-gates.py --build-dir <BUILD_DIR> [--phase <3c|6>]
@@ -287,6 +288,116 @@ def check_mutation_state_backfill() -> bool:
     return True
 
 
+def check_graphql_subscription_url(build_dir: Path) -> bool:
+    """FB36-3: Verify GraphQL subscriptions target /graphql, not /ws (Socket.IO)."""
+    client_ts = build_dir / "frontend" / "src" / "graphql" / "client.ts"
+    if not client_ts.exists():
+        print("[SKIP] FB36-3: frontend/src/graphql/client.ts not found")
+        return True
+
+    client_text = client_ts.read_text()
+    if "GraphQLWsLink" not in client_text:
+        print("[SKIP] FB36-3: No GraphQLWsLink found")
+        return True
+
+    env_files = [
+        build_dir / ".env.example",
+        build_dir / ".env",
+        build_dir / "frontend" / ".env.example",
+        build_dir / "frontend" / ".env",
+    ]
+    vite_ws_url: str | None = None
+    vite_socket_io_url: str | None = None
+    ws_re = re.compile(r"^\s*#?\s*VITE_WS_URL\s*=\s*(.*)$")
+    sio_re = re.compile(r"^\s*#?\s*VITE_SOCKET_IO_URL\s*=\s*(.*)$")
+    for env_file in env_files:
+        if not env_file.exists():
+            continue
+        for line in env_file.read_text().splitlines():
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#") and "VITE_WS_URL" not in stripped and "VITE_SOCKET_IO_URL" not in stripped:
+                continue
+            m = ws_re.match(line)
+            if m:
+                vite_ws_url = m.group(1).strip()
+                continue
+            m = sio_re.match(line)
+            if m:
+                vite_socket_io_url = m.group(1).strip()
+
+    if vite_ws_url is None:
+        fail("FB36-3: VITE_WS_URL not found in .env.example; cannot verify GraphQL subscription URL parity")
+        return False
+
+    # Strip trailing slash and query/fragment for robust comparison
+    normalized = vite_ws_url.rstrip("/").split("?")[0].split("#")[0]
+    if normalized.endswith("/ws") or "/ws" in normalized.split("/")[-1:]:
+        fail(
+            f"FB36-3: VITE_WS_URL ({vite_ws_url}) points to the Socket.IO /ws path. "
+            "GraphQL subscriptions must target the Strawberry GraphQL WebSocket endpoint (usually /graphql)."
+        )
+        return False
+
+    if "/graphql" not in normalized:
+        fail(
+            f"FB36-3: VITE_WS_URL ({vite_ws_url}) does not contain /graphql. "
+            "Apollo GraphQL subscriptions will fail to reach the Strawberry subscription handler."
+        )
+        return False
+
+    if vite_socket_io_url is not None and "/ws" not in vite_socket_io_url:
+        fail(
+            f"FB36-3: VITE_SOCKET_IO_URL ({vite_socket_io_url}) does not point to /ws. "
+            "Socket.IO client connections will fail."
+        )
+        return False
+
+    print("[PASS] FB36-3: GraphQL subscription URL targets /graphql; Socket.IO URL targets /ws")
+    return True
+
+
+def check_unmounted_router_files(build_dir: Path) -> bool:
+    """FB36-4: Detect router files in app/routers/ that are not mounted in main.py."""
+    routers_dirs = [build_dir / "app" / "routers", build_dir / "backend" / "app" / "routers"]
+    main_files = [build_dir / "app" / "main.py", build_dir / "backend" / "app" / "main.py"]
+
+    routers_dir = next((d for d in routers_dirs if d.exists()), None)
+    main_file = next((f for f in main_files if f.exists()), None)
+
+    if routers_dir is None or main_file is None:
+        print("[SKIP] FB36-4: No app/routers/ directory or main.py found")
+        return True
+
+    main_text = main_file.read_text()
+    unmounted: list[str] = []
+
+    for router_file in routers_dir.glob("*.py"):
+        if router_file.name == "__init__.py":
+            continue
+        text = router_file.read_text()
+        if "APIRouter" not in text:
+            continue
+        module = router_file.stem
+        # Match: from app.routers import X, Y; import app.routers.X; from app.routers.X import ...
+        pattern = re.compile(
+            rf"from\s+app\.routers\s+import\s+[^\n]*\b{module}\b"
+            rf"|import\s+app\.routers\.{module}\b"
+            rf"|from\s+app\.routers\.{module}\s+import"
+        )
+        if not pattern.search(main_text):
+            unmounted.append(router_file.name)
+
+    if unmounted:
+        fail(
+            f"FB36-4: Found unmounted router file(s) in app/routers/: {', '.join(unmounted)}. "
+            "Delete or move them after intentionally removing them from main.py to avoid scope drift."
+        )
+        return False
+
+    print("[PASS] FB36-4: All app/routers/ files with APIRouter are mounted in main.py")
+    return True
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Integration Hard Gates")
     parser.add_argument("--build-dir", required=True, type=Path, help="Path to build directory")
@@ -305,6 +416,8 @@ def main() -> int:
     results.append(check_graphql_stubs(build_dir))
     results.append(check_graphql_session_cleanup(build_dir))
     results.append(check_socketprovider_auth_emit(build_dir))
+    results.append(check_graphql_subscription_url(build_dir))
+    results.append(check_unmounted_router_files(build_dir))
     results.append(check_mutation_state_backfill())
 
     passed = sum(results)

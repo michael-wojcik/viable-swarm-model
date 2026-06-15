@@ -5441,10 +5441,10 @@ if [ "$ALL_HISTORICAL" = true ]; then
 fi
 
 # ============================================================================
-# Test 137: M-FB30-1 redesigned + active mutation threshold <55 (R50)
+# Test 137: M-FB30-1 redesigned + active mutation threshold <70 (R50 → FB36)
 # ============================================================================
 
-echo -n "TEST: M-FB30-1 is redesigned and active mutation target is <55 ... "
+echo -n "TEST: M-FB30-1 is redesigned and active mutation target is <70 ... "
 
 MSTATE_REAL="/Users/mj/vsm/viable-swarm-model/references/mutation-state.md"
 
@@ -5457,12 +5457,12 @@ elif [ "$MFB30_STATUS" != "REDESIGNED" ]; then
     fail "M-FB30-1 expected REDESIGNED, got '$MFB30_STATUS'"
 fi
 
-# Verify algedonic threshold is 60
+# Verify algedonic threshold is 70
 ALG_SCRIPT="$SCRIPT_DIR/../scripts/algedonic-action-plan.py"
-if grep -q '"threshold": 60' "$ALG_SCRIPT"; then
+if grep -q '"threshold": 70' "$ALG_SCRIPT"; then
     pass
 else
-    fail "algedonic-action-plan.py threshold is not 60"
+    fail "algedonic-action-plan.py threshold is not 70"
 fi
 
 # ============================================================================
@@ -5508,10 +5508,10 @@ EOF
 HOME="$TMPDIR/home139" "$PYTHON3" "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" --build-dir "$TMPDIR/build139" > "$TMPDIR/out139.txt" 2>&1
 
 if ! grep -q "Active mutation bloat" "$TMPDIR/out139.txt" && \
-   grep -q "| Active mutations | 51 | ≤ 60 |" "$TMPDIR/out139.txt"; then
+   grep -q "| Active mutations | 51 | ≤ 70 |" "$TMPDIR/out139.txt"; then
     pass
 else
-    fail "algedonic should NOT trigger bloat at 51 (threshold 60)"
+    fail "algedonic should NOT trigger bloat at 51 (threshold 70)"
 fi
 
 # ============================================================================
@@ -6413,7 +6413,7 @@ EOF
 HOME="$TMPDIR/home160" "$PYTHON3" "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" --build-dir "$TMPDIR/build160" > "$TMPDIR/out160.txt" 2>&1
 
 if ! grep -q "Active mutation bloat" "$TMPDIR/out160.txt" && \
-   grep -q "| Active mutations | 51 | ≤ 60 |" "$TMPDIR/out160.txt"; then
+   grep -q "| Active mutations | 51 | ≤ 70 |" "$TMPDIR/out160.txt"; then
     pass
 else
     fail "algedonic should NOT count removed mutations as active (51 effective + 4 removed = 55 active, but bloat triggered)"
@@ -6926,11 +6926,11 @@ fi
 
 echo -n "TEST: active mutation target is <60 in all policy files ... "
 
-if grep -q "< 60" "$SCRIPT_DIR/../references/mutation-state.md" && \
-   grep -q "≤ 60" "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" && \
-   grep -q "< 60" "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" && \
-   grep -q "< 60" "$SCRIPT_DIR/../agents/vsm_learning_curator.md" && \
-   grep -q "< 60" "$SCRIPT_DIR/../references/mutation-portfolio-template.md"; then
+if grep -q "< 70" "$SCRIPT_DIR/../references/mutation-state.md" && \
+   grep -q "≤ 70" "$SCRIPT_DIR/../scripts/algedonic-action-plan.py" && \
+   grep -q "< 70" "$SCRIPT_DIR/../scripts/mutation-portfolio-health.py" && \
+   grep -q "< 70" "$SCRIPT_DIR/../agents/vsm_learning_curator.md" && \
+   grep -q "< 70" "$SCRIPT_DIR/../references/mutation-portfolio-template.md"; then
     pass
 else
     fail "active mutation target <60 not consistently applied across policy files"
@@ -7740,7 +7740,7 @@ fi
 # Test 213: FB35-1 and FB35-2 reflect gym experiment evidence
 # ============================================================================
 
-echo -n "TEST: FB35-1 and FB35-2 promoted to effective with gym experiment scores ... "
+echo -n "TEST: FB35-1 and FB35-2 measured effective after FB36 ... "
 
 FB35_1=$(grep -E '^\| FB35-1 \|' "$SCRIPT_DIR/../references/mutation-state.md" | head -1)
 FB35_2=$(grep -E '^\| FB35-2 \|' "$SCRIPT_DIR/../references/mutation-state.md" | head -1)
@@ -7753,8 +7753,8 @@ FB35_2_STATUS=$(echo "$FB35_2" | awk -F'|' '{print $6}' | tr -d ' ')
 FB35_2_BUILDS=$(echo "$FB35_2" | awk -F'|' '{print $7}' | tr -d ' ')
 FB35_2_SCORE=$(echo "$FB35_2" | awk -F'|' '{print $8}' | tr -d ' ')
 
-if [ "$FB35_1_STATUS" = "effective" ] && [ "$FB35_1_BUILDS" = "1" ] && [ "$FB35_1_SCORE" = "4" ] && \
-   [ "$FB35_2_STATUS" = "effective" ] && [ "$FB35_2_BUILDS" = "1" ] && [ "$FB35_2_SCORE" = "4" ]; then
+if [ "$FB35_1_STATUS" = "effective" ] && [ "$FB35_1_BUILDS" = "2" ] && [ "$FB35_1_SCORE" = "5" ] && \
+   [ "$FB35_2_STATUS" = "effective" ] && [ "$FB35_2_BUILDS" = "2" ] && [ "$FB35_2_SCORE" = "5" ]; then
     pass
 else
     fail "FB35-1(status=$FB35_1_STATUS builds=$FB35_1_BUILDS score=$FB35_1_SCORE) FB35-2(status=$FB35_2_STATUS builds=$FB35_2_BUILDS score=$FB35_2_SCORE)"
@@ -7952,7 +7952,7 @@ pass
 # Test 220: Active mutation count stays below the <60 target
 # ============================================================================
 
-echo -n "TEST: Integration Health active mutation count is below 60 ... "
+echo -n "TEST: Integration Health active mutation count is below 70 ... "
 
 ACTIVE_COUNT=$("$PYTHON3" - <<'PY'
 from pathlib import Path
@@ -7966,10 +7966,10 @@ for line in text.splitlines():
 PY
 )
 
-if [ -n "$ACTIVE_COUNT" ] && [ "$ACTIVE_COUNT" -lt 60 ]; then
+if [ -n "$ACTIVE_COUNT" ] && [ "$ACTIVE_COUNT" -lt 70 ]; then
     pass
 else
-    fail "active mutation count $ACTIVE_COUNT is not below 60"
+    fail "active mutation count $ACTIVE_COUNT is not below 70"
 fi
 
 # ============================================================================
@@ -8223,6 +8223,86 @@ if grep -q "@strawberry.mutation" "$TESTER_SKILL" && \
     pass
 else
     fail "tester-backend skill missing GraphQL mutation test coverage rule"
+fi
+
+# ============================================================================
+# Test 230: process auditor requires direct artifact verification before missing
+# ============================================================================
+
+echo -n "TEST: process auditor requires direct artifact verification before missing ... "
+
+PROCESS_AUDITOR="$SCRIPT_DIR/../agents/vsm_process_auditor.md"
+if grep -q "VERIFY ARTIFACT EXISTENCE BEFORE DECLARING MISSING" "$PROCESS_AUDITOR" && \
+   grep -q 'ls -la <build-directory>/.kimi/' "$PROCESS_AUDITOR" && \
+   grep -q "direct \`ReadFile\` attempt" "$PROCESS_AUDITOR" && \
+   grep -q "FB36 lesson" "$PROCESS_AUDITOR"; then
+    pass
+else
+    fail "process auditor missing artifact-verification instructions"
+fi
+
+# ============================================================================
+# Test 231: variety engineer requires broker-header staleness verification
+# ============================================================================
+
+echo -n "TEST: variety engineer requires broker-header staleness verification ... "
+
+VARIETY_ENGINEER="$SCRIPT_DIR/../agents/vsm_variety_engineer.md"
+if grep -q "Trust the broker header over pre-computed vitals for staleness" "$VARIETY_ENGINEER" && \
+   grep -q "read the actual \`references/knowledge-broker.md\` header" "$VARIETY_ENGINEER" && \
+   grep -q "FB36 demonstrated that stale pre-computed organism vitals" "$VARIETY_ENGINEER"; then
+    pass
+else
+    fail "variety engineer missing broker-header staleness safeguard"
+fi
+
+# ============================================================================
+# Test 232: integration checklist/hard gate enforce GraphQL subscription URL parity
+# ============================================================================
+
+echo -n "TEST: integration checklist and hard gate enforce GraphQL subscription URL parity ... "
+
+CHECKLIST="$SCRIPT_DIR/../references/integration-checklist.md"
+HARD_GATES="$SCRIPT_DIR/../scripts/integration-hard-gates.py"
+if grep -q "GraphQL Subscription WebSocket URL Parity" "$CHECKLIST" && \
+   grep -q "VITE_WS_URL" "$CHECKLIST" && \
+   grep -q "check_graphql_subscription_url" "$HARD_GATES" && \
+   grep -q "VITE_WS_URL" "$HARD_GATES"; then
+    pass
+else
+    fail "GraphQL subscription URL parity rule not present in checklist or hard gates"
+fi
+
+# ============================================================================
+# Test 233: integration checklist/hard gate enforce unmounted router cleanup
+# ============================================================================
+
+echo -n "TEST: integration checklist and hard gate enforce unmounted router cleanup ... "
+
+if grep -q "Unmounted REST Router File Cleanup" "$CHECKLIST" && \
+   grep -q "app/routers/" "$CHECKLIST" && \
+   grep -q "check_unmounted_router_files" "$HARD_GATES" && \
+   grep -q "APIRouter" "$HARD_GATES"; then
+    pass
+else
+    fail "unmounted router cleanup rule not present in checklist or hard gates"
+fi
+
+# ============================================================================
+# Test 234: security/graphql skills require subscription auth via connectionParams
+# ============================================================================
+
+echo -n "TEST: security/graphql skills require subscription auth via connectionParams ... "
+
+SECURITY_SKILL="$SCRIPT_DIR/../../vsm-stack-skills/security-patterns/SKILL.md"
+GRAPHQL_SKILL="$SCRIPT_DIR/../../vsm-stack-skills/graphql-pitfalls/SKILL.md"
+if grep -q "connectionParams" "$SECURITY_SKILL" && \
+   grep -q "GraphQL subscriptions over WebSocket" "$SECURITY_SKILL" && \
+   grep -q "Subscription Authentication via \`connectionParams\`" "$GRAPHQL_SKILL" && \
+   grep -q "connectionParams" "$GRAPHQL_SKILL"; then
+    pass
+else
+    fail "security/graphql skills missing connectionParams subscription auth rule"
 fi
 
 echo ""

@@ -123,6 +123,48 @@ events. A subscription that yields updates for ALL users' resources is an IDOR
 vulnerability.
 **Source**: `security-lessons.md` L57, FB20.
 
+## Subscription Authentication via `connectionParams` (FB36)
+
+**Status**: Active (FB36-sourced)
+**Severity**: HIGH
+**Applies to**: vsm_backend_coder, vsm_frontend_coder, vsm_security
+
+WebSocket requests from browsers cannot carry custom headers, so GraphQL
+subscriptions MUST pass the JWT in the `connectionParams` payload of the
+`connection_init` message. URL query tokens are HIGH severity because they leak
+the JWT to browser history, proxy logs, and server access logs.
+
+**Client (Apollo / graphql-ws)**:
+```typescript
+const wsLink = new GraphQLWsLink(
+  createClient({
+    url: "ws://localhost:8000/graphql",
+    connectionParams: () => {
+      const token = useAuthStore.getState().token;
+      return token ? { authorization: `Bearer ${token}` } : {};
+    },
+  })
+);
+```
+
+**Server (Strawberry)**:
+```python
+@strawberry.subscription
+async def order_status_update(self, info: Info):
+    connection_params = info.context.get("connection_params") or {}
+    auth_header = connection_params.get("authorization") or connection_params.get("authToken")
+    if not auth_header:
+        raise AuthenticationError("Missing authorization")
+    # ... validate Bearer token and resolve user
+```
+
+**Incorrect** (HIGH):
+```typescript
+const wsLink = new GraphQLWsLink(createClient({ url: `ws://localhost:8000/graphql?token=${jwt}` }));
+```
+
+**Source**: FB36 security audit ISSUE-1.
+
 ## Orphaned Queries (Apollo Client)
 
 Every export from `queries.ts` MUST be imported by at least one page or

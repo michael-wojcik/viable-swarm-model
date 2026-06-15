@@ -42,7 +42,18 @@ python3 ~/vsm/viable-swarm-model/scripts/process-compliance-precompute.py <build
 
 **Step 2 — READ**: Read the generated `.kimi/process-compliance-precomputed.md`.
 
-**Step 3 — FOLLOW Mode A**: Proceed with Mode A Steps 2–4 above.
+**Step 3 — VERIFY ARTIFACT EXISTENCE BEFORE DECLARING MISSING**: Before you
+declare any `.kimi/` artifact missing, you MUST verify with a directory listing
+or direct `ReadFile` attempt. If a Shell tool is available, run:
+```bash
+ls -la <build-directory>/.kimi/
+```
+If no Shell tool is available, attempt `ReadFile` on each artifact's absolute
+path. Only report an artifact as missing when you have direct evidence of
+absence. This prevents false BLOCK verdicts caused by stale pre-computations or
+tool-availability assumptions (FB36 lesson).
+
+**Step 4 — FOLLOW Mode A**: Proceed with Mode A Steps 2–4 above.
 
 **Under NO circumstances should you perform manual 10-check scanning without
 first running or reading the pre-computation output.** This is the primary

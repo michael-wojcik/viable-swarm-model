@@ -368,6 +368,14 @@ FB24 GraphQL mutations lacked REST-equivalent role guards.
 **Source**: FB17 frontend initialized ApolloProvider but all pages used REST fetch();
 queries.ts was completely orphaned (H84).
 
+#### Check 41: GraphQL Subscription WebSocket URL Parity (BLOCKER)
+- [ ] The frontend GraphQL subscription URL (`VITE_WS_URL` / `wsLink`) MUST target the SAME path as the backend Strawberry GraphQL WebSocket endpoint (typically `/graphql`), NOT the Socket.IO endpoint (`/ws`).
+- [ ] The Socket.IO client URL (`VITE_SOCKET_IO_URL`) MUST target the Socket.IO endpoint (`/ws`).
+- [ ] If `GraphQLWsLink` points at `/ws` or `VITE_WS_URL` ends in `/ws`, this is a BLOCKER — subscriptions will connect to the wrong transport and fail.
+- [ ] Verify by inspecting `frontend/src/graphql/client.ts` and `frontend/.env.example` (or the root `.env.example`).
+
+**Source**: FB36 `VITE_WS_URL` defaulted to `ws://localhost:8000/ws`, causing Apollo GraphQL subscriptions to hit the Socket.IO endpoint.
+
 ---
 
 ### 2D: Frontend (run if React/Vite/TypeScript frontend exists)
@@ -484,6 +492,13 @@ resolution error (H153).
 
 **Source**: FB18 `main.py` only registered `auth_router`. Shipments, analytics, exceptions,
 and uploads routers were created but never registered, causing 404 on all core REST endpoints (H85).
+
+#### Check 42: Unmounted REST Router File Cleanup (ISSUE)
+- [ ] After intentionally removing routers from `main.py` (e.g., to make a GraphQL-first API), delete or move the unmounted router files from `app/routers/`.
+- [ ] If unmounted router files remain in the tree, flag as ISSUE; if the build's contract claims they are removed, treat as BLOCKER.
+- [ ] Run `grep -l "APIRouter" app/routers/*.py` and confirm each file is imported and `include_router`-ed in `main.py`.
+
+**Source**: FB36 left `stores.py`, `products.py`, `orders.py`, `reviews.py` unmounted after switching to GraphQL-first; files were eventually deleted in Phase 7.
 
 ---
 

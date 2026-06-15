@@ -51,6 +51,48 @@ pitfall skills.
 - Auth must be in-band, never in URL
   → See `anti-patterns.md` #5 / `security-lessons.md` L16
 
+## GraphQL Subscription Auth (FB36)
+
+**Status**: Active (FB36-sourced)
+**Severity**: HIGH
+**Applies to**: vsm_backend_coder, vsm_frontend_coder, vsm_security
+
+GraphQL subscriptions over WebSocket MUST authenticate via `connectionParams`
+sent in the `connection_init` message, NOT via URL query parameters.
+
+**Correct pattern (Apollo Client)**:
+```typescript
+const wsLink = new GraphQLWsLink(
+  createClient({
+    url: GRAPHQL_WS_URL, // e.g., ws://localhost:8000/graphql
+    connectionParams: () => {
+      const token = useAuthStore.getState().token;
+      return token ? { authorization: `Bearer ${token}` } : {};
+    },
+  })
+);
+```
+
+**Correct pattern (Strawberry resolver)**:
+```python
+@strawberry.subscription
+async def order_status_update(self, info: Info) -> AsyncGenerator[...]:
+    connection_params = info.context.get("connection_params") or {}
+    auth_header = connection_params.get("authorization") or connection_params.get("authToken")
+    if not auth_header:
+        raise AuthenticationError("Authorization required")
+    # validate Bearer token and resolve user ...
+```
+
+**Incorrect pattern** (HIGH — token exposed to browser history, proxy logs, and server access logs):
+```typescript
+const wsLink = new GraphQLWsLink(createClient({ url: `${GRAPHQL_WS_URL}?token=${jwt}` }));
+```
+
+**Source**: FB36 initial design passed JWT in WebSocket URL query string for Strawberry
+subscriptions, violating the same "no URL tokens" rule applied to Socket.IO. Security audit
+ISSUE-1; fixed by moving token to `connectionParams`.
+
 ## Async Worker Defense-in-Depth (FB25)
 Celery tasks (and other async workers) that operate on user-owned resources
 MUST re-verify ownership boundaries inside the worker. Do not trust enqueue-time

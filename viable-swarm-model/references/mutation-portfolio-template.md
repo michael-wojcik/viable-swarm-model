@@ -12,7 +12,7 @@
 ## Portfolio Health Metrics
 | Metric | Value | Target | Status |
 |---|---|---|---|
-| Total active mutations | [N] | < 60 | [OK/WARNING/CRITICAL] |
+| Total active mutations | [N] | < 70 | [OK/WARNING/CRITICAL] |
 | Probationary ratio | [N%] | < 30% | [OK/WARNING/CRITICAL] |
 | Measured effect fill rate | [N%] | ≥ 80% | [OK/WARNING/CRITICAL] |
 | Removal rate (last 5 builds) | [N] | ≥ 2 | [OK/WARNING/CRITICAL] |

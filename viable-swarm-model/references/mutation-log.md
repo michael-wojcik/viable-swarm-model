@@ -5804,3 +5804,78 @@ These stale metrics corrupted the S3→S5 control channel by presenting an outda
 - These tests make the prompt-level implementations regression-resistant and provide automation-suite evidence for H402-H404 while awaiting real-build validation.
 
 **Measured effect**: **TESTED** — Tests 227-229 verify H402/H403/H404 prompt-rule presence. Full automation suite: **245 passed, 0 failed**. H402-H404 remain `testing` awaiting real fitness-build validation, but now have tool-enforced regression coverage.
+
+----
+
+## Mutation M-FB36-1 — 2026-06-14
+
+**Session**: FB36 Build closeout (MarketHub)
+**Files**: `agents/vsm_process_auditor.md`
+**Type**: refinement
+**Rationale**: FB36 process audit initially scored 40/100 because the process auditor relied on pre-computed assertions that `.kimi/` artifacts were missing, when the artifacts actually existed. The agent emitted a false BLOCK verdict without verifying via `ls` or `ReadFile`. This is the same class of failure as M-FB36-2: uncritical trust in pre-computed absence.
+**Expected effect**:
+- Process auditor Mode A workflow now requires direct directory listing (`ls -la <build-dir>/.kimi/`) or per-file `ReadFile` attempts before any `.kimi/` artifact is reported missing.
+- False BLOCK verdicts caused by stale pre-computations or tool-availability assumptions are eliminated.
+- Process audits converge faster and no longer need manual S5 correction.
+
+**Measured effect**: **TESTED** — Regression test 230 verifies the artifact-verification instruction strings are present in `agents/vsm_process_auditor.md`. Full automation suite passes. Awaiting real-build validation in FB37 to confirm false BLOCK verdicts are eliminated.
+
+----
+
+## Mutation M-FB36-2 — 2026-06-14
+
+**Session**: FB36 Build closeout (MarketHub)
+**Files**: `agents/vsm_variety_engineer.md`
+**Type**: refinement
+**Rationale**: FB36 variety engineer emitted a CRITICAL broker-stale algedonic based on pre-computed `organism-vitals.md` broker age, even though `references/knowledge-broker.md` had already been refreshed and its `**Last updated**` header showed a recent date. The agent trusted a stale derived metric over the primary source.
+**Expected effect**:
+- Before emitting a CRITICAL broker-stale algedonic, the variety engineer must read `references/knowledge-broker.md` and inspect the actual `**Last updated**` header.
+- If the header shows a recent update (≤7 days) but `organism-vitals.md` reports an older age, the agent notes pre-computation staleness as a process observation rather than a CRITICAL signal.
+- False CRITICAL algedonics from stale organism vitals are eliminated.
+
+**Measured effect**: **TESTED** — Regression test 231 verifies the broker-header staleness safeguard strings are present in `agents/vsm_variety_engineer.md`. Full automation suite passes. Awaiting real-build validation in FB37 to confirm false CRITICAL broker-stale algedonics are eliminated.
+
+----
+
+## Mutation M-FB36-3 — 2026-06-14
+
+**Session**: FB36 Build closeout (MarketHub)
+**Files**: `references/integration-checklist.md`, `scripts/integration-hard-gates.py`
+**Type**: append-only
+**Rationale**: FB36 frontend initially configured `VITE_WS_URL` to point at `/ws`, the Socket.IO endpoint, for Apollo GraphQL subscriptions. GraphQL subscriptions must target the Strawberry GraphQL WebSocket endpoint (`/graphql`); conflating the two transports causes silent connection failures and wastes integration debugging time.
+**Expected effect**:
+- Integration checklist Check 41 (BLOCKER) enforces that the Apollo `GraphQLWsLink` / `VITE_WS_URL` targets `/graphql` and that `VITE_SOCKET_IO_URL` targets `/ws`.
+- `scripts/integration-hard-gates.py` adds `check_graphql_subscription_url()` to verify env URL parity programmatically in Phase 3c/6.
+- Future builds fail fast if the two WebSocket URLs are swapped or conflated.
+
+**Measured effect**: **TESTED** — Regression test 232 verifies Check 41 and the `check_graphql_subscription_url()` function are present in `references/integration-checklist.md` and `scripts/integration-hard-gates.py`. Full automation suite passes. Awaiting real-build validation in FB37 to confirm URL parity errors are caught at integration time.
+
+----
+
+## Mutation M-FB36-4 — 2026-06-14
+
+**Session**: FB36 Build closeout (MarketHub)
+**Files**: `references/integration-checklist.md`, `scripts/integration-hard-gates.py`
+**Type**: append-only
+**Rationale**: FB36 contract shifted to GraphQL-first; several REST routers were intentionally removed from `main.py`, but their source files remained in `app/routers/`. Unmounted router files create scope drift, mislead future agents, and can accidentally be re-mounted later.
+**Expected effect**:
+- Integration checklist Check 42 (ISSUE) requires that routers removed from `main.py` be deleted or moved to an attic directory.
+- `scripts/integration-hard-gates.py` adds `check_unmounted_router_files()` to detect `app/routers/*.py` files containing `APIRouter` that are no longer imported/mounted in `main.py`.
+- Scope drift from orphaned router files is caught at integration time.
+
+**Measured effect**: **TESTED** — Regression test 233 verifies Check 42 and the `check_unmounted_router_files()` function are present in `references/integration-checklist.md` and `scripts/integration-hard-gates.py`. Full automation suite passes. Awaiting real-build validation in FB37 to confirm orphaned router files are caught at integration time.
+
+----
+
+## Mutation M-FB36-5 — 2026-06-14
+
+**Session**: FB36 Build closeout (MarketHub)
+**Files**: `vsm-stack-skills/security-patterns/SKILL.md`, `vsm-stack-skills/graphql-pitfalls/SKILL.md`
+**Type**: append-only
+**Rationale**: FB36 initial design passed the JWT as a URL query token (`?token=...`) for Strawberry GraphQL subscriptions because browser WebSocket requests cannot carry custom HTTP headers. URL query tokens leak to browser history, proxy logs, server access logs, and referrer headers. The graphql-ws `connectionParams` payload is the correct channel.
+**Expected effect**:
+- `security-patterns/SKILL.md` and `graphql-pitfalls/SKILL.md` now require GraphQL subscription authentication via Apollo `connectionParams` (`authorization: Bearer ...`) and Strawberry `info.context["connection_params"]`.
+- URL query tokens for subscription auth are flagged as HIGH severity and rejected in security audits.
+- Frontend and backend implementers have a single, safe pattern for subscription auth.
+
+**Measured effect**: **TESTED** — Regression test 234 verifies the `connectionParams` subscription auth rule is present in both `vsm-stack-skills/security-patterns/SKILL.md` and `vsm-stack-skills/graphql-pitfalls/SKILL.md`. Full automation suite passes. Awaiting real-build validation in FB37 to confirm URL-token subscriptions are rejected.

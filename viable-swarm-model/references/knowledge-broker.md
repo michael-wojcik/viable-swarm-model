@@ -3,7 +3,7 @@
 > **Updated by**: S5 during Phase 8 / coach Phase 5 / gym Phase 5 (curated tables)
 > **Read by**: All three skills at Phase 0 (MANDATORY)
 > **Schema version**: 1.2
-> **Last updated**: 2026-06-06
+> **Last updated**: 2026-06-14
 
 ---
 
@@ -782,3 +782,27 @@ After 6 gym experiments testing:
 | E26 | Pre-pass perfectionism observed | This is a task-sizing issue (H217). Ensure STOP rules emphasize MINIMUM viable code, not just "stop after tests pass" | LOW |
 
 *Updated: 2026-06-08*
+
+---
+
+## Entry: FB35 — 2026-06-14
+
+**Build**: FB35
+**Score**: 4.0/5.0
+**Process Audit**: 85/100
+**Domain**: FB35-20260608
+
+### Key Learnings
+- **Source**: Foundation + Implementation waves  
+- **Finding**: 5 of 8 background agents wrote files to their own session directories instead of the build directory. Only 3 agents (architecture.md, vehicles.py, drivers.py) wrote to the correct location. The requirements+env agent, frontend agent, routes+deliveries agent, and graphql+dead-code agent all produced files that were lost.  
+- **Fix**: S5 had to manually write missing files or accept stubs.  
+
+### Mutations Applied
+- ## Mutation R86 — 2026-06-14
+- ## Mutation R87 — 2026-06-14
+- ## Mutation R88 — 2026-06-14
+- ## Mutation R89 — 2026-06-14
+- ## Mutation R90 — 2026-06-14
+
+### Cross-Skill Findings
+- (Auto-populated — review and expand manually if needed)
